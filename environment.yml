@@ -1,0 +1,26 @@
+name: tp
+channels:
+  - defaults
+  - conda-forge
+  - simpleitk
+dependencies:
+  - python
+  - pip
+  - pip:
+    - pyside2>=5.15
+    - pyqt5>=5.15
+  - pytest
+  - cx_freeze
+  - rich
+  - loguru
+  - numpy
+  - matplotlib
+  - seaborn
+  - pandas
+  - openpyxl
+  - opencv
+  - scikit-image
+  - tensorflow
+  - simpleitk
+  - pdoc3
+  - fire

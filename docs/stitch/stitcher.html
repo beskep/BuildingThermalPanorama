@@ -1,0 +1,2642 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.2" />
+<title>src.stitch.stitcher API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>src.stitch.stitcher</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">from typing import Callable, Iterable, List, Optional, Tuple
+
+import cv2 as cv
+import numpy as np
+from loguru import logger
+from skimage.exposure import rescale_intensity
+
+_AVAILABLE_WARPER = (
+    &#39;affine&#39;,
+    &#39;compressedPlaneA1.5B1&#39;,
+    &#39;compressedPlaneA2B1&#39;,
+    &#39;compressedPlanePortraitA1.5B1&#39;,
+    &#39;compressedPlanePortraitA2B1&#39;,
+    &#39;cylindrical&#39;,
+    &#39;fisheye&#39;,
+    &#39;mercator&#39;,
+    &#39;paniniA1.5B1&#39;,
+    &#39;paniniA2B1&#39;,
+    &#39;paniniPortraitA1.5B1&#39;,
+    &#39;paniniPortraitA2B1&#39;,
+    &#39;plane&#39;,
+    &#39;spherical&#39;,
+    &#39;stereographic&#39;,
+    &#39;transverseMercator&#39;,
+)
+
+
+class StitchingImages:
+
+  def __init__(self, arrays: list, preprocess: Optional[Callable] = None):
+    &#34;&#34;&#34;Stitching 대상 이미지
+
+    Parameters
+    ----------
+    arrays : list of np.ndarray
+        원본 이미지. dtype 상관 없음.
+    preprocess : callable, optional
+        Preprocessing function, by default None
+        (image, mask)를 반환해야 함
+
+    Raises
+    ------
+    ValueError
+        preprocess가 None이나 callable이 아닌 경우
+    &#34;&#34;&#34;
+    if (preprocess is not None) and not callable(preprocess):
+      raise ValueError
+
+    self._arrays = None
+    self._arrays_count = None
+    self._ndim = None
+
+    self.arrays = arrays
+    self._preprocess = preprocess
+
+    minmax = np.array([[np.min(x), np.max(x)] for x in arrays])
+    self._in_range = (np.min(minmax[:, 0]), np.max(minmax[:, 1]))
+
+  @property
+  def arrays(self):
+    &#34;&#34;&#34;영상 원본&#34;&#34;&#34;
+    return self._arrays
+
+  @arrays.setter
+  def arrays(self, value):
+    ndim = value[0].ndim
+    if not all(x.ndim == ndim for x in value):
+      raise ValueError(&#39;영상의 채널 수가 동일하지 않음&#39;)
+
+    self._arrays = value
+    self._arrays_count = len(value)
+    self._ndim = ndim
+
+  @property
+  def count(self):
+    &#34;&#34;&#34;영상 개수&#34;&#34;&#34;
+    return self._arrays_count
+
+  @property
+  def ndim(self) -&gt; int:
+    &#34;&#34;&#34;영상의 차원&#34;&#34;&#34;
+    return self._ndim
+
+  def set_preprocess(self, fn: Callable):
+    self._preprocess = fn
+
+  def select_images(self, indices: Iterable):
+    &#34;&#34;&#34;
+    주어진 인덱스에 해당하는 영상 반환
+
+    Parameters
+    ----------
+    indices : Iterable
+        선택할 영상의 인덱스 목록
+    &#34;&#34;&#34;
+    self.arrays = [self.arrays[x] for x in indices]
+
+  def scale(self, image: np.ndarray, out_range) -&gt; np.ndarray:
+    &#34;&#34;&#34;
+    영상의 픽셀값 범위를 전체 영상 (`arrays`)의 범위로부터 `out_range` 범위로 조정.
+
+    Parameters
+    ----------
+    image : np.ndarray
+        대상 영상.
+    out_range
+        조정할 픽셀값 범위 (`skimage.exposure.rescale_intensity` 참조).
+
+    Returns
+    -------
+    np.ndarray
+    &#34;&#34;&#34;
+    res = rescale_intensity(image=image,
+                            in_range=self._in_range,
+                            out_range=out_range)
+    return res
+
+  def unscale(self, image: np.ndarray, out_range) -&gt; np.ndarray:
+    &#34;&#34;&#34;
+    `out_range` 범위로 픽셀값이 조정됐던 영상을 원 범위로 변환.
+
+    Parameters
+    ----------
+    image : np.ndarray
+        대상 영상.
+    out_range
+        과거 변경했던 영상 범위 (`skimage.exposure.rescale_intensity` 참조).
+
+    Returns
+    -------
+    np.ndarray
+    &#34;&#34;&#34;
+    res = rescale_intensity(image=image,
+                            in_range=out_range,
+                            out_range=self._in_range)
+    return res
+
+  def preprocess(self) -&gt; Tuple[List[np.ndarray], List[np.ndarray]]:
+    &#34;&#34;&#34;
+    전처리 함수를 적용한 영상과 대상 영역 마스크 반환
+
+    Returns
+    -------
+    Tuple[List[np.ndarray], List[np.ndarray]]
+        전처리를 적용한 영상 리스트, 마스크 리스트
+    &#34;&#34;&#34;
+    if self._preprocess is None:
+      images = self.arrays
+      masks = [None for _ in range(self.count)]
+    else:
+      prep = [self._preprocess(x.copy()) for x in self._arrays]
+      images = [x[0] for x in prep]
+      masks = [x[1] for x in prep]
+
+    if any(x.dtype != np.uint8 for x in images):
+      images = [self.scale(x, out_range=np.uint8) for x in images]
+
+    return images, masks
+
+
+class Stitcher:
+
+  def __init__(self,
+               mode=&#39;pano&#39;,
+               features_finder: Optional[cv.Feature2D] = None,
+               compose_scale=1.0,
+               work_scale=1.0,
+               warp_threshold=20.0,
+               try_cuda=False):
+    &#34;&#34;&#34;
+    파노라마 생성자
+
+    Parameters
+    ----------
+    mode : str, optional
+        파노라마 생성 모드. {`&#39;pano&#39;`, `&#39;scan&#39;`}. `&#39;pano&#39;`를 권장함.
+    features_finder : Optional[cv.Feature2D], optional
+        대상 영상의 특징점 추출 알고리즘. 지정하지 않는 경우 ORB 알고리즘 적용.
+    compose_scale : float, optional
+        구성될 영상의 원본 영상 대비 해상도 배율
+    work_scale : float, optional
+        특징 추출/정합을 위한 작업 영상의 원본 영상 대비 해상도 비율
+    warp_threshold : float, optional
+        정합되는 영상의 변형 한계. 변형되는 영상의 넓이 또는 폭이 원본 영상의
+        `warp_threshold`배 이상인 경우, 오류로 인해 과도한 변형이 적용되는 것으로
+        판단하고 해당 영상을 제외함.
+    try_cuda : bool, optional
+        NVIDIA CUDA 사용여부. 지원하는 OpenCV 버전을 설치해야 함.
+    &#34;&#34;&#34;
+    self._mode = None
+    self._estimator = None
+    self._features_finder = None
+    self._features_matcher = None
+    self._bundle_adjuster = None
+    self._refine_mask = None
+    self._warper = None
+    self._warper_type = None
+    self._blend_type = &#39;no&#39;
+    self._blend_strength = 0.05
+
+    self._compose_scale = compose_scale
+    self._work_scale = work_scale
+    self._compose_work_aspect = compose_scale / work_scale
+    self._warp_threshold = warp_threshold
+    self._try_cuda = try_cuda
+
+    self.features_finder = features_finder
+    self.set_mode(mode.lower())
+
+  @property
+  def estimator(self) -&gt; cv.detail_Estimator:
+    &#34;&#34;&#34;
+    정합/영상 변환을 위한 Camera parameter 추정 방법. `mode`에 따라 결정됨
+    (`set_mode` 참조).
+    &#34;&#34;&#34;
+    return self._estimator
+
+  @estimator.setter
+  def estimator(self, value: cv.detail_Estimator):
+    if not isinstance(value, cv.detail_Estimator):
+      raise TypeError
+
+    self._estimator = value
+
+  @property
+  def features_finder(self) -&gt; cv.Feature2D:
+    &#34;&#34;&#34;
+    영상의 특징점 추출 알고리즘 (지정하지 않는 경우 ORB 알고리즘 적용).
+    &#34;&#34;&#34;
+    if self._features_finder is None:
+      self._features_finder = cv.ORB_create()
+
+    return self._features_finder
+
+  @features_finder.setter
+  def features_finder(self, value: cv.Feature2D):
+    self._features_finder = value
+
+  @property
+  def features_matcher(self) -&gt; cv.detail_FeaturesMatcher:
+    &#34;&#34;&#34;추출한 영상 특징점의 matching 방법. `set_features_matcher`로 설정.&#34;&#34;&#34;
+    return self._features_matcher
+
+  @features_matcher.setter
+  def features_matcher(self, value: cv.detail_FeaturesMatcher):
+    self._features_matcher = value
+
+  @property
+  def bundle_adjuster(self) -&gt; cv.detail_BundleAdjusterBase:
+    &#34;&#34;&#34;카메라 위치 최적화를 위한 Bundle Adjust 알고리즘&#34;&#34;&#34;
+    return self._bundle_adjuster
+
+  @bundle_adjuster.setter
+  def bundle_adjuster(self, value: cv.detail_BundleAdjusterBase):
+    self._bundle_adjuster = value
+
+  @property
+  def refine_mask(self) -&gt; np.ndarray:
+    &#34;&#34;&#34;Bundle adjuster가 이용하는 Refinement mask&#34;&#34;&#34;
+    if self._refine_mask is None:
+      self.set_bundle_adjuster_refine_mask()
+
+    return self._refine_mask
+
+  @property
+  def warper(self) -&gt; Optional[cv.PyRotationWarper]:
+    &#34;&#34;&#34;
+    파노라마를 구성하는 영상의 변형 (warp) 방법.
+    3차원 공간에 위치한 영상을 평면에 투영하는 방법을 결정함.
+    `warper_type`을 통해 설정.
+    &#34;&#34;&#34;
+    return self._warper
+
+  @property
+  def warper_type(self) -&gt; str:
+    &#34;&#34;&#34;
+    `warper`의 종류. `available_warper_types` 중에서 선택 가능함.
+
+    `&#39;plane&#39;` -&gt; Rectilinear Projection.
+
+    `&#39;spherical&#39;` -&gt; Stereographic Projection.
+
+    References
+    ----------
+    [1] https://wiki.panotools.org/Stereographic_Projection
+    &#34;&#34;&#34;
+    return self._warper_type
+
+  @warper_type.setter
+  def warper_type(self, value: str):
+    if value not in _AVAILABLE_WARPER:
+      raise ValueError(value)
+
+    self._warper_type = value
+
+  @property
+  def blend_type(self) -&gt; str:
+    &#34;&#34;&#34;
+    파노라마를 구성하는 영상의 밝기 차이를 조정하기 위한 Blend 방법
+
+    {`&#39;multiband&#39;`, `&#39;feature&#39;`, `&#39;no&#39;`}
+    &#34;&#34;&#34;
+    return self._blend_type
+
+  @blend_type.setter
+  def blend_type(self, value: str):
+    value = value.lower()
+    if value not in (&#39;multiband&#39;, &#39;feather&#39;, &#39;no&#39;):
+      raise ValueError
+
+    self._blend_type = value
+
+  @property
+  def blend_strength(self) -&gt; float:
+    &#34;&#34;&#34;Blend 강도&#34;&#34;&#34;
+    return self._blend_strength
+
+  @blend_strength.setter
+  def blend_strength(self, value: float):
+    if not 0.0 &lt;= value &lt;= 1.0:
+      raise ValueError(
+          &#39;blender strength not in [0, 1], value: {}&#39;.format(value))
+
+    self._blend_strength = value
+
+  def set_features_matcher(self,
+                           matcher=&#39;affine&#39;,
+                           confidence: Optional[float] = None,
+                           range_width=-1):
+    &#34;&#34;&#34;
+    Parameters
+    ----------
+    matcher: str
+        matcher type
+    confidence: Optional[float], optional
+        Confidence for feature matching step.
+        The default is 0.3 for ORB and 0.65 for other feature types.
+    range_width
+        uses range_width to limit number of images to match with
+    &#34;&#34;&#34;
+    if confidence is None:
+      if (self._features_finder is None or
+          isinstance(self._features_finder, cv.ORB)):
+        confidence = 0.30
+      else:
+        confidence = 0.65
+
+    if matcher == &#39;affine&#39;:
+      matcher = cv.detail_AffineBestOf2NearestMatcher(
+          full_affine=False, try_use_gpu=self._try_cuda, match_conf=confidence)
+    elif range_width == -1:
+      matcher = cv.detail.BestOf2NearestMatcher_create(
+          try_use_gpu=self._try_cuda, match_conf=confidence)
+    else:
+      matcher = cv.detail_BestOf2NearestRangeMatcher(range_width=range_width,
+                                                     try_use_gpu=self._try_cuda,
+                                                     match_conf=confidence)
+    self.features_matcher = matcher
+
+  def set_bundle_adjuster_refine_mask(self,
+                                      fx=True,
+                                      skew=True,
+                                      ppx=True,
+                                      aspect=True,
+                                      ppy=True):
+    &#34;&#34;&#34;Set refinement mask for bundle adjustment&#34;&#34;&#34;
+    refine_mask = np.zeros([3, 3], dtype=np.uint8)
+
+    masks = [fx, skew, ppx, aspect, ppy]
+    rows = [0, 0, 0, 1, 1]
+    cols = [0, 1, 2, 1, 2]
+    for mask, row, col in zip(masks, rows, cols):
+      if mask:
+        refine_mask[row, col] = 1
+
+    self._refine_mask = refine_mask
+
+  def set_warper(self, scale):
+    self._warper = cv.PyRotationWarper(type=self.warper_type, scale=scale)
+
+  @staticmethod
+  def available_warper_types():
+    return _AVAILABLE_WARPER[:]
+
+  def set_mode(self, mode: str):
+    &#34;&#34;&#34;파노라마 생성 모드 ({`&#39;pano&#39;`, `&#39;scan&#39;`}) 및 모드별 적절한 알고리즘 설정.&#34;&#34;&#34;
+    if mode.startswith(&#39;pano&#39;):
+      self.estimator = cv.detail_HomographyBasedEstimator()
+      self.set_features_matcher(&#39;pano&#39;)
+      self.bundle_adjuster = cv.detail_BundleAdjusterRay()
+      self.warper_type = &#39;spherical&#39;
+    elif mode == &#39;scan&#39;:
+      self.estimator = cv.detail_AffineBasedEstimator()
+      self.set_features_matcher(&#39;affine&#39;)
+      self.bundle_adjuster = cv.detail_BundleAdjusterAffinePartial()
+      self.warper_type = &#39;affine&#39;
+    else:
+      raise ValueError(mode)
+
+    self._mode = mode
+
+  def find_features(self, image: np.ndarray, mask: np.ndarray):
+    &#34;&#34;&#34;
+    대상 영상의 특징점 추출
+
+    Parameters
+    ----------
+    image : np.ndarray
+        대상 영상
+    mask : np.ndarray
+        대상 영역의 마스크
+    &#34;&#34;&#34;
+    if self.features_finder is None:
+      raise ValueError(&#39;features_finder가 지정되지 않음&#39;)
+
+    features = cv.detail.computeImageFeatures2(
+        featuresFinder=self.features_finder, image=image, mask=mask)
+
+    return features
+
+  def stitch(
+      self,
+      images: StitchingImages,
+      masks: Optional[list] = None,
+      image_names: Optional[list] = None
+  ) -&gt; Tuple[np.ndarray, np.ndarray, str, np.ndarray]:
+    &#34;&#34;&#34;
+    영상의 특징점을 기반으로 정합 (stitch)하여 파노라마 영상 생성
+
+    Parameters
+    ----------
+    images : StitchingImages
+        대상 영상 목록.
+    masks : Optional[list], optional
+        대상 영상의 마스크 목록., by default None
+    image_names : Optional[list], optional
+        대상 영상의 이름 목록. 미지정 시 `Image n` 형식으로 지정.
+
+    Returns
+    -------
+    image : np.ndarray
+        파노라마 영상
+    mask : np.ndarray
+        파노라마 영역의 마스크
+    matches_graph : str
+        그래프 정보 (영상 간 연결 관계)
+    indices : np.ndarray
+        파노라마를 구성하는 영상의 index
+    &#34;&#34;&#34;
+    if image_names is None:
+      image_names = [&#39;Image {}&#39;.format(x + 1) for x in range(images.count)]
+
+    prep_images, prep_masks = images.preprocess()
+
+    if masks is None:
+      masks = prep_masks
+    else:
+      masks = [np.logical_and(m, p) for m, p in zip(masks, prep_masks)]
+
+    # camera matrix 계산
+    cameras, indices, matches_graph = self.calculate_camera_matrix(
+        images=prep_images, image_names=image_names)
+
+    if len(indices) != len(prep_images):
+      images.select_images(indices=[int(x) for x in indices.ravel()])
+      removed = set(range(len(prep_images))) - set(indices.ravel())
+      logger.debug(&#39;Stitching에 필요 없는 이미지 제거 (indices: {})&#39;, list(removed))
+
+    # warp
+    warped_images, warped_masks, rois = self.warp_images(images=images.arrays,
+                                                         masks=masks,
+                                                         cameras=cameras,
+                                                         names=image_names)
+
+    # stitch
+    scaled_images = [images.scale(x, out_range=&#39;int16&#39;) for x in warped_images]
+    stitched_image, stitched_mask = self.blend(images=scaled_images,
+                                               masks=warped_masks,
+                                               rois=rois)
+    stitched_image[np.logical_not(stitched_mask)] = np.median(stitched_image)
+
+    if images.ndim == 2:
+      # 원본 영상이 2차원인 경우 (열화상) 경우 첫 번째 채널만 추출
+      stitched_image = stitched_image[:, :, 0]
+
+    unscaled_image = images.unscale(image=stitched_image, out_range=&#39;int16&#39;)
+
+    return unscaled_image, stitched_mask, matches_graph, indices
+
+  def calculate_camera_matrix(
+      self,
+      images: List[np.ndarray],
+      image_names: List[str],
+  ) -&gt; Tuple[List[cv.detail_CameraParams], np.ndarray, str]:
+    &#34;&#34;&#34;
+    영상의 특성 추출/매칭을 통해 camera matrix 추정
+
+    Parameters
+    ----------
+    images : List[np.ndarray]
+        대상 영상 목록.
+    image_names : List[str]
+        대상 영상의 이름 목록.
+
+    Returns
+    -------
+    Tuple[List[cv.detail_CameraParams], np.ndarray, str]
+        각 영상의 camera parameter,
+        매칭된 영상의 index,
+        매칭 graph (영상 간 연결 관계) 정보
+    &#34;&#34;&#34;
+    logger.debug(&#39;Feature finding and matching&#39;)
+    # note: find_features에는 마스크 적용하지 않음
+    # (~mask에 0 대입한 영상으로 feature 탐색)
+    features = [self.find_features(image=image, mask=None) for image in images]
+
+    pairwise_matches = self.features_matcher.apply2(features=features)
+    self.features_matcher.collectGarbage()
+
+    indices: np.ndarray = cv.detail.leaveBiggestComponent(
+        features=features,
+        pairwise_matches=pairwise_matches,
+        conf_threshold=0.3)
+    logger.debug(&#39;Selected indices: {}&#39;, indices.ravel().tolist())
+    if len(indices) &lt; 2:
+      raise ValueError(&#39;Need more images (valid images are less than two)&#39;)
+
+    # indices = [x[0] for x in indices]
+    # images = [images[x] for x in indices]
+
+    logger.debug(&#39;Matches graph&#39;)
+    matches_graph: str = cv.detail.matchesGraphAsString(
+        pathes=image_names,
+        pairwise_matches=pairwise_matches,
+        conf_threshold=1.0)
+
+    logger.debug(&#39;Estimate camera&#39;)
+    estimate_status, cameras = self.estimator.apply(
+        features=features, pairwise_matches=pairwise_matches, cameras=None)
+    if not estimate_status:
+      raise ValueError(&#39;Homography estimation failed&#39;)
+
+    logger.debug(&#39;Bundle adjust&#39;)
+    self.bundle_adjuster.setConfThresh(1)
+    self.bundle_adjuster.setRefinementMask(self.refine_mask)
+
+    for cam in cameras:
+      cam.R = cam.R.astype(np.float32)
+
+    adjuster_status, cameras = self.bundle_adjuster.apply(
+        features=features, pairwise_matches=pairwise_matches, cameras=cameras)
+    if not adjuster_status:
+      logger.error(&#39;Camera parameters adjusting failed&#39;)
+
+    logger.debug(&#39;Wave correction&#39;)
+    Rs = [np.copy(camera.R) for camera in cameras]
+    try:
+      cv.detail.waveCorrect(Rs, cv.detail.WAVE_CORRECT_HORIZ)
+    except cv.error:
+      logger.debug(&#39;Wave correction failed&#39;)
+    else:
+      for camera, R in zip(cameras, Rs):
+        camera.R = R
+
+    return cameras, indices, matches_graph
+
+  def warp_image(
+      self,
+      image: np.ndarray,
+      mask: np.ndarray,
+      camera: cv.detail_CameraParams,
+  ) -&gt; Tuple[np.ndarray, np.ndarray, Tuple[int, int, int, int]]:
+    &#34;&#34;&#34;
+    Camera parameter에 따라 영상을 변형.
+
+    Parameters
+    ----------
+    image : np.ndarray
+        대상 영상.
+    mask : np.ndarray
+        대상 영상의 유의미한 영역 마스크.
+    camera : cv.detail_CameraParams
+        Camera parameter.
+
+    Returns
+    -------
+    Tuple[np.ndarray, np.ndarray, Tuple[int, int, int, int]]
+        변형된 영상, 변형된 영상의 마스크, Region of interest
+
+    Raises
+    ------
+    cv.error
+        너무 과도한 영상 변형 시 raise
+    &#34;&#34;&#34;
+    if self._compose_work_aspect != 1.0:
+      camera.focal *= self._compose_work_aspect
+      camera.ppx *= self._compose_work_aspect
+      camera.ppy *= self._compose_work_aspect
+
+    size = (int(image.shape[1] * self._compose_scale),
+            int(image.shape[0] * self._compose_scale))
+    kmat = camera.K().astype(np.float32)
+    rmat = camera.R
+    roi: Tuple[int, int, int, int] = self.warper.warpRoi(src_size=size,
+                                                         K=kmat,
+                                                         R=rmat)
+
+    warped_shape = (roi[2] - roi[0], roi[3] - roi[1])
+    if any(image.shape[x] * self._warp_threshold &lt; warped_shape[x]
+           for x in range(2)):
+      raise cv.error
+
+    if abs(self._compose_scale - 1) &gt; 0.1:
+      img = cv.resize(src=image,
+                      dsize=None,
+                      fx=self._compose_scale,
+                      fy=self._compose_scale,
+                      interpolation=cv.INTER_LINEAR_EXACT)
+      if mask is not None:
+        mask = cv.resize(src=mask,
+                         dsize=None,
+                         fx=self._compose_scale,
+                         fy=self._compose_scale,
+                         interpolation=cv.INTER_LINEAR_EXACT)
+    else:
+      img = image
+
+    # note: (roi[0], roi[1]) == corner
+    corner, warped_image = self.warper.warp(src=img,
+                                            K=kmat,
+                                            R=rmat,
+                                            interp_mode=cv.INTER_LINEAR,
+                                            border_mode=cv.BORDER_CONSTANT)
+
+    if mask is None:
+      mask = np.ones(shape=img.shape[:2], dtype=np.uint8)
+
+    _, warped_mask = self.warper.warp(src=mask,
+                                      K=kmat,
+                                      R=rmat,
+                                      interp_mode=cv.INTER_LINEAR,
+                                      border_mode=cv.BORDER_CONSTANT)
+
+    return warped_image, warped_mask, roi
+
+  def warp_images(
+      self,
+      images: List[np.ndarray],
+      masks: List[np.ndarray],
+      cameras: List[cv.detail_CameraParams],
+      names: Optional[List[str]] = None,
+  ) -&gt; Tuple[List[np.ndarray], List[np.ndarray], np.ndarray]:
+    &#34;&#34;&#34;
+    대상 영상들을 Camera parameter에 따라 변형. 과도한 변형이 일어나는 경우
+    오류로 판단하고 파노라마를 구성하는 영상에서 제외함.
+
+    Parameters
+    ----------
+    images : List[np.ndarray]
+        대상 영상 목록.
+    masks : List[np.ndarray]
+        대상 영상의 마스크 목록.
+    cameras : List[cv.detail_CameraParams]
+        대상 영상의 camera parameter 목록
+    names: Optional[List[str]]
+        대상 영상의 이름 목록
+
+    Returns
+    -------
+    Tuple[List[np.ndarray], List[np.ndarray], np.ndarray]
+        변형된 영상 목록, 마스크 목록, region of interest 목록
+    &#34;&#34;&#34;
+    scale = np.median([x.focal for x in cameras])
+    self.set_warper(scale=scale)
+
+    warped_images = []
+    warped_masks = []
+    rois = []
+    for idx, args in enumerate(zip(images, masks, cameras)):
+      try:
+        wi, wm, roi = self.warp_image(*args)
+      except cv.error:
+        msg = f&#39;과도한 변형으로 인해 {idx+1}번 영상을 제외합니다.&#39;
+        if names is not None:
+          msg += f&#39; ({names[idx]})&#39;
+
+        logger.error(msg)
+      else:
+        warped_images.append(wi)
+        warped_masks.append(wm)
+        rois.append(roi)
+
+    rois = np.array(rois)
+
+    return warped_images, warped_masks, rois
+
+  def blend(
+      self,
+      images: List[np.ndarray],
+      masks: List[np.ndarray],
+      rois: np.ndarray,
+  ) -&gt; Tuple[np.ndarray, np.ndarray]:
+    &#34;&#34;&#34;
+    파노라마를 구성하는 영상들의 밝기 조정
+
+    Parameters
+    ----------
+    images : List[np.ndarray]
+        대상 영상 목록. int16 형식만 입력 받음. 1채널인 경우 자동으로
+        3채널 영상으로 변환.
+    masks : List[np.ndarray]
+        대상 영역의 마스크 목록
+    rois : np.ndarray
+        Region of interest
+
+    Returns
+    -------
+    Tuple[np.ndarray, np.ndarray]
+        파노라마 영상, 파노라마 영역의 마스크
+    &#34;&#34;&#34;
+    corners = [(x[0].item(), x[1].item()) for x in rois]
+    dst_size = cv.detail.resultRoi(corners=corners, images=images)
+
+    # blend width 계산, blender type 결정
+    blend_width = (np.sqrt(dst_size[2] * dst_size[3]) * self._blend_strength)
+    blend_type = &#39;no&#39; if blend_width &lt; 1 else self.blend_type
+    logger.debug(&#39;Blend type: {}&#39;, blend_type.title())
+
+    # blender 생성
+    if blend_type == &#39;no&#39;:
+      blender = cv.detail.Blender_createDefault(type=cv.detail.Blender_NO,
+                                                try_gpu=self._try_cuda)
+    elif blend_type == &#39;multiband&#39;:
+      blender = cv.detail_MultiBandBlender()
+      bands_count = (np.log2(blend_width) - 1.0).astype(np.int)
+      blender.setNumBands(bands_count)
+    elif blend_type == &#39;feather&#39;:
+      blender = cv.detail_FeatherBlender()
+      blender.setSharpness(1.0 / blend_width)
+    else:
+      raise ValueError
+
+    # blend
+    blender.prepare(dst_size)
+    for image, mask, corner in zip(images, masks, corners):
+      if image.ndim == 2:
+        image = np.repeat(image[:, :, np.newaxis], repeats=3, axis=2)
+
+      blender.feed(img=image, mask=mask, tl=corner)
+
+    stitched_image, stitched_mask = blender.blend(dst=None, dst_mask=None)
+
+    return stitched_image, stitched_mask</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="src.stitch.stitcher.Stitcher"><code class="flex name class">
+<span>class <span class="ident">Stitcher</span></span>
+<span>(</span><span>mode='pano', features_finder: Union[cv2.Feature2D, NoneType] = None, compose_scale=1.0, work_scale=1.0, warp_threshold=20.0, try_cuda=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>파노라마 생성자</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>mode</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>파노라마 생성 모드. {<code>'pano'</code>, <code>'scan'</code>}. <code>'pano'</code>를 권장함.</dd>
+<dt><strong><code>features_finder</code></strong> :&ensp;<code>Optional[cv.Feature2D]</code>, optional</dt>
+<dd>대상 영상의 특징점 추출 알고리즘. 지정하지 않는 경우 ORB 알고리즘 적용.</dd>
+<dt><strong><code>compose_scale</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>구성될 영상의 원본 영상 대비 해상도 배율</dd>
+<dt><strong><code>work_scale</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>특징 추출/정합을 위한 작업 영상의 원본 영상 대비 해상도 비율</dd>
+<dt><strong><code>warp_threshold</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>정합되는 영상의 변형 한계. 변형되는 영상의 넓이 또는 폭이 원본 영상의
+<code>warp_threshold</code>배 이상인 경우, 오류로 인해 과도한 변형이 적용되는 것으로
+판단하고 해당 영상을 제외함.</dd>
+<dt><strong><code>try_cuda</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>NVIDIA CUDA 사용여부. 지원하는 OpenCV 버전을 설치해야 함.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Stitcher:
+
+  def __init__(self,
+               mode=&#39;pano&#39;,
+               features_finder: Optional[cv.Feature2D] = None,
+               compose_scale=1.0,
+               work_scale=1.0,
+               warp_threshold=20.0,
+               try_cuda=False):
+    &#34;&#34;&#34;
+    파노라마 생성자
+
+    Parameters
+    ----------
+    mode : str, optional
+        파노라마 생성 모드. {`&#39;pano&#39;`, `&#39;scan&#39;`}. `&#39;pano&#39;`를 권장함.
+    features_finder : Optional[cv.Feature2D], optional
+        대상 영상의 특징점 추출 알고리즘. 지정하지 않는 경우 ORB 알고리즘 적용.
+    compose_scale : float, optional
+        구성될 영상의 원본 영상 대비 해상도 배율
+    work_scale : float, optional
+        특징 추출/정합을 위한 작업 영상의 원본 영상 대비 해상도 비율
+    warp_threshold : float, optional
+        정합되는 영상의 변형 한계. 변형되는 영상의 넓이 또는 폭이 원본 영상의
+        `warp_threshold`배 이상인 경우, 오류로 인해 과도한 변형이 적용되는 것으로
+        판단하고 해당 영상을 제외함.
+    try_cuda : bool, optional
+        NVIDIA CUDA 사용여부. 지원하는 OpenCV 버전을 설치해야 함.
+    &#34;&#34;&#34;
+    self._mode = None
+    self._estimator = None
+    self._features_finder = None
+    self._features_matcher = None
+    self._bundle_adjuster = None
+    self._refine_mask = None
+    self._warper = None
+    self._warper_type = None
+    self._blend_type = &#39;no&#39;
+    self._blend_strength = 0.05
+
+    self._compose_scale = compose_scale
+    self._work_scale = work_scale
+    self._compose_work_aspect = compose_scale / work_scale
+    self._warp_threshold = warp_threshold
+    self._try_cuda = try_cuda
+
+    self.features_finder = features_finder
+    self.set_mode(mode.lower())
+
+  @property
+  def estimator(self) -&gt; cv.detail_Estimator:
+    &#34;&#34;&#34;
+    정합/영상 변환을 위한 Camera parameter 추정 방법. `mode`에 따라 결정됨
+    (`set_mode` 참조).
+    &#34;&#34;&#34;
+    return self._estimator
+
+  @estimator.setter
+  def estimator(self, value: cv.detail_Estimator):
+    if not isinstance(value, cv.detail_Estimator):
+      raise TypeError
+
+    self._estimator = value
+
+  @property
+  def features_finder(self) -&gt; cv.Feature2D:
+    &#34;&#34;&#34;
+    영상의 특징점 추출 알고리즘 (지정하지 않는 경우 ORB 알고리즘 적용).
+    &#34;&#34;&#34;
+    if self._features_finder is None:
+      self._features_finder = cv.ORB_create()
+
+    return self._features_finder
+
+  @features_finder.setter
+  def features_finder(self, value: cv.Feature2D):
+    self._features_finder = value
+
+  @property
+  def features_matcher(self) -&gt; cv.detail_FeaturesMatcher:
+    &#34;&#34;&#34;추출한 영상 특징점의 matching 방법. `set_features_matcher`로 설정.&#34;&#34;&#34;
+    return self._features_matcher
+
+  @features_matcher.setter
+  def features_matcher(self, value: cv.detail_FeaturesMatcher):
+    self._features_matcher = value
+
+  @property
+  def bundle_adjuster(self) -&gt; cv.detail_BundleAdjusterBase:
+    &#34;&#34;&#34;카메라 위치 최적화를 위한 Bundle Adjust 알고리즘&#34;&#34;&#34;
+    return self._bundle_adjuster
+
+  @bundle_adjuster.setter
+  def bundle_adjuster(self, value: cv.detail_BundleAdjusterBase):
+    self._bundle_adjuster = value
+
+  @property
+  def refine_mask(self) -&gt; np.ndarray:
+    &#34;&#34;&#34;Bundle adjuster가 이용하는 Refinement mask&#34;&#34;&#34;
+    if self._refine_mask is None:
+      self.set_bundle_adjuster_refine_mask()
+
+    return self._refine_mask
+
+  @property
+  def warper(self) -&gt; Optional[cv.PyRotationWarper]:
+    &#34;&#34;&#34;
+    파노라마를 구성하는 영상의 변형 (warp) 방법.
+    3차원 공간에 위치한 영상을 평면에 투영하는 방법을 결정함.
+    `warper_type`을 통해 설정.
+    &#34;&#34;&#34;
+    return self._warper
+
+  @property
+  def warper_type(self) -&gt; str:
+    &#34;&#34;&#34;
+    `warper`의 종류. `available_warper_types` 중에서 선택 가능함.
+
+    `&#39;plane&#39;` -&gt; Rectilinear Projection.
+
+    `&#39;spherical&#39;` -&gt; Stereographic Projection.
+
+    References
+    ----------
+    [1] https://wiki.panotools.org/Stereographic_Projection
+    &#34;&#34;&#34;
+    return self._warper_type
+
+  @warper_type.setter
+  def warper_type(self, value: str):
+    if value not in _AVAILABLE_WARPER:
+      raise ValueError(value)
+
+    self._warper_type = value
+
+  @property
+  def blend_type(self) -&gt; str:
+    &#34;&#34;&#34;
+    파노라마를 구성하는 영상의 밝기 차이를 조정하기 위한 Blend 방법
+
+    {`&#39;multiband&#39;`, `&#39;feature&#39;`, `&#39;no&#39;`}
+    &#34;&#34;&#34;
+    return self._blend_type
+
+  @blend_type.setter
+  def blend_type(self, value: str):
+    value = value.lower()
+    if value not in (&#39;multiband&#39;, &#39;feather&#39;, &#39;no&#39;):
+      raise ValueError
+
+    self._blend_type = value
+
+  @property
+  def blend_strength(self) -&gt; float:
+    &#34;&#34;&#34;Blend 강도&#34;&#34;&#34;
+    return self._blend_strength
+
+  @blend_strength.setter
+  def blend_strength(self, value: float):
+    if not 0.0 &lt;= value &lt;= 1.0:
+      raise ValueError(
+          &#39;blender strength not in [0, 1], value: {}&#39;.format(value))
+
+    self._blend_strength = value
+
+  def set_features_matcher(self,
+                           matcher=&#39;affine&#39;,
+                           confidence: Optional[float] = None,
+                           range_width=-1):
+    &#34;&#34;&#34;
+    Parameters
+    ----------
+    matcher: str
+        matcher type
+    confidence: Optional[float], optional
+        Confidence for feature matching step.
+        The default is 0.3 for ORB and 0.65 for other feature types.
+    range_width
+        uses range_width to limit number of images to match with
+    &#34;&#34;&#34;
+    if confidence is None:
+      if (self._features_finder is None or
+          isinstance(self._features_finder, cv.ORB)):
+        confidence = 0.30
+      else:
+        confidence = 0.65
+
+    if matcher == &#39;affine&#39;:
+      matcher = cv.detail_AffineBestOf2NearestMatcher(
+          full_affine=False, try_use_gpu=self._try_cuda, match_conf=confidence)
+    elif range_width == -1:
+      matcher = cv.detail.BestOf2NearestMatcher_create(
+          try_use_gpu=self._try_cuda, match_conf=confidence)
+    else:
+      matcher = cv.detail_BestOf2NearestRangeMatcher(range_width=range_width,
+                                                     try_use_gpu=self._try_cuda,
+                                                     match_conf=confidence)
+    self.features_matcher = matcher
+
+  def set_bundle_adjuster_refine_mask(self,
+                                      fx=True,
+                                      skew=True,
+                                      ppx=True,
+                                      aspect=True,
+                                      ppy=True):
+    &#34;&#34;&#34;Set refinement mask for bundle adjustment&#34;&#34;&#34;
+    refine_mask = np.zeros([3, 3], dtype=np.uint8)
+
+    masks = [fx, skew, ppx, aspect, ppy]
+    rows = [0, 0, 0, 1, 1]
+    cols = [0, 1, 2, 1, 2]
+    for mask, row, col in zip(masks, rows, cols):
+      if mask:
+        refine_mask[row, col] = 1
+
+    self._refine_mask = refine_mask
+
+  def set_warper(self, scale):
+    self._warper = cv.PyRotationWarper(type=self.warper_type, scale=scale)
+
+  @staticmethod
+  def available_warper_types():
+    return _AVAILABLE_WARPER[:]
+
+  def set_mode(self, mode: str):
+    &#34;&#34;&#34;파노라마 생성 모드 ({`&#39;pano&#39;`, `&#39;scan&#39;`}) 및 모드별 적절한 알고리즘 설정.&#34;&#34;&#34;
+    if mode.startswith(&#39;pano&#39;):
+      self.estimator = cv.detail_HomographyBasedEstimator()
+      self.set_features_matcher(&#39;pano&#39;)
+      self.bundle_adjuster = cv.detail_BundleAdjusterRay()
+      self.warper_type = &#39;spherical&#39;
+    elif mode == &#39;scan&#39;:
+      self.estimator = cv.detail_AffineBasedEstimator()
+      self.set_features_matcher(&#39;affine&#39;)
+      self.bundle_adjuster = cv.detail_BundleAdjusterAffinePartial()
+      self.warper_type = &#39;affine&#39;
+    else:
+      raise ValueError(mode)
+
+    self._mode = mode
+
+  def find_features(self, image: np.ndarray, mask: np.ndarray):
+    &#34;&#34;&#34;
+    대상 영상의 특징점 추출
+
+    Parameters
+    ----------
+    image : np.ndarray
+        대상 영상
+    mask : np.ndarray
+        대상 영역의 마스크
+    &#34;&#34;&#34;
+    if self.features_finder is None:
+      raise ValueError(&#39;features_finder가 지정되지 않음&#39;)
+
+    features = cv.detail.computeImageFeatures2(
+        featuresFinder=self.features_finder, image=image, mask=mask)
+
+    return features
+
+  def stitch(
+      self,
+      images: StitchingImages,
+      masks: Optional[list] = None,
+      image_names: Optional[list] = None
+  ) -&gt; Tuple[np.ndarray, np.ndarray, str, np.ndarray]:
+    &#34;&#34;&#34;
+    영상의 특징점을 기반으로 정합 (stitch)하여 파노라마 영상 생성
+
+    Parameters
+    ----------
+    images : StitchingImages
+        대상 영상 목록.
+    masks : Optional[list], optional
+        대상 영상의 마스크 목록., by default None
+    image_names : Optional[list], optional
+        대상 영상의 이름 목록. 미지정 시 `Image n` 형식으로 지정.
+
+    Returns
+    -------
+    image : np.ndarray
+        파노라마 영상
+    mask : np.ndarray
+        파노라마 영역의 마스크
+    matches_graph : str
+        그래프 정보 (영상 간 연결 관계)
+    indices : np.ndarray
+        파노라마를 구성하는 영상의 index
+    &#34;&#34;&#34;
+    if image_names is None:
+      image_names = [&#39;Image {}&#39;.format(x + 1) for x in range(images.count)]
+
+    prep_images, prep_masks = images.preprocess()
+
+    if masks is None:
+      masks = prep_masks
+    else:
+      masks = [np.logical_and(m, p) for m, p in zip(masks, prep_masks)]
+
+    # camera matrix 계산
+    cameras, indices, matches_graph = self.calculate_camera_matrix(
+        images=prep_images, image_names=image_names)
+
+    if len(indices) != len(prep_images):
+      images.select_images(indices=[int(x) for x in indices.ravel()])
+      removed = set(range(len(prep_images))) - set(indices.ravel())
+      logger.debug(&#39;Stitching에 필요 없는 이미지 제거 (indices: {})&#39;, list(removed))
+
+    # warp
+    warped_images, warped_masks, rois = self.warp_images(images=images.arrays,
+                                                         masks=masks,
+                                                         cameras=cameras,
+                                                         names=image_names)
+
+    # stitch
+    scaled_images = [images.scale(x, out_range=&#39;int16&#39;) for x in warped_images]
+    stitched_image, stitched_mask = self.blend(images=scaled_images,
+                                               masks=warped_masks,
+                                               rois=rois)
+    stitched_image[np.logical_not(stitched_mask)] = np.median(stitched_image)
+
+    if images.ndim == 2:
+      # 원본 영상이 2차원인 경우 (열화상) 경우 첫 번째 채널만 추출
+      stitched_image = stitched_image[:, :, 0]
+
+    unscaled_image = images.unscale(image=stitched_image, out_range=&#39;int16&#39;)
+
+    return unscaled_image, stitched_mask, matches_graph, indices
+
+  def calculate_camera_matrix(
+      self,
+      images: List[np.ndarray],
+      image_names: List[str],
+  ) -&gt; Tuple[List[cv.detail_CameraParams], np.ndarray, str]:
+    &#34;&#34;&#34;
+    영상의 특성 추출/매칭을 통해 camera matrix 추정
+
+    Parameters
+    ----------
+    images : List[np.ndarray]
+        대상 영상 목록.
+    image_names : List[str]
+        대상 영상의 이름 목록.
+
+    Returns
+    -------
+    Tuple[List[cv.detail_CameraParams], np.ndarray, str]
+        각 영상의 camera parameter,
+        매칭된 영상의 index,
+        매칭 graph (영상 간 연결 관계) 정보
+    &#34;&#34;&#34;
+    logger.debug(&#39;Feature finding and matching&#39;)
+    # note: find_features에는 마스크 적용하지 않음
+    # (~mask에 0 대입한 영상으로 feature 탐색)
+    features = [self.find_features(image=image, mask=None) for image in images]
+
+    pairwise_matches = self.features_matcher.apply2(features=features)
+    self.features_matcher.collectGarbage()
+
+    indices: np.ndarray = cv.detail.leaveBiggestComponent(
+        features=features,
+        pairwise_matches=pairwise_matches,
+        conf_threshold=0.3)
+    logger.debug(&#39;Selected indices: {}&#39;, indices.ravel().tolist())
+    if len(indices) &lt; 2:
+      raise ValueError(&#39;Need more images (valid images are less than two)&#39;)
+
+    # indices = [x[0] for x in indices]
+    # images = [images[x] for x in indices]
+
+    logger.debug(&#39;Matches graph&#39;)
+    matches_graph: str = cv.detail.matchesGraphAsString(
+        pathes=image_names,
+        pairwise_matches=pairwise_matches,
+        conf_threshold=1.0)
+
+    logger.debug(&#39;Estimate camera&#39;)
+    estimate_status, cameras = self.estimator.apply(
+        features=features, pairwise_matches=pairwise_matches, cameras=None)
+    if not estimate_status:
+      raise ValueError(&#39;Homography estimation failed&#39;)
+
+    logger.debug(&#39;Bundle adjust&#39;)
+    self.bundle_adjuster.setConfThresh(1)
+    self.bundle_adjuster.setRefinementMask(self.refine_mask)
+
+    for cam in cameras:
+      cam.R = cam.R.astype(np.float32)
+
+    adjuster_status, cameras = self.bundle_adjuster.apply(
+        features=features, pairwise_matches=pairwise_matches, cameras=cameras)
+    if not adjuster_status:
+      logger.error(&#39;Camera parameters adjusting failed&#39;)
+
+    logger.debug(&#39;Wave correction&#39;)
+    Rs = [np.copy(camera.R) for camera in cameras]
+    try:
+      cv.detail.waveCorrect(Rs, cv.detail.WAVE_CORRECT_HORIZ)
+    except cv.error:
+      logger.debug(&#39;Wave correction failed&#39;)
+    else:
+      for camera, R in zip(cameras, Rs):
+        camera.R = R
+
+    return cameras, indices, matches_graph
+
+  def warp_image(
+      self,
+      image: np.ndarray,
+      mask: np.ndarray,
+      camera: cv.detail_CameraParams,
+  ) -&gt; Tuple[np.ndarray, np.ndarray, Tuple[int, int, int, int]]:
+    &#34;&#34;&#34;
+    Camera parameter에 따라 영상을 변형.
+
+    Parameters
+    ----------
+    image : np.ndarray
+        대상 영상.
+    mask : np.ndarray
+        대상 영상의 유의미한 영역 마스크.
+    camera : cv.detail_CameraParams
+        Camera parameter.
+
+    Returns
+    -------
+    Tuple[np.ndarray, np.ndarray, Tuple[int, int, int, int]]
+        변형된 영상, 변형된 영상의 마스크, Region of interest
+
+    Raises
+    ------
+    cv.error
+        너무 과도한 영상 변형 시 raise
+    &#34;&#34;&#34;
+    if self._compose_work_aspect != 1.0:
+      camera.focal *= self._compose_work_aspect
+      camera.ppx *= self._compose_work_aspect
+      camera.ppy *= self._compose_work_aspect
+
+    size = (int(image.shape[1] * self._compose_scale),
+            int(image.shape[0] * self._compose_scale))
+    kmat = camera.K().astype(np.float32)
+    rmat = camera.R
+    roi: Tuple[int, int, int, int] = self.warper.warpRoi(src_size=size,
+                                                         K=kmat,
+                                                         R=rmat)
+
+    warped_shape = (roi[2] - roi[0], roi[3] - roi[1])
+    if any(image.shape[x] * self._warp_threshold &lt; warped_shape[x]
+           for x in range(2)):
+      raise cv.error
+
+    if abs(self._compose_scale - 1) &gt; 0.1:
+      img = cv.resize(src=image,
+                      dsize=None,
+                      fx=self._compose_scale,
+                      fy=self._compose_scale,
+                      interpolation=cv.INTER_LINEAR_EXACT)
+      if mask is not None:
+        mask = cv.resize(src=mask,
+                         dsize=None,
+                         fx=self._compose_scale,
+                         fy=self._compose_scale,
+                         interpolation=cv.INTER_LINEAR_EXACT)
+    else:
+      img = image
+
+    # note: (roi[0], roi[1]) == corner
+    corner, warped_image = self.warper.warp(src=img,
+                                            K=kmat,
+                                            R=rmat,
+                                            interp_mode=cv.INTER_LINEAR,
+                                            border_mode=cv.BORDER_CONSTANT)
+
+    if mask is None:
+      mask = np.ones(shape=img.shape[:2], dtype=np.uint8)
+
+    _, warped_mask = self.warper.warp(src=mask,
+                                      K=kmat,
+                                      R=rmat,
+                                      interp_mode=cv.INTER_LINEAR,
+                                      border_mode=cv.BORDER_CONSTANT)
+
+    return warped_image, warped_mask, roi
+
+  def warp_images(
+      self,
+      images: List[np.ndarray],
+      masks: List[np.ndarray],
+      cameras: List[cv.detail_CameraParams],
+      names: Optional[List[str]] = None,
+  ) -&gt; Tuple[List[np.ndarray], List[np.ndarray], np.ndarray]:
+    &#34;&#34;&#34;
+    대상 영상들을 Camera parameter에 따라 변형. 과도한 변형이 일어나는 경우
+    오류로 판단하고 파노라마를 구성하는 영상에서 제외함.
+
+    Parameters
+    ----------
+    images : List[np.ndarray]
+        대상 영상 목록.
+    masks : List[np.ndarray]
+        대상 영상의 마스크 목록.
+    cameras : List[cv.detail_CameraParams]
+        대상 영상의 camera parameter 목록
+    names: Optional[List[str]]
+        대상 영상의 이름 목록
+
+    Returns
+    -------
+    Tuple[List[np.ndarray], List[np.ndarray], np.ndarray]
+        변형된 영상 목록, 마스크 목록, region of interest 목록
+    &#34;&#34;&#34;
+    scale = np.median([x.focal for x in cameras])
+    self.set_warper(scale=scale)
+
+    warped_images = []
+    warped_masks = []
+    rois = []
+    for idx, args in enumerate(zip(images, masks, cameras)):
+      try:
+        wi, wm, roi = self.warp_image(*args)
+      except cv.error:
+        msg = f&#39;과도한 변형으로 인해 {idx+1}번 영상을 제외합니다.&#39;
+        if names is not None:
+          msg += f&#39; ({names[idx]})&#39;
+
+        logger.error(msg)
+      else:
+        warped_images.append(wi)
+        warped_masks.append(wm)
+        rois.append(roi)
+
+    rois = np.array(rois)
+
+    return warped_images, warped_masks, rois
+
+  def blend(
+      self,
+      images: List[np.ndarray],
+      masks: List[np.ndarray],
+      rois: np.ndarray,
+  ) -&gt; Tuple[np.ndarray, np.ndarray]:
+    &#34;&#34;&#34;
+    파노라마를 구성하는 영상들의 밝기 조정
+
+    Parameters
+    ----------
+    images : List[np.ndarray]
+        대상 영상 목록. int16 형식만 입력 받음. 1채널인 경우 자동으로
+        3채널 영상으로 변환.
+    masks : List[np.ndarray]
+        대상 영역의 마스크 목록
+    rois : np.ndarray
+        Region of interest
+
+    Returns
+    -------
+    Tuple[np.ndarray, np.ndarray]
+        파노라마 영상, 파노라마 영역의 마스크
+    &#34;&#34;&#34;
+    corners = [(x[0].item(), x[1].item()) for x in rois]
+    dst_size = cv.detail.resultRoi(corners=corners, images=images)
+
+    # blend width 계산, blender type 결정
+    blend_width = (np.sqrt(dst_size[2] * dst_size[3]) * self._blend_strength)
+    blend_type = &#39;no&#39; if blend_width &lt; 1 else self.blend_type
+    logger.debug(&#39;Blend type: {}&#39;, blend_type.title())
+
+    # blender 생성
+    if blend_type == &#39;no&#39;:
+      blender = cv.detail.Blender_createDefault(type=cv.detail.Blender_NO,
+                                                try_gpu=self._try_cuda)
+    elif blend_type == &#39;multiband&#39;:
+      blender = cv.detail_MultiBandBlender()
+      bands_count = (np.log2(blend_width) - 1.0).astype(np.int)
+      blender.setNumBands(bands_count)
+    elif blend_type == &#39;feather&#39;:
+      blender = cv.detail_FeatherBlender()
+      blender.setSharpness(1.0 / blend_width)
+    else:
+      raise ValueError
+
+    # blend
+    blender.prepare(dst_size)
+    for image, mask, corner in zip(images, masks, corners):
+      if image.ndim == 2:
+        image = np.repeat(image[:, :, np.newaxis], repeats=3, axis=2)
+
+      blender.feed(img=image, mask=mask, tl=corner)
+
+    stitched_image, stitched_mask = blender.blend(dst=None, dst_mask=None)
+
+    return stitched_image, stitched_mask</code></pre>
+</details>
+<h3>Static methods</h3>
+<dl>
+<dt id="src.stitch.stitcher.Stitcher.available_warper_types"><code class="name flex">
+<span>def <span class="ident">available_warper_types</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def available_warper_types():
+  return _AVAILABLE_WARPER[:]</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="src.stitch.stitcher.Stitcher.blend_strength"><code class="name">var <span class="ident">blend_strength</span> : float</code></dt>
+<dd>
+<div class="desc"><p>Blend 강도</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def blend_strength(self) -&gt; float:
+  &#34;&#34;&#34;Blend 강도&#34;&#34;&#34;
+  return self._blend_strength</code></pre>
+</details>
+</dd>
+<dt id="src.stitch.stitcher.Stitcher.blend_type"><code class="name">var <span class="ident">blend_type</span> : str</code></dt>
+<dd>
+<div class="desc"><p>파노라마를 구성하는 영상의 밝기 차이를 조정하기 위한 Blend 방법</p>
+<p>{<code>'multiband'</code>, <code>'feature'</code>, <code>'no'</code>}</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def blend_type(self) -&gt; str:
+  &#34;&#34;&#34;
+  파노라마를 구성하는 영상의 밝기 차이를 조정하기 위한 Blend 방법
+
+  {`&#39;multiband&#39;`, `&#39;feature&#39;`, `&#39;no&#39;`}
+  &#34;&#34;&#34;
+  return self._blend_type</code></pre>
+</details>
+</dd>
+<dt id="src.stitch.stitcher.Stitcher.bundle_adjuster"><code class="name">var <span class="ident">bundle_adjuster</span> : cv2.detail_BundleAdjusterBase</code></dt>
+<dd>
+<div class="desc"><p>카메라 위치 최적화를 위한 Bundle Adjust 알고리즘</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def bundle_adjuster(self) -&gt; cv.detail_BundleAdjusterBase:
+  &#34;&#34;&#34;카메라 위치 최적화를 위한 Bundle Adjust 알고리즘&#34;&#34;&#34;
+  return self._bundle_adjuster</code></pre>
+</details>
+</dd>
+<dt id="src.stitch.stitcher.Stitcher.estimator"><code class="name">var <span class="ident">estimator</span> : cv2.detail_Estimator</code></dt>
+<dd>
+<div class="desc"><p>정합/영상 변환을 위한 Camera parameter 추정 방법. <code>mode</code>에 따라 결정됨
+(<code>set_mode</code> 참조).</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def estimator(self) -&gt; cv.detail_Estimator:
+  &#34;&#34;&#34;
+  정합/영상 변환을 위한 Camera parameter 추정 방법. `mode`에 따라 결정됨
+  (`set_mode` 참조).
+  &#34;&#34;&#34;
+  return self._estimator</code></pre>
+</details>
+</dd>
+<dt id="src.stitch.stitcher.Stitcher.features_finder"><code class="name">var <span class="ident">features_finder</span> : cv2.Feature2D</code></dt>
+<dd>
+<div class="desc"><p>영상의 특징점 추출 알고리즘 (지정하지 않는 경우 ORB 알고리즘 적용).</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def features_finder(self) -&gt; cv.Feature2D:
+  &#34;&#34;&#34;
+  영상의 특징점 추출 알고리즘 (지정하지 않는 경우 ORB 알고리즘 적용).
+  &#34;&#34;&#34;
+  if self._features_finder is None:
+    self._features_finder = cv.ORB_create()
+
+  return self._features_finder</code></pre>
+</details>
+</dd>
+<dt id="src.stitch.stitcher.Stitcher.features_matcher"><code class="name">var <span class="ident">features_matcher</span> : cv2.detail_FeaturesMatcher</code></dt>
+<dd>
+<div class="desc"><p>추출한 영상 특징점의 matching 방법. <code>set_features_matcher</code>로 설정.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def features_matcher(self) -&gt; cv.detail_FeaturesMatcher:
+  &#34;&#34;&#34;추출한 영상 특징점의 matching 방법. `set_features_matcher`로 설정.&#34;&#34;&#34;
+  return self._features_matcher</code></pre>
+</details>
+</dd>
+<dt id="src.stitch.stitcher.Stitcher.refine_mask"><code class="name">var <span class="ident">refine_mask</span> : numpy.ndarray</code></dt>
+<dd>
+<div class="desc"><p>Bundle adjuster가 이용하는 Refinement mask</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def refine_mask(self) -&gt; np.ndarray:
+  &#34;&#34;&#34;Bundle adjuster가 이용하는 Refinement mask&#34;&#34;&#34;
+  if self._refine_mask is None:
+    self.set_bundle_adjuster_refine_mask()
+
+  return self._refine_mask</code></pre>
+</details>
+</dd>
+<dt id="src.stitch.stitcher.Stitcher.warper"><code class="name">var <span class="ident">warper</span> : Union[cv2.PyRotationWarper, NoneType]</code></dt>
+<dd>
+<div class="desc"><p>파노라마를 구성하는 영상의 변형 (warp) 방법.
+3차원 공간에 위치한 영상을 평면에 투영하는 방법을 결정함.
+<code>warper_type</code>을 통해 설정.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def warper(self) -&gt; Optional[cv.PyRotationWarper]:
+  &#34;&#34;&#34;
+  파노라마를 구성하는 영상의 변형 (warp) 방법.
+  3차원 공간에 위치한 영상을 평면에 투영하는 방법을 결정함.
+  `warper_type`을 통해 설정.
+  &#34;&#34;&#34;
+  return self._warper</code></pre>
+</details>
+</dd>
+<dt id="src.stitch.stitcher.Stitcher.warper_type"><code class="name">var <span class="ident">warper_type</span> : str</code></dt>
+<dd>
+<div class="desc"><p><code>warper</code>의 종류. <code>available_warper_types</code> 중에서 선택 가능함.</p>
+<p><code>'plane'</code> -&gt; Rectilinear Projection.</p>
+<p><code>'spherical'</code> -&gt; Stereographic Projection.</p>
+<h2 id="references">References</h2>
+<p>[1] <a href="https://wiki.panotools.org/Stereographic_Projection">https://wiki.panotools.org/Stereographic_Projection</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def warper_type(self) -&gt; str:
+  &#34;&#34;&#34;
+  `warper`의 종류. `available_warper_types` 중에서 선택 가능함.
+
+  `&#39;plane&#39;` -&gt; Rectilinear Projection.
+
+  `&#39;spherical&#39;` -&gt; Stereographic Projection.
+
+  References
+  ----------
+  [1] https://wiki.panotools.org/Stereographic_Projection
+  &#34;&#34;&#34;
+  return self._warper_type</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="src.stitch.stitcher.Stitcher.blend"><code class="name flex">
+<span>def <span class="ident">blend</span></span>(<span>self, images: List[numpy.ndarray], masks: List[numpy.ndarray], rois: numpy.ndarray) ‑> Tuple[numpy.ndarray, numpy.ndarray]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>파노라마를 구성하는 영상들의 밝기 조정</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>images</code></strong> :&ensp;<code>List[np.ndarray]</code></dt>
+<dd>대상 영상 목록. int16 형식만 입력 받음. 1채널인 경우 자동으로
+3채널 영상으로 변환.</dd>
+<dt><strong><code>masks</code></strong> :&ensp;<code>List[np.ndarray]</code></dt>
+<dd>대상 영역의 마스크 목록</dd>
+<dt><strong><code>rois</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>Region of interest</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Tuple[np.ndarray, np.ndarray]</code></dt>
+<dd>파노라마 영상, 파노라마 영역의 마스크</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def blend(
+    self,
+    images: List[np.ndarray],
+    masks: List[np.ndarray],
+    rois: np.ndarray,
+) -&gt; Tuple[np.ndarray, np.ndarray]:
+  &#34;&#34;&#34;
+  파노라마를 구성하는 영상들의 밝기 조정
+
+  Parameters
+  ----------
+  images : List[np.ndarray]
+      대상 영상 목록. int16 형식만 입력 받음. 1채널인 경우 자동으로
+      3채널 영상으로 변환.
+  masks : List[np.ndarray]
+      대상 영역의 마스크 목록
+  rois : np.ndarray
+      Region of interest
+
+  Returns
+  -------
+  Tuple[np.ndarray, np.ndarray]
+      파노라마 영상, 파노라마 영역의 마스크
+  &#34;&#34;&#34;
+  corners = [(x[0].item(), x[1].item()) for x in rois]
+  dst_size = cv.detail.resultRoi(corners=corners, images=images)
+
+  # blend width 계산, blender type 결정
+  blend_width = (np.sqrt(dst_size[2] * dst_size[3]) * self._blend_strength)
+  blend_type = &#39;no&#39; if blend_width &lt; 1 else self.blend_type
+  logger.debug(&#39;Blend type: {}&#39;, blend_type.title())
+
+  # blender 생성
+  if blend_type == &#39;no&#39;:
+    blender = cv.detail.Blender_createDefault(type=cv.detail.Blender_NO,
+                                              try_gpu=self._try_cuda)
+  elif blend_type == &#39;multiband&#39;:
+    blender = cv.detail_MultiBandBlender()
+    bands_count = (np.log2(blend_width) - 1.0).astype(np.int)
+    blender.setNumBands(bands_count)
+  elif blend_type == &#39;feather&#39;:
+    blender = cv.detail_FeatherBlender()
+    blender.setSharpness(1.0 / blend_width)
+  else:
+    raise ValueError
+
+  # blend
+  blender.prepare(dst_size)
+  for image, mask, corner in zip(images, masks, corners):
+    if image.ndim == 2:
+      image = np.repeat(image[:, :, np.newaxis], repeats=3, axis=2)
+
+    blender.feed(img=image, mask=mask, tl=corner)
+
+  stitched_image, stitched_mask = blender.blend(dst=None, dst_mask=None)
+
+  return stitched_image, stitched_mask</code></pre>
+</details>
+</dd>
+<dt id="src.stitch.stitcher.Stitcher.calculate_camera_matrix"><code class="name flex">
+<span>def <span class="ident">calculate_camera_matrix</span></span>(<span>self, images: List[numpy.ndarray], image_names: List[str]) ‑> Tuple[List[cv2.detail_CameraParams], numpy.ndarray, str]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>영상의 특성 추출/매칭을 통해 camera matrix 추정</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>images</code></strong> :&ensp;<code>List[np.ndarray]</code></dt>
+<dd>대상 영상 목록.</dd>
+<dt><strong><code>image_names</code></strong> :&ensp;<code>List[str]</code></dt>
+<dd>대상 영상의 이름 목록.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Tuple[List[cv.detail_CameraParams], np.ndarray, str]</code></dt>
+<dd>각 영상의 camera parameter,
+매칭된 영상의 index,
+매칭 graph (영상 간 연결 관계) 정보</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def calculate_camera_matrix(
+    self,
+    images: List[np.ndarray],
+    image_names: List[str],
+) -&gt; Tuple[List[cv.detail_CameraParams], np.ndarray, str]:
+  &#34;&#34;&#34;
+  영상의 특성 추출/매칭을 통해 camera matrix 추정
+
+  Parameters
+  ----------
+  images : List[np.ndarray]
+      대상 영상 목록.
+  image_names : List[str]
+      대상 영상의 이름 목록.
+
+  Returns
+  -------
+  Tuple[List[cv.detail_CameraParams], np.ndarray, str]
+      각 영상의 camera parameter,
+      매칭된 영상의 index,
+      매칭 graph (영상 간 연결 관계) 정보
+  &#34;&#34;&#34;
+  logger.debug(&#39;Feature finding and matching&#39;)
+  # note: find_features에는 마스크 적용하지 않음
+  # (~mask에 0 대입한 영상으로 feature 탐색)
+  features = [self.find_features(image=image, mask=None) for image in images]
+
+  pairwise_matches = self.features_matcher.apply2(features=features)
+  self.features_matcher.collectGarbage()
+
+  indices: np.ndarray = cv.detail.leaveBiggestComponent(
+      features=features,
+      pairwise_matches=pairwise_matches,
+      conf_threshold=0.3)
+  logger.debug(&#39;Selected indices: {}&#39;, indices.ravel().tolist())
+  if len(indices) &lt; 2:
+    raise ValueError(&#39;Need more images (valid images are less than two)&#39;)
+
+  # indices = [x[0] for x in indices]
+  # images = [images[x] for x in indices]
+
+  logger.debug(&#39;Matches graph&#39;)
+  matches_graph: str = cv.detail.matchesGraphAsString(
+      pathes=image_names,
+      pairwise_matches=pairwise_matches,
+      conf_threshold=1.0)
+
+  logger.debug(&#39;Estimate camera&#39;)
+  estimate_status, cameras = self.estimator.apply(
+      features=features, pairwise_matches=pairwise_matches, cameras=None)
+  if not estimate_status:
+    raise ValueError(&#39;Homography estimation failed&#39;)
+
+  logger.debug(&#39;Bundle adjust&#39;)
+  self.bundle_adjuster.setConfThresh(1)
+  self.bundle_adjuster.setRefinementMask(self.refine_mask)
+
+  for cam in cameras:
+    cam.R = cam.R.astype(np.float32)
+
+  adjuster_status, cameras = self.bundle_adjuster.apply(
+      features=features, pairwise_matches=pairwise_matches, cameras=cameras)
+  if not adjuster_status:
+    logger.error(&#39;Camera parameters adjusting failed&#39;)
+
+  logger.debug(&#39;Wave correction&#39;)
+  Rs = [np.copy(camera.R) for camera in cameras]
+  try:
+    cv.detail.waveCorrect(Rs, cv.detail.WAVE_CORRECT_HORIZ)
+  except cv.error:
+    logger.debug(&#39;Wave correction failed&#39;)
+  else:
+    for camera, R in zip(cameras, Rs):
+      camera.R = R
+
+  return cameras, indices, matches_graph</code></pre>
+</details>
+</dd>
+<dt id="src.stitch.stitcher.Stitcher.find_features"><code class="name flex">
+<span>def <span class="ident">find_features</span></span>(<span>self, image: numpy.ndarray, mask: numpy.ndarray)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>대상 영상의 특징점 추출</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>image</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>대상 영상</dd>
+<dt><strong><code>mask</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>대상 영역의 마스크</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def find_features(self, image: np.ndarray, mask: np.ndarray):
+  &#34;&#34;&#34;
+  대상 영상의 특징점 추출
+
+  Parameters
+  ----------
+  image : np.ndarray
+      대상 영상
+  mask : np.ndarray
+      대상 영역의 마스크
+  &#34;&#34;&#34;
+  if self.features_finder is None:
+    raise ValueError(&#39;features_finder가 지정되지 않음&#39;)
+
+  features = cv.detail.computeImageFeatures2(
+      featuresFinder=self.features_finder, image=image, mask=mask)
+
+  return features</code></pre>
+</details>
+</dd>
+<dt id="src.stitch.stitcher.Stitcher.set_bundle_adjuster_refine_mask"><code class="name flex">
+<span>def <span class="ident">set_bundle_adjuster_refine_mask</span></span>(<span>self, fx=True, skew=True, ppx=True, aspect=True, ppy=True)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Set refinement mask for bundle adjustment</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_bundle_adjuster_refine_mask(self,
+                                    fx=True,
+                                    skew=True,
+                                    ppx=True,
+                                    aspect=True,
+                                    ppy=True):
+  &#34;&#34;&#34;Set refinement mask for bundle adjustment&#34;&#34;&#34;
+  refine_mask = np.zeros([3, 3], dtype=np.uint8)
+
+  masks = [fx, skew, ppx, aspect, ppy]
+  rows = [0, 0, 0, 1, 1]
+  cols = [0, 1, 2, 1, 2]
+  for mask, row, col in zip(masks, rows, cols):
+    if mask:
+      refine_mask[row, col] = 1
+
+  self._refine_mask = refine_mask</code></pre>
+</details>
+</dd>
+<dt id="src.stitch.stitcher.Stitcher.set_features_matcher"><code class="name flex">
+<span>def <span class="ident">set_features_matcher</span></span>(<span>self, matcher='affine', confidence: Union[float, NoneType] = None, range_width=-1)</span>
+</code></dt>
+<dd>
+<div class="desc"><h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>matcher</code></strong> :&ensp;<code>str</code></dt>
+<dd>matcher type</dd>
+<dt><strong><code>confidence</code></strong> :&ensp;<code>Optional[float]</code>, optional</dt>
+<dd>Confidence for feature matching step.
+The default is 0.3 for ORB and 0.65 for other feature types.</dd>
+<dt><strong><code>range_width</code></strong></dt>
+<dd>uses range_width to limit number of images to match with</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_features_matcher(self,
+                         matcher=&#39;affine&#39;,
+                         confidence: Optional[float] = None,
+                         range_width=-1):
+  &#34;&#34;&#34;
+  Parameters
+  ----------
+  matcher: str
+      matcher type
+  confidence: Optional[float], optional
+      Confidence for feature matching step.
+      The default is 0.3 for ORB and 0.65 for other feature types.
+  range_width
+      uses range_width to limit number of images to match with
+  &#34;&#34;&#34;
+  if confidence is None:
+    if (self._features_finder is None or
+        isinstance(self._features_finder, cv.ORB)):
+      confidence = 0.30
+    else:
+      confidence = 0.65
+
+  if matcher == &#39;affine&#39;:
+    matcher = cv.detail_AffineBestOf2NearestMatcher(
+        full_affine=False, try_use_gpu=self._try_cuda, match_conf=confidence)
+  elif range_width == -1:
+    matcher = cv.detail.BestOf2NearestMatcher_create(
+        try_use_gpu=self._try_cuda, match_conf=confidence)
+  else:
+    matcher = cv.detail_BestOf2NearestRangeMatcher(range_width=range_width,
+                                                   try_use_gpu=self._try_cuda,
+                                                   match_conf=confidence)
+  self.features_matcher = matcher</code></pre>
+</details>
+</dd>
+<dt id="src.stitch.stitcher.Stitcher.set_mode"><code class="name flex">
+<span>def <span class="ident">set_mode</span></span>(<span>self, mode: str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>파노라마 생성 모드 ({<code>'pano'</code>, <code>'scan'</code>}) 및 모드별 적절한 알고리즘 설정.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_mode(self, mode: str):
+  &#34;&#34;&#34;파노라마 생성 모드 ({`&#39;pano&#39;`, `&#39;scan&#39;`}) 및 모드별 적절한 알고리즘 설정.&#34;&#34;&#34;
+  if mode.startswith(&#39;pano&#39;):
+    self.estimator = cv.detail_HomographyBasedEstimator()
+    self.set_features_matcher(&#39;pano&#39;)
+    self.bundle_adjuster = cv.detail_BundleAdjusterRay()
+    self.warper_type = &#39;spherical&#39;
+  elif mode == &#39;scan&#39;:
+    self.estimator = cv.detail_AffineBasedEstimator()
+    self.set_features_matcher(&#39;affine&#39;)
+    self.bundle_adjuster = cv.detail_BundleAdjusterAffinePartial()
+    self.warper_type = &#39;affine&#39;
+  else:
+    raise ValueError(mode)
+
+  self._mode = mode</code></pre>
+</details>
+</dd>
+<dt id="src.stitch.stitcher.Stitcher.set_warper"><code class="name flex">
+<span>def <span class="ident">set_warper</span></span>(<span>self, scale)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_warper(self, scale):
+  self._warper = cv.PyRotationWarper(type=self.warper_type, scale=scale)</code></pre>
+</details>
+</dd>
+<dt id="src.stitch.stitcher.Stitcher.stitch"><code class="name flex">
+<span>def <span class="ident">stitch</span></span>(<span>self, images: <a title="src.stitch.stitcher.StitchingImages" href="#src.stitch.stitcher.StitchingImages">StitchingImages</a>, masks: Union[list, NoneType] = None, image_names: Union[list, NoneType] = None) ‑> Tuple[numpy.ndarray, numpy.ndarray, str, numpy.ndarray]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>영상의 특징점을 기반으로 정합 (stitch)하여 파노라마 영상 생성</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>images</code></strong> :&ensp;<code><a title="src.stitch.stitcher.StitchingImages" href="#src.stitch.stitcher.StitchingImages">StitchingImages</a></code></dt>
+<dd>대상 영상 목록.</dd>
+<dt><strong><code>masks</code></strong> :&ensp;<code>Optional[list]</code>, optional</dt>
+<dd>대상 영상의 마스크 목록., by default None</dd>
+<dt><strong><code>image_names</code></strong> :&ensp;<code>Optional[list]</code>, optional</dt>
+<dd>대상 영상의 이름 목록. 미지정 시 <code>Image n</code> 형식으로 지정.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>image</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>파노라마 영상</dd>
+<dt><strong><code>mask</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>파노라마 영역의 마스크</dd>
+<dt><strong><code>matches_graph</code></strong> :&ensp;<code>str</code></dt>
+<dd>그래프 정보 (영상 간 연결 관계)</dd>
+<dt><strong><code>indices</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>파노라마를 구성하는 영상의 index</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def stitch(
+    self,
+    images: StitchingImages,
+    masks: Optional[list] = None,
+    image_names: Optional[list] = None
+) -&gt; Tuple[np.ndarray, np.ndarray, str, np.ndarray]:
+  &#34;&#34;&#34;
+  영상의 특징점을 기반으로 정합 (stitch)하여 파노라마 영상 생성
+
+  Parameters
+  ----------
+  images : StitchingImages
+      대상 영상 목록.
+  masks : Optional[list], optional
+      대상 영상의 마스크 목록., by default None
+  image_names : Optional[list], optional
+      대상 영상의 이름 목록. 미지정 시 `Image n` 형식으로 지정.
+
+  Returns
+  -------
+  image : np.ndarray
+      파노라마 영상
+  mask : np.ndarray
+      파노라마 영역의 마스크
+  matches_graph : str
+      그래프 정보 (영상 간 연결 관계)
+  indices : np.ndarray
+      파노라마를 구성하는 영상의 index
+  &#34;&#34;&#34;
+  if image_names is None:
+    image_names = [&#39;Image {}&#39;.format(x + 1) for x in range(images.count)]
+
+  prep_images, prep_masks = images.preprocess()
+
+  if masks is None:
+    masks = prep_masks
+  else:
+    masks = [np.logical_and(m, p) for m, p in zip(masks, prep_masks)]
+
+  # camera matrix 계산
+  cameras, indices, matches_graph = self.calculate_camera_matrix(
+      images=prep_images, image_names=image_names)
+
+  if len(indices) != len(prep_images):
+    images.select_images(indices=[int(x) for x in indices.ravel()])
+    removed = set(range(len(prep_images))) - set(indices.ravel())
+    logger.debug(&#39;Stitching에 필요 없는 이미지 제거 (indices: {})&#39;, list(removed))
+
+  # warp
+  warped_images, warped_masks, rois = self.warp_images(images=images.arrays,
+                                                       masks=masks,
+                                                       cameras=cameras,
+                                                       names=image_names)
+
+  # stitch
+  scaled_images = [images.scale(x, out_range=&#39;int16&#39;) for x in warped_images]
+  stitched_image, stitched_mask = self.blend(images=scaled_images,
+                                             masks=warped_masks,
+                                             rois=rois)
+  stitched_image[np.logical_not(stitched_mask)] = np.median(stitched_image)
+
+  if images.ndim == 2:
+    # 원본 영상이 2차원인 경우 (열화상) 경우 첫 번째 채널만 추출
+    stitched_image = stitched_image[:, :, 0]
+
+  unscaled_image = images.unscale(image=stitched_image, out_range=&#39;int16&#39;)
+
+  return unscaled_image, stitched_mask, matches_graph, indices</code></pre>
+</details>
+</dd>
+<dt id="src.stitch.stitcher.Stitcher.warp_image"><code class="name flex">
+<span>def <span class="ident">warp_image</span></span>(<span>self, image: numpy.ndarray, mask: numpy.ndarray, camera: cv2.detail_CameraParams) ‑> Tuple[numpy.ndarray, numpy.ndarray, Tuple[int, int, int, int]]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Camera parameter에 따라 영상을 변형.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>image</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>대상 영상.</dd>
+<dt><strong><code>mask</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>대상 영상의 유의미한 영역 마스크.</dd>
+<dt><strong><code>camera</code></strong> :&ensp;<code>cv.detail_CameraParams</code></dt>
+<dd>Camera parameter.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Tuple[np.ndarray, np.ndarray, Tuple[int, int, int, int]]</code></dt>
+<dd>변형된 영상, 변형된 영상의 마스크, Region of interest</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>cv.error</code></dt>
+<dd>너무 과도한 영상 변형 시 raise</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def warp_image(
+    self,
+    image: np.ndarray,
+    mask: np.ndarray,
+    camera: cv.detail_CameraParams,
+) -&gt; Tuple[np.ndarray, np.ndarray, Tuple[int, int, int, int]]:
+  &#34;&#34;&#34;
+  Camera parameter에 따라 영상을 변형.
+
+  Parameters
+  ----------
+  image : np.ndarray
+      대상 영상.
+  mask : np.ndarray
+      대상 영상의 유의미한 영역 마스크.
+  camera : cv.detail_CameraParams
+      Camera parameter.
+
+  Returns
+  -------
+  Tuple[np.ndarray, np.ndarray, Tuple[int, int, int, int]]
+      변형된 영상, 변형된 영상의 마스크, Region of interest
+
+  Raises
+  ------
+  cv.error
+      너무 과도한 영상 변형 시 raise
+  &#34;&#34;&#34;
+  if self._compose_work_aspect != 1.0:
+    camera.focal *= self._compose_work_aspect
+    camera.ppx *= self._compose_work_aspect
+    camera.ppy *= self._compose_work_aspect
+
+  size = (int(image.shape[1] * self._compose_scale),
+          int(image.shape[0] * self._compose_scale))
+  kmat = camera.K().astype(np.float32)
+  rmat = camera.R
+  roi: Tuple[int, int, int, int] = self.warper.warpRoi(src_size=size,
+                                                       K=kmat,
+                                                       R=rmat)
+
+  warped_shape = (roi[2] - roi[0], roi[3] - roi[1])
+  if any(image.shape[x] * self._warp_threshold &lt; warped_shape[x]
+         for x in range(2)):
+    raise cv.error
+
+  if abs(self._compose_scale - 1) &gt; 0.1:
+    img = cv.resize(src=image,
+                    dsize=None,
+                    fx=self._compose_scale,
+                    fy=self._compose_scale,
+                    interpolation=cv.INTER_LINEAR_EXACT)
+    if mask is not None:
+      mask = cv.resize(src=mask,
+                       dsize=None,
+                       fx=self._compose_scale,
+                       fy=self._compose_scale,
+                       interpolation=cv.INTER_LINEAR_EXACT)
+  else:
+    img = image
+
+  # note: (roi[0], roi[1]) == corner
+  corner, warped_image = self.warper.warp(src=img,
+                                          K=kmat,
+                                          R=rmat,
+                                          interp_mode=cv.INTER_LINEAR,
+                                          border_mode=cv.BORDER_CONSTANT)
+
+  if mask is None:
+    mask = np.ones(shape=img.shape[:2], dtype=np.uint8)
+
+  _, warped_mask = self.warper.warp(src=mask,
+                                    K=kmat,
+                                    R=rmat,
+                                    interp_mode=cv.INTER_LINEAR,
+                                    border_mode=cv.BORDER_CONSTANT)
+
+  return warped_image, warped_mask, roi</code></pre>
+</details>
+</dd>
+<dt id="src.stitch.stitcher.Stitcher.warp_images"><code class="name flex">
+<span>def <span class="ident">warp_images</span></span>(<span>self, images: List[numpy.ndarray], masks: List[numpy.ndarray], cameras: List[cv2.detail_CameraParams], names: Union[List[str], NoneType] = None) ‑> Tuple[List[numpy.ndarray], List[numpy.ndarray], numpy.ndarray]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>대상 영상들을 Camera parameter에 따라 변형. 과도한 변형이 일어나는 경우
+오류로 판단하고 파노라마를 구성하는 영상에서 제외함.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>images</code></strong> :&ensp;<code>List[np.ndarray]</code></dt>
+<dd>대상 영상 목록.</dd>
+<dt><strong><code>masks</code></strong> :&ensp;<code>List[np.ndarray]</code></dt>
+<dd>대상 영상의 마스크 목록.</dd>
+<dt><strong><code>cameras</code></strong> :&ensp;<code>List[cv.detail_CameraParams]</code></dt>
+<dd>대상 영상의 camera parameter 목록</dd>
+<dt><strong><code>names</code></strong> :&ensp;<code>Optional[List[str]]</code></dt>
+<dd>대상 영상의 이름 목록</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Tuple[List[np.ndarray], List[np.ndarray], np.ndarray]</code></dt>
+<dd>변형된 영상 목록, 마스크 목록, region of interest 목록</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def warp_images(
+    self,
+    images: List[np.ndarray],
+    masks: List[np.ndarray],
+    cameras: List[cv.detail_CameraParams],
+    names: Optional[List[str]] = None,
+) -&gt; Tuple[List[np.ndarray], List[np.ndarray], np.ndarray]:
+  &#34;&#34;&#34;
+  대상 영상들을 Camera parameter에 따라 변형. 과도한 변형이 일어나는 경우
+  오류로 판단하고 파노라마를 구성하는 영상에서 제외함.
+
+  Parameters
+  ----------
+  images : List[np.ndarray]
+      대상 영상 목록.
+  masks : List[np.ndarray]
+      대상 영상의 마스크 목록.
+  cameras : List[cv.detail_CameraParams]
+      대상 영상의 camera parameter 목록
+  names: Optional[List[str]]
+      대상 영상의 이름 목록
+
+  Returns
+  -------
+  Tuple[List[np.ndarray], List[np.ndarray], np.ndarray]
+      변형된 영상 목록, 마스크 목록, region of interest 목록
+  &#34;&#34;&#34;
+  scale = np.median([x.focal for x in cameras])
+  self.set_warper(scale=scale)
+
+  warped_images = []
+  warped_masks = []
+  rois = []
+  for idx, args in enumerate(zip(images, masks, cameras)):
+    try:
+      wi, wm, roi = self.warp_image(*args)
+    except cv.error:
+      msg = f&#39;과도한 변형으로 인해 {idx+1}번 영상을 제외합니다.&#39;
+      if names is not None:
+        msg += f&#39; ({names[idx]})&#39;
+
+      logger.error(msg)
+    else:
+      warped_images.append(wi)
+      warped_masks.append(wm)
+      rois.append(roi)
+
+  rois = np.array(rois)
+
+  return warped_images, warped_masks, rois</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="src.stitch.stitcher.StitchingImages"><code class="flex name class">
+<span>class <span class="ident">StitchingImages</span></span>
+<span>(</span><span>arrays: list, preprocess: Union[Callable, NoneType] = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Stitching 대상 이미지</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>arrays</code></strong> :&ensp;<code>list</code> of <code>np.ndarray</code></dt>
+<dd>원본 이미지. dtype 상관 없음.</dd>
+<dt><strong><code>preprocess</code></strong> :&ensp;<code>callable</code>, optional</dt>
+<dd>Preprocessing function, by default None
+(image, mask)를 반환해야 함</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>preprocess가 None이나 callable이 아닌 경우</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class StitchingImages:
+
+  def __init__(self, arrays: list, preprocess: Optional[Callable] = None):
+    &#34;&#34;&#34;Stitching 대상 이미지
+
+    Parameters
+    ----------
+    arrays : list of np.ndarray
+        원본 이미지. dtype 상관 없음.
+    preprocess : callable, optional
+        Preprocessing function, by default None
+        (image, mask)를 반환해야 함
+
+    Raises
+    ------
+    ValueError
+        preprocess가 None이나 callable이 아닌 경우
+    &#34;&#34;&#34;
+    if (preprocess is not None) and not callable(preprocess):
+      raise ValueError
+
+    self._arrays = None
+    self._arrays_count = None
+    self._ndim = None
+
+    self.arrays = arrays
+    self._preprocess = preprocess
+
+    minmax = np.array([[np.min(x), np.max(x)] for x in arrays])
+    self._in_range = (np.min(minmax[:, 0]), np.max(minmax[:, 1]))
+
+  @property
+  def arrays(self):
+    &#34;&#34;&#34;영상 원본&#34;&#34;&#34;
+    return self._arrays
+
+  @arrays.setter
+  def arrays(self, value):
+    ndim = value[0].ndim
+    if not all(x.ndim == ndim for x in value):
+      raise ValueError(&#39;영상의 채널 수가 동일하지 않음&#39;)
+
+    self._arrays = value
+    self._arrays_count = len(value)
+    self._ndim = ndim
+
+  @property
+  def count(self):
+    &#34;&#34;&#34;영상 개수&#34;&#34;&#34;
+    return self._arrays_count
+
+  @property
+  def ndim(self) -&gt; int:
+    &#34;&#34;&#34;영상의 차원&#34;&#34;&#34;
+    return self._ndim
+
+  def set_preprocess(self, fn: Callable):
+    self._preprocess = fn
+
+  def select_images(self, indices: Iterable):
+    &#34;&#34;&#34;
+    주어진 인덱스에 해당하는 영상 반환
+
+    Parameters
+    ----------
+    indices : Iterable
+        선택할 영상의 인덱스 목록
+    &#34;&#34;&#34;
+    self.arrays = [self.arrays[x] for x in indices]
+
+  def scale(self, image: np.ndarray, out_range) -&gt; np.ndarray:
+    &#34;&#34;&#34;
+    영상의 픽셀값 범위를 전체 영상 (`arrays`)의 범위로부터 `out_range` 범위로 조정.
+
+    Parameters
+    ----------
+    image : np.ndarray
+        대상 영상.
+    out_range
+        조정할 픽셀값 범위 (`skimage.exposure.rescale_intensity` 참조).
+
+    Returns
+    -------
+    np.ndarray
+    &#34;&#34;&#34;
+    res = rescale_intensity(image=image,
+                            in_range=self._in_range,
+                            out_range=out_range)
+    return res
+
+  def unscale(self, image: np.ndarray, out_range) -&gt; np.ndarray:
+    &#34;&#34;&#34;
+    `out_range` 범위로 픽셀값이 조정됐던 영상을 원 범위로 변환.
+
+    Parameters
+    ----------
+    image : np.ndarray
+        대상 영상.
+    out_range
+        과거 변경했던 영상 범위 (`skimage.exposure.rescale_intensity` 참조).
+
+    Returns
+    -------
+    np.ndarray
+    &#34;&#34;&#34;
+    res = rescale_intensity(image=image,
+                            in_range=out_range,
+                            out_range=self._in_range)
+    return res
+
+  def preprocess(self) -&gt; Tuple[List[np.ndarray], List[np.ndarray]]:
+    &#34;&#34;&#34;
+    전처리 함수를 적용한 영상과 대상 영역 마스크 반환
+
+    Returns
+    -------
+    Tuple[List[np.ndarray], List[np.ndarray]]
+        전처리를 적용한 영상 리스트, 마스크 리스트
+    &#34;&#34;&#34;
+    if self._preprocess is None:
+      images = self.arrays
+      masks = [None for _ in range(self.count)]
+    else:
+      prep = [self._preprocess(x.copy()) for x in self._arrays]
+      images = [x[0] for x in prep]
+      masks = [x[1] for x in prep]
+
+    if any(x.dtype != np.uint8 for x in images):
+      images = [self.scale(x, out_range=np.uint8) for x in images]
+
+    return images, masks</code></pre>
+</details>
+<h3>Instance variables</h3>
+<dl>
+<dt id="src.stitch.stitcher.StitchingImages.arrays"><code class="name">var <span class="ident">arrays</span></code></dt>
+<dd>
+<div class="desc"><p>영상 원본</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def arrays(self):
+  &#34;&#34;&#34;영상 원본&#34;&#34;&#34;
+  return self._arrays</code></pre>
+</details>
+</dd>
+<dt id="src.stitch.stitcher.StitchingImages.count"><code class="name">var <span class="ident">count</span></code></dt>
+<dd>
+<div class="desc"><p>영상 개수</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def count(self):
+  &#34;&#34;&#34;영상 개수&#34;&#34;&#34;
+  return self._arrays_count</code></pre>
+</details>
+</dd>
+<dt id="src.stitch.stitcher.StitchingImages.ndim"><code class="name">var <span class="ident">ndim</span> : int</code></dt>
+<dd>
+<div class="desc"><p>영상의 차원</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def ndim(self) -&gt; int:
+  &#34;&#34;&#34;영상의 차원&#34;&#34;&#34;
+  return self._ndim</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="src.stitch.stitcher.StitchingImages.preprocess"><code class="name flex">
+<span>def <span class="ident">preprocess</span></span>(<span>self) ‑> Tuple[List[numpy.ndarray], List[numpy.ndarray]]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>전처리 함수를 적용한 영상과 대상 영역 마스크 반환</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Tuple[List[np.ndarray], List[np.ndarray]]</code></dt>
+<dd>전처리를 적용한 영상 리스트, 마스크 리스트</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def preprocess(self) -&gt; Tuple[List[np.ndarray], List[np.ndarray]]:
+  &#34;&#34;&#34;
+  전처리 함수를 적용한 영상과 대상 영역 마스크 반환
+
+  Returns
+  -------
+  Tuple[List[np.ndarray], List[np.ndarray]]
+      전처리를 적용한 영상 리스트, 마스크 리스트
+  &#34;&#34;&#34;
+  if self._preprocess is None:
+    images = self.arrays
+    masks = [None for _ in range(self.count)]
+  else:
+    prep = [self._preprocess(x.copy()) for x in self._arrays]
+    images = [x[0] for x in prep]
+    masks = [x[1] for x in prep]
+
+  if any(x.dtype != np.uint8 for x in images):
+    images = [self.scale(x, out_range=np.uint8) for x in images]
+
+  return images, masks</code></pre>
+</details>
+</dd>
+<dt id="src.stitch.stitcher.StitchingImages.scale"><code class="name flex">
+<span>def <span class="ident">scale</span></span>(<span>self, image: numpy.ndarray, out_range) ‑> numpy.ndarray</span>
+</code></dt>
+<dd>
+<div class="desc"><p>영상의 픽셀값 범위를 전체 영상 (<code>arrays</code>)의 범위로부터 <code>out_range</code> 범위로 조정.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>image</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>대상 영상.</dd>
+<dt><strong><code>out_range</code></strong></dt>
+<dd>조정할 픽셀값 범위 (<code>skimage.exposure.rescale_intensity</code> 참조).</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>np.ndarray</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def scale(self, image: np.ndarray, out_range) -&gt; np.ndarray:
+  &#34;&#34;&#34;
+  영상의 픽셀값 범위를 전체 영상 (`arrays`)의 범위로부터 `out_range` 범위로 조정.
+
+  Parameters
+  ----------
+  image : np.ndarray
+      대상 영상.
+  out_range
+      조정할 픽셀값 범위 (`skimage.exposure.rescale_intensity` 참조).
+
+  Returns
+  -------
+  np.ndarray
+  &#34;&#34;&#34;
+  res = rescale_intensity(image=image,
+                          in_range=self._in_range,
+                          out_range=out_range)
+  return res</code></pre>
+</details>
+</dd>
+<dt id="src.stitch.stitcher.StitchingImages.select_images"><code class="name flex">
+<span>def <span class="ident">select_images</span></span>(<span>self, indices: Iterable)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>주어진 인덱스에 해당하는 영상 반환</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>indices</code></strong> :&ensp;<code>Iterable</code></dt>
+<dd>선택할 영상의 인덱스 목록</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def select_images(self, indices: Iterable):
+  &#34;&#34;&#34;
+  주어진 인덱스에 해당하는 영상 반환
+
+  Parameters
+  ----------
+  indices : Iterable
+      선택할 영상의 인덱스 목록
+  &#34;&#34;&#34;
+  self.arrays = [self.arrays[x] for x in indices]</code></pre>
+</details>
+</dd>
+<dt id="src.stitch.stitcher.StitchingImages.set_preprocess"><code class="name flex">
+<span>def <span class="ident">set_preprocess</span></span>(<span>self, fn: Callable)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_preprocess(self, fn: Callable):
+  self._preprocess = fn</code></pre>
+</details>
+</dd>
+<dt id="src.stitch.stitcher.StitchingImages.unscale"><code class="name flex">
+<span>def <span class="ident">unscale</span></span>(<span>self, image: numpy.ndarray, out_range) ‑> numpy.ndarray</span>
+</code></dt>
+<dd>
+<div class="desc"><p><code>out_range</code> 범위로 픽셀값이 조정됐던 영상을 원 범위로 변환.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>image</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>대상 영상.</dd>
+<dt><strong><code>out_range</code></strong></dt>
+<dd>과거 변경했던 영상 범위 (<code>skimage.exposure.rescale_intensity</code> 참조).</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>np.ndarray</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def unscale(self, image: np.ndarray, out_range) -&gt; np.ndarray:
+  &#34;&#34;&#34;
+  `out_range` 범위로 픽셀값이 조정됐던 영상을 원 범위로 변환.
+
+  Parameters
+  ----------
+  image : np.ndarray
+      대상 영상.
+  out_range
+      과거 변경했던 영상 범위 (`skimage.exposure.rescale_intensity` 참조).
+
+  Returns
+  -------
+  np.ndarray
+  &#34;&#34;&#34;
+  res = rescale_intensity(image=image,
+                          in_range=out_range,
+                          out_range=self._in_range)
+  return res</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="src.stitch" href="index.html">src.stitch</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="src.stitch.stitcher.Stitcher" href="#src.stitch.stitcher.Stitcher">Stitcher</a></code></h4>
+<ul class="">
+<li><code><a title="src.stitch.stitcher.Stitcher.available_warper_types" href="#src.stitch.stitcher.Stitcher.available_warper_types">available_warper_types</a></code></li>
+<li><code><a title="src.stitch.stitcher.Stitcher.blend" href="#src.stitch.stitcher.Stitcher.blend">blend</a></code></li>
+<li><code><a title="src.stitch.stitcher.Stitcher.blend_strength" href="#src.stitch.stitcher.Stitcher.blend_strength">blend_strength</a></code></li>
+<li><code><a title="src.stitch.stitcher.Stitcher.blend_type" href="#src.stitch.stitcher.Stitcher.blend_type">blend_type</a></code></li>
+<li><code><a title="src.stitch.stitcher.Stitcher.bundle_adjuster" href="#src.stitch.stitcher.Stitcher.bundle_adjuster">bundle_adjuster</a></code></li>
+<li><code><a title="src.stitch.stitcher.Stitcher.calculate_camera_matrix" href="#src.stitch.stitcher.Stitcher.calculate_camera_matrix">calculate_camera_matrix</a></code></li>
+<li><code><a title="src.stitch.stitcher.Stitcher.estimator" href="#src.stitch.stitcher.Stitcher.estimator">estimator</a></code></li>
+<li><code><a title="src.stitch.stitcher.Stitcher.features_finder" href="#src.stitch.stitcher.Stitcher.features_finder">features_finder</a></code></li>
+<li><code><a title="src.stitch.stitcher.Stitcher.features_matcher" href="#src.stitch.stitcher.Stitcher.features_matcher">features_matcher</a></code></li>
+<li><code><a title="src.stitch.stitcher.Stitcher.find_features" href="#src.stitch.stitcher.Stitcher.find_features">find_features</a></code></li>
+<li><code><a title="src.stitch.stitcher.Stitcher.refine_mask" href="#src.stitch.stitcher.Stitcher.refine_mask">refine_mask</a></code></li>
+<li><code><a title="src.stitch.stitcher.Stitcher.set_bundle_adjuster_refine_mask" href="#src.stitch.stitcher.Stitcher.set_bundle_adjuster_refine_mask">set_bundle_adjuster_refine_mask</a></code></li>
+<li><code><a title="src.stitch.stitcher.Stitcher.set_features_matcher" href="#src.stitch.stitcher.Stitcher.set_features_matcher">set_features_matcher</a></code></li>
+<li><code><a title="src.stitch.stitcher.Stitcher.set_mode" href="#src.stitch.stitcher.Stitcher.set_mode">set_mode</a></code></li>
+<li><code><a title="src.stitch.stitcher.Stitcher.set_warper" href="#src.stitch.stitcher.Stitcher.set_warper">set_warper</a></code></li>
+<li><code><a title="src.stitch.stitcher.Stitcher.stitch" href="#src.stitch.stitcher.Stitcher.stitch">stitch</a></code></li>
+<li><code><a title="src.stitch.stitcher.Stitcher.warp_image" href="#src.stitch.stitcher.Stitcher.warp_image">warp_image</a></code></li>
+<li><code><a title="src.stitch.stitcher.Stitcher.warp_images" href="#src.stitch.stitcher.Stitcher.warp_images">warp_images</a></code></li>
+<li><code><a title="src.stitch.stitcher.Stitcher.warper" href="#src.stitch.stitcher.Stitcher.warper">warper</a></code></li>
+<li><code><a title="src.stitch.stitcher.Stitcher.warper_type" href="#src.stitch.stitcher.Stitcher.warper_type">warper_type</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="src.stitch.stitcher.StitchingImages" href="#src.stitch.stitcher.StitchingImages">StitchingImages</a></code></h4>
+<ul class="two-column">
+<li><code><a title="src.stitch.stitcher.StitchingImages.arrays" href="#src.stitch.stitcher.StitchingImages.arrays">arrays</a></code></li>
+<li><code><a title="src.stitch.stitcher.StitchingImages.count" href="#src.stitch.stitcher.StitchingImages.count">count</a></code></li>
+<li><code><a title="src.stitch.stitcher.StitchingImages.ndim" href="#src.stitch.stitcher.StitchingImages.ndim">ndim</a></code></li>
+<li><code><a title="src.stitch.stitcher.StitchingImages.preprocess" href="#src.stitch.stitcher.StitchingImages.preprocess">preprocess</a></code></li>
+<li><code><a title="src.stitch.stitcher.StitchingImages.scale" href="#src.stitch.stitcher.StitchingImages.scale">scale</a></code></li>
+<li><code><a title="src.stitch.stitcher.StitchingImages.select_images" href="#src.stitch.stitcher.StitchingImages.select_images">select_images</a></code></li>
+<li><code><a title="src.stitch.stitcher.StitchingImages.set_preprocess" href="#src.stitch.stitcher.StitchingImages.set_preprocess">set_preprocess</a></code></li>
+<li><code><a title="src.stitch.stitcher.StitchingImages.unscale" href="#src.stitch.stitcher.StitchingImages.unscale">unscale</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+</footer>
+</body>
+</html>

@@ -1,0 +1,766 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.2" />
+<title>src.stitch.preprocess API documentation</title>
+<meta name="description" content="Stitcher용 전처리 함수, 클래스" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>src.stitch.preprocess</code></h1>
+</header>
+<section id="section-intro">
+<p>Stitcher용 전처리 함수, 클래스</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;
+Stitcher용 전처리 함수, 클래스
+&#34;&#34;&#34;
+
+from typing import Optional, Tuple
+
+import cv2 as cv
+import numpy as np
+from loguru import logger
+from skimage.exposure import equalize_hist, rescale_intensity
+
+from misc.tools import normalize_rgb_image_hist
+
+
+class PanoramaPreprocess:
+  &#34;&#34;&#34;
+  파노라마 생성을 위한 열화상, 실화상의 전처리
+  &#34;&#34;&#34;
+
+  def __init__(self,
+               is_numeric: bool,
+               mask_threshold: Optional[float] = -30.0,
+               contrast: Optional[str] = &#39;equalization&#39;,
+               denoise: Optional[str] = &#39;bilateral&#39;):
+    &#34;&#34;&#34;
+    Parameters
+    ----------
+    is_numeric : bool
+        전처리 대상 영상의 픽셀값이 물리적 의미가 있는지 (실화상인지) 여부.
+        `True`인 경우, `mask_threshold` 적용.
+
+    mask_threshold : Optional[float], optional
+        `is_numeric`이 `True`인 경우, 픽셀 값이 `mask_threshold` 미만인 영역은
+        파노라마 생성 시 제외함.
+
+    contrast : Optional[str]
+        명암비 개선 방법.
+
+        `&#39;equalization&#39;`: Histogram equalization (히스토그램 균일화) 적용.
+        `skimage.exposure.equalize_hist` 참조. 열화상에만 적용 권장.
+
+        `&#39;normalization&#39;`: 영상의 밝기 정규화 적용. `cv2.normalize` 참조.
+        RGB 형식의 실화상에만 적용.
+
+    denoise : Optional[str]
+        잡음 제거 방법.
+
+        `&#39;bilateral&#39;`: Bilateral filter (양방향 필터) 적용.
+
+        `&#39;gaussian&#39;`: Gaussian filter 적용.
+
+    Raises
+    ------
+    ValueError
+        전처리 방법 인자 설정 오류
+    &#34;&#34;&#34;
+    if contrast not in (None, &#39;equalization&#39;, &#39;normalization&#39;):
+      raise ValueError
+    if denoise not in (None, &#39;bilateral&#39;, &#39;gaussian&#39;):
+      raise ValueError
+
+    self._is_numeric = is_numeric
+    self._mask_threshold = mask_threshold
+    self._contrast_type = contrast
+    self._denoise_type = denoise
+
+    self._bilateral_args = {&#39;d&#39;: -1, &#39;sigmaColor&#39;: 20, &#39;sigmaSpace&#39;: 10}
+    self._gaussian_args = {&#39;ksize&#39;: (5, 5), &#39;sigmaX&#39;: 0}
+
+  @property
+  def mask_threshold(self):
+    &#34;&#34;&#34;
+    영상의 마스킹을 위한 기준 픽셀값.
+    `mask_threshold` 미만의 영역은 파노라마 생성 영역에서 제외됨.
+    &#34;&#34;&#34;
+    return self._mask_threshold
+
+  @mask_threshold.setter
+  def mask_threshold(self, value: Optional[float]):
+    self._mask_threshold = value
+
+  @property
+  def bilateral_args(self):
+    return self._bilateral_args
+
+  @property
+  def gaussian_args(self):
+    return self._gaussian_args
+
+  def set_bilateral_args(self, d=-1, sigmaColor=20, sigmaSpace=10):
+    &#34;&#34;&#34;
+    uint8로 변환한 영상에 적용하는 Bilateral filter의 arguments 설정.
+    `cv2.bilateralFilter` 참조.
+    &#34;&#34;&#34;
+    self._bilateral_args = {
+        &#39;d&#39;: d,
+        &#39;sigmaColor&#39;: sigmaColor,
+        &#39;sigmaSpace&#39;: sigmaSpace
+    }
+
+  def set_gaussian_args(self, ksize=(5, 5), sigmaX=0):
+    &#34;&#34;&#34;
+    uint8로 변환한 영상에 적용하는 Gaussian filter의 arguments 설정.
+    `cv2.GaussianBlur` 참조.
+    &#34;&#34;&#34;
+    self._gaussian_args = {&#39;ksize&#39;: tuple(ksize), &#39;sigmaX&#39;: sigmaX}
+
+  def _bilateral_filter(self, image: np.ndarray) -&gt; np.ndarray:
+    return cv.bilateralFilter(image, **self._bilateral_args)
+
+  def _gaussian_filter(self, image: np.ndarray) -&gt; np.ndarray:
+    return cv.GaussianBlur(image, **self._gaussian_args)
+
+  def masking(self, image: np.ndarray) -&gt; Optional[np.ndarray]:
+    &#34;&#34;&#34;
+    영상의 픽셀값에 따라 마스킹. 대상 영상이 열화상이 아닌 경우 (not `is_numeric`)
+    `None` 반환.
+
+    Parameters
+    ----------
+    image : np.ndarray
+        대상 영상
+
+    Returns
+    -------
+    Optional[np.ndarray]
+        추출한 마스크. 파노라마를 생성할 영역의 픽셀값은 1, 제외할 영역은 0
+    &#34;&#34;&#34;
+    if self._is_numeric and self.mask_threshold is not None:
+      mask = (self._mask_threshold &lt; image).astype(&#39;uint8&#39;)
+    else:
+      mask = None
+
+    return mask
+
+  def adjust_contrast(self, image: np.ndarray) -&gt; np.ndarray:
+    &#34;&#34;&#34;
+    선택한 명암 개선 알고리즘 적용. 열화상의 경우 `normalization`을 선택 시
+    Histogram normalization을 적용하지 않고 경고 메세지. 실화상의 경우
+    `equalization` 선택 시 알고리즘은 적용하지만 경고 메세지를 보냄.
+
+    Parameters
+    ----------
+    image : np.ndarray
+        대상 영상.
+
+    Returns
+    -------
+    np.ndarray
+    &#34;&#34;&#34;
+    if self._contrast_type == &#39;equalization&#39;:
+      if not self._is_numeric:
+        logger.warning(&#39;실화상에 Histogram equalization을 적용합니다. &#39;
+                       &#39;예상치 못한 오류가 발생할 수 있습니다.&#39;)
+
+      res = equalize_hist(image)
+
+    elif self._contrast_type == &#39;normalization&#39;:
+      if not self._is_numeric:
+        res = normalize_rgb_image_hist(image)
+      else:
+        res = image
+        logger.warning(&#39;열화상에 Histogram normalization을 적용할 수 없습니다. &#39;
+                       &#39;명암 보정을 적용하지 않습니다&#39;)
+
+    else:
+      res = image
+
+    return res
+
+  def denoise(self, image: np.ndarray) -&gt; np.ndarray:
+    &#34;&#34;&#34;
+    선택한 잡음 제거 알고리즘 적용.
+
+    Parameters
+    ----------
+    image : np.ndarray
+        대상 영상
+
+    Returns
+    -------
+    np.ndarray
+    &#34;&#34;&#34;
+    if self._denoise_type == &#39;bilateral&#39;:
+      res = self._bilateral_filter(image)
+    elif self._denoise_type == &#39;gaussian&#39;:
+      res = self._gaussian_filter(image)
+    else:
+      res = image
+
+    return res
+
+  def __call__(self,
+               image: np.ndarray) -&gt; Tuple[np.ndarray, Optional[np.ndarray]]:
+    &#34;&#34;&#34;
+    마스킹, 명암비 개선, 잡음 제거 알고리즘 순차적으로 적용
+
+    Parameters
+    ----------
+    image : np.ndarray
+        대상 영상
+
+    Returns
+    -------
+    image : np.ndarray
+        전처리를 거친 영상
+    mask : Optional[np.ndarray]
+        마스크
+    &#34;&#34;&#34;
+    mask = self.masking(image)
+
+    image = self.adjust_contrast(image)
+    image = rescale_intensity(image, out_range=&#39;uint8&#39;)
+    image = self.denoise(image)
+
+    return image, mask</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="src.stitch.preprocess.PanoramaPreprocess"><code class="flex name class">
+<span>class <span class="ident">PanoramaPreprocess</span></span>
+<span>(</span><span>is_numeric: bool, mask_threshold: Union[float, NoneType] = -30.0, contrast: Union[str, NoneType] = 'equalization', denoise: Union[str, NoneType] = 'bilateral')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>파노라마 생성을 위한 열화상, 실화상의 전처리</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>is_numeric</code></strong> :&ensp;<code>bool</code></dt>
+<dd>전처리 대상 영상의 픽셀값이 물리적 의미가 있는지 (실화상인지) 여부.
+<code>True</code>인 경우, <code>mask_threshold</code> 적용.</dd>
+<dt><strong><code>mask_threshold</code></strong> :&ensp;<code>Optional[float]</code>, optional</dt>
+<dd><code>is_numeric</code>이 <code>True</code>인 경우, 픽셀 값이 <code>mask_threshold</code> 미만인 영역은
+파노라마 생성 시 제외함.</dd>
+<dt><strong><code>contrast</code></strong> :&ensp;<code>Optional[str]</code></dt>
+<dd>
+<p>명암비 개선 방법.</p>
+<p><code>'equalization'</code>: Histogram equalization (히스토그램 균일화) 적용.
+<code>skimage.exposure.equalize_hist</code> 참조. 열화상에만 적용 권장.</p>
+<p><code>'normalization'</code>: 영상의 밝기 정규화 적용. <code>cv2.normalize</code> 참조.
+RGB 형식의 실화상에만 적용.</p>
+</dd>
+<dt><strong><code>denoise</code></strong> :&ensp;<code>Optional[str]</code></dt>
+<dd>
+<p>잡음 제거 방법.</p>
+<p><code>'bilateral'</code>: Bilateral filter (양방향 필터) 적용.</p>
+<p><code>'gaussian'</code>: Gaussian filter 적용.</p>
+</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>전처리 방법 인자 설정 오류</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PanoramaPreprocess:
+  &#34;&#34;&#34;
+  파노라마 생성을 위한 열화상, 실화상의 전처리
+  &#34;&#34;&#34;
+
+  def __init__(self,
+               is_numeric: bool,
+               mask_threshold: Optional[float] = -30.0,
+               contrast: Optional[str] = &#39;equalization&#39;,
+               denoise: Optional[str] = &#39;bilateral&#39;):
+    &#34;&#34;&#34;
+    Parameters
+    ----------
+    is_numeric : bool
+        전처리 대상 영상의 픽셀값이 물리적 의미가 있는지 (실화상인지) 여부.
+        `True`인 경우, `mask_threshold` 적용.
+
+    mask_threshold : Optional[float], optional
+        `is_numeric`이 `True`인 경우, 픽셀 값이 `mask_threshold` 미만인 영역은
+        파노라마 생성 시 제외함.
+
+    contrast : Optional[str]
+        명암비 개선 방법.
+
+        `&#39;equalization&#39;`: Histogram equalization (히스토그램 균일화) 적용.
+        `skimage.exposure.equalize_hist` 참조. 열화상에만 적용 권장.
+
+        `&#39;normalization&#39;`: 영상의 밝기 정규화 적용. `cv2.normalize` 참조.
+        RGB 형식의 실화상에만 적용.
+
+    denoise : Optional[str]
+        잡음 제거 방법.
+
+        `&#39;bilateral&#39;`: Bilateral filter (양방향 필터) 적용.
+
+        `&#39;gaussian&#39;`: Gaussian filter 적용.
+
+    Raises
+    ------
+    ValueError
+        전처리 방법 인자 설정 오류
+    &#34;&#34;&#34;
+    if contrast not in (None, &#39;equalization&#39;, &#39;normalization&#39;):
+      raise ValueError
+    if denoise not in (None, &#39;bilateral&#39;, &#39;gaussian&#39;):
+      raise ValueError
+
+    self._is_numeric = is_numeric
+    self._mask_threshold = mask_threshold
+    self._contrast_type = contrast
+    self._denoise_type = denoise
+
+    self._bilateral_args = {&#39;d&#39;: -1, &#39;sigmaColor&#39;: 20, &#39;sigmaSpace&#39;: 10}
+    self._gaussian_args = {&#39;ksize&#39;: (5, 5), &#39;sigmaX&#39;: 0}
+
+  @property
+  def mask_threshold(self):
+    &#34;&#34;&#34;
+    영상의 마스킹을 위한 기준 픽셀값.
+    `mask_threshold` 미만의 영역은 파노라마 생성 영역에서 제외됨.
+    &#34;&#34;&#34;
+    return self._mask_threshold
+
+  @mask_threshold.setter
+  def mask_threshold(self, value: Optional[float]):
+    self._mask_threshold = value
+
+  @property
+  def bilateral_args(self):
+    return self._bilateral_args
+
+  @property
+  def gaussian_args(self):
+    return self._gaussian_args
+
+  def set_bilateral_args(self, d=-1, sigmaColor=20, sigmaSpace=10):
+    &#34;&#34;&#34;
+    uint8로 변환한 영상에 적용하는 Bilateral filter의 arguments 설정.
+    `cv2.bilateralFilter` 참조.
+    &#34;&#34;&#34;
+    self._bilateral_args = {
+        &#39;d&#39;: d,
+        &#39;sigmaColor&#39;: sigmaColor,
+        &#39;sigmaSpace&#39;: sigmaSpace
+    }
+
+  def set_gaussian_args(self, ksize=(5, 5), sigmaX=0):
+    &#34;&#34;&#34;
+    uint8로 변환한 영상에 적용하는 Gaussian filter의 arguments 설정.
+    `cv2.GaussianBlur` 참조.
+    &#34;&#34;&#34;
+    self._gaussian_args = {&#39;ksize&#39;: tuple(ksize), &#39;sigmaX&#39;: sigmaX}
+
+  def _bilateral_filter(self, image: np.ndarray) -&gt; np.ndarray:
+    return cv.bilateralFilter(image, **self._bilateral_args)
+
+  def _gaussian_filter(self, image: np.ndarray) -&gt; np.ndarray:
+    return cv.GaussianBlur(image, **self._gaussian_args)
+
+  def masking(self, image: np.ndarray) -&gt; Optional[np.ndarray]:
+    &#34;&#34;&#34;
+    영상의 픽셀값에 따라 마스킹. 대상 영상이 열화상이 아닌 경우 (not `is_numeric`)
+    `None` 반환.
+
+    Parameters
+    ----------
+    image : np.ndarray
+        대상 영상
+
+    Returns
+    -------
+    Optional[np.ndarray]
+        추출한 마스크. 파노라마를 생성할 영역의 픽셀값은 1, 제외할 영역은 0
+    &#34;&#34;&#34;
+    if self._is_numeric and self.mask_threshold is not None:
+      mask = (self._mask_threshold &lt; image).astype(&#39;uint8&#39;)
+    else:
+      mask = None
+
+    return mask
+
+  def adjust_contrast(self, image: np.ndarray) -&gt; np.ndarray:
+    &#34;&#34;&#34;
+    선택한 명암 개선 알고리즘 적용. 열화상의 경우 `normalization`을 선택 시
+    Histogram normalization을 적용하지 않고 경고 메세지. 실화상의 경우
+    `equalization` 선택 시 알고리즘은 적용하지만 경고 메세지를 보냄.
+
+    Parameters
+    ----------
+    image : np.ndarray
+        대상 영상.
+
+    Returns
+    -------
+    np.ndarray
+    &#34;&#34;&#34;
+    if self._contrast_type == &#39;equalization&#39;:
+      if not self._is_numeric:
+        logger.warning(&#39;실화상에 Histogram equalization을 적용합니다. &#39;
+                       &#39;예상치 못한 오류가 발생할 수 있습니다.&#39;)
+
+      res = equalize_hist(image)
+
+    elif self._contrast_type == &#39;normalization&#39;:
+      if not self._is_numeric:
+        res = normalize_rgb_image_hist(image)
+      else:
+        res = image
+        logger.warning(&#39;열화상에 Histogram normalization을 적용할 수 없습니다. &#39;
+                       &#39;명암 보정을 적용하지 않습니다&#39;)
+
+    else:
+      res = image
+
+    return res
+
+  def denoise(self, image: np.ndarray) -&gt; np.ndarray:
+    &#34;&#34;&#34;
+    선택한 잡음 제거 알고리즘 적용.
+
+    Parameters
+    ----------
+    image : np.ndarray
+        대상 영상
+
+    Returns
+    -------
+    np.ndarray
+    &#34;&#34;&#34;
+    if self._denoise_type == &#39;bilateral&#39;:
+      res = self._bilateral_filter(image)
+    elif self._denoise_type == &#39;gaussian&#39;:
+      res = self._gaussian_filter(image)
+    else:
+      res = image
+
+    return res
+
+  def __call__(self,
+               image: np.ndarray) -&gt; Tuple[np.ndarray, Optional[np.ndarray]]:
+    &#34;&#34;&#34;
+    마스킹, 명암비 개선, 잡음 제거 알고리즘 순차적으로 적용
+
+    Parameters
+    ----------
+    image : np.ndarray
+        대상 영상
+
+    Returns
+    -------
+    image : np.ndarray
+        전처리를 거친 영상
+    mask : Optional[np.ndarray]
+        마스크
+    &#34;&#34;&#34;
+    mask = self.masking(image)
+
+    image = self.adjust_contrast(image)
+    image = rescale_intensity(image, out_range=&#39;uint8&#39;)
+    image = self.denoise(image)
+
+    return image, mask</code></pre>
+</details>
+<h3>Instance variables</h3>
+<dl>
+<dt id="src.stitch.preprocess.PanoramaPreprocess.bilateral_args"><code class="name">var <span class="ident">bilateral_args</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def bilateral_args(self):
+  return self._bilateral_args</code></pre>
+</details>
+</dd>
+<dt id="src.stitch.preprocess.PanoramaPreprocess.gaussian_args"><code class="name">var <span class="ident">gaussian_args</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def gaussian_args(self):
+  return self._gaussian_args</code></pre>
+</details>
+</dd>
+<dt id="src.stitch.preprocess.PanoramaPreprocess.mask_threshold"><code class="name">var <span class="ident">mask_threshold</span></code></dt>
+<dd>
+<div class="desc"><p>영상의 마스킹을 위한 기준 픽셀값.
+<code>mask_threshold</code> 미만의 영역은 파노라마 생성 영역에서 제외됨.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def mask_threshold(self):
+  &#34;&#34;&#34;
+  영상의 마스킹을 위한 기준 픽셀값.
+  `mask_threshold` 미만의 영역은 파노라마 생성 영역에서 제외됨.
+  &#34;&#34;&#34;
+  return self._mask_threshold</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="src.stitch.preprocess.PanoramaPreprocess.adjust_contrast"><code class="name flex">
+<span>def <span class="ident">adjust_contrast</span></span>(<span>self, image: numpy.ndarray) ‑> numpy.ndarray</span>
+</code></dt>
+<dd>
+<div class="desc"><p>선택한 명암 개선 알고리즘 적용. 열화상의 경우 <code>normalization</code>을 선택 시
+Histogram normalization을 적용하지 않고 경고 메세지. 실화상의 경우
+<code>equalization</code> 선택 시 알고리즘은 적용하지만 경고 메세지를 보냄.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>image</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>대상 영상.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>np.ndarray</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def adjust_contrast(self, image: np.ndarray) -&gt; np.ndarray:
+  &#34;&#34;&#34;
+  선택한 명암 개선 알고리즘 적용. 열화상의 경우 `normalization`을 선택 시
+  Histogram normalization을 적용하지 않고 경고 메세지. 실화상의 경우
+  `equalization` 선택 시 알고리즘은 적용하지만 경고 메세지를 보냄.
+
+  Parameters
+  ----------
+  image : np.ndarray
+      대상 영상.
+
+  Returns
+  -------
+  np.ndarray
+  &#34;&#34;&#34;
+  if self._contrast_type == &#39;equalization&#39;:
+    if not self._is_numeric:
+      logger.warning(&#39;실화상에 Histogram equalization을 적용합니다. &#39;
+                     &#39;예상치 못한 오류가 발생할 수 있습니다.&#39;)
+
+    res = equalize_hist(image)
+
+  elif self._contrast_type == &#39;normalization&#39;:
+    if not self._is_numeric:
+      res = normalize_rgb_image_hist(image)
+    else:
+      res = image
+      logger.warning(&#39;열화상에 Histogram normalization을 적용할 수 없습니다. &#39;
+                     &#39;명암 보정을 적용하지 않습니다&#39;)
+
+  else:
+    res = image
+
+  return res</code></pre>
+</details>
+</dd>
+<dt id="src.stitch.preprocess.PanoramaPreprocess.denoise"><code class="name flex">
+<span>def <span class="ident">denoise</span></span>(<span>self, image: numpy.ndarray) ‑> numpy.ndarray</span>
+</code></dt>
+<dd>
+<div class="desc"><p>선택한 잡음 제거 알고리즘 적용.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>image</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>대상 영상</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>np.ndarray</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def denoise(self, image: np.ndarray) -&gt; np.ndarray:
+  &#34;&#34;&#34;
+  선택한 잡음 제거 알고리즘 적용.
+
+  Parameters
+  ----------
+  image : np.ndarray
+      대상 영상
+
+  Returns
+  -------
+  np.ndarray
+  &#34;&#34;&#34;
+  if self._denoise_type == &#39;bilateral&#39;:
+    res = self._bilateral_filter(image)
+  elif self._denoise_type == &#39;gaussian&#39;:
+    res = self._gaussian_filter(image)
+  else:
+    res = image
+
+  return res</code></pre>
+</details>
+</dd>
+<dt id="src.stitch.preprocess.PanoramaPreprocess.masking"><code class="name flex">
+<span>def <span class="ident">masking</span></span>(<span>self, image: numpy.ndarray) ‑> Union[numpy.ndarray, NoneType]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>영상의 픽셀값에 따라 마스킹. 대상 영상이 열화상이 아닌 경우 (not <code>is_numeric</code>)
+<code>None</code> 반환.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>image</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>대상 영상</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Optional[np.ndarray]</code></dt>
+<dd>추출한 마스크. 파노라마를 생성할 영역의 픽셀값은 1, 제외할 영역은 0</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def masking(self, image: np.ndarray) -&gt; Optional[np.ndarray]:
+  &#34;&#34;&#34;
+  영상의 픽셀값에 따라 마스킹. 대상 영상이 열화상이 아닌 경우 (not `is_numeric`)
+  `None` 반환.
+
+  Parameters
+  ----------
+  image : np.ndarray
+      대상 영상
+
+  Returns
+  -------
+  Optional[np.ndarray]
+      추출한 마스크. 파노라마를 생성할 영역의 픽셀값은 1, 제외할 영역은 0
+  &#34;&#34;&#34;
+  if self._is_numeric and self.mask_threshold is not None:
+    mask = (self._mask_threshold &lt; image).astype(&#39;uint8&#39;)
+  else:
+    mask = None
+
+  return mask</code></pre>
+</details>
+</dd>
+<dt id="src.stitch.preprocess.PanoramaPreprocess.set_bilateral_args"><code class="name flex">
+<span>def <span class="ident">set_bilateral_args</span></span>(<span>self, d=-1, sigmaColor=20, sigmaSpace=10)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>uint8로 변환한 영상에 적용하는 Bilateral filter의 arguments 설정.
+<code>cv2.bilateralFilter</code> 참조.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_bilateral_args(self, d=-1, sigmaColor=20, sigmaSpace=10):
+  &#34;&#34;&#34;
+  uint8로 변환한 영상에 적용하는 Bilateral filter의 arguments 설정.
+  `cv2.bilateralFilter` 참조.
+  &#34;&#34;&#34;
+  self._bilateral_args = {
+      &#39;d&#39;: d,
+      &#39;sigmaColor&#39;: sigmaColor,
+      &#39;sigmaSpace&#39;: sigmaSpace
+  }</code></pre>
+</details>
+</dd>
+<dt id="src.stitch.preprocess.PanoramaPreprocess.set_gaussian_args"><code class="name flex">
+<span>def <span class="ident">set_gaussian_args</span></span>(<span>self, ksize=(5, 5), sigmaX=0)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>uint8로 변환한 영상에 적용하는 Gaussian filter의 arguments 설정.
+<code>cv2.GaussianBlur</code> 참조.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_gaussian_args(self, ksize=(5, 5), sigmaX=0):
+  &#34;&#34;&#34;
+  uint8로 변환한 영상에 적용하는 Gaussian filter의 arguments 설정.
+  `cv2.GaussianBlur` 참조.
+  &#34;&#34;&#34;
+  self._gaussian_args = {&#39;ksize&#39;: tuple(ksize), &#39;sigmaX&#39;: sigmaX}</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="src.stitch" href="index.html">src.stitch</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="src.stitch.preprocess.PanoramaPreprocess" href="#src.stitch.preprocess.PanoramaPreprocess">PanoramaPreprocess</a></code></h4>
+<ul class="two-column">
+<li><code><a title="src.stitch.preprocess.PanoramaPreprocess.adjust_contrast" href="#src.stitch.preprocess.PanoramaPreprocess.adjust_contrast">adjust_contrast</a></code></li>
+<li><code><a title="src.stitch.preprocess.PanoramaPreprocess.bilateral_args" href="#src.stitch.preprocess.PanoramaPreprocess.bilateral_args">bilateral_args</a></code></li>
+<li><code><a title="src.stitch.preprocess.PanoramaPreprocess.denoise" href="#src.stitch.preprocess.PanoramaPreprocess.denoise">denoise</a></code></li>
+<li><code><a title="src.stitch.preprocess.PanoramaPreprocess.gaussian_args" href="#src.stitch.preprocess.PanoramaPreprocess.gaussian_args">gaussian_args</a></code></li>
+<li><code><a title="src.stitch.preprocess.PanoramaPreprocess.mask_threshold" href="#src.stitch.preprocess.PanoramaPreprocess.mask_threshold">mask_threshold</a></code></li>
+<li><code><a title="src.stitch.preprocess.PanoramaPreprocess.masking" href="#src.stitch.preprocess.PanoramaPreprocess.masking">masking</a></code></li>
+<li><code><a title="src.stitch.preprocess.PanoramaPreprocess.set_bilateral_args" href="#src.stitch.preprocess.PanoramaPreprocess.set_bilateral_args">set_bilateral_args</a></code></li>
+<li><code><a title="src.stitch.preprocess.PanoramaPreprocess.set_gaussian_args" href="#src.stitch.preprocess.PanoramaPreprocess.set_gaussian_args">set_gaussian_args</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+</footer>
+</body>
+</html>
