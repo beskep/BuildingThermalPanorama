@@ -27,7 +27,7 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">from itertools import product
-from typing import Generator, Iterable, Tuple
+from typing import Iterable, Iterator, Tuple
 
 import numpy as np
 from numpy.linalg import inv
@@ -147,8 +147,7 @@ class ImageEnhance:
     return transformed_image
 
   def transformed_images(
-      self
-  ) -&gt; Generator[Tuple[np.ndarray, float, float, np.ndarray], None, None]:
+      self) -&gt; Iterator[Tuple[np.ndarray, float, float, np.ndarray]]:
     &#34;&#34;&#34;
     입력한 scale, rotation, translation 조합 (product)을 적용한 영상의 iterator
 
@@ -317,8 +316,7 @@ class ImageEnhance:
     return transformed_image
 
   def transformed_images(
-      self
-  ) -&gt; Generator[Tuple[np.ndarray, float, float, np.ndarray], None, None]:
+      self) -&gt; Iterator[Tuple[np.ndarray, float, float, np.ndarray]]:
     &#34;&#34;&#34;
     입력한 scale, rotation, translation 조합 (product)을 적용한 영상의 iterator
 
@@ -501,7 +499,7 @@ def original(self):
 </details>
 </dd>
 <dt id="src.misc.image_enhance.ImageEnhance.transformed_images"><code class="name flex">
-<span>def <span class="ident">transformed_images</span></span>(<span>self) ‑> Generator[Tuple[numpy.ndarray, float, float, numpy.ndarray], NoneType, NoneType]</span>
+<span>def <span class="ident">transformed_images</span></span>(<span>self) ‑> Iterator[Tuple[numpy.ndarray, float, float, numpy.ndarray]]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>입력한 scale, rotation, translation 조합 (product)을 적용한 영상의 iterator</p>
@@ -521,8 +519,7 @@ def original(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def transformed_images(
-    self
-) -&gt; Generator[Tuple[np.ndarray, float, float, np.ndarray], None, None]:
+    self) -&gt; Iterator[Tuple[np.ndarray, float, float, np.ndarray]]:
   &#34;&#34;&#34;
   입력한 scale, rotation, translation 조합 (product)을 적용한 영상의 iterator
 

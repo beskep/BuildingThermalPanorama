@@ -505,7 +505,7 @@ class Stitcher:
     stitched_image, stitched_mask = self.blend(images=scaled_images,
                                                masks=warped_masks,
                                                rois=rois)
-    stitched_image[np.logical_not(stitched_mask)] = np.median(stitched_image)
+    stitched_image[np.logical_not(stitched_mask)] = np.min(stitched_image)
 
     if images.ndim == 2:
       # 원본 영상이 2차원인 경우 (열화상) 경우 첫 번째 채널만 추출
@@ -513,6 +513,7 @@ class Stitcher:
 
     unscaled_image = images.unscale(image=stitched_image, out_range=&#39;int16&#39;)
 
+    # TODO graph, indices 대신 다른 정보도 포함한 dict 반환 (yaml 저장 가능한 형태로)
     return unscaled_image, stitched_mask, matches_graph, indices
 
   def calculate_camera_matrix(
@@ -532,9 +533,11 @@ class Stitcher:
 
     Returns
     -------
-    Tuple[List[cv.detail_CameraParams], np.ndarray, str]
-        각 영상의 camera parameter,
-        매칭된 영상의 index,
+    cameras : List[cv.detail_CameraParams]
+        각 영상의 camera parameter
+    indices : np.ndarray
+        매칭된 영상의 index 목록
+    matches_graph : str
         매칭 graph (영상 간 연결 관계) 정보
     &#34;&#34;&#34;
     logger.debug(&#39;Feature finding and matching&#39;)
@@ -578,7 +581,7 @@ class Stitcher:
     adjuster_status, cameras = self.bundle_adjuster.apply(
         features=features, pairwise_matches=pairwise_matches, cameras=cameras)
     if not adjuster_status:
-      logger.error(&#39;Camera parameters adjusting failed&#39;)
+      raise ValueError(&#39;Camera parameters adjusting failed&#39;)
 
     logger.debug(&#39;Wave correction&#39;)
     Rs = [np.copy(camera.R) for camera in cameras]
@@ -618,9 +621,9 @@ class Stitcher:
     Raises
     ------
     cv.error
-        너무 과도한 영상 변형 시 raise
+        지나치게 과도한 영상 변형 시
     &#34;&#34;&#34;
-    if self._compose_work_aspect != 1.0:
+    if not np.isclose(self._compose_work_aspect, 1.0, rtol=1e-05, atol=0):
       camera.focal *= self._compose_work_aspect
       camera.ppx *= self._compose_work_aspect
       camera.ppy *= self._compose_work_aspect
@@ -1136,7 +1139,7 @@ class Stitcher:
     stitched_image, stitched_mask = self.blend(images=scaled_images,
                                                masks=warped_masks,
                                                rois=rois)
-    stitched_image[np.logical_not(stitched_mask)] = np.median(stitched_image)
+    stitched_image[np.logical_not(stitched_mask)] = np.min(stitched_image)
 
     if images.ndim == 2:
       # 원본 영상이 2차원인 경우 (열화상) 경우 첫 번째 채널만 추출
@@ -1144,6 +1147,7 @@ class Stitcher:
 
     unscaled_image = images.unscale(image=stitched_image, out_range=&#39;int16&#39;)
 
+    # TODO graph, indices 대신 다른 정보도 포함한 dict 반환 (yaml 저장 가능한 형태로)
     return unscaled_image, stitched_mask, matches_graph, indices
 
   def calculate_camera_matrix(
@@ -1163,9 +1167,11 @@ class Stitcher:
 
     Returns
     -------
-    Tuple[List[cv.detail_CameraParams], np.ndarray, str]
-        각 영상의 camera parameter,
-        매칭된 영상의 index,
+    cameras : List[cv.detail_CameraParams]
+        각 영상의 camera parameter
+    indices : np.ndarray
+        매칭된 영상의 index 목록
+    matches_graph : str
         매칭 graph (영상 간 연결 관계) 정보
     &#34;&#34;&#34;
     logger.debug(&#39;Feature finding and matching&#39;)
@@ -1209,7 +1215,7 @@ class Stitcher:
     adjuster_status, cameras = self.bundle_adjuster.apply(
         features=features, pairwise_matches=pairwise_matches, cameras=cameras)
     if not adjuster_status:
-      logger.error(&#39;Camera parameters adjusting failed&#39;)
+      raise ValueError(&#39;Camera parameters adjusting failed&#39;)
 
     logger.debug(&#39;Wave correction&#39;)
     Rs = [np.copy(camera.R) for camera in cameras]
@@ -1249,9 +1255,9 @@ class Stitcher:
     Raises
     ------
     cv.error
-        너무 과도한 영상 변형 시 raise
+        지나치게 과도한 영상 변형 시
     &#34;&#34;&#34;
-    if self._compose_work_aspect != 1.0:
+    if not np.isclose(self._compose_work_aspect, 1.0, rtol=1e-05, atol=0):
       camera.focal *= self._compose_work_aspect
       camera.ppx *= self._compose_work_aspect
       camera.ppy *= self._compose_work_aspect
@@ -1684,10 +1690,12 @@ def warper_type(self) -&gt; str:
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>Tuple[List[cv.detail_CameraParams], np.ndarray, str]</code></dt>
-<dd>각 영상의 camera parameter,
-매칭된 영상의 index,
-매칭 graph (영상 간 연결 관계) 정보</dd>
+<dt><strong><code>cameras</code></strong> :&ensp;<code>List[cv.detail_CameraParams]</code></dt>
+<dd>각 영상의 camera parameter</dd>
+<dt><strong><code>indices</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>매칭된 영상의 index 목록</dd>
+<dt><strong><code>matches_graph</code></strong> :&ensp;<code>str</code></dt>
+<dd>매칭 graph (영상 간 연결 관계) 정보</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -1710,9 +1718,11 @@ def warper_type(self) -&gt; str:
 
   Returns
   -------
-  Tuple[List[cv.detail_CameraParams], np.ndarray, str]
-      각 영상의 camera parameter,
-      매칭된 영상의 index,
+  cameras : List[cv.detail_CameraParams]
+      각 영상의 camera parameter
+  indices : np.ndarray
+      매칭된 영상의 index 목록
+  matches_graph : str
       매칭 graph (영상 간 연결 관계) 정보
   &#34;&#34;&#34;
   logger.debug(&#39;Feature finding and matching&#39;)
@@ -1756,7 +1766,7 @@ def warper_type(self) -&gt; str:
   adjuster_status, cameras = self.bundle_adjuster.apply(
       features=features, pairwise_matches=pairwise_matches, cameras=cameras)
   if not adjuster_status:
-    logger.error(&#39;Camera parameters adjusting failed&#39;)
+    raise ValueError(&#39;Camera parameters adjusting failed&#39;)
 
   logger.debug(&#39;Wave correction&#39;)
   Rs = [np.copy(camera.R) for camera in cameras]
@@ -2016,7 +2026,7 @@ The default is 0.3 for ORB and 0.65 for other feature types.</dd>
   stitched_image, stitched_mask = self.blend(images=scaled_images,
                                              masks=warped_masks,
                                              rois=rois)
-  stitched_image[np.logical_not(stitched_mask)] = np.median(stitched_image)
+  stitched_image[np.logical_not(stitched_mask)] = np.min(stitched_image)
 
   if images.ndim == 2:
     # 원본 영상이 2차원인 경우 (열화상) 경우 첫 번째 채널만 추출
@@ -2024,6 +2034,7 @@ The default is 0.3 for ORB and 0.65 for other feature types.</dd>
 
   unscaled_image = images.unscale(image=stitched_image, out_range=&#39;int16&#39;)
 
+  # TODO graph, indices 대신 다른 정보도 포함한 dict 반환 (yaml 저장 가능한 형태로)
   return unscaled_image, stitched_mask, matches_graph, indices</code></pre>
 </details>
 </dd>
@@ -2049,7 +2060,7 @@ The default is 0.3 for ORB and 0.65 for other feature types.</dd>
 <h2 id="raises">Raises</h2>
 <dl>
 <dt><code>cv.error</code></dt>
-<dd>너무 과도한 영상 변형 시 raise</dd>
+<dd>지나치게 과도한 영상 변형 시</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -2081,9 +2092,9 @@ The default is 0.3 for ORB and 0.65 for other feature types.</dd>
   Raises
   ------
   cv.error
-      너무 과도한 영상 변형 시 raise
+      지나치게 과도한 영상 변형 시
   &#34;&#34;&#34;
-  if self._compose_work_aspect != 1.0:
+  if not np.isclose(self._compose_work_aspect, 1.0, rtol=1e-05, atol=0):
     camera.focal *= self._compose_work_aspect
     camera.ppx *= self._compose_work_aspect
     camera.ppy *= self._compose_work_aspect

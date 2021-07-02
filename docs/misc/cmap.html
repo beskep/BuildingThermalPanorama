@@ -64,7 +64,7 @@ def extract_flir_colormap(image_path: str,
   np.savetxt(fname=save_path, X=palette_array.reshape([-1, 3]), fmt=&#39;%d&#39;)
 
 
-class Colormap(ListedColormap):
+class FLIRColormap(ListedColormap):
 
   @classmethod
   def from_uint8_colors(cls,
@@ -199,8 +199,8 @@ class Colormap(ListedColormap):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="src.misc.cmap.Colormap"><code class="flex name class">
-<span>class <span class="ident">Colormap</span></span>
+<dt id="src.misc.cmap.FLIRColormap"><code class="flex name class">
+<span>class <span class="ident">FLIRColormap</span></span>
 <span>(</span><span>colors, name='from_list', N=None)</span>
 </code></dt>
 <dd>
@@ -239,7 +239,7 @@ If ::</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Colormap(ListedColormap):
+<pre><code class="python">class FLIRColormap(ListedColormap):
 
   @classmethod
   def from_uint8_colors(cls,
@@ -322,7 +322,7 @@ If ::</p>
 </ul>
 <h3>Static methods</h3>
 <dl>
-<dt id="src.misc.cmap.Colormap.from_flir_file"><code class="name flex">
+<dt id="src.misc.cmap.FLIRColormap.from_flir_file"><code class="name flex">
 <span>def <span class="ident">from_flir_file</span></span>(<span>path: str) ‑> matplotlib.colors.ListedColormap</span>
 </code></dt>
 <dd>
@@ -362,7 +362,7 @@ def from_flir_file(cls, path: str) -&gt; ListedColormap:
   return instance</code></pre>
 </details>
 </dd>
-<dt id="src.misc.cmap.Colormap.from_uint8_colors"><code class="name flex">
+<dt id="src.misc.cmap.FLIRColormap.from_uint8_colors"><code class="name flex">
 <span>def <span class="ident">from_uint8_colors</span></span>(<span>colors: numpy.ndarray, color_space: str = 'RGB') ‑> matplotlib.colors.ListedColormap</span>
 </code></dt>
 <dd>
@@ -415,7 +415,7 @@ def from_uint8_colors(cls,
   return instance</code></pre>
 </details>
 </dd>
-<dt id="src.misc.cmap.Colormap.from_uint8_text_file"><code class="name flex">
+<dt id="src.misc.cmap.FLIRColormap.from_uint8_text_file"><code class="name flex">
 <span>def <span class="ident">from_uint8_text_file</span></span>(<span>path: Union[str, pathlib.Path], color_space='RGB') ‑> matplotlib.colors.ListedColormap</span>
 </code></dt>
 <dd>
@@ -484,11 +484,11 @@ def from_uint8_text_file(cls,
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="src.misc.cmap.Colormap" href="#src.misc.cmap.Colormap">Colormap</a></code></h4>
+<h4><code><a title="src.misc.cmap.FLIRColormap" href="#src.misc.cmap.FLIRColormap">FLIRColormap</a></code></h4>
 <ul class="">
-<li><code><a title="src.misc.cmap.Colormap.from_flir_file" href="#src.misc.cmap.Colormap.from_flir_file">from_flir_file</a></code></li>
-<li><code><a title="src.misc.cmap.Colormap.from_uint8_colors" href="#src.misc.cmap.Colormap.from_uint8_colors">from_uint8_colors</a></code></li>
-<li><code><a title="src.misc.cmap.Colormap.from_uint8_text_file" href="#src.misc.cmap.Colormap.from_uint8_text_file">from_uint8_text_file</a></code></li>
+<li><code><a title="src.misc.cmap.FLIRColormap.from_flir_file" href="#src.misc.cmap.FLIRColormap.from_flir_file">from_flir_file</a></code></li>
+<li><code><a title="src.misc.cmap.FLIRColormap.from_uint8_colors" href="#src.misc.cmap.FLIRColormap.from_uint8_colors">from_uint8_colors</a></code></li>
+<li><code><a title="src.misc.cmap.FLIRColormap.from_uint8_text_file" href="#src.misc.cmap.FLIRColormap.from_uint8_text_file">from_uint8_text_file</a></code></li>
 </ul>
 </li>
 </ul>

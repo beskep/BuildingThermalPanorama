@@ -4,16 +4,15 @@ import cv2 as cv
 import numpy as np
 import pytest
 import skimage.exposure
-import skimage.io
 
-import ivimages as ivi
 import stitch
+from misc.tools import ImageIO
 
 
 def test_stitcher():
-  img_dir = DATA_DIR.joinpath('MainBldgBackLoc1PanTiltTripod')
-  loader = ivi.ImageLoader(img_dir=img_dir, img_ext='npy')
-  arrays = [loader.read(x).astype('float32') for x in loader.files]
+  img_dir = DATA_DIR.joinpath('MainBldgBackLoc1PanTiltTripod/IR')
+  files = img_dir.glob('*.npy')
+  arrays = [ImageIO.read_image(x) for x in files]
 
   def _prep(image):
     mask = (image > -30.0).astype(np.uint8)

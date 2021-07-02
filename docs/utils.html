@@ -28,7 +28,7 @@
 </summary>
 <pre><code class="python">import sys
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 from loguru import logger
 from rich.console import Console
@@ -36,7 +36,6 @@ from rich.logging import RichHandler
 
 SRC_DIR = Path(__file__).parent.resolve()
 ROOT_DIR = SRC_DIR.parent
-SCRIPT_DIR = ROOT_DIR.joinpath(&#39;scripts&#39;)
 DATA_DIR = ROOT_DIR.joinpath(&#39;data&#39;)
 
 _SRC_DIR = SRC_DIR.as_posix()
@@ -46,7 +45,7 @@ if _SRC_DIR not in sys.path:
 console = Console()
 
 
-def set_logger(level: Optional[str] = None):
+def set_logger(level: Optional[Union[int, str]] = None):
   logger.remove()
 
   if level is None:
@@ -56,14 +55,11 @@ def set_logger(level: Optional[str] = None):
       level = &#39;INFO&#39;
 
   rich_handler = RichHandler(show_time=True, console=console)
-  logger.add(rich_handler,
-             level=level.upper(),
-             format=&#39;{message}&#39;,
-             enqueue=True)
-  logger.add(&#39;.log&#39;,
+  logger.add(rich_handler, level=level, format=&#39;{message}&#39;, enqueue=True)
+  logger.add(&#39;pano.log&#39;,
              level=&#39;DEBUG&#39;,
              rotation=&#39;1 week&#39;,
-             retention=&#39;1 week&#39;,
+             retention=&#39;1 month&#39;,
              encoding=&#39;UTF-8-SIG&#39;,
              enqueue=True)</code></pre>
 </details>
@@ -76,7 +72,7 @@ def set_logger(level: Optional[str] = None):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="src.utils.set_logger"><code class="name flex">
-<span>def <span class="ident">set_logger</span></span>(<span>level: Union[str, NoneType] = None)</span>
+<span>def <span class="ident">set_logger</span></span>(<span>level: Union[int, str, NoneType] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -84,7 +80,7 @@ def set_logger(level: Optional[str] = None):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def set_logger(level: Optional[str] = None):
+<pre><code class="python">def set_logger(level: Optional[Union[int, str]] = None):
   logger.remove()
 
   if level is None:
@@ -94,14 +90,11 @@ def set_logger(level: Optional[str] = None):
       level = &#39;INFO&#39;
 
   rich_handler = RichHandler(show_time=True, console=console)
-  logger.add(rich_handler,
-             level=level.upper(),
-             format=&#39;{message}&#39;,
-             enqueue=True)
-  logger.add(&#39;.log&#39;,
+  logger.add(rich_handler, level=level, format=&#39;{message}&#39;, enqueue=True)
+  logger.add(&#39;pano.log&#39;,
              level=&#39;DEBUG&#39;,
              rotation=&#39;1 week&#39;,
-             retention=&#39;1 week&#39;,
+             retention=&#39;1 month&#39;,
              encoding=&#39;UTF-8-SIG&#39;,
              enqueue=True)</code></pre>
 </details>

@@ -1,6 +1,6 @@
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 from loguru import logger
 from rich.console import Console
@@ -8,7 +8,6 @@ from rich.logging import RichHandler
 
 SRC_DIR = Path(__file__).parent.resolve()
 ROOT_DIR = SRC_DIR.parent
-SCRIPT_DIR = ROOT_DIR.joinpath('scripts')
 DATA_DIR = ROOT_DIR.joinpath('data')
 
 _SRC_DIR = SRC_DIR.as_posix()
@@ -18,7 +17,7 @@ if _SRC_DIR not in sys.path:
 console = Console()
 
 
-def set_logger(level: Optional[str] = None):
+def set_logger(level: Optional[Union[int, str]] = None):
   logger.remove()
 
   if level is None:
@@ -28,13 +27,10 @@ def set_logger(level: Optional[str] = None):
       level = 'INFO'
 
   rich_handler = RichHandler(show_time=True, console=console)
-  logger.add(rich_handler,
-             level=level.upper(),
-             format='{message}',
-             enqueue=True)
-  logger.add('.log',
+  logger.add(rich_handler, level=level, format='{message}', enqueue=True)
+  logger.add('pano.log',
              level='DEBUG',
              rotation='1 week',
-             retention='1 week',
+             retention='1 month',
              encoding='UTF-8-SIG',
              enqueue=True)

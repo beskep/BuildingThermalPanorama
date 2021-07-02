@@ -1,17 +1,12 @@
 from pathlib import Path
-from shutil import copy2
 from typing import Optional, Tuple, Union
 from warnings import warn
-
-import utils
 
 import cv2 as cv
 import numpy as np
 import pandas as pd
 import PIL.Image
 import yaml
-from matplotlib.pyplot import get_cmap
-from rich.progress import track
 from skimage.exposure import equalize_hist, rescale_intensity
 from skimage.io import imread, imsave
 from skimage.util import compare_images
@@ -311,19 +306,30 @@ class ImageIO:
     elif path.suffix == cls.CSV_EXT:
       np.savetxt(fname=path.as_posix(), X=array, delimiter=cls.DELIMITER)
     else:
-      # FIXME uint16 영상 저장 불가
       imsave(fname=path.as_posix(), arr=array, check_contrast=check_contrast)
 
   @staticmethod
-  def _scale_and_save_image(array: np.ndarray, path: Path, exts: list):
+  def _scale_and_save_image(array: np.ndarray,
+                            path: Path,
+                            exts: list,
+                            dtype='uint8'):
     if not exts:
       return
+    if dtype not in ('uint8', 'uint16'):
+      raise ValueError
 
-    image = uint16_image(array)
-    pil_image = PIL.Image.fromarray(image)
+    if dtype == 'uint8':
+      image = uint8_image(array)
+      for ext in exts:
+        imsave(fname=path.with_suffix(ext).as_posix(),
+               arr=image,
+               check_contrast=False)
+    else:
+      image = uint16_image(array)
+      pil_image = PIL.Image.fromarray(image)
 
-    for ext in exts:
-      pil_image.save(fp=path.with_suffix(ext))
+      for ext in exts:
+        pil_image.save(fp=path.with_suffix(ext))
 
   @staticmethod
   def _save_image(array: np.ndarray, path: Path, exts: list):
@@ -335,9 +341,8 @@ class ImageIO:
                           path: Union[str, Path],
                           array: np.ndarray,
                           exts: list,
-                          scale=False,
                           meta: Optional[dict] = None,
-                          save_meta=False):
+                          dtype: Optional[str] = None):
     """
     주어진 path와 각 확장자 (`exts`)에 따라 영상 파일 저장.
     조건에 따라 주어진 메타 정보를 함께 저장하며, 영상 확장자 (`.png` 등) 파일은
@@ -351,18 +356,14 @@ class ImageIO:
         저장할 영상.
     exts : list
         저장할 확장자 목록.
-    scale : bool, optional
-        `True`인 경우, 영상 확장자 (`.png` 등) 파일은 `uint16` 범위로
-        픽셀값을 조정하고 저장.
     meta : Optional[dict], optional
-        영상의 메타데이터 (Exif 정보 등).
-    save_meta : bool, optional
-        `True`인 경우 `{file name}_meta.yaml` 파일에 메타 정보 저장.
+        영상의 메타데이터 (Exif 정보 등). `None`이 아니면 `{file name}_meta.yaml`
+        파일에 메타 정보 저장.
+    dtype : Optional[str], optional
+        None이면 입력한 array를 그대로 영상 확장자로 저장. 'uint8' 혹은 'uint16'인
+        경우, 해당 dtype의 범위로 정규화하고 저장.
     """
     path = Path(path)
-
-    if save_meta and meta is None:
-      meta = dict()
 
     # npy 저장
     if cls.NPY_EXT in exts:
@@ -377,58 +378,17 @@ class ImageIO:
       exts.remove(cls.CSV_EXT)
 
     # 이미지 파일 저장
-    if scale:
-      cls._scale_and_save_image(array=array, path=path, exts=exts)
-    else:
+    if dtype is None:
       cls._save_image(array=array, path=path, exts=exts)
+    else:
+      cls._scale_and_save_image(array=array, path=path, exts=exts, dtype=dtype)
 
     # 메타 데이터 저장
-    if save_meta:
+    if meta is not None:
       meta['range'] = {
-          'min': np.around(np.nanmin(array), 4).item(),
-          'max': np.around(np.nanmax(array), 4).item()
+          'min': np.around(np.nanmin(array).item(), 4).item(),
+          'max': np.around(np.nanmax(array).item(), 4).item()
       }
       meta_path = cls._meta_path(path)
       with open(meta_path, 'w', encoding=cls.ENCODING) as f:
         yaml.safe_dump(meta, f)
-
-
-def testo_convert(data_dir,
-                  save_dir,
-                  cmap: Optional[str] = 'inferno',
-                  vis_suffix='_실화상 이미지.JPG'):
-  # TODO `pano.py` 로 옮기기
-
-  data_dir = Path(data_dir).resolve()
-  save_dir = Path(save_dir).resolve()
-  ir_dir = save_dir.joinpath('IR')
-  vis_dir = save_dir.joinpath('VIS')
-  for d in (ir_dir, vis_dir):
-    if not d.exists():
-      d.mkdir()
-
-  if cmap is not None:
-    cmap = get_cmap(cmap)
-
-  ir_files = list(data_dir.rglob('*.xlsx'))
-  for ir_file in track(ir_files, console=utils.console):
-    vis_file = ir_file.parent.joinpath(ir_file.stem + vis_suffix)
-    if not vis_file.exists():
-      raise FileNotFoundError(vis_file)
-
-    # IR npy
-    ir = ImageIO.read_image(ir_file)
-    ImageIO.save_image(path=ir_dir.joinpath(ir_file.stem + '.npy'), array=ir)
-
-    # IR png
-    if cmap is not None:
-      ir_image = cmap(normalize_image(ir), bytes=True)
-    else:
-      ir_image = uint8_image(ir)
-
-    ImageIO.save_image(path=ir_dir.joinpath(ir_file.stem + '.png'),
-                       array=ir_image)
-
-    # Visible jpg
-    copy2(src=vis_file,
-          dst=vis_dir.joinpath(ir_file.stem + '_visible' + vis_file.suffix))

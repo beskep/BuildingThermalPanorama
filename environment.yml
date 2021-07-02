@@ -6,21 +6,26 @@ channels:
 dependencies:
   - python
   - pip
+  # UI
   - pip:
     - pyside2>=5.15
     - pyqt5>=5.15
+  # dev
   - pytest
   - cx_freeze
   - rich
   - loguru
+  - omegaconf
+  - pdoc3
+  - fire
+  # data analysis
   - numpy
   - matplotlib
   - seaborn
   - pandas
   - openpyxl
+  # image
   - opencv
   - scikit-image
   - tensorflow
   - simpleitk
-  - pdoc3
-  - fire

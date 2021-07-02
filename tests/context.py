@@ -14,6 +14,6 @@ if _SRC_DIR not in sys.path:
 # pylint: disable=wrong-import-position
 import distortion
 import flir
-import ivimages
 import misc
+import registration
 import stitch

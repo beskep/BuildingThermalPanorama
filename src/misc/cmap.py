@@ -36,7 +36,7 @@ def extract_flir_colormap(image_path: str,
   np.savetxt(fname=save_path, X=palette_array.reshape([-1, 3]), fmt='%d')
 
 
-class Colormap(ListedColormap):
+class FLIRColormap(ListedColormap):
 
   @classmethod
   def from_uint8_colors(cls,

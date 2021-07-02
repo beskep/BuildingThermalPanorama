@@ -20,11 +20,19 @@ from interface.pano import ThermalPanorama
 
 class _ThermalPanorama(ThermalPanorama):
 
-  def __init__(self, config='./config.yaml', debug=False) -> None:
+  def __init__(self, directory, debug=False) -> None:
+    """
+    Parameters
+    ----------
+    directory : str
+        Working directory
+    debug : bool, optional
+        If true, log debug message
+    """
     self.level = 'DEBUG' if debug else 'INFO'
     utils.set_logger(level=self.level)
 
-    super().__init__(config)
+    super().__init__(directory)
 
   def register(self):
     try:
@@ -46,4 +54,11 @@ class _ThermalPanorama(ThermalPanorama):
 
 
 if __name__ == '__main__':
+  sys.argv = [
+      sys.argv[0],
+      '--directory',
+      r'D:\test\panorama\cli',
+      'panorama',
+  ]
+
   fire.Fire(_ThermalPanorama)

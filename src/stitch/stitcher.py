@@ -477,7 +477,7 @@ class Stitcher:
     stitched_image, stitched_mask = self.blend(images=scaled_images,
                                                masks=warped_masks,
                                                rois=rois)
-    stitched_image[np.logical_not(stitched_mask)] = np.median(stitched_image)
+    stitched_image[np.logical_not(stitched_mask)] = np.min(stitched_image)
 
     if images.ndim == 2:
       # 원본 영상이 2차원인 경우 (열화상) 경우 첫 번째 채널만 추출
@@ -485,6 +485,7 @@ class Stitcher:
 
     unscaled_image = images.unscale(image=stitched_image, out_range='int16')
 
+    # TODO graph, indices 대신 다른 정보도 포함한 dict 반환 (yaml 저장 가능한 형태로)
     return unscaled_image, stitched_mask, matches_graph, indices
 
   def calculate_camera_matrix(
@@ -504,9 +505,11 @@ class Stitcher:
 
     Returns
     -------
-    Tuple[List[cv.detail_CameraParams], np.ndarray, str]
-        각 영상의 camera parameter,
-        매칭된 영상의 index,
+    cameras : List[cv.detail_CameraParams]
+        각 영상의 camera parameter
+    indices : np.ndarray
+        매칭된 영상의 index 목록
+    matches_graph : str
         매칭 graph (영상 간 연결 관계) 정보
     """
     logger.debug('Feature finding and matching')
@@ -550,7 +553,7 @@ class Stitcher:
     adjuster_status, cameras = self.bundle_adjuster.apply(
         features=features, pairwise_matches=pairwise_matches, cameras=cameras)
     if not adjuster_status:
-      logger.error('Camera parameters adjusting failed')
+      raise ValueError('Camera parameters adjusting failed')
 
     logger.debug('Wave correction')
     Rs = [np.copy(camera.R) for camera in cameras]
@@ -590,9 +593,9 @@ class Stitcher:
     Raises
     ------
     cv.error
-        너무 과도한 영상 변형 시 raise
+        지나치게 과도한 영상 변형 시
     """
-    if self._compose_work_aspect != 1.0:
+    if not np.isclose(self._compose_work_aspect, 1.0, rtol=1e-05, atol=0):
       camera.focal *= self._compose_work_aspect
       camera.ppx *= self._compose_work_aspect
       camera.ppy *= self._compose_work_aspect

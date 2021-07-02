@@ -31,25 +31,30 @@
 외피 열화상 파노라마 영상처리 알고리즘의 CLI 인터페이스
 &#34;&#34;&#34;
 from pathlib import Path
-from typing import List, Optional
+from shutil import copy2
+from typing import List, Optional, Union
 
 import utils
 
 import matplotlib.pyplot as plt
 import numpy as np
-import yaml
 from loguru import logger
+from omegaconf import DictConfig, OmegaConf
 from PIL import Image as PILImage
 from rich.progress import track
 from skimage.exposure import rescale_intensity
 from skimage.io import imsave
+from yaml.error import YAMLError
 
 import flir
 import stitch
 from misc import exif, tools
 from misc.tools import ImageIO
 
-CURRENT_DIR = Path(&#39;.&#39;).resolve()
+from .cmap import get_thermal_colormap
+
+CONFIG_FNAME = &#39;config.yaml&#39;
+DEFAULT_CONFIG_PATH = utils.SRC_DIR.joinpath(CONFIG_FNAME)
 
 
 class _DIR:
@@ -62,37 +67,53 @@ class _DIR:
 
 
 class ThermalPanorama:
-  # TODO: colormap
 
-  def __init__(self, config) -&gt; None:
-    config = Path(config).resolve()
-    logger.debug(&#39;Config path: `{}`&#39;, config)
-    if not config.exists():
-      raise FileNotFoundError(config)
-
-    with open(config, &#39;r&#39;, encoding=&#39;utf-8&#39;) as f:
-      self._config: dict = yaml.safe_load(f)
-
-    wd = Path(self._config[&#39;path&#39;][&#39;working_directory&#39;])
-    if not wd.is_absolute():
-      wd = config.parent.joinpath(wd).resolve()
+  def __init__(self, directory: Union[str, Path]) -&gt; None:
+    # working directory
+    wd = Path(directory).resolve()
     if not wd.exists():
       raise FileNotFoundError(wd)
-
     self._wd = wd
-    self._exts = (self._config[&#39;path&#39;][&#39;save_ext&#39;][&#39;IR&#39;],
-                  self._config[&#39;path&#39;][&#39;save_ext&#39;][&#39;VIS&#39;])
+
+    # config
+    config = OmegaConf.load(DEFAULT_CONFIG_PATH)
+    config_path = wd.joinpath(CONFIG_FNAME)
+    if config_path.exists():
+      try:
+        wd_config = OmegaConf.load(config_path)
+      except YAMLError:
+        logger.error(&#39;`config.yaml` 파일의 형식이 올바르지 않습니다. 기본 설정을 사용합니다.&#39;)
+      else:
+        # 기본 설정에 working dir의 설정을 덮어씌움
+        config = OmegaConf.merge(config, wd_config)
+    else:
+      # 기본 설정 파일 복사
+      copy2(src=DEFAULT_CONFIG_PATH, dst=config_path)
+
+    OmegaConf.set_readonly(config, True)
+    self._config = config
+
+    # 파일 형식
+    self._exts = (config[&#39;file&#39;][&#39;save_ext&#39;][&#39;IR&#39;],
+                  config[&#39;file&#39;][&#39;save_ext&#39;][&#39;VIS&#39;])
 
     self._manufacturer = self._check_manufacturer()
-    self._flir_ext = flir.FlirExtractor()
     logger.debug(&#39;Manufacturer: {}&#39;, self._manufacturer)
+    if self._manufacturer == &#39;FLIR&#39;:
+      self._flir_ext = flir.FlirExtractor()
+    else:
+      self._flir_ext = None
+
+    # colormap
+    self._cmap = get_thermal_colormap(
+        name=config[&#39;color&#39;].get(&#39;colormap&#39;, &#39;iron&#39;))
 
   def _check_manufacturer(self) -&gt; str:
-    raw_dir = self._dir(_DIR.RAW)
+    raw_dir = self._dir(_DIR.RAW, mkdir=False)
 
-    flir_files = list(raw_dir.glob(self._config[&#39;path&#39;][&#39;FLIR&#39;][&#39;IR&#39;]))
-    testo_ir_files = list(raw_dir.glob(self._config[&#39;path&#39;][&#39;testo&#39;][&#39;IR&#39;]))
-    testo_vis_files = list(raw_dir.glob(self._config[&#39;path&#39;][&#39;testo&#39;][&#39;VIS&#39;]))
+    flir_files = list(raw_dir.glob(self._config[&#39;file&#39;][&#39;FLIR&#39;][&#39;IR&#39;]))
+    testo_ir_files = list(raw_dir.glob(self._config[&#39;file&#39;][&#39;testo&#39;][&#39;IR&#39;]))
+    testo_vis_files = list(raw_dir.glob(self._config[&#39;file&#39;][&#39;testo&#39;][&#39;VIS&#39;]))
 
     if testo_ir_files and testo_vis_files:
       manufacturer = &#39;testo&#39;
@@ -105,7 +126,7 @@ class ThermalPanorama:
 
   def _files(self) -&gt; List[Path]:
     # FIXME Raw 폴더에 원본이 없는 경우에도 지원?
-    pattern = self._config[&#39;path&#39;][self._manufacturer][&#39;IR&#39;]
+    pattern = self._config[&#39;file&#39;][self._manufacturer][&#39;IR&#39;]
     files = [x.resolve() for x in self._dir(_DIR.RAW).glob(pattern)]
 
     if not files:
@@ -114,12 +135,12 @@ class ThermalPanorama:
     return files
 
   @property
-  def working_dir(self) -&gt; Path:
+  def _working_dir(self) -&gt; Path:
     return self._wd
 
-  def _dir(self, folder: str):
-    d = self.working_dir.joinpath(folder)
-    if not d.exists():
+  def _dir(self, folder: str, mkdir=True):
+    d = self._working_dir.joinpath(folder)
+    if mkdir and not d.exists():
       d.mkdir()
 
     return d
@@ -137,7 +158,7 @@ class ThermalPanorama:
     return ir, vis, meta
 
   def _extract_testo_image(self, path: Path):
-    vis_suffix = self._config[&#39;path&#39;][&#39;testo&#39;][&#39;VIS&#39;].replace(&#39;*&#39;, &#39;&#39;)
+    vis_suffix = self._config[&#39;file&#39;][&#39;testo&#39;][&#39;VIS&#39;].replace(&#39;*&#39;, &#39;&#39;)
     vis_path = path.with_name(path.stem + vis_suffix)
     if not vis_path.exists():
       raise FileNotFoundError(vis_path)
@@ -157,10 +178,11 @@ class ThermalPanorama:
 
     ImageIO.save_image_and_meta(path=ir_path,
                                 array=ir,
-                                exts=[self._exts[0], &#39;.png&#39;],
-                                scale=True,
-                                meta=meta,
-                                save_meta=True)
+                                exts=[self._exts[0]],
+                                meta=meta)
+    if self._config[&#39;color&#39;][&#39;extract_color_image&#39;]:
+      ImageIO.save_image(path=ir_path.with_name(fname + &#39;_color.png&#39;),
+                         array=self._cmap(tools.normalize_image(ir)))
 
     ImageIO.save_image(path=vis_path, array=vis)
 
@@ -211,53 +233,35 @@ class ThermalPanorama:
 
     return ir_images, vis_images
 
-  def register(self):
-    pass
-
-  def segment(self):
-    pass
-
-  def panorama(self):
-    wl = self._config[&#39;panorama&#39;][&#39;target&#39;].upper()
-    if not wl in (&#39;IR&#39;, &#39;VIS&#39;):
-      raise ValueError(wl)
-
-    sopt: dict = self._config[&#39;panorama&#39;][&#39;stitch&#39;]
-    popt: dict = self._config[&#39;panorama&#39;][&#39;preprocess&#39;][wl]
-
-    pano_dir = self._dir(_DIR.PANO)
-    pano_fname = &#39;panorama_&#39; + sopt[&#39;warp&#39;]
-    if pano_dir.joinpath(pano_fname + &#39;.png&#39;).exists():
-      logger.info(&#39;기 생성된 파노라마 파일이 존재합니다.&#39;)
-      return
+  def _stitch(self, spectrum: str):
+    sopt: DictConfig = self._config[&#39;panorama&#39;][&#39;stitch&#39;]
+    popt: DictConfig = self._config[&#39;panorama&#39;][&#39;preprocess&#39;][spectrum]
 
     ir_images, vis_images = self._read_files()
-    images = ir_images if wl == &#39;IR&#39; else vis_images
+    images = ir_images if spectrum == &#39;IR&#39; else vis_images
     if not images:
-      logger.warning(&#39;대상 영상이 없습니다.&#39;)
-      return
+      raise ValueError(&#39;대상 영상이 없습니다.&#39;)
 
     # 전처리
-    prep = stitch.preprocess.PanoramaPreprocess(
-        is_numeric=(images[0].ndim == 2),
-        mask_threshold=popt[&#39;masking_threshold&#39;],
-        contrast=popt[&#39;contrast&#39;],
-        denoise=popt[&#39;denoise&#39;])
+    prep = stitch.PanoramaPreprocess(is_numeric=(images[0].ndim == 2),
+                                     mask_threshold=popt[&#39;masking_threshold&#39;],
+                                     contrast=popt[&#39;contrast&#39;],
+                                     denoise=popt[&#39;denoise&#39;])
     if &#39;bilateral_args&#39; in popt:
       prep.set_bilateral_args(**popt[&#39;bilateral_args&#39;])
     if &#39;gaussian_args&#39; in popt:
       prep.set_gaussian_args(**popt[&#39;gaussian_args&#39;])
 
     # 영상
-    stitching_images = stitch.stitcher.StitchingImages(arrays=images)
+    stitching_images = stitch.StitchingImages(arrays=images)
     stitching_images.set_preprocess(prep)
     logger.debug(&#39;Stitching: 대상 영상 &amp; 전처리 설정&#39;)
 
     # Stitcher
-    stitcher = stitch.stitcher.Stitcher(mode=sopt[&#39;perspective&#39;],
-                                        compose_scale=sopt[&#39;compose_scale&#39;],
-                                        work_scale=sopt[&#39;work_scale&#39;],
-                                        warp_threshold=sopt[&#39;warp_threshold&#39;])
+    stitcher = stitch.Stitcher(mode=sopt[&#39;perspective&#39;],
+                               compose_scale=sopt[&#39;compose_scale&#39;],
+                               work_scale=sopt[&#39;work_scale&#39;],
+                               warp_threshold=sopt[&#39;warp_threshold&#39;])
     stitcher.warper_type = sopt[&#39;warp&#39;]
     logger.debug(&#39;Stitching: Stitcher 초기화&#39;)
 
@@ -267,14 +271,14 @@ class ThermalPanorama:
           masks=None,
           image_names=[x.stem for x in self._files()])
 
-    if self._config[&#39;panorama&#39;][&#39;stitch&#39;][&#39;crop&#39;]:
-      logger.debug(&#39;Crop panorama&#39;)
-      x1, x2, y1, y2 = tools.mask_bbox(mask=mask, morphology_open=True)
-      panorama = panorama[y1:y2, x1:x2]
-      mask = mask[y1:y2, x1:x2]
+    return panorama, mask, graph, indices
+
+  def _save_panorama(self, fname: str, spectrum: str, panorama: np.ndarray,
+                     mask: np.ndarray, graph: str, indices: np.ndarray):
+    pano_dir = self._dir(_DIR.PANO)
 
     with utils.console.status(&#39;Saving...&#39;):
-      if wl == &#39;IR&#39;:
+      if spectrum == &#39;IR&#39;:
         meta = {
             &#39;panorama&#39;: {
                 &#39;graph&#39;: graph,
@@ -282,21 +286,54 @@ class ThermalPanorama:
             }
         }
         ImageIO.save_image_and_meta(
-            path=pano_dir.joinpath(pano_fname),
-            # array=np.round(panorama, 3),
+            path=pano_dir.joinpath(fname),
             array=panorama.astype(np.float16),  # TODO 추출부터 float16으로
-            exts=[&#39;.npy&#39;, &#39;.png&#39;],
-            scale=True,
-            meta=meta,
-            save_meta=True)
+            exts=[&#39;.npy&#39;],
+            meta=meta)
+
+        color_panorama = self._cmap(tools.normalize_image(panorama))
+        ImageIO.save_image(path=pano_dir.joinpath(fname + &#39;_color.png&#39;),
+                           array=color_panorama)
       else:
         panorama_image = tools.uint8_image(panorama)
-        ImageIO.save_image(
-            path=pano_dir.joinpath(pano_fname).with_suffix(&#39;.jpg&#39;),
-            array=panorama_image)
+        ImageIO.save_image(path=pano_dir.joinpath(fname).with_suffix(&#39;.jpg&#39;),
+                           array=panorama_image)
 
-      ImageIO.save_image(path=pano_dir.joinpath(pano_fname + &#39;_mask.png&#39;),
+      ImageIO.save_image(path=pano_dir.joinpath(fname + &#39;_mask.png&#39;),
                          array=rescale_intensity(mask, out_range=&#39;uint8&#39;))
+
+  def panorama(self):
+    spectrum = self._config[&#39;panorama&#39;][&#39;target&#39;].upper()
+    if not spectrum in (&#39;IR&#39;, &#39;VIS&#39;):
+      raise ValueError(spectrum)
+
+    fname = &#39;panorama_{}&#39;.format(self._config[&#39;panorama&#39;][&#39;stitch&#39;][&#39;warp&#39;])
+    path = self._dir(_DIR.PANO, mkdir=False).joinpath(fname + self._exts[0])
+    if path.exists():
+      logger.info(&#39;기존에 생성된 파노라마 파일이 존재합니다.&#39;)
+      return
+
+    # 파노라마 생성
+    try:
+      panorama, mask, graph, indices = self._stitch(spectrum=spectrum)
+    except ValueError as e:
+      logger.error(e)
+      return
+
+    # 데이터가 존재하는 부분만 crop
+    if self._config[&#39;panorama&#39;][&#39;stitch&#39;][&#39;crop&#39;]:
+      logger.debug(&#39;Crop panorama&#39;)
+      x1, x2, y1, y2 = tools.mask_bbox(mask=mask, morphology_open=True)
+      panorama = panorama[y1:y2, x1:x2]
+      mask = mask[y1:y2, x1:x2]
+
+    # 저장
+    self._save_panorama(fname=fname,
+                        spectrum=spectrum,
+                        panorama=panorama,
+                        mask=mask,
+                        graph=graph,
+                        indices=indices)
 
     logger.info(&#39;파노라마 생성 완료&#39;)</code></pre>
 </details>
@@ -312,7 +349,7 @@ class ThermalPanorama:
 <dl>
 <dt id="src.interface.pano.ThermalPanorama"><code class="flex name class">
 <span>class <span class="ident">ThermalPanorama</span></span>
-<span>(</span><span>config)</span>
+<span>(</span><span>directory: Union[str, pathlib.Path])</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -321,37 +358,53 @@ class ThermalPanorama:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ThermalPanorama:
-  # TODO: colormap
 
-  def __init__(self, config) -&gt; None:
-    config = Path(config).resolve()
-    logger.debug(&#39;Config path: `{}`&#39;, config)
-    if not config.exists():
-      raise FileNotFoundError(config)
-
-    with open(config, &#39;r&#39;, encoding=&#39;utf-8&#39;) as f:
-      self._config: dict = yaml.safe_load(f)
-
-    wd = Path(self._config[&#39;path&#39;][&#39;working_directory&#39;])
-    if not wd.is_absolute():
-      wd = config.parent.joinpath(wd).resolve()
+  def __init__(self, directory: Union[str, Path]) -&gt; None:
+    # working directory
+    wd = Path(directory).resolve()
     if not wd.exists():
       raise FileNotFoundError(wd)
-
     self._wd = wd
-    self._exts = (self._config[&#39;path&#39;][&#39;save_ext&#39;][&#39;IR&#39;],
-                  self._config[&#39;path&#39;][&#39;save_ext&#39;][&#39;VIS&#39;])
+
+    # config
+    config = OmegaConf.load(DEFAULT_CONFIG_PATH)
+    config_path = wd.joinpath(CONFIG_FNAME)
+    if config_path.exists():
+      try:
+        wd_config = OmegaConf.load(config_path)
+      except YAMLError:
+        logger.error(&#39;`config.yaml` 파일의 형식이 올바르지 않습니다. 기본 설정을 사용합니다.&#39;)
+      else:
+        # 기본 설정에 working dir의 설정을 덮어씌움
+        config = OmegaConf.merge(config, wd_config)
+    else:
+      # 기본 설정 파일 복사
+      copy2(src=DEFAULT_CONFIG_PATH, dst=config_path)
+
+    OmegaConf.set_readonly(config, True)
+    self._config = config
+
+    # 파일 형식
+    self._exts = (config[&#39;file&#39;][&#39;save_ext&#39;][&#39;IR&#39;],
+                  config[&#39;file&#39;][&#39;save_ext&#39;][&#39;VIS&#39;])
 
     self._manufacturer = self._check_manufacturer()
-    self._flir_ext = flir.FlirExtractor()
     logger.debug(&#39;Manufacturer: {}&#39;, self._manufacturer)
+    if self._manufacturer == &#39;FLIR&#39;:
+      self._flir_ext = flir.FlirExtractor()
+    else:
+      self._flir_ext = None
+
+    # colormap
+    self._cmap = get_thermal_colormap(
+        name=config[&#39;color&#39;].get(&#39;colormap&#39;, &#39;iron&#39;))
 
   def _check_manufacturer(self) -&gt; str:
-    raw_dir = self._dir(_DIR.RAW)
+    raw_dir = self._dir(_DIR.RAW, mkdir=False)
 
-    flir_files = list(raw_dir.glob(self._config[&#39;path&#39;][&#39;FLIR&#39;][&#39;IR&#39;]))
-    testo_ir_files = list(raw_dir.glob(self._config[&#39;path&#39;][&#39;testo&#39;][&#39;IR&#39;]))
-    testo_vis_files = list(raw_dir.glob(self._config[&#39;path&#39;][&#39;testo&#39;][&#39;VIS&#39;]))
+    flir_files = list(raw_dir.glob(self._config[&#39;file&#39;][&#39;FLIR&#39;][&#39;IR&#39;]))
+    testo_ir_files = list(raw_dir.glob(self._config[&#39;file&#39;][&#39;testo&#39;][&#39;IR&#39;]))
+    testo_vis_files = list(raw_dir.glob(self._config[&#39;file&#39;][&#39;testo&#39;][&#39;VIS&#39;]))
 
     if testo_ir_files and testo_vis_files:
       manufacturer = &#39;testo&#39;
@@ -364,7 +417,7 @@ class ThermalPanorama:
 
   def _files(self) -&gt; List[Path]:
     # FIXME Raw 폴더에 원본이 없는 경우에도 지원?
-    pattern = self._config[&#39;path&#39;][self._manufacturer][&#39;IR&#39;]
+    pattern = self._config[&#39;file&#39;][self._manufacturer][&#39;IR&#39;]
     files = [x.resolve() for x in self._dir(_DIR.RAW).glob(pattern)]
 
     if not files:
@@ -373,12 +426,12 @@ class ThermalPanorama:
     return files
 
   @property
-  def working_dir(self) -&gt; Path:
+  def _working_dir(self) -&gt; Path:
     return self._wd
 
-  def _dir(self, folder: str):
-    d = self.working_dir.joinpath(folder)
-    if not d.exists():
+  def _dir(self, folder: str, mkdir=True):
+    d = self._working_dir.joinpath(folder)
+    if mkdir and not d.exists():
       d.mkdir()
 
     return d
@@ -396,7 +449,7 @@ class ThermalPanorama:
     return ir, vis, meta
 
   def _extract_testo_image(self, path: Path):
-    vis_suffix = self._config[&#39;path&#39;][&#39;testo&#39;][&#39;VIS&#39;].replace(&#39;*&#39;, &#39;&#39;)
+    vis_suffix = self._config[&#39;file&#39;][&#39;testo&#39;][&#39;VIS&#39;].replace(&#39;*&#39;, &#39;&#39;)
     vis_path = path.with_name(path.stem + vis_suffix)
     if not vis_path.exists():
       raise FileNotFoundError(vis_path)
@@ -416,10 +469,11 @@ class ThermalPanorama:
 
     ImageIO.save_image_and_meta(path=ir_path,
                                 array=ir,
-                                exts=[self._exts[0], &#39;.png&#39;],
-                                scale=True,
-                                meta=meta,
-                                save_meta=True)
+                                exts=[self._exts[0]],
+                                meta=meta)
+    if self._config[&#39;color&#39;][&#39;extract_color_image&#39;]:
+      ImageIO.save_image(path=ir_path.with_name(fname + &#39;_color.png&#39;),
+                         array=self._cmap(tools.normalize_image(ir)))
 
     ImageIO.save_image(path=vis_path, array=vis)
 
@@ -470,53 +524,35 @@ class ThermalPanorama:
 
     return ir_images, vis_images
 
-  def register(self):
-    pass
-
-  def segment(self):
-    pass
-
-  def panorama(self):
-    wl = self._config[&#39;panorama&#39;][&#39;target&#39;].upper()
-    if not wl in (&#39;IR&#39;, &#39;VIS&#39;):
-      raise ValueError(wl)
-
-    sopt: dict = self._config[&#39;panorama&#39;][&#39;stitch&#39;]
-    popt: dict = self._config[&#39;panorama&#39;][&#39;preprocess&#39;][wl]
-
-    pano_dir = self._dir(_DIR.PANO)
-    pano_fname = &#39;panorama_&#39; + sopt[&#39;warp&#39;]
-    if pano_dir.joinpath(pano_fname + &#39;.png&#39;).exists():
-      logger.info(&#39;기 생성된 파노라마 파일이 존재합니다.&#39;)
-      return
+  def _stitch(self, spectrum: str):
+    sopt: DictConfig = self._config[&#39;panorama&#39;][&#39;stitch&#39;]
+    popt: DictConfig = self._config[&#39;panorama&#39;][&#39;preprocess&#39;][spectrum]
 
     ir_images, vis_images = self._read_files()
-    images = ir_images if wl == &#39;IR&#39; else vis_images
+    images = ir_images if spectrum == &#39;IR&#39; else vis_images
     if not images:
-      logger.warning(&#39;대상 영상이 없습니다.&#39;)
-      return
+      raise ValueError(&#39;대상 영상이 없습니다.&#39;)
 
     # 전처리
-    prep = stitch.preprocess.PanoramaPreprocess(
-        is_numeric=(images[0].ndim == 2),
-        mask_threshold=popt[&#39;masking_threshold&#39;],
-        contrast=popt[&#39;contrast&#39;],
-        denoise=popt[&#39;denoise&#39;])
+    prep = stitch.PanoramaPreprocess(is_numeric=(images[0].ndim == 2),
+                                     mask_threshold=popt[&#39;masking_threshold&#39;],
+                                     contrast=popt[&#39;contrast&#39;],
+                                     denoise=popt[&#39;denoise&#39;])
     if &#39;bilateral_args&#39; in popt:
       prep.set_bilateral_args(**popt[&#39;bilateral_args&#39;])
     if &#39;gaussian_args&#39; in popt:
       prep.set_gaussian_args(**popt[&#39;gaussian_args&#39;])
 
     # 영상
-    stitching_images = stitch.stitcher.StitchingImages(arrays=images)
+    stitching_images = stitch.StitchingImages(arrays=images)
     stitching_images.set_preprocess(prep)
     logger.debug(&#39;Stitching: 대상 영상 &amp; 전처리 설정&#39;)
 
     # Stitcher
-    stitcher = stitch.stitcher.Stitcher(mode=sopt[&#39;perspective&#39;],
-                                        compose_scale=sopt[&#39;compose_scale&#39;],
-                                        work_scale=sopt[&#39;work_scale&#39;],
-                                        warp_threshold=sopt[&#39;warp_threshold&#39;])
+    stitcher = stitch.Stitcher(mode=sopt[&#39;perspective&#39;],
+                               compose_scale=sopt[&#39;compose_scale&#39;],
+                               work_scale=sopt[&#39;work_scale&#39;],
+                               warp_threshold=sopt[&#39;warp_threshold&#39;])
     stitcher.warper_type = sopt[&#39;warp&#39;]
     logger.debug(&#39;Stitching: Stitcher 초기화&#39;)
 
@@ -526,14 +562,14 @@ class ThermalPanorama:
           masks=None,
           image_names=[x.stem for x in self._files()])
 
-    if self._config[&#39;panorama&#39;][&#39;stitch&#39;][&#39;crop&#39;]:
-      logger.debug(&#39;Crop panorama&#39;)
-      x1, x2, y1, y2 = tools.mask_bbox(mask=mask, morphology_open=True)
-      panorama = panorama[y1:y2, x1:x2]
-      mask = mask[y1:y2, x1:x2]
+    return panorama, mask, graph, indices
+
+  def _save_panorama(self, fname: str, spectrum: str, panorama: np.ndarray,
+                     mask: np.ndarray, graph: str, indices: np.ndarray):
+    pano_dir = self._dir(_DIR.PANO)
 
     with utils.console.status(&#39;Saving...&#39;):
-      if wl == &#39;IR&#39;:
+      if spectrum == &#39;IR&#39;:
         meta = {
             &#39;panorama&#39;: {
                 &#39;graph&#39;: graph,
@@ -541,39 +577,57 @@ class ThermalPanorama:
             }
         }
         ImageIO.save_image_and_meta(
-            path=pano_dir.joinpath(pano_fname),
-            # array=np.round(panorama, 3),
+            path=pano_dir.joinpath(fname),
             array=panorama.astype(np.float16),  # TODO 추출부터 float16으로
-            exts=[&#39;.npy&#39;, &#39;.png&#39;],
-            scale=True,
-            meta=meta,
-            save_meta=True)
+            exts=[&#39;.npy&#39;],
+            meta=meta)
+
+        color_panorama = self._cmap(tools.normalize_image(panorama))
+        ImageIO.save_image(path=pano_dir.joinpath(fname + &#39;_color.png&#39;),
+                           array=color_panorama)
       else:
         panorama_image = tools.uint8_image(panorama)
-        ImageIO.save_image(
-            path=pano_dir.joinpath(pano_fname).with_suffix(&#39;.jpg&#39;),
-            array=panorama_image)
+        ImageIO.save_image(path=pano_dir.joinpath(fname).with_suffix(&#39;.jpg&#39;),
+                           array=panorama_image)
 
-      ImageIO.save_image(path=pano_dir.joinpath(pano_fname + &#39;_mask.png&#39;),
+      ImageIO.save_image(path=pano_dir.joinpath(fname + &#39;_mask.png&#39;),
                          array=rescale_intensity(mask, out_range=&#39;uint8&#39;))
+
+  def panorama(self):
+    spectrum = self._config[&#39;panorama&#39;][&#39;target&#39;].upper()
+    if not spectrum in (&#39;IR&#39;, &#39;VIS&#39;):
+      raise ValueError(spectrum)
+
+    fname = &#39;panorama_{}&#39;.format(self._config[&#39;panorama&#39;][&#39;stitch&#39;][&#39;warp&#39;])
+    path = self._dir(_DIR.PANO, mkdir=False).joinpath(fname + self._exts[0])
+    if path.exists():
+      logger.info(&#39;기존에 생성된 파노라마 파일이 존재합니다.&#39;)
+      return
+
+    # 파노라마 생성
+    try:
+      panorama, mask, graph, indices = self._stitch(spectrum=spectrum)
+    except ValueError as e:
+      logger.error(e)
+      return
+
+    # 데이터가 존재하는 부분만 crop
+    if self._config[&#39;panorama&#39;][&#39;stitch&#39;][&#39;crop&#39;]:
+      logger.debug(&#39;Crop panorama&#39;)
+      x1, x2, y1, y2 = tools.mask_bbox(mask=mask, morphology_open=True)
+      panorama = panorama[y1:y2, x1:x2]
+      mask = mask[y1:y2, x1:x2]
+
+    # 저장
+    self._save_panorama(fname=fname,
+                        spectrum=spectrum,
+                        panorama=panorama,
+                        mask=mask,
+                        graph=graph,
+                        indices=indices)
 
     logger.info(&#39;파노라마 생성 완료&#39;)</code></pre>
 </details>
-<h3>Instance variables</h3>
-<dl>
-<dt id="src.interface.pano.ThermalPanorama.working_dir"><code class="name">var <span class="ident">working_dir</span> : pathlib.Path</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def working_dir(self) -&gt; Path:
-  return self._wd</code></pre>
-</details>
-</dd>
-</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="src.interface.pano.ThermalPanorama.panorama"><code class="name flex">
@@ -586,113 +640,39 @@ def working_dir(self) -&gt; Path:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def panorama(self):
-  wl = self._config[&#39;panorama&#39;][&#39;target&#39;].upper()
-  if not wl in (&#39;IR&#39;, &#39;VIS&#39;):
-    raise ValueError(wl)
+  spectrum = self._config[&#39;panorama&#39;][&#39;target&#39;].upper()
+  if not spectrum in (&#39;IR&#39;, &#39;VIS&#39;):
+    raise ValueError(spectrum)
 
-  sopt: dict = self._config[&#39;panorama&#39;][&#39;stitch&#39;]
-  popt: dict = self._config[&#39;panorama&#39;][&#39;preprocess&#39;][wl]
-
-  pano_dir = self._dir(_DIR.PANO)
-  pano_fname = &#39;panorama_&#39; + sopt[&#39;warp&#39;]
-  if pano_dir.joinpath(pano_fname + &#39;.png&#39;).exists():
-    logger.info(&#39;기 생성된 파노라마 파일이 존재합니다.&#39;)
+  fname = &#39;panorama_{}&#39;.format(self._config[&#39;panorama&#39;][&#39;stitch&#39;][&#39;warp&#39;])
+  path = self._dir(_DIR.PANO, mkdir=False).joinpath(fname + self._exts[0])
+  if path.exists():
+    logger.info(&#39;기존에 생성된 파노라마 파일이 존재합니다.&#39;)
     return
 
-  ir_images, vis_images = self._read_files()
-  images = ir_images if wl == &#39;IR&#39; else vis_images
-  if not images:
-    logger.warning(&#39;대상 영상이 없습니다.&#39;)
+  # 파노라마 생성
+  try:
+    panorama, mask, graph, indices = self._stitch(spectrum=spectrum)
+  except ValueError as e:
+    logger.error(e)
     return
 
-  # 전처리
-  prep = stitch.preprocess.PanoramaPreprocess(
-      is_numeric=(images[0].ndim == 2),
-      mask_threshold=popt[&#39;masking_threshold&#39;],
-      contrast=popt[&#39;contrast&#39;],
-      denoise=popt[&#39;denoise&#39;])
-  if &#39;bilateral_args&#39; in popt:
-    prep.set_bilateral_args(**popt[&#39;bilateral_args&#39;])
-  if &#39;gaussian_args&#39; in popt:
-    prep.set_gaussian_args(**popt[&#39;gaussian_args&#39;])
-
-  # 영상
-  stitching_images = stitch.stitcher.StitchingImages(arrays=images)
-  stitching_images.set_preprocess(prep)
-  logger.debug(&#39;Stitching: 대상 영상 &amp; 전처리 설정&#39;)
-
-  # Stitcher
-  stitcher = stitch.stitcher.Stitcher(mode=sopt[&#39;perspective&#39;],
-                                      compose_scale=sopt[&#39;compose_scale&#39;],
-                                      work_scale=sopt[&#39;work_scale&#39;],
-                                      warp_threshold=sopt[&#39;warp_threshold&#39;])
-  stitcher.warper_type = sopt[&#39;warp&#39;]
-  logger.debug(&#39;Stitching: Stitcher 초기화&#39;)
-
-  with utils.console.status(&#39;Stitching...&#39;):
-    panorama, mask, graph, indices = stitcher.stitch(
-        images=stitching_images,
-        masks=None,
-        image_names=[x.stem for x in self._files()])
-
+  # 데이터가 존재하는 부분만 crop
   if self._config[&#39;panorama&#39;][&#39;stitch&#39;][&#39;crop&#39;]:
     logger.debug(&#39;Crop panorama&#39;)
     x1, x2, y1, y2 = tools.mask_bbox(mask=mask, morphology_open=True)
     panorama = panorama[y1:y2, x1:x2]
     mask = mask[y1:y2, x1:x2]
 
-  with utils.console.status(&#39;Saving...&#39;):
-    if wl == &#39;IR&#39;:
-      meta = {
-          &#39;panorama&#39;: {
-              &#39;graph&#39;: graph,
-              &#39;image_indices&#39;: indices.ravel().tolist()
-          }
-      }
-      ImageIO.save_image_and_meta(
-          path=pano_dir.joinpath(pano_fname),
-          # array=np.round(panorama, 3),
-          array=panorama.astype(np.float16),  # TODO 추출부터 float16으로
-          exts=[&#39;.npy&#39;, &#39;.png&#39;],
-          scale=True,
-          meta=meta,
-          save_meta=True)
-    else:
-      panorama_image = tools.uint8_image(panorama)
-      ImageIO.save_image(
-          path=pano_dir.joinpath(pano_fname).with_suffix(&#39;.jpg&#39;),
-          array=panorama_image)
-
-    ImageIO.save_image(path=pano_dir.joinpath(pano_fname + &#39;_mask.png&#39;),
-                       array=rescale_intensity(mask, out_range=&#39;uint8&#39;))
+  # 저장
+  self._save_panorama(fname=fname,
+                      spectrum=spectrum,
+                      panorama=panorama,
+                      mask=mask,
+                      graph=graph,
+                      indices=indices)
 
   logger.info(&#39;파노라마 생성 완료&#39;)</code></pre>
-</details>
-</dd>
-<dt id="src.interface.pano.ThermalPanorama.register"><code class="name flex">
-<span>def <span class="ident">register</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def register(self):
-  pass</code></pre>
-</details>
-</dd>
-<dt id="src.interface.pano.ThermalPanorama.segment"><code class="name flex">
-<span>def <span class="ident">segment</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def segment(self):
-  pass</code></pre>
 </details>
 </dd>
 </dl>
@@ -717,9 +697,6 @@ def working_dir(self) -&gt; Path:
 <h4><code><a title="src.interface.pano.ThermalPanorama" href="#src.interface.pano.ThermalPanorama">ThermalPanorama</a></code></h4>
 <ul class="">
 <li><code><a title="src.interface.pano.ThermalPanorama.panorama" href="#src.interface.pano.ThermalPanorama.panorama">panorama</a></code></li>
-<li><code><a title="src.interface.pano.ThermalPanorama.register" href="#src.interface.pano.ThermalPanorama.register">register</a></code></li>
-<li><code><a title="src.interface.pano.ThermalPanorama.segment" href="#src.interface.pano.ThermalPanorama.segment">segment</a></code></li>
-<li><code><a title="src.interface.pano.ThermalPanorama.working_dir" href="#src.interface.pano.ThermalPanorama.working_dir">working_dir</a></code></li>
 </ul>
 </li>
 </ul>

@@ -1,5 +1,5 @@
 from itertools import product
-from typing import Generator, Iterable, Tuple
+from typing import Iterable, Iterator, Tuple
 
 import numpy as np
 from numpy.linalg import inv
@@ -119,8 +119,7 @@ class ImageEnhance:
     return transformed_image
 
   def transformed_images(
-      self
-  ) -> Generator[Tuple[np.ndarray, float, float, np.ndarray], None, None]:
+      self) -> Iterator[Tuple[np.ndarray, float, float, np.ndarray]]:
     """
     입력한 scale, rotation, translation 조합 (product)을 적용한 영상의 iterator
 

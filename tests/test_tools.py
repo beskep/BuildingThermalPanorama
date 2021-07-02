@@ -23,9 +23,8 @@ class TestImageIO:
     IVIO.save_image_and_meta(path=path,
                              array=self.arr,
                              exts=exts,
-                             scale=True,
                              meta=self.meta,
-                             save_meta=True)
+                             dtype='uint16')
 
     for ext in exts:
       assert path.with_suffix(ext).exists()

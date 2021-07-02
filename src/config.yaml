@@ -1,0 +1,55 @@
+camera:
+    IR_VIS_scale:
+    IR_AOV: 32 # degree
+    VIS_AOV: 42 # degree
+color:
+    colormap: iron # optional, {"iron", "inferno", "rainbow", ...}
+    extract_color_image: True
+registration:
+    metric: JointHistMI # {"JointHistMI", "MattesMI", ...}
+    transformation: Similarity # {"Similarity", "Affine"}
+    bins: auto # {int, "auto", "fd", "sqrt", ...}
+    preprocess:
+        equalize_histogram: True
+        unsharp: False
+panorama:
+    target: IR # {"IR", "VIS"}
+    stitch:
+        perspective: panorama # {"panorama", "scan"}
+        warp: plane # {"plane", "spherical", "affine", ...}
+        compose_scale: 1.0
+        work_scale: 1.0
+        warp_threshold: 20.0
+        crop: True
+    preprocess:
+        IR:
+            masking_threshold: -30.0
+            contrast: equalization # {"equalization", "normalization", Null}
+            denoise: bilateral # {"bilateral", "gaussian", Null}
+            bilateral_args: # optional
+                d: -1
+                sigmaColor: 20
+                sigmaSpace: 10
+            gaussian_args: # optional
+                ksize: [5, 5]
+                sigmaX: 0
+        VIS:
+            masking_threshold: Null
+            contrast: normalization # {"equalization", "normalization", Null}
+            denoise: gaussian # {"bilateral", "gaussian", Null}
+            bilateral_args: # optional
+                d: -1
+                sigmaColor: 20
+                sigmaSpace: 10
+            gaussian_args: # optional
+                ksize: [5, 5]
+                sigmaX: 0
+file:
+    FLIR:
+        IR: "*.jpg"
+    testo:
+        IR: "*.xlsx"
+        VIS: "*_실화상 이미지.JPG"
+    save_ext:
+        IR: ".npy"
+        VIS: ".png"

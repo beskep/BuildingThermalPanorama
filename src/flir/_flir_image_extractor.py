@@ -257,14 +257,14 @@ class FlirImageExtractor:
                raw_wind_attn - raw_refl1_attn - raw_refl2_attn)
 
     # temperature from radiance
-    raw_obj_tmp = PR1 / (PR2 * (raw_obj + PO)) + PF
-    if np.min(raw_obj_tmp) <= 0.0:
-      mask = raw_obj_tmp <= 0.0
-      raw_obj_tmp[mask] = np.e
+    RSob = PR1 / (PR2 * (raw_obj + PO)) + PF
+    if np.min(RSob) <= 0.0:
+      mask = RSob <= 0.0
+      RSob[mask] = np.e
     else:
       mask = None
 
-    temp_celsius = PB / np.log(raw_obj_tmp) - 273.15
+    temp_celsius = PB / np.log(RSob) - 273.15
 
     if mask is not None:
       min_temp = np.min(temp_celsius[np.logical_not(mask)])

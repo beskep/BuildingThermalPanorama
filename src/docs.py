@@ -1,5 +1,6 @@
 import re
 from pathlib import Path
+from warnings import catch_warnings
 
 import utils
 
@@ -7,6 +8,7 @@ import pdoc
 from loguru import logger
 
 OUTPUT_DIR = utils.ROOT_DIR.joinpath('docs')
+utils.set_logger(level='DEBUG')
 
 
 def module_path(m: pdoc.Module, ext: str) -> Path:
@@ -25,16 +27,19 @@ def recursive_htmls(mod: pdoc.Module):
 
 
 if __name__ == '__main__':
-  # module_names = [x.name for x in utils.SRC_DIR.iterdir() if x.is_dir()]
   module_names = ['src']
   context = pdoc.Context()
 
   modules = []
   for name in module_names:
     try:
-      module = pdoc.Module(name, context=context)
+      with catch_warnings(record=True) as warnings:
+        module = pdoc.Module(name, context=context)
+
+        for w in warnings:
+          logger.warning(w)
     except ImportError as e:
-      logger.error(e)
+      logger.exception(e)
     else:
       modules.append(module)
 
