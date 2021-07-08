@@ -29,12 +29,14 @@ def test_stitcher():
   stitcher = stitch.stitcher.Stitcher(mode='pano')
   stitcher.warper_type = 'plane'
 
-  image, mask, graph, indices = stitcher.stitch(images=stitching_images,
-                                                masks=None,
-                                                image_names=None)
+  stitched = stitcher.stitch(images=stitching_images, masks=None, names=None)
 
-  assert isinstance(image, np.ndarray)
-  assert isinstance(mask, np.ndarray)
+  assert isinstance(stitched.panorama, np.ndarray)
+  assert isinstance(stitched.mask, np.ndarray)
+  assert stitched.panorama.shape[:2] == stitched.mask.shape
+
+  assert isinstance(stitched.graph, str)
+  assert isinstance(stitched.indices, list)
 
 
 if __name__ == "__main__":

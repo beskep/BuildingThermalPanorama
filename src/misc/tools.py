@@ -68,8 +68,7 @@ def _mask_range(mask, axis):
   return int(c1), int(c2)
 
 
-def mask_bbox(mask: np.ndarray,
-              morphology_open=True) -> Tuple[int, int, int, int]:
+def mask_bbox(mask: np.ndarray, morphology_open=True) -> Tuple[int]:
   """
   마스크 영상 중 True인 영역의 bounding box 좌표를 찾음
 
@@ -84,7 +83,7 @@ def mask_bbox(mask: np.ndarray,
 
   Returns
   -------
-  Tuple[int, int, int, int]
+  Tuple[int]
       (x_min, x_max, y_min, y_max)
 
   Raises

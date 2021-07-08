@@ -27,43 +27,55 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">&#34;&#34;&#34;
+<pre><code class="python">&#39;&#39;&#39;
 외피 열화상 파노라마 영상처리 알고리즘의 CLI 인터페이스
-&#34;&#34;&#34;
+&#39;&#39;&#39;
 from pathlib import Path
-from shutil import copy2
-from typing import List, Optional, Union
+from typing import List, Optional, Tuple, Union
 
 import utils
 
 import matplotlib.pyplot as plt
 import numpy as np
 from loguru import logger
-from omegaconf import DictConfig, OmegaConf
-from PIL import Image as PILImage
 from rich.progress import track
-from skimage.exposure import rescale_intensity
-from skimage.io import imsave
-from yaml.error import YAMLError
 
 import flir
 import stitch
 from misc import exif, tools
-from misc.tools import ImageIO
+from misc.tools import ImageIO as IIO
 
-from .cmap import get_thermal_colormap
-
-CONFIG_FNAME = &#39;config.yaml&#39;
-DEFAULT_CONFIG_PATH = utils.SRC_DIR.joinpath(CONFIG_FNAME)
+from .cmap import apply_colormap, get_thermal_colormap
+from .config import DictConfig, read_config
 
 
 class _DIR:
+  # directory
   RAW = &#39;Raw&#39;
   IR = &#39;IR&#39;
   VIS = &#39;VIS&#39;
   PANO = &#39;Panorama&#39;
   RGST = &#39;Registration&#39;
   SEG = &#39;Segmentation&#39;
+
+
+class _FN:
+  # file suffix, ext
+
+  NPY = &#39;.npy&#39;
+  LL = &#39;.png&#39;  # Lossless
+  LS = &#39;.jpg&#39;  # Loss
+
+  COLOR = &#39;_color&#39;
+
+  RGST_VIS = &#39;_vis&#39;
+  RGST_CMPR = &#39;_compare&#39;
+
+  SEG_MASK = &#39;_mask&#39;
+  SEG_VIS = &#39;_vis&#39;
+  SEG_FIG = &#39;_fig&#39;
+
+  PANO_MASK = &#39;_mask&#39;
 
 
 class ThermalPanorama:
@@ -76,26 +88,11 @@ class ThermalPanorama:
     self._wd = wd
 
     # config
-    config = OmegaConf.load(DEFAULT_CONFIG_PATH)
-    config_path = wd.joinpath(CONFIG_FNAME)
-    if config_path.exists():
-      try:
-        wd_config = OmegaConf.load(config_path)
-      except YAMLError:
-        logger.error(&#39;`config.yaml` 파일의 형식이 올바르지 않습니다. 기본 설정을 사용합니다.&#39;)
-      else:
-        # 기본 설정에 working dir의 설정을 덮어씌움
-        config = OmegaConf.merge(config, wd_config)
-    else:
-      # 기본 설정 파일 복사
-      copy2(src=DEFAULT_CONFIG_PATH, dst=config_path)
-
-    OmegaConf.set_readonly(config, True)
-    self._config = config
+    self._config = read_config(wd)
 
     # 파일 형식
-    self._exts = (config[&#39;file&#39;][&#39;save_ext&#39;][&#39;IR&#39;],
-                  config[&#39;file&#39;][&#39;save_ext&#39;][&#39;VIS&#39;])
+    self._exts = (self._config[&#39;file&#39;][&#39;save_ext&#39;][&#39;IR&#39;],
+                  self._config[&#39;file&#39;][&#39;save_ext&#39;][&#39;VIS&#39;])
 
     self._manufacturer = self._check_manufacturer()
     logger.debug(&#39;Manufacturer: {}&#39;, self._manufacturer)
@@ -106,14 +103,13 @@ class ThermalPanorama:
 
     # colormap
     self._cmap = get_thermal_colormap(
-        name=config[&#39;color&#39;].get(&#39;colormap&#39;, &#39;iron&#39;))
+        name=self._config[&#39;color&#39;].get(&#39;colormap&#39;, &#39;iron&#39;))
 
   def _check_manufacturer(self) -&gt; str:
-    raw_dir = self._dir(_DIR.RAW, mkdir=False)
-
-    flir_files = list(raw_dir.glob(self._config[&#39;file&#39;][&#39;FLIR&#39;][&#39;IR&#39;]))
-    testo_ir_files = list(raw_dir.glob(self._config[&#39;file&#39;][&#39;testo&#39;][&#39;IR&#39;]))
-    testo_vis_files = list(raw_dir.glob(self._config[&#39;file&#39;][&#39;testo&#39;][&#39;VIS&#39;]))
+    fopt: DictConfig = self._config[&#39;file&#39;]
+    flir_files = self._glob(folder=_DIR.RAW, pattern=fopt[&#39;FLIR&#39;][&#39;IR&#39;])
+    testo_ir_files = self._glob(folder=_DIR.RAW, pattern=fopt[&#39;testo&#39;][&#39;IR&#39;])
+    testo_vis_files = self._glob(folder=_DIR.RAW, pattern=fopt[&#39;testo&#39;][&#39;VIS&#39;])
 
     if testo_ir_files and testo_vis_files:
       manufacturer = &#39;testo&#39;
@@ -124,13 +120,57 @@ class ThermalPanorama:
 
     return manufacturer
 
-  def _files(self) -&gt; List[Path]:
+  def _glob(self, folder: str, pattern: str):
+    return list(self._dir(folder=folder, mkdir=False).glob(pattern=pattern))
+
+  def _raw_files(self) -&gt; List[Path]:
     # FIXME Raw 폴더에 원본이 없는 경우에도 지원?
     pattern = self._config[&#39;file&#39;][self._manufacturer][&#39;IR&#39;]
-    files = [x.resolve() for x in self._dir(_DIR.RAW).glob(pattern)]
+    files = self._glob(folder=_DIR.RAW, pattern=pattern)
 
     if not files:
       logger.warning(&#39;{} 폴더에 영상 파일이 존재하지 않습니다.&#39;, _DIR.RAW)
+
+    return files
+
+  def _files(self, d, error=False):
+    &#34;&#34;&#34;
+    각 폴더에서 수치 정보를 담고 있는 파일 목록 반환
+
+    Parameters
+    ----------
+    d : str
+        대상 폴더
+    warn : bool, optional
+        `True`이고 파일 목록이 없을 경우 warning
+    error : bool, optional
+        `True`이고 파일 목록이 없을 경우 `FileNotFoundError`
+
+    Returns
+    -------
+    List[Path]
+    &#34;&#34;&#34;
+    if d == _DIR.IR:
+      files = self._glob(folder=d, pattern=f&#39;*{_FN.NPY}&#39;)
+      target = &#39;열화상 추출 결과&#39;
+    elif d == _DIR.VIS:
+      files = self._glob(folder=d, pattern=f&#39;*{_FN.LL}&#39;)
+      target = &#39;실화상 추출 결과&#39;
+    elif d == _DIR.RGST:
+      files = self._glob(folder=d, pattern=f&#39;*{_FN.RGST_VIS}{_FN.LL}&#39;)
+      target = &#39;정합 결과&#39;
+    elif d == _DIR.SEG:
+      files = self._glob(folder=d, pattern=f&#39;*{_FN.SEG_MASK}{_FN.LL}&#39;)
+      target = &#39;분할 결과&#39;
+    else:
+      raise ValueError
+
+    if not files:
+      msg = f&#39;{target}가 존재하지 않습니다.&#39;
+      if error:
+        raise FileNotFoundError(msg)
+
+      logger.warning(f&#39;{target}가 존재하지 않습니다.&#39;)
 
     return files
 
@@ -163,8 +203,8 @@ class ThermalPanorama:
     if not vis_path.exists():
       raise FileNotFoundError(vis_path)
 
-    ir = ImageIO.read_image(path=path)
-    vis = ImageIO.read_image(path=vis_path)
+    ir = IIO.read_image(path=path)
+    vis = IIO.read_image(path=vis_path)
 
     return ir, vis
 
@@ -173,20 +213,38 @@ class ThermalPanorama:
                             ir: np.ndarray,
                             vis: np.ndarray,
                             meta: Optional[dict] = None):
+    &#34;&#34;&#34;추출한 열/실화상을 각 폴더에 저장&#34;&#34;&#34;
     ir_path = self._dir(_DIR.IR).joinpath(fname)
     vis_path = self._dir(_DIR.VIS).joinpath(f&#39;{fname}{self._exts[1]}&#39;)
 
-    ImageIO.save_image_and_meta(path=ir_path,
-                                array=ir,
-                                exts=[self._exts[0]],
-                                meta=meta)
+    IIO.save_image_and_meta(path=ir_path,
+                            array=ir,
+                            exts=[self._exts[0]],
+                            meta=meta)
     if self._config[&#39;color&#39;][&#39;extract_color_image&#39;]:
-      ImageIO.save_image(path=ir_path.with_name(fname + &#39;_color.png&#39;),
-                         array=self._cmap(tools.normalize_image(ir)))
+      color_image = apply_colormap(ir, self._cmap)
+      IIO.save_image(path=ir_path.with_name(f&#39;{fname}{_FN.COLOR}{_FN.LL}&#39;),
+                     array=color_image)
 
-    ImageIO.save_image(path=vis_path, array=vis)
+    IIO.save_image(path=vis_path, array=vis)
 
-  def _read_file(self, file: Path):
+  def _read_raw_file(self, file: Path) -&gt; Tuple[np.ndarray, np.ndarray]:
+    &#34;&#34;&#34;
+    Raw 열화상, 실화상 파일을 읽음.
+    각 해당하는 폴더에 해당 파일이 없으면 입력한 `file`로부터 추출하고 저장.
+
+    Parameters
+    ----------
+    file : Path
+        Raw 파일 경로
+
+    Returns
+    -------
+    np.ndarray
+        열화상
+    np.ndarray
+        실화상
+    &#34;&#34;&#34;
     if not file.exists():
       raise FileNotFoundError(file)
 
@@ -194,8 +252,8 @@ class ThermalPanorama:
     vis_path = self._dir(_DIR.VIS).joinpath(file.stem + self._exts[1])
 
     if ir_path.exists() and vis_path.exists():
-      ir = ImageIO.read_image(ir_path)
-      vis = ImageIO.read_image(vis_path)
+      ir = IIO.read_image(ir_path)
+      vis = IIO.read_image(vis_path)
     else:
       logger.debug(&#39;Extracting `{}`&#39;, file.name)
 
@@ -213,36 +271,49 @@ class ThermalPanorama:
 
     return ir, vis
 
-  def _iter_files(self):
-    files = self._files()
+  def _iter_raw_files(self):
+    files = self._raw_files()
     for file in files:
-      ir, vis = self._read_file(file)
+      ir, vis = self._read_raw_file(file)
 
       yield ir, vis
 
-  def _read_files(self):
+  def _read_raw_files(self):
     ir_images = []
     vis_images = []
 
-    for ir, vis in track(self._iter_files(),
+    for ir, vis in track(self._iter_raw_files(),
                          &#39;Reading...&#39;,
-                         total=len(self._files()),
+                         total=len(self._raw_files()),
                          console=utils.console):
       ir_images.append(ir)
       vis_images.append(vis)
 
     return ir_images, vis_images
 
-  def _stitch(self, spectrum: str):
+  def _init_stitcher(self) -&gt; stitch.Stitcher:
     sopt: DictConfig = self._config[&#39;panorama&#39;][&#39;stitch&#39;]
+
+    # Stitcher
+    stitcher = stitch.Stitcher(mode=sopt[&#39;perspective&#39;],
+                               compose_scale=sopt[&#39;compose_scale&#39;],
+                               work_scale=sopt[&#39;work_scale&#39;],
+                               warp_threshold=sopt[&#39;warp_threshold&#39;])
+    stitcher.warper_type = sopt[&#39;warp&#39;]
+
+    logger.debug(&#39;Stitching: Stitcher 초기화&#39;)
+
+    return stitcher
+
+  def _stitch(
+      self,
+      stitcher: stitch.Stitcher,
+      images: List[np.ndarray],
+      spectrum: str,
+  ) -&gt; stitch.StitchedImage:
     popt: DictConfig = self._config[&#39;panorama&#39;][&#39;preprocess&#39;][spectrum]
 
-    ir_images, vis_images = self._read_files()
-    images = ir_images if spectrum == &#39;IR&#39; else vis_images
-    if not images:
-      raise ValueError(&#39;대상 영상이 없습니다.&#39;)
-
-    # 전처리
+    # 전처리 정의
     prep = stitch.PanoramaPreprocess(is_numeric=(images[0].ndim == 2),
                                      mask_threshold=popt[&#39;masking_threshold&#39;],
                                      contrast=popt[&#39;contrast&#39;],
@@ -252,88 +323,115 @@ class ThermalPanorama:
     if &#39;gaussian_args&#39; in popt:
       prep.set_gaussian_args(**popt[&#39;gaussian_args&#39;])
 
-    # 영상
+    # 대상 영상
     stitching_images = stitch.StitchingImages(arrays=images)
     stitching_images.set_preprocess(prep)
     logger.debug(&#39;Stitching: 대상 영상 &amp; 전처리 설정&#39;)
 
-    # Stitcher
-    stitcher = stitch.Stitcher(mode=sopt[&#39;perspective&#39;],
-                               compose_scale=sopt[&#39;compose_scale&#39;],
-                               work_scale=sopt[&#39;work_scale&#39;],
-                               warp_threshold=sopt[&#39;warp_threshold&#39;])
-    stitcher.warper_type = sopt[&#39;warp&#39;]
-    logger.debug(&#39;Stitching: Stitcher 초기화&#39;)
-
     with utils.console.status(&#39;Stitching...&#39;):
-      panorama, mask, graph, indices = stitcher.stitch(
-          images=stitching_images,
-          masks=None,
-          image_names=[x.stem for x in self._files()])
+      res = stitcher.stitch(images=stitching_images,
+                            masks=None,
+                            names=[x.stem for x in self._raw_files()],
+                            crop=self._config[&#39;panorama&#39;][&#39;stitch&#39;][&#39;crop&#39;])
 
-    return panorama, mask, graph, indices
+    return res
 
-  def _save_panorama(self, fname: str, spectrum: str, panorama: np.ndarray,
-                     mask: np.ndarray, graph: str, indices: np.ndarray):
+  def _save_panorama(self,
+                     fname: str,
+                     spectrum: str,
+                     res: stitch.StitchedImage,
+                     save_mask=True,
+                     save_meta=True):
     pano_dir = self._dir(_DIR.PANO)
+
+    if save_meta:
+      meta = {&#39;panorama&#39;: {&#39;graph&#39;: res.graph, &#39;image_indices&#39;: res.indices}}
+    else:
+      meta = None
 
     with utils.console.status(&#39;Saving...&#39;):
       if spectrum == &#39;IR&#39;:
-        meta = {
-            &#39;panorama&#39;: {
-                &#39;graph&#39;: graph,
-                &#39;image_indices&#39;: indices.ravel().tolist()
-            }
-        }
-        ImageIO.save_image_and_meta(
+        # 적외선 수치, meta 정보 저장
+        IIO.save_image_and_meta(
             path=pano_dir.joinpath(fname),
-            array=panorama.astype(np.float16),  # TODO 추출부터 float16으로
+            array=res.panorama.astype(np.float16),  # TODO 추출부터 float16으로?
             exts=[&#39;.npy&#39;],
             meta=meta)
 
-        color_panorama = self._cmap(tools.normalize_image(panorama))
-        ImageIO.save_image(path=pano_dir.joinpath(fname + &#39;_color.png&#39;),
-                           array=color_panorama)
+        # 적외선 colormap 영상 저장
+        color_panorama = apply_colormap(res.panorama, self._cmap)
+        IIO.save_image(path=pano_dir.joinpath(f&#39;{fname}{_FN.COLOR}{_FN.LL}&#39;),
+                       array=color_panorama)
       else:
-        panorama_image = tools.uint8_image(panorama)
-        ImageIO.save_image(path=pano_dir.joinpath(fname).with_suffix(&#39;.jpg&#39;),
-                           array=panorama_image)
+        # 실화상 저장
+        IIO.save_image_and_meta(path=pano_dir.joinpath(f&#39;{fname}{_FN.LS}&#39;),
+                                array=res.panorama,
+                                exts=[_FN.LS],
+                                meta=meta)
 
-      ImageIO.save_image(path=pano_dir.joinpath(fname + &#39;_mask.png&#39;),
-                         array=rescale_intensity(mask, out_range=&#39;uint8&#39;))
+      if save_mask:
+        # 마스크 저장
+        IIO.save_image(
+            path=pano_dir.joinpath(f&#39;{fname}{_FN.PANO_MASK}{_FN.LL}&#39;),
+            array=tools.uint8_image(res.mask))
+
+  @staticmethod
+  def _pano_target(spectrum):
+    if spectrum == &#39;IR&#39;:
+      d = _DIR.IR
+    elif spectrum == &#39;VIS&#39;:
+      d = _DIR.RGST
+    else:
+      raise ValueError
+
+    return d
 
   def panorama(self):
     spectrum = self._config[&#39;panorama&#39;][&#39;target&#39;].upper()
     if not spectrum in (&#39;IR&#39;, &#39;VIS&#39;):
       raise ValueError(spectrum)
 
-    fname = &#39;panorama_{}&#39;.format(self._config[&#39;panorama&#39;][&#39;stitch&#39;][&#39;warp&#39;])
-    path = self._dir(_DIR.PANO, mkdir=False).joinpath(fname + self._exts[0])
-    if path.exists():
-      logger.info(&#39;기존에 생성된 파노라마 파일이 존재합니다.&#39;)
-      return
+    stitcher = self._init_stitcher()
+
+    # Raw 파일 추출
+    try:
+      self._files(_DIR.IR, error=True)
+    except FileNotFoundError:
+      self._read_raw_files()
+
+    # 지정한 spectrum 파노라마
+    files = self._files(self._pano_target(spectrum))
+    images = [IIO.read_image(x) for x in files]
 
     # 파노라마 생성
-    try:
-      panorama, mask, graph, indices = self._stitch(spectrum=spectrum)
-    except ValueError as e:
-      logger.error(e)
-      return
-
-    # 데이터가 존재하는 부분만 crop
-    if self._config[&#39;panorama&#39;][&#39;stitch&#39;][&#39;crop&#39;]:
-      logger.debug(&#39;Crop panorama&#39;)
-      x1, x2, y1, y2 = tools.mask_bbox(mask=mask, morphology_open=True)
-      panorama = panorama[y1:y2, x1:x2]
-      mask = mask[y1:y2, x1:x2]
+    res = self._stitch(stitcher=stitcher, images=images, spectrum=spectrum)
 
     # 저장
-    self._save_panorama(fname=fname,
-                        spectrum=spectrum,
-                        panorama=panorama,
-                        mask=mask,
-                        graph=graph,
-                        indices=indices)
+    warp = self._config[&#39;panorama&#39;][&#39;stitch&#39;][&#39;warp&#39;]
+    self._save_panorama(fname=f&#39;{spectrum}_{warp}&#39;, spectrum=spectrum, res=res)
+
+    # 나머지 영상의 파노라마 생성/저장
+    spectrum2 = &#39;VIS&#39; if spectrum == &#39;IR&#39; else &#39;IR&#39;
+    files2 = self._files(self._pano_target(spectrum2), error=True)
+    files2 = [files2[x] for x in res.indices]  # FIXME 파일 이름과 대조
+    images2 = [IIO.read_image(x) for x in files2]
+
+    panorama2, _ = stitcher.warp_and_blend(
+        images=stitch.StitchingImages(arrays=images2),
+        cameras=res.cameras,
+        masks=None,
+        names=None)
+    if res.crop_range:
+      panorama2, _, _ = stitcher.crop(panorama2,
+                                      mask=None,
+                                      crop_range=res.crop_range)
+    res.panorama = np.round(panorama2).astype(np.uint8)
+
+    self._save_panorama(fname=f&#39;{spectrum2}_{warp}&#39;,
+                        spectrum=spectrum2,
+                        res=res,
+                        save_mask=False,
+                        save_meta=False)
 
     logger.info(&#39;파노라마 생성 완료&#39;)</code></pre>
 </details>
@@ -367,26 +465,11 @@ class ThermalPanorama:
     self._wd = wd
 
     # config
-    config = OmegaConf.load(DEFAULT_CONFIG_PATH)
-    config_path = wd.joinpath(CONFIG_FNAME)
-    if config_path.exists():
-      try:
-        wd_config = OmegaConf.load(config_path)
-      except YAMLError:
-        logger.error(&#39;`config.yaml` 파일의 형식이 올바르지 않습니다. 기본 설정을 사용합니다.&#39;)
-      else:
-        # 기본 설정에 working dir의 설정을 덮어씌움
-        config = OmegaConf.merge(config, wd_config)
-    else:
-      # 기본 설정 파일 복사
-      copy2(src=DEFAULT_CONFIG_PATH, dst=config_path)
-
-    OmegaConf.set_readonly(config, True)
-    self._config = config
+    self._config = read_config(wd)
 
     # 파일 형식
-    self._exts = (config[&#39;file&#39;][&#39;save_ext&#39;][&#39;IR&#39;],
-                  config[&#39;file&#39;][&#39;save_ext&#39;][&#39;VIS&#39;])
+    self._exts = (self._config[&#39;file&#39;][&#39;save_ext&#39;][&#39;IR&#39;],
+                  self._config[&#39;file&#39;][&#39;save_ext&#39;][&#39;VIS&#39;])
 
     self._manufacturer = self._check_manufacturer()
     logger.debug(&#39;Manufacturer: {}&#39;, self._manufacturer)
@@ -397,14 +480,13 @@ class ThermalPanorama:
 
     # colormap
     self._cmap = get_thermal_colormap(
-        name=config[&#39;color&#39;].get(&#39;colormap&#39;, &#39;iron&#39;))
+        name=self._config[&#39;color&#39;].get(&#39;colormap&#39;, &#39;iron&#39;))
 
   def _check_manufacturer(self) -&gt; str:
-    raw_dir = self._dir(_DIR.RAW, mkdir=False)
-
-    flir_files = list(raw_dir.glob(self._config[&#39;file&#39;][&#39;FLIR&#39;][&#39;IR&#39;]))
-    testo_ir_files = list(raw_dir.glob(self._config[&#39;file&#39;][&#39;testo&#39;][&#39;IR&#39;]))
-    testo_vis_files = list(raw_dir.glob(self._config[&#39;file&#39;][&#39;testo&#39;][&#39;VIS&#39;]))
+    fopt: DictConfig = self._config[&#39;file&#39;]
+    flir_files = self._glob(folder=_DIR.RAW, pattern=fopt[&#39;FLIR&#39;][&#39;IR&#39;])
+    testo_ir_files = self._glob(folder=_DIR.RAW, pattern=fopt[&#39;testo&#39;][&#39;IR&#39;])
+    testo_vis_files = self._glob(folder=_DIR.RAW, pattern=fopt[&#39;testo&#39;][&#39;VIS&#39;])
 
     if testo_ir_files and testo_vis_files:
       manufacturer = &#39;testo&#39;
@@ -415,13 +497,57 @@ class ThermalPanorama:
 
     return manufacturer
 
-  def _files(self) -&gt; List[Path]:
+  def _glob(self, folder: str, pattern: str):
+    return list(self._dir(folder=folder, mkdir=False).glob(pattern=pattern))
+
+  def _raw_files(self) -&gt; List[Path]:
     # FIXME Raw 폴더에 원본이 없는 경우에도 지원?
     pattern = self._config[&#39;file&#39;][self._manufacturer][&#39;IR&#39;]
-    files = [x.resolve() for x in self._dir(_DIR.RAW).glob(pattern)]
+    files = self._glob(folder=_DIR.RAW, pattern=pattern)
 
     if not files:
       logger.warning(&#39;{} 폴더에 영상 파일이 존재하지 않습니다.&#39;, _DIR.RAW)
+
+    return files
+
+  def _files(self, d, error=False):
+    &#34;&#34;&#34;
+    각 폴더에서 수치 정보를 담고 있는 파일 목록 반환
+
+    Parameters
+    ----------
+    d : str
+        대상 폴더
+    warn : bool, optional
+        `True`이고 파일 목록이 없을 경우 warning
+    error : bool, optional
+        `True`이고 파일 목록이 없을 경우 `FileNotFoundError`
+
+    Returns
+    -------
+    List[Path]
+    &#34;&#34;&#34;
+    if d == _DIR.IR:
+      files = self._glob(folder=d, pattern=f&#39;*{_FN.NPY}&#39;)
+      target = &#39;열화상 추출 결과&#39;
+    elif d == _DIR.VIS:
+      files = self._glob(folder=d, pattern=f&#39;*{_FN.LL}&#39;)
+      target = &#39;실화상 추출 결과&#39;
+    elif d == _DIR.RGST:
+      files = self._glob(folder=d, pattern=f&#39;*{_FN.RGST_VIS}{_FN.LL}&#39;)
+      target = &#39;정합 결과&#39;
+    elif d == _DIR.SEG:
+      files = self._glob(folder=d, pattern=f&#39;*{_FN.SEG_MASK}{_FN.LL}&#39;)
+      target = &#39;분할 결과&#39;
+    else:
+      raise ValueError
+
+    if not files:
+      msg = f&#39;{target}가 존재하지 않습니다.&#39;
+      if error:
+        raise FileNotFoundError(msg)
+
+      logger.warning(f&#39;{target}가 존재하지 않습니다.&#39;)
 
     return files
 
@@ -454,8 +580,8 @@ class ThermalPanorama:
     if not vis_path.exists():
       raise FileNotFoundError(vis_path)
 
-    ir = ImageIO.read_image(path=path)
-    vis = ImageIO.read_image(path=vis_path)
+    ir = IIO.read_image(path=path)
+    vis = IIO.read_image(path=vis_path)
 
     return ir, vis
 
@@ -464,20 +590,38 @@ class ThermalPanorama:
                             ir: np.ndarray,
                             vis: np.ndarray,
                             meta: Optional[dict] = None):
+    &#34;&#34;&#34;추출한 열/실화상을 각 폴더에 저장&#34;&#34;&#34;
     ir_path = self._dir(_DIR.IR).joinpath(fname)
     vis_path = self._dir(_DIR.VIS).joinpath(f&#39;{fname}{self._exts[1]}&#39;)
 
-    ImageIO.save_image_and_meta(path=ir_path,
-                                array=ir,
-                                exts=[self._exts[0]],
-                                meta=meta)
+    IIO.save_image_and_meta(path=ir_path,
+                            array=ir,
+                            exts=[self._exts[0]],
+                            meta=meta)
     if self._config[&#39;color&#39;][&#39;extract_color_image&#39;]:
-      ImageIO.save_image(path=ir_path.with_name(fname + &#39;_color.png&#39;),
-                         array=self._cmap(tools.normalize_image(ir)))
+      color_image = apply_colormap(ir, self._cmap)
+      IIO.save_image(path=ir_path.with_name(f&#39;{fname}{_FN.COLOR}{_FN.LL}&#39;),
+                     array=color_image)
 
-    ImageIO.save_image(path=vis_path, array=vis)
+    IIO.save_image(path=vis_path, array=vis)
 
-  def _read_file(self, file: Path):
+  def _read_raw_file(self, file: Path) -&gt; Tuple[np.ndarray, np.ndarray]:
+    &#34;&#34;&#34;
+    Raw 열화상, 실화상 파일을 읽음.
+    각 해당하는 폴더에 해당 파일이 없으면 입력한 `file`로부터 추출하고 저장.
+
+    Parameters
+    ----------
+    file : Path
+        Raw 파일 경로
+
+    Returns
+    -------
+    np.ndarray
+        열화상
+    np.ndarray
+        실화상
+    &#34;&#34;&#34;
     if not file.exists():
       raise FileNotFoundError(file)
 
@@ -485,8 +629,8 @@ class ThermalPanorama:
     vis_path = self._dir(_DIR.VIS).joinpath(file.stem + self._exts[1])
 
     if ir_path.exists() and vis_path.exists():
-      ir = ImageIO.read_image(ir_path)
-      vis = ImageIO.read_image(vis_path)
+      ir = IIO.read_image(ir_path)
+      vis = IIO.read_image(vis_path)
     else:
       logger.debug(&#39;Extracting `{}`&#39;, file.name)
 
@@ -504,36 +648,49 @@ class ThermalPanorama:
 
     return ir, vis
 
-  def _iter_files(self):
-    files = self._files()
+  def _iter_raw_files(self):
+    files = self._raw_files()
     for file in files:
-      ir, vis = self._read_file(file)
+      ir, vis = self._read_raw_file(file)
 
       yield ir, vis
 
-  def _read_files(self):
+  def _read_raw_files(self):
     ir_images = []
     vis_images = []
 
-    for ir, vis in track(self._iter_files(),
+    for ir, vis in track(self._iter_raw_files(),
                          &#39;Reading...&#39;,
-                         total=len(self._files()),
+                         total=len(self._raw_files()),
                          console=utils.console):
       ir_images.append(ir)
       vis_images.append(vis)
 
     return ir_images, vis_images
 
-  def _stitch(self, spectrum: str):
+  def _init_stitcher(self) -&gt; stitch.Stitcher:
     sopt: DictConfig = self._config[&#39;panorama&#39;][&#39;stitch&#39;]
+
+    # Stitcher
+    stitcher = stitch.Stitcher(mode=sopt[&#39;perspective&#39;],
+                               compose_scale=sopt[&#39;compose_scale&#39;],
+                               work_scale=sopt[&#39;work_scale&#39;],
+                               warp_threshold=sopt[&#39;warp_threshold&#39;])
+    stitcher.warper_type = sopt[&#39;warp&#39;]
+
+    logger.debug(&#39;Stitching: Stitcher 초기화&#39;)
+
+    return stitcher
+
+  def _stitch(
+      self,
+      stitcher: stitch.Stitcher,
+      images: List[np.ndarray],
+      spectrum: str,
+  ) -&gt; stitch.StitchedImage:
     popt: DictConfig = self._config[&#39;panorama&#39;][&#39;preprocess&#39;][spectrum]
 
-    ir_images, vis_images = self._read_files()
-    images = ir_images if spectrum == &#39;IR&#39; else vis_images
-    if not images:
-      raise ValueError(&#39;대상 영상이 없습니다.&#39;)
-
-    # 전처리
+    # 전처리 정의
     prep = stitch.PanoramaPreprocess(is_numeric=(images[0].ndim == 2),
                                      mask_threshold=popt[&#39;masking_threshold&#39;],
                                      contrast=popt[&#39;contrast&#39;],
@@ -543,88 +700,115 @@ class ThermalPanorama:
     if &#39;gaussian_args&#39; in popt:
       prep.set_gaussian_args(**popt[&#39;gaussian_args&#39;])
 
-    # 영상
+    # 대상 영상
     stitching_images = stitch.StitchingImages(arrays=images)
     stitching_images.set_preprocess(prep)
     logger.debug(&#39;Stitching: 대상 영상 &amp; 전처리 설정&#39;)
 
-    # Stitcher
-    stitcher = stitch.Stitcher(mode=sopt[&#39;perspective&#39;],
-                               compose_scale=sopt[&#39;compose_scale&#39;],
-                               work_scale=sopt[&#39;work_scale&#39;],
-                               warp_threshold=sopt[&#39;warp_threshold&#39;])
-    stitcher.warper_type = sopt[&#39;warp&#39;]
-    logger.debug(&#39;Stitching: Stitcher 초기화&#39;)
-
     with utils.console.status(&#39;Stitching...&#39;):
-      panorama, mask, graph, indices = stitcher.stitch(
-          images=stitching_images,
-          masks=None,
-          image_names=[x.stem for x in self._files()])
+      res = stitcher.stitch(images=stitching_images,
+                            masks=None,
+                            names=[x.stem for x in self._raw_files()],
+                            crop=self._config[&#39;panorama&#39;][&#39;stitch&#39;][&#39;crop&#39;])
 
-    return panorama, mask, graph, indices
+    return res
 
-  def _save_panorama(self, fname: str, spectrum: str, panorama: np.ndarray,
-                     mask: np.ndarray, graph: str, indices: np.ndarray):
+  def _save_panorama(self,
+                     fname: str,
+                     spectrum: str,
+                     res: stitch.StitchedImage,
+                     save_mask=True,
+                     save_meta=True):
     pano_dir = self._dir(_DIR.PANO)
+
+    if save_meta:
+      meta = {&#39;panorama&#39;: {&#39;graph&#39;: res.graph, &#39;image_indices&#39;: res.indices}}
+    else:
+      meta = None
 
     with utils.console.status(&#39;Saving...&#39;):
       if spectrum == &#39;IR&#39;:
-        meta = {
-            &#39;panorama&#39;: {
-                &#39;graph&#39;: graph,
-                &#39;image_indices&#39;: indices.ravel().tolist()
-            }
-        }
-        ImageIO.save_image_and_meta(
+        # 적외선 수치, meta 정보 저장
+        IIO.save_image_and_meta(
             path=pano_dir.joinpath(fname),
-            array=panorama.astype(np.float16),  # TODO 추출부터 float16으로
+            array=res.panorama.astype(np.float16),  # TODO 추출부터 float16으로?
             exts=[&#39;.npy&#39;],
             meta=meta)
 
-        color_panorama = self._cmap(tools.normalize_image(panorama))
-        ImageIO.save_image(path=pano_dir.joinpath(fname + &#39;_color.png&#39;),
-                           array=color_panorama)
+        # 적외선 colormap 영상 저장
+        color_panorama = apply_colormap(res.panorama, self._cmap)
+        IIO.save_image(path=pano_dir.joinpath(f&#39;{fname}{_FN.COLOR}{_FN.LL}&#39;),
+                       array=color_panorama)
       else:
-        panorama_image = tools.uint8_image(panorama)
-        ImageIO.save_image(path=pano_dir.joinpath(fname).with_suffix(&#39;.jpg&#39;),
-                           array=panorama_image)
+        # 실화상 저장
+        IIO.save_image_and_meta(path=pano_dir.joinpath(f&#39;{fname}{_FN.LS}&#39;),
+                                array=res.panorama,
+                                exts=[_FN.LS],
+                                meta=meta)
 
-      ImageIO.save_image(path=pano_dir.joinpath(fname + &#39;_mask.png&#39;),
-                         array=rescale_intensity(mask, out_range=&#39;uint8&#39;))
+      if save_mask:
+        # 마스크 저장
+        IIO.save_image(
+            path=pano_dir.joinpath(f&#39;{fname}{_FN.PANO_MASK}{_FN.LL}&#39;),
+            array=tools.uint8_image(res.mask))
+
+  @staticmethod
+  def _pano_target(spectrum):
+    if spectrum == &#39;IR&#39;:
+      d = _DIR.IR
+    elif spectrum == &#39;VIS&#39;:
+      d = _DIR.RGST
+    else:
+      raise ValueError
+
+    return d
 
   def panorama(self):
     spectrum = self._config[&#39;panorama&#39;][&#39;target&#39;].upper()
     if not spectrum in (&#39;IR&#39;, &#39;VIS&#39;):
       raise ValueError(spectrum)
 
-    fname = &#39;panorama_{}&#39;.format(self._config[&#39;panorama&#39;][&#39;stitch&#39;][&#39;warp&#39;])
-    path = self._dir(_DIR.PANO, mkdir=False).joinpath(fname + self._exts[0])
-    if path.exists():
-      logger.info(&#39;기존에 생성된 파노라마 파일이 존재합니다.&#39;)
-      return
+    stitcher = self._init_stitcher()
+
+    # Raw 파일 추출
+    try:
+      self._files(_DIR.IR, error=True)
+    except FileNotFoundError:
+      self._read_raw_files()
+
+    # 지정한 spectrum 파노라마
+    files = self._files(self._pano_target(spectrum))
+    images = [IIO.read_image(x) for x in files]
 
     # 파노라마 생성
-    try:
-      panorama, mask, graph, indices = self._stitch(spectrum=spectrum)
-    except ValueError as e:
-      logger.error(e)
-      return
-
-    # 데이터가 존재하는 부분만 crop
-    if self._config[&#39;panorama&#39;][&#39;stitch&#39;][&#39;crop&#39;]:
-      logger.debug(&#39;Crop panorama&#39;)
-      x1, x2, y1, y2 = tools.mask_bbox(mask=mask, morphology_open=True)
-      panorama = panorama[y1:y2, x1:x2]
-      mask = mask[y1:y2, x1:x2]
+    res = self._stitch(stitcher=stitcher, images=images, spectrum=spectrum)
 
     # 저장
-    self._save_panorama(fname=fname,
-                        spectrum=spectrum,
-                        panorama=panorama,
-                        mask=mask,
-                        graph=graph,
-                        indices=indices)
+    warp = self._config[&#39;panorama&#39;][&#39;stitch&#39;][&#39;warp&#39;]
+    self._save_panorama(fname=f&#39;{spectrum}_{warp}&#39;, spectrum=spectrum, res=res)
+
+    # 나머지 영상의 파노라마 생성/저장
+    spectrum2 = &#39;VIS&#39; if spectrum == &#39;IR&#39; else &#39;IR&#39;
+    files2 = self._files(self._pano_target(spectrum2), error=True)
+    files2 = [files2[x] for x in res.indices]  # FIXME 파일 이름과 대조
+    images2 = [IIO.read_image(x) for x in files2]
+
+    panorama2, _ = stitcher.warp_and_blend(
+        images=stitch.StitchingImages(arrays=images2),
+        cameras=res.cameras,
+        masks=None,
+        names=None)
+    if res.crop_range:
+      panorama2, _, _ = stitcher.crop(panorama2,
+                                      mask=None,
+                                      crop_range=res.crop_range)
+    res.panorama = np.round(panorama2).astype(np.uint8)
+
+    self._save_panorama(fname=f&#39;{spectrum2}_{warp}&#39;,
+                        spectrum=spectrum2,
+                        res=res,
+                        save_mask=False,
+                        save_meta=False)
 
     logger.info(&#39;파노라마 생성 완료&#39;)</code></pre>
 </details>
@@ -644,33 +828,47 @@ class ThermalPanorama:
   if not spectrum in (&#39;IR&#39;, &#39;VIS&#39;):
     raise ValueError(spectrum)
 
-  fname = &#39;panorama_{}&#39;.format(self._config[&#39;panorama&#39;][&#39;stitch&#39;][&#39;warp&#39;])
-  path = self._dir(_DIR.PANO, mkdir=False).joinpath(fname + self._exts[0])
-  if path.exists():
-    logger.info(&#39;기존에 생성된 파노라마 파일이 존재합니다.&#39;)
-    return
+  stitcher = self._init_stitcher()
+
+  # Raw 파일 추출
+  try:
+    self._files(_DIR.IR, error=True)
+  except FileNotFoundError:
+    self._read_raw_files()
+
+  # 지정한 spectrum 파노라마
+  files = self._files(self._pano_target(spectrum))
+  images = [IIO.read_image(x) for x in files]
 
   # 파노라마 생성
-  try:
-    panorama, mask, graph, indices = self._stitch(spectrum=spectrum)
-  except ValueError as e:
-    logger.error(e)
-    return
-
-  # 데이터가 존재하는 부분만 crop
-  if self._config[&#39;panorama&#39;][&#39;stitch&#39;][&#39;crop&#39;]:
-    logger.debug(&#39;Crop panorama&#39;)
-    x1, x2, y1, y2 = tools.mask_bbox(mask=mask, morphology_open=True)
-    panorama = panorama[y1:y2, x1:x2]
-    mask = mask[y1:y2, x1:x2]
+  res = self._stitch(stitcher=stitcher, images=images, spectrum=spectrum)
 
   # 저장
-  self._save_panorama(fname=fname,
-                      spectrum=spectrum,
-                      panorama=panorama,
-                      mask=mask,
-                      graph=graph,
-                      indices=indices)
+  warp = self._config[&#39;panorama&#39;][&#39;stitch&#39;][&#39;warp&#39;]
+  self._save_panorama(fname=f&#39;{spectrum}_{warp}&#39;, spectrum=spectrum, res=res)
+
+  # 나머지 영상의 파노라마 생성/저장
+  spectrum2 = &#39;VIS&#39; if spectrum == &#39;IR&#39; else &#39;IR&#39;
+  files2 = self._files(self._pano_target(spectrum2), error=True)
+  files2 = [files2[x] for x in res.indices]  # FIXME 파일 이름과 대조
+  images2 = [IIO.read_image(x) for x in files2]
+
+  panorama2, _ = stitcher.warp_and_blend(
+      images=stitch.StitchingImages(arrays=images2),
+      cameras=res.cameras,
+      masks=None,
+      names=None)
+  if res.crop_range:
+    panorama2, _, _ = stitcher.crop(panorama2,
+                                    mask=None,
+                                    crop_range=res.crop_range)
+  res.panorama = np.round(panorama2).astype(np.uint8)
+
+  self._save_panorama(fname=f&#39;{spectrum2}_{warp}&#39;,
+                      spectrum=spectrum2,
+                      res=res,
+                      save_mask=False,
+                      save_meta=False)
 
   logger.info(&#39;파노라마 생성 완료&#39;)</code></pre>
 </details>

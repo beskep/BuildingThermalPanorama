@@ -1,9 +1,12 @@
+from dataclasses import dataclass
 from typing import Callable, Iterable, List, Optional, Tuple
 
 import cv2 as cv
 import numpy as np
 from loguru import logger
 from skimage.exposure import rescale_intensity
+
+from misc.tools import mask_bbox
 
 _AVAILABLE_WARPER = (
     'affine',
@@ -25,14 +28,26 @@ _AVAILABLE_WARPER = (
 )
 
 
+@dataclass
+class StitchedImage:
+  panorama: np.ndarray
+  mask: np.ndarray
+  graph: str
+  indices: list
+  cameras: list
+  crop_range: Optional[List[int]]
+
+
 class StitchingImages:
 
-  def __init__(self, arrays: list, preprocess: Optional[Callable] = None):
+  def __init__(self,
+               arrays: List[np.ndarray],
+               preprocess: Optional[Callable] = None):
     """Stitching 대상 이미지
 
     Parameters
     ----------
-    arrays : list of np.ndarray
+    arrays : List[np.ndarray]
         원본 이미지. dtype 상관 없음.
     preprocess : callable, optional
         Preprocessing function, by default None
@@ -115,7 +130,7 @@ class StitchingImages:
                             out_range=out_range)
     return res
 
-  def unscale(self, image: np.ndarray, out_range) -> np.ndarray:
+  def unscale(self, image: np.ndarray, out_range='image') -> np.ndarray:
     """
     `out_range` 범위로 픽셀값이 조정됐던 영상을 원 범위로 변환.
 
@@ -141,8 +156,10 @@ class StitchingImages:
 
     Returns
     -------
-    Tuple[List[np.ndarray], List[np.ndarray]]
-        전처리를 적용한 영상 리스트, 마스크 리스트
+    images : List[np.ndarray]
+        전처리를 적용한 영상 리스트
+    masks : List[np.ndarray]
+        마스크 리스트
     """
     if self._preprocess is None:
       images = self.arrays
@@ -210,8 +227,8 @@ class Stitcher:
   @property
   def estimator(self) -> cv.detail_Estimator:
     """
-    정합/영상 변환을 위한 Camera parameter 추정 방법. `mode`에 따라 결정됨
-    (`set_mode` 참조).
+    정합/영상 변환을 위한 Camera parameter 추정 방법.
+    `mode`에 따라 결정됨 (`set_mode` 참조).
     """
     return self._estimator
 
@@ -224,9 +241,7 @@ class Stitcher:
 
   @property
   def features_finder(self) -> cv.Feature2D:
-    """
-    영상의 특징점 추출 알고리즘 (지정하지 않는 경우 ORB 알고리즘 적용).
-    """
+    """영상의 특징점 추출 알고리즘 (지정하지 않는 경우 ORB 알고리즘 적용)."""
     if self._features_finder is None:
       self._features_finder = cv.ORB_create()
 
@@ -276,9 +291,9 @@ class Stitcher:
     """
     `warper`의 종류. `available_warper_types` 중에서 선택 가능함.
 
-    `'plane'` -> Rectilinear Projection.
+    `'plane'` : Rectilinear Projection.
 
-    `'spherical'` -> Stereographic Projection.
+    `'spherical'` : Stereographic Projection.
 
     References
     ----------
@@ -298,7 +313,7 @@ class Stitcher:
     """
     파노라마를 구성하는 영상의 밝기 차이를 조정하기 위한 Blend 방법
 
-    {`'multiband'`, `'feature'`, `'no'`}
+    {`'multiband'`, `'feather'`, `'no'`}
     """
     return self._blend_type
 
@@ -330,9 +345,9 @@ class Stitcher:
     """
     Parameters
     ----------
-    matcher: str
+    matcher : str
         matcher type
-    confidence: Optional[float], optional
+    confidence : Optional[float], optional
         Confidence for feature matching step.
         The default is 0.3 for ORB and 0.65 for other feature types.
     range_width
@@ -418,12 +433,11 @@ class Stitcher:
 
     return features
 
-  def stitch(
-      self,
-      images: StitchingImages,
-      masks: Optional[list] = None,
-      image_names: Optional[list] = None
-  ) -> Tuple[np.ndarray, np.ndarray, str, np.ndarray]:
+  def stitch(self,
+             images: StitchingImages,
+             masks: Optional[list] = None,
+             names: Optional[list] = None,
+             crop=True) -> StitchedImage:
     """
     영상의 특징점을 기반으로 정합 (stitch)하여 파노라마 영상 생성
 
@@ -433,8 +447,10 @@ class Stitcher:
         대상 영상 목록.
     masks : Optional[list], optional
         대상 영상의 마스크 목록., by default None
-    image_names : Optional[list], optional
+    names : Optional[list], optional
         대상 영상의 이름 목록. 미지정 시 `Image n` 형식으로 지정.
+    crop : bool
+        `True`인 경우, 파노라마 영상 중 데이터가 존재하는 부분만 crop
 
     Returns
     -------
@@ -447,8 +463,8 @@ class Stitcher:
     indices : np.ndarray
         파노라마를 구성하는 영상의 index
     """
-    if image_names is None:
-      image_names = ['Image {}'.format(x + 1) for x in range(images.count)]
+    if names is None:
+      names = ['Image {}'.format(x + 1) for x in range(images.count)]
 
     prep_images, prep_masks = images.preprocess()
 
@@ -459,34 +475,40 @@ class Stitcher:
 
     # camera matrix 계산
     cameras, indices, matches_graph = self.calculate_camera_matrix(
-        images=prep_images, image_names=image_names)
+        images=prep_images, image_names=names)
 
     if len(indices) != len(prep_images):
       images.select_images(indices=[int(x) for x in indices.ravel()])
       removed = set(range(len(prep_images))) - set(indices.ravel())
       logger.debug('Stitching에 필요 없는 이미지 제거 (indices: {})', list(removed))
 
-    # warp
-    warped_images, warped_masks, rois = self.warp_images(images=images.arrays,
-                                                         masks=masks,
-                                                         cameras=cameras,
-                                                         names=image_names)
-
-    # stitch
-    scaled_images = [images.scale(x, out_range='int16') for x in warped_images]
-    stitched_image, stitched_mask = self.blend(images=scaled_images,
-                                               masks=warped_masks,
-                                               rois=rois)
-    stitched_image[np.logical_not(stitched_mask)] = np.min(stitched_image)
-
+    panorama, panorama_mask = self.warp_and_blend(images=images,
+                                                  cameras=cameras,
+                                                  masks=masks,
+                                                  names=names)
     if images.ndim == 2:
-      # 원본 영상이 2차원인 경우 (열화상) 경우 첫 번째 채널만 추출
-      stitched_image = stitched_image[:, :, 0]
+      # 원본 영상이 2차원인 경우 (열화상), 첫 번째 채널만 추출
+      panorama = panorama[:, :, 0]
 
-    unscaled_image = images.unscale(image=stitched_image, out_range='int16')
+    # 파노라마 영상 중 데이터 없는 부분에 최소값 대입
+    panorama[np.logical_not(panorama_mask)] = np.min(panorama)
 
-    # TODO graph, indices 대신 다른 정보도 포함한 dict 반환 (yaml 저장 가능한 형태로)
-    return unscaled_image, stitched_mask, matches_graph, indices
+    if not crop:
+      crop_range = None
+    else:
+      # 데이터가 존재하는 부분의 bounding box만 crop
+      logger.debug('Crop panorama')
+      panorama, panorama_mask, crop_range = self.crop(image=panorama,
+                                                      mask=panorama_mask,
+                                                      crop_range=None)
+
+    res = StitchedImage(panorama=panorama,
+                        mask=panorama_mask,
+                        graph=matches_graph,
+                        indices=indices.ravel().tolist(),
+                        cameras=cameras,
+                        crop_range=crop_range)
+    return res
 
   def calculate_camera_matrix(
       self,
@@ -567,7 +589,7 @@ class Stitcher:
 
     return cameras, indices, matches_graph
 
-  def warp_image(
+  def _warp_image(
       self,
       image: np.ndarray,
       mask: np.ndarray,
@@ -646,11 +668,11 @@ class Stitcher:
 
     return warped_image, warped_mask, roi
 
-  def warp_images(
+  def _warp_images(
       self,
       images: List[np.ndarray],
-      masks: List[np.ndarray],
       cameras: List[cv.detail_CameraParams],
+      masks: Optional[List[np.ndarray]] = None,
       names: Optional[List[str]] = None,
   ) -> Tuple[List[np.ndarray], List[np.ndarray], np.ndarray]:
     """
@@ -661,27 +683,34 @@ class Stitcher:
     ----------
     images : List[np.ndarray]
         대상 영상 목록.
-    masks : List[np.ndarray]
-        대상 영상의 마스크 목록.
     cameras : List[cv.detail_CameraParams]
         대상 영상의 camera parameter 목록
+    masks : Optional[List[np.ndarray]]
+        대상 영상의 마스크 목록.
     names: Optional[List[str]]
         대상 영상의 이름 목록
 
     Returns
     -------
-    Tuple[List[np.ndarray], List[np.ndarray], np.ndarray]
-        변형된 영상 목록, 마스크 목록, region of interest 목록
+    warped_images : np.ndarray
+        변형된 영상 목록
+    warped_masks : np.ndarray
+        마스크 목록
+    rois : np.ndarray
+        Region of interest 목록
     """
     scale = np.median([x.focal for x in cameras])
     self.set_warper(scale=scale)
+
+    if masks is None:
+      masks = [None for _ in range(len(images))]
 
     warped_images = []
     warped_masks = []
     rois = []
     for idx, args in enumerate(zip(images, masks, cameras)):
       try:
-        wi, wm, roi = self.warp_image(*args)
+        wi, wm, roi = self._warp_image(*args)
       except cv.error:
         msg = f'과도한 변형으로 인해 {idx+1}번 영상을 제외합니다.'
         if names is not None:
@@ -697,7 +726,7 @@ class Stitcher:
 
     return warped_images, warped_masks, rois
 
-  def blend(
+  def _blend(
       self,
       images: List[np.ndarray],
       masks: List[np.ndarray],
@@ -709,8 +738,8 @@ class Stitcher:
     Parameters
     ----------
     images : List[np.ndarray]
-        대상 영상 목록. int16 형식만 입력 받음. 1채널인 경우 자동으로
-        3채널 영상으로 변환.
+        대상 영상 목록. int16 형식만 입력 받음.
+        1채널인 경우 자동으로 3채널 영상으로 변환.
     masks : List[np.ndarray]
         대상 영역의 마스크 목록
     rois : np.ndarray
@@ -718,8 +747,10 @@ class Stitcher:
 
     Returns
     -------
-    Tuple[np.ndarray, np.ndarray]
-        파노라마 영상, 파노라마 영역의 마스크
+    stitched_image : np.ndarray
+        파노라마 영상
+    stitched_mask : np.ndarray
+        파노라마 영역의 마스크
     """
     corners = [(x[0].item(), x[1].item()) for x in rois]
     dst_size = cv.detail.resultRoi(corners=corners, images=images)
@@ -754,3 +785,68 @@ class Stitcher:
     stitched_image, stitched_mask = blender.blend(dst=None, dst_mask=None)
 
     return stitched_image, stitched_mask
+
+  def warp_and_blend(
+      self,
+      images: StitchingImages,
+      cameras: List[cv.detail_CameraParams],
+      masks: Optional[List[np.ndarray]] = None,
+      names: Optional[List[str]] = None) -> Tuple[np.ndarray, np.ndarray]:
+    # warp each image
+    warped_images, warped_masks, rois = self._warp_images(images=images.arrays,
+                                                          cameras=cameras,
+                                                          masks=masks,
+                                                          names=names)
+
+    # stitch and blend
+    scaled_images = [images.scale(x, out_range='int16') for x in warped_images]
+    scaled_panorama, panorama_mask = self._blend(images=scaled_images,
+                                                 masks=warped_masks,
+                                                 rois=rois)
+
+    panorama = images.unscale(image=scaled_panorama)
+
+    return panorama, panorama_mask
+
+  @staticmethod
+  def crop(
+      image: np.ndarray,
+      mask: Optional[np.ndarray] = None,
+      crop_range: Optional[list] = None,
+  ) -> Tuple[np.ndarray, np.ndarray, tuple]:
+    """
+    image와 mask를 일부 영역으로 crop
+
+    Parameters
+    ----------
+    image : np.ndarray
+        대상 영상
+    mask : Optional[np.ndarray]
+        대상 마스크
+    crop_range : Optional[list]
+        Crop 영역.
+        [x1, x2, y1, y2].
+        `None`인 경우, `mask` 중 `True`인 영역의 bounding box로 설정.
+
+    Returns
+    -------
+    np.ndarray
+        Cropped image
+    Optional[np.ndarray]
+        Cropped mask
+    Optional[list]
+        crop_range
+    """
+    if crop_range is not None:
+      x1, x2, y1, y2 = crop_range
+    else:
+      if mask is None:
+        raise ValueError('`mask`나 `crop_range` 중 하나를 설정해야 함.')
+
+      x1, x2, y1, y2 = mask_bbox(mask=mask, morphology_open=True)
+      crop_range = [x1, x2, y1, y2]
+
+    cropped_image = image[y1:y2, x1:x2]
+    cropped_mask = None if mask is None else mask[y1:y2, x1:x2]
+
+    return cropped_image, cropped_mask, crop_range

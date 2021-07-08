@@ -31,9 +31,9 @@ from typing import Union
 
 import cv2 as cv
 import numpy as np
-from matplotlib.colors import ListedColormap
+from matplotlib.colors import Colormap, ListedColormap
 
-from . import exif
+from . import exif, tools
 
 
 def extract_flir_colormap(image_path: str,
@@ -138,7 +138,31 @@ class FLIRColormap(ListedColormap):
     colors = np.loadtxt(path)
     instance = cls.from_uint8_colors(colors=colors, color_space=color_space)
 
-    return instance</code></pre>
+    return instance
+
+
+def apply_colormap(image: np.ndarray, cmap: Colormap) -&gt; np.ndarray:
+  &#34;&#34;&#34;
+  대상 영상에 지정한 colormap을 적용한 영상 반환.
+  Normalize ([0, 1]) -&gt; cmap() -&gt; rescale to uint8
+
+  Parameters
+  ----------
+  image : np.ndarray
+      대상 영상
+  cmap : Colormap
+      Colormap
+
+  Returns
+  -------
+  np.ndarray
+      Colormap을 적용한 영상
+  &#34;&#34;&#34;
+  norm_image = tools.normalize_image(image=image)
+  color_image = cmap(norm_image)
+  uint8_image = tools.uint8_image(color_image)
+
+  return uint8_image</code></pre>
 </details>
 </section>
 <section>
@@ -148,6 +172,52 @@ class FLIRColormap(ListedColormap):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="src.misc.cmap.apply_colormap"><code class="name flex">
+<span>def <span class="ident">apply_colormap</span></span>(<span>image: numpy.ndarray, cmap: matplotlib.colors.Colormap) ‑> numpy.ndarray</span>
+</code></dt>
+<dd>
+<div class="desc"><p>대상 영상에 지정한 colormap을 적용한 영상 반환.
+Normalize ([0, 1]) -&gt; cmap() -&gt; rescale to uint8</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>image</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>대상 영상</dd>
+<dt><strong><code>cmap</code></strong> :&ensp;<code>Colormap</code></dt>
+<dd>Colormap</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>np.ndarray</code></dt>
+<dd>Colormap을 적용한 영상</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def apply_colormap(image: np.ndarray, cmap: Colormap) -&gt; np.ndarray:
+  &#34;&#34;&#34;
+  대상 영상에 지정한 colormap을 적용한 영상 반환.
+  Normalize ([0, 1]) -&gt; cmap() -&gt; rescale to uint8
+
+  Parameters
+  ----------
+  image : np.ndarray
+      대상 영상
+  cmap : Colormap
+      Colormap
+
+  Returns
+  -------
+  np.ndarray
+      Colormap을 적용한 영상
+  &#34;&#34;&#34;
+  norm_image = tools.normalize_image(image=image)
+  color_image = cmap(norm_image)
+  uint8_image = tools.uint8_image(color_image)
+
+  return uint8_image</code></pre>
+</details>
+</dd>
 <dt id="src.misc.cmap.extract_flir_colormap"><code class="name flex">
 <span>def <span class="ident">extract_flir_colormap</span></span>(<span>image_path: str, save_path: str, color_space: str = 'RGB')</span>
 </code></dt>
@@ -478,6 +548,7 @@ def from_uint8_text_file(cls,
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="src.misc.cmap.apply_colormap" href="#src.misc.cmap.apply_colormap">apply_colormap</a></code></li>
 <li><code><a title="src.misc.cmap.extract_flir_colormap" href="#src.misc.cmap.extract_flir_colormap">extract_flir_colormap</a></code></li>
 </ul>
 </li>

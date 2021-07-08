@@ -1,2 +1,2 @@
 from .preprocess import PanoramaPreprocess
-from .stitcher import Stitcher, StitchingImages
+from .stitcher import StitchedImage, Stitcher, StitchingImages

@@ -29,8 +29,8 @@ class _ThermalPanorama(ThermalPanorama):
     debug : bool, optional
         If true, log debug message
     """
-    self.level = 'DEBUG' if debug else 'INFO'
-    utils.set_logger(level=self.level)
+    self._level = 'DEBUG' if debug else 'INFO'
+    utils.set_logger(level=self._level)
 
     super().__init__(directory)
 
@@ -54,11 +54,4 @@ class _ThermalPanorama(ThermalPanorama):
 
 
 if __name__ == '__main__':
-  sys.argv = [
-      sys.argv[0],
-      '--directory',
-      r'D:\test\panorama\cli',
-      'panorama',
-  ]
-
   fire.Fire(_ThermalPanorama)

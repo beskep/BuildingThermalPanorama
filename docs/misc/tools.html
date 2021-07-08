@@ -96,8 +96,7 @@ def _mask_range(mask, axis):
   return int(c1), int(c2)
 
 
-def mask_bbox(mask: np.ndarray,
-              morphology_open=True) -&gt; Tuple[int, int, int, int]:
+def mask_bbox(mask: np.ndarray, morphology_open=True) -&gt; Tuple[int]:
   &#34;&#34;&#34;
   마스크 영상 중 True인 영역의 bounding box 좌표를 찾음
 
@@ -112,7 +111,7 @@ def mask_bbox(mask: np.ndarray,
 
   Returns
   -------
-  Tuple[int, int, int, int]
+  Tuple[int]
       (x_min, x_max, y_min, y_max)
 
   Raises
@@ -488,7 +487,7 @@ class ImageIO:
 </details>
 </dd>
 <dt id="src.misc.tools.mask_bbox"><code class="name flex">
-<span>def <span class="ident">mask_bbox</span></span>(<span>mask: numpy.ndarray, morphology_open=True) ‑> Tuple[int, int, int, int]</span>
+<span>def <span class="ident">mask_bbox</span></span>(<span>mask: numpy.ndarray, morphology_open=True) ‑> Tuple[int]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>마스크 영상 중 True인 영역의 bounding box 좌표를 찾음</p>
@@ -502,7 +501,7 @@ class ImageIO:
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>Tuple[int, int, int, int]</code></dt>
+<dt><code>Tuple[int]</code></dt>
 <dd>(x_min, x_max, y_min, y_max)</dd>
 </dl>
 <h2 id="raises">Raises</h2>
@@ -514,8 +513,7 @@ class ImageIO:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def mask_bbox(mask: np.ndarray,
-              morphology_open=True) -&gt; Tuple[int, int, int, int]:
+<pre><code class="python">def mask_bbox(mask: np.ndarray, morphology_open=True) -&gt; Tuple[int]:
   &#34;&#34;&#34;
   마스크 영상 중 True인 영역의 bounding box 좌표를 찾음
 
@@ -530,7 +528,7 @@ class ImageIO:
 
   Returns
   -------
-  Tuple[int, int, int, int]
+  Tuple[int]
       (x_min, x_max, y_min, y_max)
 
   Raises

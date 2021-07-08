@@ -126,3 +126,4 @@ cython_debug/
 .idea
 *.exe
 data/
+.*.py
