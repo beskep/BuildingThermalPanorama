@@ -37,7 +37,7 @@ def _detect_chessboard(file: Path, save_dir: Path, img_size, pattern_size,
                              patternWasFound=ret)
 
     path = save_dir.joinpath(file.with_suffix('.jpg').name)
-    ImageIO.save_image(path=path, array=image)
+    ImageIO.save(path=path, array=image)
 
   return img_size, ret, corners
 

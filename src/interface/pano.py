@@ -95,22 +95,25 @@ class ThermalPanorama:
   def _glob(self, folder: str, pattern: str):
     return list(self._dir(folder=folder, mkdir=False).glob(pattern=pattern))
 
-  def _files(self, d, error=False):
+  def _files(self, d: str) -> List[Path]:
     """
-    각 폴더에서 수치 정보를 담고 있는 파일 목록 반환
+    각 폴더에서 수치 정보를 담고 있는 파일 목록 반환.
+    RAW 폴더의 경우 열화상 파일 (FLIR: `.jpg`, testo: `.xlsx`).
 
     Parameters
     ----------
     d : str
         대상 폴더
-    warn : bool, optional
-        `True`이고 파일 목록이 없을 경우 warning
-    error : bool, optional
-        `True`이고 파일 목록이 없을 경우 `FileNotFoundError`
 
     Returns
     -------
     List[Path]
+
+    Raises
+    ------
+    ValueError
+        d not in `DIR`
+    FileNotFoundError
     """
     if d == DIR.RAW:
       pattern = self._config['file'][self._manufacturer]['IR']
@@ -132,12 +135,7 @@ class ThermalPanorama:
       raise ValueError
 
     if not files:
-      msg = f'{target}가 존재하지 않습니다.'
-
-      if error:
-        raise FileNotFoundError(msg)
-
-      logger.warning(f'{target}가 존재하지 않습니다.')
+      raise FileNotFoundError(f'{target}가 존재하지 않습니다.')
 
     return files
 
@@ -167,11 +165,9 @@ class ThermalPanorama:
   def _extract_testo_image(self, path: Path):
     vis_suffix = self._config['file']['testo']['VIS'].replace('*', '')
     vis_path = path.with_name(path.stem + vis_suffix)
-    if not vis_path.exists():
-      raise FileNotFoundError(vis_path)
 
-    ir = IIO.read_image(path=path)
-    vis = IIO.read_image(path=vis_path)
+    ir = IIO.read(path=path)
+    vis = IIO.read(path=vis_path)
 
     return ir, vis
 
@@ -184,13 +180,14 @@ class ThermalPanorama:
     ir_path = self._dir(DIR.IR).joinpath(fname)
     vis_path = self._dir(DIR.VIS).joinpath(f'{fname}{FN.LL}')
 
-    IIO.save_image_and_meta(path=ir_path, array=ir, exts=[FN.NPY], meta=meta)
+    IIO.save_with_meta(path=ir_path, array=ir, exts=[FN.NPY], meta=meta)
+
     if self._config['color']['extract_color_image']:
       color_image = apply_colormap(ir, self._cmap)
-      IIO.save_image(path=ir_path.with_name(f'{fname}{FN.COLOR}{FN.LL}'),
-                     array=color_image)
+      IIO.save(path=ir_path.with_name(f'{fname}{FN.COLOR}{FN.LL}'),
+               array=color_image)
 
-    IIO.save_image(path=vis_path, array=vis)
+    IIO.save(path=vis_path, array=vis)
 
   def _extract_raw_file(self, file: Path):
     """
@@ -200,13 +197,6 @@ class ThermalPanorama:
     ----------
     file : Path
         Raw 파일 경로
-
-    Returns
-    -------
-    np.ndarray
-        열화상
-    np.ndarray
-        실화상
     """
     if not file.exists():
       raise FileNotFoundError(file)
@@ -231,13 +221,14 @@ class ThermalPanorama:
     self._save_extracted_image(fname=file.stem, ir=ir, vis=vis, meta=meta)
 
   def _extract_raw_files(self):
-    """기존에 raw 파일로부터 추출한 실화상/열화상이 없는 경우 추출 시행"""
+    """기존에 raw 파일로부터 추출한 실화상/열화상이 없는 경우 추출"""
     try:
-      self._files(DIR.IR, error=True)
-      self._files(DIR.VIS, error=True)
+      self._files(DIR.IR)
+      self._files(DIR.VIS)
     except FileNotFoundError:
-      files = self._files(DIR.RAW, error=True)
-      for file in track(files,
+      files = self._files(DIR.RAW)
+
+      for file in track(sequence=files,
                         description='Extracting images...',
                         console=utils.console):
         self._extract_raw_file(file=file)
@@ -251,7 +242,7 @@ class ThermalPanorama:
                                warp_threshold=sopt['warp_threshold'])
     stitcher.warper_type = sopt['warp']
 
-    logger.debug('Stitching: Stitcher 초기화')
+    logger.debug('Stitcher 초기화')
 
     return stitcher
 
@@ -277,7 +268,7 @@ class ThermalPanorama:
     # 대상 영상
     stitching_images = stitch.StitchingImages(arrays=images)
     stitching_images.set_preprocess(prep)
-    logger.debug('Stitching: 대상 영상 & 전처리 설정')
+    logger.debug('Stitch 대상 영상 & 전처리 설정')
 
     with utils.console.status('Stitching...'):
       res = stitcher.stitch(images=stitching_images,
@@ -296,34 +287,39 @@ class ThermalPanorama:
     pano_dir = self._dir(DIR.PANO)
 
     if save_meta:
-      meta = {'panorama': {'graph': res.graph, 'image_indices': res.indices}}
+      meta = {
+          'panorama': {
+              'including': res.included(),
+              'not_including': res.not_included(),
+              'graph': res.graph_list()
+          }
+      }
     else:
       meta = None
 
     with utils.console.status('Saving...'):
       if spectrum == 'IR':
         # 적외선 수치, meta 정보 저장
-        IIO.save_image_and_meta(
-            path=pano_dir.joinpath(fname),
-            array=res.panorama.astype(np.float16),  # TODO 추출부터 float16으로?
-            exts=[FN.NPY],
-            meta=meta)
+        IIO.save_with_meta(path=pano_dir.joinpath(fname),
+                           array=res.panorama.astype(np.float16),
+                           exts=[FN.NPY],
+                           meta=meta)
 
         # 적외선 colormap 영상 저장
         color_panorama = apply_colormap(res.panorama, self._cmap)
-        IIO.save_image(path=pano_dir.joinpath(f'{fname}{FN.COLOR}{FN.LL}'),
-                       array=color_panorama)
+        IIO.save(path=pano_dir.joinpath(f'{fname}{FN.COLOR}{FN.LL}'),
+                 array=color_panorama)
       else:
         # 실화상 저장
-        IIO.save_image_and_meta(path=pano_dir.joinpath(f'{fname}{FN.LS}'),
-                                array=res.panorama,
-                                exts=[FN.LS],
-                                meta=meta)
+        IIO.save_with_meta(path=pano_dir.joinpath(f'{fname}{FN.LS}'),
+                           array=res.panorama,
+                           exts=[FN.LS],
+                           meta=meta)
 
       if save_mask:
         # 마스크 저장
-        IIO.save_image(path=pano_dir.joinpath(f'{fname}{FN.PANO_MASK}{FN.LL}'),
-                       array=tools.uint8_image(res.mask))
+        IIO.save(path=pano_dir.joinpath(f'{fname}{FN.PANO_MASK}{FN.LL}'),
+                 array=tools.uint8_image(res.mask))
 
   @staticmethod
   def _pano_target(spectrum):
@@ -346,7 +342,7 @@ class ThermalPanorama:
 
     # 지정한 spectrum 파노라마
     files = self._files(self._pano_target(spectrum))
-    images = [IIO.read_image(x) for x in files]
+    images = [IIO.read(x) for x in files]
 
     # 파노라마 생성
     res = self._stitch(stitcher=stitcher,

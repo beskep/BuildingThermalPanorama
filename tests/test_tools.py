@@ -20,11 +20,11 @@ class TestImageIO:
     path = Path(directory).joinpath(self.fname)
     exts = ['.npy', '.csv', '.png']
 
-    IIO.save_image_and_meta(path=path,
-                            array=self.arr,
-                            exts=exts,
-                            meta=self.meta,
-                            dtype='uint16')
+    IIO.save_with_meta(path=path,
+                       array=self.arr,
+                       exts=exts,
+                       meta=self.meta,
+                       dtype='uint16')
 
     for ext in exts:
       assert path.with_suffix(ext).exists()
@@ -36,18 +36,17 @@ class TestImageIO:
   def read_image(self, directory):
     path = Path(directory).joinpath(self.fname)
 
-    img_npy, meta = IIO.read_image_and_meta(path.with_suffix('.npy'),
-                                            scale=False)
+    img_npy, meta = IIO.read_with_meta(path.with_suffix('.npy'), scale=False)
     assert self.arr == pytest.approx(img_npy)
 
     meta_ = meta.copy()
     meta_['range'] = {'min': 0.0, 'max': 10.0}
     assert meta == meta_
 
-    img_csv, _ = IIO.read_image_and_meta(path.with_suffix('.csv'), scale=False)
+    img_csv, _ = IIO.read_with_meta(path.with_suffix('.csv'), scale=False)
     assert self.arr == pytest.approx(img_csv)
 
-    img_png, _ = IIO.read_image_and_meta(path.with_suffix('.png'), scale=True)
+    img_png, _ = IIO.read_with_meta(path.with_suffix('.png'), scale=True)
     assert self.arr == pytest.approx(img_png, rel=1e-3)
 
   def test_io(self):

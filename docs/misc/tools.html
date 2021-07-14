@@ -243,11 +243,11 @@ class ImageIO:
   DELIMITER = &#39;,&#39;
 
   @classmethod
-  def _meta_path(cls, path: Path) -&gt; Path:
+  def meta_path(cls, path: Path) -&gt; Path:
     return path.with_name(f&#39;{path.stem}{cls.META_SUFFIX}{cls.META_EXT}&#39;)
 
   @classmethod
-  def read_image(cls, path: Union[str, Path]) -&gt; np.ndarray:
+  def read(cls, path: Union[str, Path]) -&gt; np.ndarray:
     &#34;&#34;&#34;
     주어진 path의 확장자에 따라 영상 파일 해석
 
@@ -283,9 +283,9 @@ class ImageIO:
     return image
 
   @classmethod
-  def read_image_and_meta(cls,
-                          path: Union[str, Path],
-                          scale=False) -&gt; Tuple[np.ndarray, Optional[dict]]:
+  def read_with_meta(cls,
+                     path: Union[str, Path],
+                     scale=False) -&gt; Tuple[np.ndarray, Optional[dict]]:
     &#34;&#34;&#34;
     주어진 path의 확장자에 따라 영상 파일 및 메타 정보 해석.
     조건에 따라 영상의 픽셀 값을 메타 정보에 기록된 원 범위로 scale함.
@@ -305,9 +305,9 @@ class ImageIO:
     meta_data : Optional[dict]
     &#34;&#34;&#34;
     path = Path(path).resolve()
-    image = cls.read_image(path)
+    image = cls.read(path)
 
-    meta_path = cls._meta_path(path)
+    meta_path = cls.meta_path(path)
     if meta_path.exists():
       with open(meta_path, &#39;r&#39;, encoding=cls.ENCODING) as f:
         meta = yaml.safe_load(f)
@@ -330,10 +330,10 @@ class ImageIO:
     return image, meta
 
   @classmethod
-  def save_image(cls,
-                 path: Union[str, Path],
-                 array: np.ndarray,
-                 check_contrast=False):
+  def save(cls,
+           path: Union[str, Path],
+           array: np.ndarray,
+           check_contrast=False):
     &#34;&#34;&#34;
     주어진 path의 확장자에 따라 영상 파일 저장
 
@@ -356,10 +356,7 @@ class ImageIO:
       imsave(fname=path.as_posix(), arr=array, check_contrast=check_contrast)
 
   @staticmethod
-  def _scale_and_save_image(array: np.ndarray,
-                            path: Path,
-                            exts: list,
-                            dtype=&#39;uint8&#39;):
+  def _scale_and_save(array: np.ndarray, path: Path, exts: list, dtype=&#39;uint8&#39;):
     if not exts:
       return
     if dtype not in (&#39;uint8&#39;, &#39;uint16&#39;):
@@ -384,12 +381,12 @@ class ImageIO:
       imsave(fname=path.with_suffix(ext).as_posix(), arr=array)
 
   @classmethod
-  def save_image_and_meta(cls,
-                          path: Union[str, Path],
-                          array: np.ndarray,
-                          exts: list,
-                          meta: Optional[dict] = None,
-                          dtype: Optional[str] = None):
+  def save_with_meta(cls,
+                     path: Union[str, Path],
+                     array: np.ndarray,
+                     exts: list,
+                     meta: Optional[dict] = None,
+                     dtype: Optional[str] = None):
     &#34;&#34;&#34;
     주어진 path와 각 확장자 (`exts`)에 따라 영상 파일 저장.
     조건에 따라 주어진 메타 정보를 함께 저장하며, 영상 확장자 (`.png` 등) 파일은
@@ -428,7 +425,7 @@ class ImageIO:
     if dtype is None:
       cls._save_image(array=array, path=path, exts=exts)
     else:
-      cls._scale_and_save_image(array=array, path=path, exts=exts, dtype=dtype)
+      cls._scale_and_save(array=array, path=path, exts=exts, dtype=dtype)
 
     # 메타 데이터 저장
     if meta is not None:
@@ -436,9 +433,9 @@ class ImageIO:
           &#39;min&#39;: np.around(np.nanmin(array).item(), 4).item(),
           &#39;max&#39;: np.around(np.nanmax(array).item(), 4).item()
       }
-      meta_path = cls._meta_path(path)
+      meta_path = cls.meta_path(path)
       with open(meta_path, &#39;w&#39;, encoding=cls.ENCODING) as f:
-        yaml.safe_dump(meta, f)</code></pre>
+        yaml.safe_dump(meta, f, indent=4, sort_keys=False)</code></pre>
 </details>
 </section>
 <section>
@@ -805,11 +802,11 @@ class ImageIO:
   DELIMITER = &#39;,&#39;
 
   @classmethod
-  def _meta_path(cls, path: Path) -&gt; Path:
+  def meta_path(cls, path: Path) -&gt; Path:
     return path.with_name(f&#39;{path.stem}{cls.META_SUFFIX}{cls.META_EXT}&#39;)
 
   @classmethod
-  def read_image(cls, path: Union[str, Path]) -&gt; np.ndarray:
+  def read(cls, path: Union[str, Path]) -&gt; np.ndarray:
     &#34;&#34;&#34;
     주어진 path의 확장자에 따라 영상 파일 해석
 
@@ -845,9 +842,9 @@ class ImageIO:
     return image
 
   @classmethod
-  def read_image_and_meta(cls,
-                          path: Union[str, Path],
-                          scale=False) -&gt; Tuple[np.ndarray, Optional[dict]]:
+  def read_with_meta(cls,
+                     path: Union[str, Path],
+                     scale=False) -&gt; Tuple[np.ndarray, Optional[dict]]:
     &#34;&#34;&#34;
     주어진 path의 확장자에 따라 영상 파일 및 메타 정보 해석.
     조건에 따라 영상의 픽셀 값을 메타 정보에 기록된 원 범위로 scale함.
@@ -867,9 +864,9 @@ class ImageIO:
     meta_data : Optional[dict]
     &#34;&#34;&#34;
     path = Path(path).resolve()
-    image = cls.read_image(path)
+    image = cls.read(path)
 
-    meta_path = cls._meta_path(path)
+    meta_path = cls.meta_path(path)
     if meta_path.exists():
       with open(meta_path, &#39;r&#39;, encoding=cls.ENCODING) as f:
         meta = yaml.safe_load(f)
@@ -892,10 +889,10 @@ class ImageIO:
     return image, meta
 
   @classmethod
-  def save_image(cls,
-                 path: Union[str, Path],
-                 array: np.ndarray,
-                 check_contrast=False):
+  def save(cls,
+           path: Union[str, Path],
+           array: np.ndarray,
+           check_contrast=False):
     &#34;&#34;&#34;
     주어진 path의 확장자에 따라 영상 파일 저장
 
@@ -918,10 +915,7 @@ class ImageIO:
       imsave(fname=path.as_posix(), arr=array, check_contrast=check_contrast)
 
   @staticmethod
-  def _scale_and_save_image(array: np.ndarray,
-                            path: Path,
-                            exts: list,
-                            dtype=&#39;uint8&#39;):
+  def _scale_and_save(array: np.ndarray, path: Path, exts: list, dtype=&#39;uint8&#39;):
     if not exts:
       return
     if dtype not in (&#39;uint8&#39;, &#39;uint16&#39;):
@@ -946,12 +940,12 @@ class ImageIO:
       imsave(fname=path.with_suffix(ext).as_posix(), arr=array)
 
   @classmethod
-  def save_image_and_meta(cls,
-                          path: Union[str, Path],
-                          array: np.ndarray,
-                          exts: list,
-                          meta: Optional[dict] = None,
-                          dtype: Optional[str] = None):
+  def save_with_meta(cls,
+                     path: Union[str, Path],
+                     array: np.ndarray,
+                     exts: list,
+                     meta: Optional[dict] = None,
+                     dtype: Optional[str] = None):
     &#34;&#34;&#34;
     주어진 path와 각 확장자 (`exts`)에 따라 영상 파일 저장.
     조건에 따라 주어진 메타 정보를 함께 저장하며, 영상 확장자 (`.png` 등) 파일은
@@ -990,7 +984,7 @@ class ImageIO:
     if dtype is None:
       cls._save_image(array=array, path=path, exts=exts)
     else:
-      cls._scale_and_save_image(array=array, path=path, exts=exts, dtype=dtype)
+      cls._scale_and_save(array=array, path=path, exts=exts, dtype=dtype)
 
     # 메타 데이터 저장
     if meta is not None:
@@ -998,9 +992,9 @@ class ImageIO:
           &#39;min&#39;: np.around(np.nanmin(array).item(), 4).item(),
           &#39;max&#39;: np.around(np.nanmax(array).item(), 4).item()
       }
-      meta_path = cls._meta_path(path)
+      meta_path = cls.meta_path(path)
       with open(meta_path, &#39;w&#39;, encoding=cls.ENCODING) as f:
-        yaml.safe_dump(meta, f)</code></pre>
+        yaml.safe_dump(meta, f, indent=4, sort_keys=False)</code></pre>
 </details>
 <h3>Class variables</h3>
 <dl>
@@ -1035,8 +1029,22 @@ class ImageIO:
 </dl>
 <h3>Static methods</h3>
 <dl>
-<dt id="src.misc.tools.ImageIO.read_image"><code class="name flex">
-<span>def <span class="ident">read_image</span></span>(<span>path: Union[str, pathlib.Path]) ‑> numpy.ndarray</span>
+<dt id="src.misc.tools.ImageIO.meta_path"><code class="name flex">
+<span>def <span class="ident">meta_path</span></span>(<span>path: pathlib.Path) ‑> pathlib.Path</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def meta_path(cls, path: Path) -&gt; Path:
+  return path.with_name(f&#39;{path.stem}{cls.META_SUFFIX}{cls.META_EXT}&#39;)</code></pre>
+</details>
+</dd>
+<dt id="src.misc.tools.ImageIO.read"><code class="name flex">
+<span>def <span class="ident">read</span></span>(<span>path: Union[str, pathlib.Path]) ‑> numpy.ndarray</span>
 </code></dt>
 <dd>
 <div class="desc"><p>주어진 path의 확장자에 따라 영상 파일 해석</p>
@@ -1061,7 +1069,7 @@ class ImageIO:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
-def read_image(cls, path: Union[str, Path]) -&gt; np.ndarray:
+def read(cls, path: Union[str, Path]) -&gt; np.ndarray:
   &#34;&#34;&#34;
   주어진 path의 확장자에 따라 영상 파일 해석
 
@@ -1097,8 +1105,8 @@ def read_image(cls, path: Union[str, Path]) -&gt; np.ndarray:
   return image</code></pre>
 </details>
 </dd>
-<dt id="src.misc.tools.ImageIO.read_image_and_meta"><code class="name flex">
-<span>def <span class="ident">read_image_and_meta</span></span>(<span>path: Union[str, pathlib.Path], scale=False) ‑> Tuple[numpy.ndarray, Union[dict, NoneType]]</span>
+<dt id="src.misc.tools.ImageIO.read_with_meta"><code class="name flex">
+<span>def <span class="ident">read_with_meta</span></span>(<span>path: Union[str, pathlib.Path], scale=False) ‑> Tuple[numpy.ndarray, Union[dict, NoneType]]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>주어진 path의 확장자에 따라 영상 파일 및 메타 정보 해석.
@@ -1124,9 +1132,9 @@ def read_image(cls, path: Union[str, Path]) -&gt; np.ndarray:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
-def read_image_and_meta(cls,
-                        path: Union[str, Path],
-                        scale=False) -&gt; Tuple[np.ndarray, Optional[dict]]:
+def read_with_meta(cls,
+                   path: Union[str, Path],
+                   scale=False) -&gt; Tuple[np.ndarray, Optional[dict]]:
   &#34;&#34;&#34;
   주어진 path의 확장자에 따라 영상 파일 및 메타 정보 해석.
   조건에 따라 영상의 픽셀 값을 메타 정보에 기록된 원 범위로 scale함.
@@ -1146,9 +1154,9 @@ def read_image_and_meta(cls,
   meta_data : Optional[dict]
   &#34;&#34;&#34;
   path = Path(path).resolve()
-  image = cls.read_image(path)
+  image = cls.read(path)
 
-  meta_path = cls._meta_path(path)
+  meta_path = cls.meta_path(path)
   if meta_path.exists():
     with open(meta_path, &#39;r&#39;, encoding=cls.ENCODING) as f:
       meta = yaml.safe_load(f)
@@ -1171,8 +1179,8 @@ def read_image_and_meta(cls,
   return image, meta</code></pre>
 </details>
 </dd>
-<dt id="src.misc.tools.ImageIO.save_image"><code class="name flex">
-<span>def <span class="ident">save_image</span></span>(<span>path: Union[str, pathlib.Path], array: numpy.ndarray, check_contrast=False)</span>
+<dt id="src.misc.tools.ImageIO.save"><code class="name flex">
+<span>def <span class="ident">save</span></span>(<span>path: Union[str, pathlib.Path], array: numpy.ndarray, check_contrast=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>주어진 path의 확장자에 따라 영상 파일 저장</p>
@@ -1191,10 +1199,10 @@ def read_image_and_meta(cls,
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
-def save_image(cls,
-               path: Union[str, Path],
-               array: np.ndarray,
-               check_contrast=False):
+def save(cls,
+         path: Union[str, Path],
+         array: np.ndarray,
+         check_contrast=False):
   &#34;&#34;&#34;
   주어진 path의 확장자에 따라 영상 파일 저장
 
@@ -1217,8 +1225,8 @@ def save_image(cls,
     imsave(fname=path.as_posix(), arr=array, check_contrast=check_contrast)</code></pre>
 </details>
 </dd>
-<dt id="src.misc.tools.ImageIO.save_image_and_meta"><code class="name flex">
-<span>def <span class="ident">save_image_and_meta</span></span>(<span>path: Union[str, pathlib.Path], array: numpy.ndarray, exts: list, meta: Union[dict, NoneType] = None, dtype: Union[str, NoneType] = None)</span>
+<dt id="src.misc.tools.ImageIO.save_with_meta"><code class="name flex">
+<span>def <span class="ident">save_with_meta</span></span>(<span>path: Union[str, pathlib.Path], array: numpy.ndarray, exts: list, meta: Union[dict, NoneType] = None, dtype: Union[str, NoneType] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>주어진 path와 각 확장자 (<code>exts</code>)에 따라 영상 파일 저장.
@@ -1244,12 +1252,12 @@ def save_image(cls,
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
-def save_image_and_meta(cls,
-                        path: Union[str, Path],
-                        array: np.ndarray,
-                        exts: list,
-                        meta: Optional[dict] = None,
-                        dtype: Optional[str] = None):
+def save_with_meta(cls,
+                   path: Union[str, Path],
+                   array: np.ndarray,
+                   exts: list,
+                   meta: Optional[dict] = None,
+                   dtype: Optional[str] = None):
   &#34;&#34;&#34;
   주어진 path와 각 확장자 (`exts`)에 따라 영상 파일 저장.
   조건에 따라 주어진 메타 정보를 함께 저장하며, 영상 확장자 (`.png` 등) 파일은
@@ -1288,7 +1296,7 @@ def save_image_and_meta(cls,
   if dtype is None:
     cls._save_image(array=array, path=path, exts=exts)
   else:
-    cls._scale_and_save_image(array=array, path=path, exts=exts, dtype=dtype)
+    cls._scale_and_save(array=array, path=path, exts=exts, dtype=dtype)
 
   # 메타 데이터 저장
   if meta is not None:
@@ -1296,9 +1304,9 @@ def save_image_and_meta(cls,
         &#39;min&#39;: np.around(np.nanmin(array).item(), 4).item(),
         &#39;max&#39;: np.around(np.nanmax(array).item(), 4).item()
     }
-    meta_path = cls._meta_path(path)
+    meta_path = cls.meta_path(path)
     with open(meta_path, &#39;w&#39;, encoding=cls.ENCODING) as f:
-      yaml.safe_dump(meta, f)</code></pre>
+      yaml.safe_dump(meta, f, indent=4, sort_keys=False)</code></pre>
 </details>
 </dd>
 </dl>
@@ -1341,10 +1349,11 @@ def save_image_and_meta(cls,
 <li><code><a title="src.misc.tools.ImageIO.META_SUFFIX" href="#src.misc.tools.ImageIO.META_SUFFIX">META_SUFFIX</a></code></li>
 <li><code><a title="src.misc.tools.ImageIO.NPY_EXT" href="#src.misc.tools.ImageIO.NPY_EXT">NPY_EXT</a></code></li>
 <li><code><a title="src.misc.tools.ImageIO.XLSX_EXT" href="#src.misc.tools.ImageIO.XLSX_EXT">XLSX_EXT</a></code></li>
-<li><code><a title="src.misc.tools.ImageIO.read_image" href="#src.misc.tools.ImageIO.read_image">read_image</a></code></li>
-<li><code><a title="src.misc.tools.ImageIO.read_image_and_meta" href="#src.misc.tools.ImageIO.read_image_and_meta">read_image_and_meta</a></code></li>
-<li><code><a title="src.misc.tools.ImageIO.save_image" href="#src.misc.tools.ImageIO.save_image">save_image</a></code></li>
-<li><code><a title="src.misc.tools.ImageIO.save_image_and_meta" href="#src.misc.tools.ImageIO.save_image_and_meta">save_image_and_meta</a></code></li>
+<li><code><a title="src.misc.tools.ImageIO.meta_path" href="#src.misc.tools.ImageIO.meta_path">meta_path</a></code></li>
+<li><code><a title="src.misc.tools.ImageIO.read" href="#src.misc.tools.ImageIO.read">read</a></code></li>
+<li><code><a title="src.misc.tools.ImageIO.read_with_meta" href="#src.misc.tools.ImageIO.read_with_meta">read_with_meta</a></code></li>
+<li><code><a title="src.misc.tools.ImageIO.save" href="#src.misc.tools.ImageIO.save">save</a></code></li>
+<li><code><a title="src.misc.tools.ImageIO.save_with_meta" href="#src.misc.tools.ImageIO.save_with_meta">save_with_meta</a></code></li>
 </ul>
 </li>
 </ul>

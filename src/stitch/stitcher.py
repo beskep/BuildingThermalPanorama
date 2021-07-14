@@ -32,6 +32,10 @@ _AVAILABLE_WARPER = (
 )
 
 
+class StitchError(ValueError):
+  pass
+
+
 @dataclass
 class StitchedImage:
   """Stitch 결과"""
@@ -41,6 +45,25 @@ class StitchedImage:
   indices: list
   cameras: list
   crop_range: Optional[List[int]]
+  image_names: List[str]
+
+  def included(self):
+    return [self.image_names[x] for x in sorted(self.indices)]
+
+  def not_included(self):
+    ni = [
+        self.image_names[x]
+        for x in range(len(self.image_names))
+        if x not in self.indices
+    ]
+    return ni if len(ni) else None
+
+  def graph_list(self):
+    gl = self.graph.split('\n')
+    assert gl[0].startswith('graph')
+    assert gl[-1] == '}'
+
+    return [x.replace("'", '').replace('"', '') for x in gl[1:-1]]
 
 
 class StitchingImages:
@@ -440,8 +463,8 @@ class Stitcher:
 
   def stitch(self,
              images: StitchingImages,
-             masks: Optional[list] = None,
-             names: Optional[list] = None,
+             masks: Optional[List[np.ndarray]] = None,
+             names: Optional[List[str]] = None,
              crop=True) -> StitchedImage:
     """
     영상의 특징점을 기반으로 정합 (stitch)하여 파노라마 영상 생성
@@ -450,9 +473,9 @@ class Stitcher:
     ----------
     images : StitchingImages
         대상 영상 목록.
-    masks : Optional[list], optional
+    masks : Optional[List[np.ndarray]], optional
         대상 영상의 마스크 목록., by default None
-    names : Optional[list], optional
+    names : Optional[List[str]], optional
         대상 영상의 이름 목록. 미지정 시 `Image n` 형식으로 지정.
     crop : bool
         `True`인 경우, 파노라마 영상 중 데이터가 존재하는 부분만 crop
@@ -483,14 +506,16 @@ class Stitcher:
         images=prep_images, image_names=names)
 
     if len(indices) != len(prep_images):
-      images.select_images(indices=[int(x) for x in indices.ravel()])
-      removed = set(range(len(prep_images))) - set(indices.ravel())
-      logger.debug('Stitching에 필요 없는 이미지 제거 (indices: {})', list(removed))
+      images.select_images(indices=[int(x) for x in indices])
+      logger.debug('Stitching에 필요 없는 이미지 제거 (indices: {})',
+                   set(range(len(prep_images))) - set(indices))
 
-    panorama, panorama_mask = self.warp_and_blend(images=images,
-                                                  cameras=cameras,
-                                                  masks=masks,
-                                                  names=names)
+    panorama, panorama_mask, warp_indices = self.warp_and_blend(images=images,
+                                                                cameras=cameras,
+                                                                masks=masks,
+                                                                names=names)
+    indices = [indices[x] for x in warp_indices]
+
     if images.ndim == 2:
       # 원본 영상이 2차원인 경우 (열화상), 첫 번째 채널만 추출
       panorama = panorama[:, :, 0]
@@ -510,16 +535,18 @@ class Stitcher:
     res = StitchedImage(panorama=panorama,
                         mask=panorama_mask,
                         graph=matches_graph,
-                        indices=indices.ravel().tolist(),
+                        indices=indices,
                         cameras=cameras,
-                        crop_range=crop_range)
+                        crop_range=crop_range,
+                        image_names=names)
+
     return res
 
   def calculate_camera_matrix(
       self,
       images: List[np.ndarray],
       image_names: List[str],
-  ) -> Tuple[List[cv.detail_CameraParams], np.ndarray, str]:
+  ) -> Tuple[List[cv.detail_CameraParams], List[int], str]:
     """
     영상의 특성 추출/매칭을 통해 camera matrix 추정
 
@@ -534,7 +561,7 @@ class Stitcher:
     -------
     cameras : List[cv.detail_CameraParams]
         각 영상의 camera parameter
-    indices : np.ndarray
+    indices : List[int]
         매칭된 영상의 index 목록
     matches_graph : str
         매칭 graph (영상 간 연결 관계) 정보
@@ -551,12 +578,9 @@ class Stitcher:
         features=features,
         pairwise_matches=pairwise_matches,
         conf_threshold=0.3)
-    logger.debug('Selected indices: {}', indices.ravel().tolist())
+    indices = indices.ravel().tolist()
     if len(indices) < 2:
-      raise ValueError('Need more images (valid images are less than two)')
-
-    # indices = [x[0] for x in indices]
-    # images = [images[x] for x in indices]
+      raise StitchError('Need more images (valid images are less than two)')
 
     logger.debug('Matches graph')
     matches_graph: str = cv.detail.matchesGraphAsString(
@@ -568,7 +592,7 @@ class Stitcher:
     estimate_status, cameras = self.estimator.apply(
         features=features, pairwise_matches=pairwise_matches, cameras=None)
     if not estimate_status:
-      raise ValueError('Homography estimation failed')
+      raise StitchError('Homography estimation failed')
 
     logger.debug('Bundle adjust')
     self.bundle_adjuster.setConfThresh(1)
@@ -580,7 +604,7 @@ class Stitcher:
     adjuster_status, cameras = self.bundle_adjuster.apply(
         features=features, pairwise_matches=pairwise_matches, cameras=cameras)
     if not adjuster_status:
-      raise ValueError('Camera parameters adjusting failed')
+      raise StitchError('Camera parameters adjusting failed')
 
     logger.debug('Wave correction')
     Rs = [np.copy(camera.R) for camera in cameras]
@@ -683,7 +707,7 @@ class Stitcher:
       cameras: List[cv.detail_CameraParams],
       masks: Optional[List[np.ndarray]] = None,
       names: Optional[List[str]] = None,
-  ) -> Tuple[List[np.ndarray], List[np.ndarray], np.ndarray]:
+  ) -> Tuple[List[np.ndarray], List[np.ndarray], np.ndarray, List[int]]:
     """
     대상 영상들을 Camera parameter에 따라 변형. 과도한 변형이 일어나는 경우
     오류로 판단하고 파노라마를 구성하는 영상에서 제외함.
@@ -707,6 +731,8 @@ class Stitcher:
         마스크 목록
     rois : np.ndarray
         Region of interest 목록
+    indices : List[int]
+        제외되지 않은 영상의 index 목록
     """
     scale = np.median([x.focal for x in cameras])
     self.set_warper(scale=scale)
@@ -717,6 +743,7 @@ class Stitcher:
     warped_images = []
     warped_masks = []
     rois = []
+    indices = []
     for idx, args in enumerate(zip(images, masks, cameras)):
       try:
         wi, wm, roi = self._warp_image(*args)
@@ -730,10 +757,11 @@ class Stitcher:
         warped_images.append(wi)
         warped_masks.append(wm)
         rois.append(roi)
+        indices.append(idx)
 
     rois = np.array(rois)
 
-    return warped_images, warped_masks, rois
+    return warped_images, warped_masks, rois, indices
 
   def _blend(
       self,
@@ -800,12 +828,11 @@ class Stitcher:
       images: StitchingImages,
       cameras: List[cv.detail_CameraParams],
       masks: Optional[List[np.ndarray]] = None,
-      names: Optional[List[str]] = None) -> Tuple[np.ndarray, np.ndarray]:
+      names: Optional[List[str]] = None
+  ) -> Tuple[np.ndarray, np.ndarray, List[int]]:
     # warp each image
-    warped_images, warped_masks, rois = self._warp_images(images=images.arrays,
-                                                          cameras=cameras,
-                                                          masks=masks,
-                                                          names=names)
+    warped_images, warped_masks, rois, indices = self._warp_images(
+        images=images.arrays, cameras=cameras, masks=masks, names=names)
 
     # stitch and blend
     scaled_images = [images.scale(x, out_range='int16') for x in warped_images]
@@ -815,7 +842,7 @@ class Stitcher:
 
     panorama = images.unscale(image=scaled_panorama)
 
-    return panorama, panorama_mask
+    return panorama, panorama_mask, indices
 
   @staticmethod
   def crop(

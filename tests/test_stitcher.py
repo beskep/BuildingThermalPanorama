@@ -12,7 +12,7 @@ from misc.tools import ImageIO
 def test_stitcher():
   img_dir = DATA_DIR.joinpath('MainBldgBackLoc1PanTiltTripod/IR')
   files = img_dir.glob('*.npy')
-  arrays = [ImageIO.read_image(x) for x in files]
+  arrays = [ImageIO.read(x) for x in files]
 
   def _prep(image):
     mask = (image > -30.0).astype(np.uint8)
