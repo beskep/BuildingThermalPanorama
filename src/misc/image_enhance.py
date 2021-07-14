@@ -1,3 +1,5 @@
+"""학습 데이터 증강 (enhancement)"""
+
 from itertools import product
 from typing import Iterable, Iterator, Tuple
 

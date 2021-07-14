@@ -27,11 +27,10 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">&#39;&#39;&#39;
-외피 열화상 파노라마 영상처리 알고리즘의 CLI 인터페이스
-&#39;&#39;&#39;
+<pre><code class="python">&#34;&#34;&#34;외피 열화상 파노라마 영상처리 알고리즘의 CLI 인터페이스&#34;&#34;&#34;
+
 from pathlib import Path
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Union
 
 import utils
 
@@ -49,17 +48,18 @@ from .cmap import apply_colormap, get_thermal_colormap
 from .config import DictConfig, read_config
 
 
-class _DIR:
+class DIR:
   # directory
   RAW = &#39;Raw&#39;
-  IR = &#39;IR&#39;
-  VIS = &#39;VIS&#39;
-  PANO = &#39;Panorama&#39;
-  RGST = &#39;Registration&#39;
-  SEG = &#39;Segmentation&#39;
+  IR = &#39;00 IR&#39;
+  VIS = &#39;00 VIS&#39;
+  RGST = &#39;01 Registration&#39;
+  SEG = &#39;02 Segmentation&#39;
+  PANO = &#39;03 Panorama&#39;
+  COR = &#39;04 Correction&#39;
 
 
-class _FN:
+class FN:
   # file suffix, ext
 
   NPY = &#39;.npy&#39;
@@ -79,8 +79,9 @@ class _FN:
 
 
 class ThermalPanorama:
+  # TODO wd에 각 명령어 성공 여부 log 저장
 
-  def __init__(self, directory: Union[str, Path]) -&gt; None:
+  def __init__(self, directory: Union[str, Path], default_config=False) -&gt; None:
     # working directory
     wd = Path(directory).resolve()
     if not wd.exists():
@@ -88,11 +89,7 @@ class ThermalPanorama:
     self._wd = wd
 
     # config
-    self._config = read_config(wd)
-
-    # 파일 형식
-    self._exts = (self._config[&#39;file&#39;][&#39;save_ext&#39;][&#39;IR&#39;],
-                  self._config[&#39;file&#39;][&#39;save_ext&#39;][&#39;VIS&#39;])
+    self._config = read_config(wd=wd, default=default_config)
 
     self._manufacturer = self._check_manufacturer()
     logger.debug(&#39;Manufacturer: {}&#39;, self._manufacturer)
@@ -105,11 +102,15 @@ class ThermalPanorama:
     self._cmap = get_thermal_colormap(
         name=self._config[&#39;color&#39;].get(&#39;colormap&#39;, &#39;iron&#39;))
 
+  @property
+  def _size_limit(self):
+    return self._config[&#39;file&#39;][&#39;size_limit&#39;]
+
   def _check_manufacturer(self) -&gt; str:
     fopt: DictConfig = self._config[&#39;file&#39;]
-    flir_files = self._glob(folder=_DIR.RAW, pattern=fopt[&#39;FLIR&#39;][&#39;IR&#39;])
-    testo_ir_files = self._glob(folder=_DIR.RAW, pattern=fopt[&#39;testo&#39;][&#39;IR&#39;])
-    testo_vis_files = self._glob(folder=_DIR.RAW, pattern=fopt[&#39;testo&#39;][&#39;VIS&#39;])
+    flir_files = self._glob(folder=DIR.RAW, pattern=fopt[&#39;FLIR&#39;][&#39;IR&#39;])
+    testo_ir_files = self._glob(folder=DIR.RAW, pattern=fopt[&#39;testo&#39;][&#39;IR&#39;])
+    testo_vis_files = self._glob(folder=DIR.RAW, pattern=fopt[&#39;testo&#39;][&#39;VIS&#39;])
 
     if testo_ir_files and testo_vis_files:
       manufacturer = &#39;testo&#39;
@@ -122,16 +123,6 @@ class ThermalPanorama:
 
   def _glob(self, folder: str, pattern: str):
     return list(self._dir(folder=folder, mkdir=False).glob(pattern=pattern))
-
-  def _raw_files(self) -&gt; List[Path]:
-    # FIXME Raw 폴더에 원본이 없는 경우에도 지원?
-    pattern = self._config[&#39;file&#39;][self._manufacturer][&#39;IR&#39;]
-    files = self._glob(folder=_DIR.RAW, pattern=pattern)
-
-    if not files:
-      logger.warning(&#39;{} 폴더에 영상 파일이 존재하지 않습니다.&#39;, _DIR.RAW)
-
-    return files
 
   def _files(self, d, error=False):
     &#34;&#34;&#34;
@@ -150,23 +141,28 @@ class ThermalPanorama:
     -------
     List[Path]
     &#34;&#34;&#34;
-    if d == _DIR.IR:
-      files = self._glob(folder=d, pattern=f&#39;*{_FN.NPY}&#39;)
+    if d == DIR.RAW:
+      pattern = self._config[&#39;file&#39;][self._manufacturer][&#39;IR&#39;]
+      files = self._glob(folder=DIR.RAW, pattern=pattern)
+      target = &#39;Raw files&#39;
+    elif d == DIR.IR:
+      files = self._glob(folder=d, pattern=f&#39;*{FN.NPY}&#39;)
       target = &#39;열화상 추출 결과&#39;
-    elif d == _DIR.VIS:
-      files = self._glob(folder=d, pattern=f&#39;*{_FN.LL}&#39;)
+    elif d == DIR.VIS:
+      files = self._glob(folder=d, pattern=f&#39;*{FN.LL}&#39;)
       target = &#39;실화상 추출 결과&#39;
-    elif d == _DIR.RGST:
-      files = self._glob(folder=d, pattern=f&#39;*{_FN.RGST_VIS}{_FN.LL}&#39;)
+    elif d == DIR.RGST:
+      files = self._glob(folder=d, pattern=f&#39;*{FN.RGST_VIS}{FN.LL}&#39;)
       target = &#39;정합 결과&#39;
-    elif d == _DIR.SEG:
-      files = self._glob(folder=d, pattern=f&#39;*{_FN.SEG_MASK}{_FN.LL}&#39;)
+    elif d == DIR.SEG:
+      files = self._glob(folder=d, pattern=f&#39;*{FN.SEG_MASK}{FN.LL}&#39;)
       target = &#39;분할 결과&#39;
     else:
       raise ValueError
 
     if not files:
       msg = f&#39;{target}가 존재하지 않습니다.&#39;
+
       if error:
         raise FileNotFoundError(msg)
 
@@ -214,24 +210,20 @@ class ThermalPanorama:
                             vis: np.ndarray,
                             meta: Optional[dict] = None):
     &#34;&#34;&#34;추출한 열/실화상을 각 폴더에 저장&#34;&#34;&#34;
-    ir_path = self._dir(_DIR.IR).joinpath(fname)
-    vis_path = self._dir(_DIR.VIS).joinpath(f&#39;{fname}{self._exts[1]}&#39;)
+    ir_path = self._dir(DIR.IR).joinpath(fname)
+    vis_path = self._dir(DIR.VIS).joinpath(f&#39;{fname}{FN.LL}&#39;)
 
-    IIO.save_image_and_meta(path=ir_path,
-                            array=ir,
-                            exts=[self._exts[0]],
-                            meta=meta)
+    IIO.save_image_and_meta(path=ir_path, array=ir, exts=[FN.NPY], meta=meta)
     if self._config[&#39;color&#39;][&#39;extract_color_image&#39;]:
       color_image = apply_colormap(ir, self._cmap)
-      IIO.save_image(path=ir_path.with_name(f&#39;{fname}{_FN.COLOR}{_FN.LL}&#39;),
+      IIO.save_image(path=ir_path.with_name(f&#39;{fname}{FN.COLOR}{FN.LL}&#39;),
                      array=color_image)
 
     IIO.save_image(path=vis_path, array=vis)
 
-  def _read_raw_file(self, file: Path) -&gt; Tuple[np.ndarray, np.ndarray]:
+  def _extract_raw_file(self, file: Path):
     &#34;&#34;&#34;
-    Raw 열화상, 실화상 파일을 읽음.
-    각 해당하는 폴더에 해당 파일이 없으면 입력한 `file`로부터 추출하고 저장.
+    Raw 열화상, 실화상 파일 추출.
 
     Parameters
     ----------
@@ -248,53 +240,40 @@ class ThermalPanorama:
     if not file.exists():
       raise FileNotFoundError(file)
 
-    ir_path = self._dir(_DIR.IR).joinpath(file.stem + self._exts[0])
-    vis_path = self._dir(_DIR.VIS).joinpath(file.stem + self._exts[1])
+    ir_path = self._dir(DIR.IR).joinpath(f&#39;{file.stat}{FN.NPY}&#39;)
+    vis_path = self._dir(DIR.VIS).joinpath(f&#39;{file.stat}{FN.LL}&#39;)
 
     if ir_path.exists() and vis_path.exists():
-      ir = IIO.read_image(ir_path)
-      vis = IIO.read_image(vis_path)
+      return
+
+    logger.debug(&#39;Extracting `{}`&#39;, file.name)
+
+    if self._manufacturer == &#39;FLIR&#39;:
+      ir, vis, meta = self._extract_flir_image(path=file)
+    elif self._manufacturer == &#39;testo&#39;:
+      ir, vis = self._extract_testo_image(path=file)
+      meta = None
     else:
-      logger.debug(&#39;Extracting `{}`&#39;, file.name)
+      raise ValueError
 
-      if self._manufacturer == &#39;FLIR&#39;:
-        ir, vis, meta = self._extract_flir_image(path=file)
-      elif self._manufacturer == &#39;testo&#39;:
-        ir, vis = self._extract_testo_image(path=file)
-        meta = None
-      else:
-        raise ValueError
+    assert ir is not None
+    self._save_extracted_image(fname=file.stem, ir=ir, vis=vis, meta=meta)
 
-      self._save_extracted_image(fname=file.stem, ir=ir, vis=vis, meta=meta)
-
-      assert ir is not None
-
-    return ir, vis
-
-  def _iter_raw_files(self):
-    files = self._raw_files()
-    for file in files:
-      ir, vis = self._read_raw_file(file)
-
-      yield ir, vis
-
-  def _read_raw_files(self):
-    ir_images = []
-    vis_images = []
-
-    for ir, vis in track(self._iter_raw_files(),
-                         &#39;Reading...&#39;,
-                         total=len(self._raw_files()),
-                         console=utils.console):
-      ir_images.append(ir)
-      vis_images.append(vis)
-
-    return ir_images, vis_images
+  def _extract_raw_files(self):
+    &#34;&#34;&#34;기존에 raw 파일로부터 추출한 실화상/열화상이 없는 경우 추출 시행&#34;&#34;&#34;
+    try:
+      self._files(DIR.IR, error=True)
+      self._files(DIR.VIS, error=True)
+    except FileNotFoundError:
+      files = self._files(DIR.RAW, error=True)
+      for file in track(files,
+                        description=&#39;Extracting images...&#39;,
+                        console=utils.console):
+        self._extract_raw_file(file=file)
 
   def _init_stitcher(self) -&gt; stitch.Stitcher:
     sopt: DictConfig = self._config[&#39;panorama&#39;][&#39;stitch&#39;]
 
-    # Stitcher
     stitcher = stitch.Stitcher(mode=sopt[&#39;perspective&#39;],
                                compose_scale=sopt[&#39;compose_scale&#39;],
                                work_scale=sopt[&#39;work_scale&#39;],
@@ -309,6 +288,7 @@ class ThermalPanorama:
       self,
       stitcher: stitch.Stitcher,
       images: List[np.ndarray],
+      names: List[str],
       spectrum: str,
   ) -&gt; stitch.StitchedImage:
     popt: DictConfig = self._config[&#39;panorama&#39;][&#39;preprocess&#39;][spectrum]
@@ -331,7 +311,7 @@ class ThermalPanorama:
     with utils.console.status(&#39;Stitching...&#39;):
       res = stitcher.stitch(images=stitching_images,
                             masks=None,
-                            names=[x.stem for x in self._raw_files()],
+                            names=names,
                             crop=self._config[&#39;panorama&#39;][&#39;stitch&#39;][&#39;crop&#39;])
 
     return res
@@ -342,7 +322,7 @@ class ThermalPanorama:
                      res: stitch.StitchedImage,
                      save_mask=True,
                      save_meta=True):
-    pano_dir = self._dir(_DIR.PANO)
+    pano_dir = self._dir(DIR.PANO)
 
     if save_meta:
       meta = {&#39;panorama&#39;: {&#39;graph&#39;: res.graph, &#39;image_indices&#39;: res.indices}}
@@ -355,85 +335,57 @@ class ThermalPanorama:
         IIO.save_image_and_meta(
             path=pano_dir.joinpath(fname),
             array=res.panorama.astype(np.float16),  # TODO 추출부터 float16으로?
-            exts=[&#39;.npy&#39;],
+            exts=[FN.NPY],
             meta=meta)
 
         # 적외선 colormap 영상 저장
         color_panorama = apply_colormap(res.panorama, self._cmap)
-        IIO.save_image(path=pano_dir.joinpath(f&#39;{fname}{_FN.COLOR}{_FN.LL}&#39;),
+        IIO.save_image(path=pano_dir.joinpath(f&#39;{fname}{FN.COLOR}{FN.LL}&#39;),
                        array=color_panorama)
       else:
         # 실화상 저장
-        IIO.save_image_and_meta(path=pano_dir.joinpath(f&#39;{fname}{_FN.LS}&#39;),
+        IIO.save_image_and_meta(path=pano_dir.joinpath(f&#39;{fname}{FN.LS}&#39;),
                                 array=res.panorama,
-                                exts=[_FN.LS],
+                                exts=[FN.LS],
                                 meta=meta)
 
       if save_mask:
         # 마스크 저장
-        IIO.save_image(
-            path=pano_dir.joinpath(f&#39;{fname}{_FN.PANO_MASK}{_FN.LL}&#39;),
-            array=tools.uint8_image(res.mask))
+        IIO.save_image(path=pano_dir.joinpath(f&#39;{fname}{FN.PANO_MASK}{FN.LL}&#39;),
+                       array=tools.uint8_image(res.mask))
 
   @staticmethod
   def _pano_target(spectrum):
     if spectrum == &#39;IR&#39;:
-      d = _DIR.IR
+      d = DIR.IR
     elif spectrum == &#39;VIS&#39;:
-      d = _DIR.RGST
+      d = DIR.RGST
     else:
       raise ValueError
 
     return d
 
   def panorama(self):
+    # FIXME 함수 정리, size_limit 적용
     spectrum = self._config[&#39;panorama&#39;][&#39;target&#39;].upper()
-    if not spectrum in (&#39;IR&#39;, &#39;VIS&#39;):
-      raise ValueError(spectrum)
-
     stitcher = self._init_stitcher()
 
     # Raw 파일 추출
-    try:
-      self._files(_DIR.IR, error=True)
-    except FileNotFoundError:
-      self._read_raw_files()
+    self._extract_raw_files()
 
     # 지정한 spectrum 파노라마
     files = self._files(self._pano_target(spectrum))
     images = [IIO.read_image(x) for x in files]
 
     # 파노라마 생성
-    res = self._stitch(stitcher=stitcher, images=images, spectrum=spectrum)
+    res = self._stitch(stitcher=stitcher,
+                       images=images,
+                       names=[x.stem for x in files],
+                       spectrum=spectrum)
 
     # 저장
     warp = self._config[&#39;panorama&#39;][&#39;stitch&#39;][&#39;warp&#39;]
-    self._save_panorama(fname=f&#39;{spectrum}_{warp}&#39;, spectrum=spectrum, res=res)
-
-    # 나머지 영상의 파노라마 생성/저장
-    spectrum2 = &#39;VIS&#39; if spectrum == &#39;IR&#39; else &#39;IR&#39;
-    files2 = self._files(self._pano_target(spectrum2), error=True)
-    files2 = [files2[x] for x in res.indices]  # FIXME 파일 이름과 대조
-    images2 = [IIO.read_image(x) for x in files2]
-
-    panorama2, _ = stitcher.warp_and_blend(
-        images=stitch.StitchingImages(arrays=images2),
-        cameras=res.cameras,
-        masks=None,
-        names=None)
-    if res.crop_range:
-      panorama2, _, _ = stitcher.crop(panorama2,
-                                      mask=None,
-                                      crop_range=res.crop_range)
-    res.panorama = np.round(panorama2).astype(np.uint8)
-
-    self._save_panorama(fname=f&#39;{spectrum2}_{warp}&#39;,
-                        spectrum=spectrum2,
-                        res=res,
-                        save_mask=False,
-                        save_meta=False)
-
-    logger.info(&#39;파노라마 생성 완료&#39;)</code></pre>
+    self._save_panorama(fname=f&#39;{spectrum}_{warp}&#39;, spectrum=spectrum, res=res)</code></pre>
 </details>
 </section>
 <section>
@@ -445,9 +397,131 @@ class ThermalPanorama:
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
+<dt id="src.interface.pano.DIR"><code class="flex name class">
+<span>class <span class="ident">DIR</span></span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DIR:
+  # directory
+  RAW = &#39;Raw&#39;
+  IR = &#39;00 IR&#39;
+  VIS = &#39;00 VIS&#39;
+  RGST = &#39;01 Registration&#39;
+  SEG = &#39;02 Segmentation&#39;
+  PANO = &#39;03 Panorama&#39;
+  COR = &#39;04 Correction&#39;</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="src.interface.pano.DIR.COR"><code class="name">var <span class="ident">COR</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="src.interface.pano.DIR.IR"><code class="name">var <span class="ident">IR</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="src.interface.pano.DIR.PANO"><code class="name">var <span class="ident">PANO</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="src.interface.pano.DIR.RAW"><code class="name">var <span class="ident">RAW</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="src.interface.pano.DIR.RGST"><code class="name">var <span class="ident">RGST</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="src.interface.pano.DIR.SEG"><code class="name">var <span class="ident">SEG</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="src.interface.pano.DIR.VIS"><code class="name">var <span class="ident">VIS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="src.interface.pano.FN"><code class="flex name class">
+<span>class <span class="ident">FN</span></span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class FN:
+  # file suffix, ext
+
+  NPY = &#39;.npy&#39;
+  LL = &#39;.png&#39;  # Lossless
+  LS = &#39;.jpg&#39;  # Loss
+
+  COLOR = &#39;_color&#39;
+
+  RGST_VIS = &#39;_vis&#39;
+  RGST_CMPR = &#39;_compare&#39;
+
+  SEG_MASK = &#39;_mask&#39;
+  SEG_VIS = &#39;_vis&#39;
+  SEG_FIG = &#39;_fig&#39;
+
+  PANO_MASK = &#39;_mask&#39;</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="src.interface.pano.FN.COLOR"><code class="name">var <span class="ident">COLOR</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="src.interface.pano.FN.LL"><code class="name">var <span class="ident">LL</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="src.interface.pano.FN.LS"><code class="name">var <span class="ident">LS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="src.interface.pano.FN.NPY"><code class="name">var <span class="ident">NPY</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="src.interface.pano.FN.PANO_MASK"><code class="name">var <span class="ident">PANO_MASK</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="src.interface.pano.FN.RGST_CMPR"><code class="name">var <span class="ident">RGST_CMPR</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="src.interface.pano.FN.RGST_VIS"><code class="name">var <span class="ident">RGST_VIS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="src.interface.pano.FN.SEG_FIG"><code class="name">var <span class="ident">SEG_FIG</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="src.interface.pano.FN.SEG_MASK"><code class="name">var <span class="ident">SEG_MASK</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="src.interface.pano.FN.SEG_VIS"><code class="name">var <span class="ident">SEG_VIS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
 <dt id="src.interface.pano.ThermalPanorama"><code class="flex name class">
 <span>class <span class="ident">ThermalPanorama</span></span>
-<span>(</span><span>directory: Union[str, pathlib.Path])</span>
+<span>(</span><span>directory: Union[str, pathlib.Path], default_config=False)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -456,8 +530,9 @@ class ThermalPanorama:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ThermalPanorama:
+  # TODO wd에 각 명령어 성공 여부 log 저장
 
-  def __init__(self, directory: Union[str, Path]) -&gt; None:
+  def __init__(self, directory: Union[str, Path], default_config=False) -&gt; None:
     # working directory
     wd = Path(directory).resolve()
     if not wd.exists():
@@ -465,11 +540,7 @@ class ThermalPanorama:
     self._wd = wd
 
     # config
-    self._config = read_config(wd)
-
-    # 파일 형식
-    self._exts = (self._config[&#39;file&#39;][&#39;save_ext&#39;][&#39;IR&#39;],
-                  self._config[&#39;file&#39;][&#39;save_ext&#39;][&#39;VIS&#39;])
+    self._config = read_config(wd=wd, default=default_config)
 
     self._manufacturer = self._check_manufacturer()
     logger.debug(&#39;Manufacturer: {}&#39;, self._manufacturer)
@@ -482,11 +553,15 @@ class ThermalPanorama:
     self._cmap = get_thermal_colormap(
         name=self._config[&#39;color&#39;].get(&#39;colormap&#39;, &#39;iron&#39;))
 
+  @property
+  def _size_limit(self):
+    return self._config[&#39;file&#39;][&#39;size_limit&#39;]
+
   def _check_manufacturer(self) -&gt; str:
     fopt: DictConfig = self._config[&#39;file&#39;]
-    flir_files = self._glob(folder=_DIR.RAW, pattern=fopt[&#39;FLIR&#39;][&#39;IR&#39;])
-    testo_ir_files = self._glob(folder=_DIR.RAW, pattern=fopt[&#39;testo&#39;][&#39;IR&#39;])
-    testo_vis_files = self._glob(folder=_DIR.RAW, pattern=fopt[&#39;testo&#39;][&#39;VIS&#39;])
+    flir_files = self._glob(folder=DIR.RAW, pattern=fopt[&#39;FLIR&#39;][&#39;IR&#39;])
+    testo_ir_files = self._glob(folder=DIR.RAW, pattern=fopt[&#39;testo&#39;][&#39;IR&#39;])
+    testo_vis_files = self._glob(folder=DIR.RAW, pattern=fopt[&#39;testo&#39;][&#39;VIS&#39;])
 
     if testo_ir_files and testo_vis_files:
       manufacturer = &#39;testo&#39;
@@ -499,16 +574,6 @@ class ThermalPanorama:
 
   def _glob(self, folder: str, pattern: str):
     return list(self._dir(folder=folder, mkdir=False).glob(pattern=pattern))
-
-  def _raw_files(self) -&gt; List[Path]:
-    # FIXME Raw 폴더에 원본이 없는 경우에도 지원?
-    pattern = self._config[&#39;file&#39;][self._manufacturer][&#39;IR&#39;]
-    files = self._glob(folder=_DIR.RAW, pattern=pattern)
-
-    if not files:
-      logger.warning(&#39;{} 폴더에 영상 파일이 존재하지 않습니다.&#39;, _DIR.RAW)
-
-    return files
 
   def _files(self, d, error=False):
     &#34;&#34;&#34;
@@ -527,23 +592,28 @@ class ThermalPanorama:
     -------
     List[Path]
     &#34;&#34;&#34;
-    if d == _DIR.IR:
-      files = self._glob(folder=d, pattern=f&#39;*{_FN.NPY}&#39;)
+    if d == DIR.RAW:
+      pattern = self._config[&#39;file&#39;][self._manufacturer][&#39;IR&#39;]
+      files = self._glob(folder=DIR.RAW, pattern=pattern)
+      target = &#39;Raw files&#39;
+    elif d == DIR.IR:
+      files = self._glob(folder=d, pattern=f&#39;*{FN.NPY}&#39;)
       target = &#39;열화상 추출 결과&#39;
-    elif d == _DIR.VIS:
-      files = self._glob(folder=d, pattern=f&#39;*{_FN.LL}&#39;)
+    elif d == DIR.VIS:
+      files = self._glob(folder=d, pattern=f&#39;*{FN.LL}&#39;)
       target = &#39;실화상 추출 결과&#39;
-    elif d == _DIR.RGST:
-      files = self._glob(folder=d, pattern=f&#39;*{_FN.RGST_VIS}{_FN.LL}&#39;)
+    elif d == DIR.RGST:
+      files = self._glob(folder=d, pattern=f&#39;*{FN.RGST_VIS}{FN.LL}&#39;)
       target = &#39;정합 결과&#39;
-    elif d == _DIR.SEG:
-      files = self._glob(folder=d, pattern=f&#39;*{_FN.SEG_MASK}{_FN.LL}&#39;)
+    elif d == DIR.SEG:
+      files = self._glob(folder=d, pattern=f&#39;*{FN.SEG_MASK}{FN.LL}&#39;)
       target = &#39;분할 결과&#39;
     else:
       raise ValueError
 
     if not files:
       msg = f&#39;{target}가 존재하지 않습니다.&#39;
+
       if error:
         raise FileNotFoundError(msg)
 
@@ -591,24 +661,20 @@ class ThermalPanorama:
                             vis: np.ndarray,
                             meta: Optional[dict] = None):
     &#34;&#34;&#34;추출한 열/실화상을 각 폴더에 저장&#34;&#34;&#34;
-    ir_path = self._dir(_DIR.IR).joinpath(fname)
-    vis_path = self._dir(_DIR.VIS).joinpath(f&#39;{fname}{self._exts[1]}&#39;)
+    ir_path = self._dir(DIR.IR).joinpath(fname)
+    vis_path = self._dir(DIR.VIS).joinpath(f&#39;{fname}{FN.LL}&#39;)
 
-    IIO.save_image_and_meta(path=ir_path,
-                            array=ir,
-                            exts=[self._exts[0]],
-                            meta=meta)
+    IIO.save_image_and_meta(path=ir_path, array=ir, exts=[FN.NPY], meta=meta)
     if self._config[&#39;color&#39;][&#39;extract_color_image&#39;]:
       color_image = apply_colormap(ir, self._cmap)
-      IIO.save_image(path=ir_path.with_name(f&#39;{fname}{_FN.COLOR}{_FN.LL}&#39;),
+      IIO.save_image(path=ir_path.with_name(f&#39;{fname}{FN.COLOR}{FN.LL}&#39;),
                      array=color_image)
 
     IIO.save_image(path=vis_path, array=vis)
 
-  def _read_raw_file(self, file: Path) -&gt; Tuple[np.ndarray, np.ndarray]:
+  def _extract_raw_file(self, file: Path):
     &#34;&#34;&#34;
-    Raw 열화상, 실화상 파일을 읽음.
-    각 해당하는 폴더에 해당 파일이 없으면 입력한 `file`로부터 추출하고 저장.
+    Raw 열화상, 실화상 파일 추출.
 
     Parameters
     ----------
@@ -625,53 +691,40 @@ class ThermalPanorama:
     if not file.exists():
       raise FileNotFoundError(file)
 
-    ir_path = self._dir(_DIR.IR).joinpath(file.stem + self._exts[0])
-    vis_path = self._dir(_DIR.VIS).joinpath(file.stem + self._exts[1])
+    ir_path = self._dir(DIR.IR).joinpath(f&#39;{file.stat}{FN.NPY}&#39;)
+    vis_path = self._dir(DIR.VIS).joinpath(f&#39;{file.stat}{FN.LL}&#39;)
 
     if ir_path.exists() and vis_path.exists():
-      ir = IIO.read_image(ir_path)
-      vis = IIO.read_image(vis_path)
+      return
+
+    logger.debug(&#39;Extracting `{}`&#39;, file.name)
+
+    if self._manufacturer == &#39;FLIR&#39;:
+      ir, vis, meta = self._extract_flir_image(path=file)
+    elif self._manufacturer == &#39;testo&#39;:
+      ir, vis = self._extract_testo_image(path=file)
+      meta = None
     else:
-      logger.debug(&#39;Extracting `{}`&#39;, file.name)
+      raise ValueError
 
-      if self._manufacturer == &#39;FLIR&#39;:
-        ir, vis, meta = self._extract_flir_image(path=file)
-      elif self._manufacturer == &#39;testo&#39;:
-        ir, vis = self._extract_testo_image(path=file)
-        meta = None
-      else:
-        raise ValueError
+    assert ir is not None
+    self._save_extracted_image(fname=file.stem, ir=ir, vis=vis, meta=meta)
 
-      self._save_extracted_image(fname=file.stem, ir=ir, vis=vis, meta=meta)
-
-      assert ir is not None
-
-    return ir, vis
-
-  def _iter_raw_files(self):
-    files = self._raw_files()
-    for file in files:
-      ir, vis = self._read_raw_file(file)
-
-      yield ir, vis
-
-  def _read_raw_files(self):
-    ir_images = []
-    vis_images = []
-
-    for ir, vis in track(self._iter_raw_files(),
-                         &#39;Reading...&#39;,
-                         total=len(self._raw_files()),
-                         console=utils.console):
-      ir_images.append(ir)
-      vis_images.append(vis)
-
-    return ir_images, vis_images
+  def _extract_raw_files(self):
+    &#34;&#34;&#34;기존에 raw 파일로부터 추출한 실화상/열화상이 없는 경우 추출 시행&#34;&#34;&#34;
+    try:
+      self._files(DIR.IR, error=True)
+      self._files(DIR.VIS, error=True)
+    except FileNotFoundError:
+      files = self._files(DIR.RAW, error=True)
+      for file in track(files,
+                        description=&#39;Extracting images...&#39;,
+                        console=utils.console):
+        self._extract_raw_file(file=file)
 
   def _init_stitcher(self) -&gt; stitch.Stitcher:
     sopt: DictConfig = self._config[&#39;panorama&#39;][&#39;stitch&#39;]
 
-    # Stitcher
     stitcher = stitch.Stitcher(mode=sopt[&#39;perspective&#39;],
                                compose_scale=sopt[&#39;compose_scale&#39;],
                                work_scale=sopt[&#39;work_scale&#39;],
@@ -686,6 +739,7 @@ class ThermalPanorama:
       self,
       stitcher: stitch.Stitcher,
       images: List[np.ndarray],
+      names: List[str],
       spectrum: str,
   ) -&gt; stitch.StitchedImage:
     popt: DictConfig = self._config[&#39;panorama&#39;][&#39;preprocess&#39;][spectrum]
@@ -708,7 +762,7 @@ class ThermalPanorama:
     with utils.console.status(&#39;Stitching...&#39;):
       res = stitcher.stitch(images=stitching_images,
                             masks=None,
-                            names=[x.stem for x in self._raw_files()],
+                            names=names,
                             crop=self._config[&#39;panorama&#39;][&#39;stitch&#39;][&#39;crop&#39;])
 
     return res
@@ -719,7 +773,7 @@ class ThermalPanorama:
                      res: stitch.StitchedImage,
                      save_mask=True,
                      save_meta=True):
-    pano_dir = self._dir(_DIR.PANO)
+    pano_dir = self._dir(DIR.PANO)
 
     if save_meta:
       meta = {&#39;panorama&#39;: {&#39;graph&#39;: res.graph, &#39;image_indices&#39;: res.indices}}
@@ -732,85 +786,57 @@ class ThermalPanorama:
         IIO.save_image_and_meta(
             path=pano_dir.joinpath(fname),
             array=res.panorama.astype(np.float16),  # TODO 추출부터 float16으로?
-            exts=[&#39;.npy&#39;],
+            exts=[FN.NPY],
             meta=meta)
 
         # 적외선 colormap 영상 저장
         color_panorama = apply_colormap(res.panorama, self._cmap)
-        IIO.save_image(path=pano_dir.joinpath(f&#39;{fname}{_FN.COLOR}{_FN.LL}&#39;),
+        IIO.save_image(path=pano_dir.joinpath(f&#39;{fname}{FN.COLOR}{FN.LL}&#39;),
                        array=color_panorama)
       else:
         # 실화상 저장
-        IIO.save_image_and_meta(path=pano_dir.joinpath(f&#39;{fname}{_FN.LS}&#39;),
+        IIO.save_image_and_meta(path=pano_dir.joinpath(f&#39;{fname}{FN.LS}&#39;),
                                 array=res.panorama,
-                                exts=[_FN.LS],
+                                exts=[FN.LS],
                                 meta=meta)
 
       if save_mask:
         # 마스크 저장
-        IIO.save_image(
-            path=pano_dir.joinpath(f&#39;{fname}{_FN.PANO_MASK}{_FN.LL}&#39;),
-            array=tools.uint8_image(res.mask))
+        IIO.save_image(path=pano_dir.joinpath(f&#39;{fname}{FN.PANO_MASK}{FN.LL}&#39;),
+                       array=tools.uint8_image(res.mask))
 
   @staticmethod
   def _pano_target(spectrum):
     if spectrum == &#39;IR&#39;:
-      d = _DIR.IR
+      d = DIR.IR
     elif spectrum == &#39;VIS&#39;:
-      d = _DIR.RGST
+      d = DIR.RGST
     else:
       raise ValueError
 
     return d
 
   def panorama(self):
+    # FIXME 함수 정리, size_limit 적용
     spectrum = self._config[&#39;panorama&#39;][&#39;target&#39;].upper()
-    if not spectrum in (&#39;IR&#39;, &#39;VIS&#39;):
-      raise ValueError(spectrum)
-
     stitcher = self._init_stitcher()
 
     # Raw 파일 추출
-    try:
-      self._files(_DIR.IR, error=True)
-    except FileNotFoundError:
-      self._read_raw_files()
+    self._extract_raw_files()
 
     # 지정한 spectrum 파노라마
     files = self._files(self._pano_target(spectrum))
     images = [IIO.read_image(x) for x in files]
 
     # 파노라마 생성
-    res = self._stitch(stitcher=stitcher, images=images, spectrum=spectrum)
+    res = self._stitch(stitcher=stitcher,
+                       images=images,
+                       names=[x.stem for x in files],
+                       spectrum=spectrum)
 
     # 저장
     warp = self._config[&#39;panorama&#39;][&#39;stitch&#39;][&#39;warp&#39;]
-    self._save_panorama(fname=f&#39;{spectrum}_{warp}&#39;, spectrum=spectrum, res=res)
-
-    # 나머지 영상의 파노라마 생성/저장
-    spectrum2 = &#39;VIS&#39; if spectrum == &#39;IR&#39; else &#39;IR&#39;
-    files2 = self._files(self._pano_target(spectrum2), error=True)
-    files2 = [files2[x] for x in res.indices]  # FIXME 파일 이름과 대조
-    images2 = [IIO.read_image(x) for x in files2]
-
-    panorama2, _ = stitcher.warp_and_blend(
-        images=stitch.StitchingImages(arrays=images2),
-        cameras=res.cameras,
-        masks=None,
-        names=None)
-    if res.crop_range:
-      panorama2, _, _ = stitcher.crop(panorama2,
-                                      mask=None,
-                                      crop_range=res.crop_range)
-    res.panorama = np.round(panorama2).astype(np.uint8)
-
-    self._save_panorama(fname=f&#39;{spectrum2}_{warp}&#39;,
-                        spectrum=spectrum2,
-                        res=res,
-                        save_mask=False,
-                        save_meta=False)
-
-    logger.info(&#39;파노라마 생성 완료&#39;)</code></pre>
+    self._save_panorama(fname=f&#39;{spectrum}_{warp}&#39;, spectrum=spectrum, res=res)</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
@@ -824,53 +850,26 @@ class ThermalPanorama:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def panorama(self):
+  # FIXME 함수 정리, size_limit 적용
   spectrum = self._config[&#39;panorama&#39;][&#39;target&#39;].upper()
-  if not spectrum in (&#39;IR&#39;, &#39;VIS&#39;):
-    raise ValueError(spectrum)
-
   stitcher = self._init_stitcher()
 
   # Raw 파일 추출
-  try:
-    self._files(_DIR.IR, error=True)
-  except FileNotFoundError:
-    self._read_raw_files()
+  self._extract_raw_files()
 
   # 지정한 spectrum 파노라마
   files = self._files(self._pano_target(spectrum))
   images = [IIO.read_image(x) for x in files]
 
   # 파노라마 생성
-  res = self._stitch(stitcher=stitcher, images=images, spectrum=spectrum)
+  res = self._stitch(stitcher=stitcher,
+                     images=images,
+                     names=[x.stem for x in files],
+                     spectrum=spectrum)
 
   # 저장
   warp = self._config[&#39;panorama&#39;][&#39;stitch&#39;][&#39;warp&#39;]
-  self._save_panorama(fname=f&#39;{spectrum}_{warp}&#39;, spectrum=spectrum, res=res)
-
-  # 나머지 영상의 파노라마 생성/저장
-  spectrum2 = &#39;VIS&#39; if spectrum == &#39;IR&#39; else &#39;IR&#39;
-  files2 = self._files(self._pano_target(spectrum2), error=True)
-  files2 = [files2[x] for x in res.indices]  # FIXME 파일 이름과 대조
-  images2 = [IIO.read_image(x) for x in files2]
-
-  panorama2, _ = stitcher.warp_and_blend(
-      images=stitch.StitchingImages(arrays=images2),
-      cameras=res.cameras,
-      masks=None,
-      names=None)
-  if res.crop_range:
-    panorama2, _, _ = stitcher.crop(panorama2,
-                                    mask=None,
-                                    crop_range=res.crop_range)
-  res.panorama = np.round(panorama2).astype(np.uint8)
-
-  self._save_panorama(fname=f&#39;{spectrum2}_{warp}&#39;,
-                      spectrum=spectrum2,
-                      res=res,
-                      save_mask=False,
-                      save_meta=False)
-
-  logger.info(&#39;파노라마 생성 완료&#39;)</code></pre>
+  self._save_panorama(fname=f&#39;{spectrum}_{warp}&#39;, spectrum=spectrum, res=res)</code></pre>
 </details>
 </dd>
 </dl>
@@ -891,6 +890,33 @@ class ThermalPanorama:
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
+<li>
+<h4><code><a title="src.interface.pano.DIR" href="#src.interface.pano.DIR">DIR</a></code></h4>
+<ul class="two-column">
+<li><code><a title="src.interface.pano.DIR.COR" href="#src.interface.pano.DIR.COR">COR</a></code></li>
+<li><code><a title="src.interface.pano.DIR.IR" href="#src.interface.pano.DIR.IR">IR</a></code></li>
+<li><code><a title="src.interface.pano.DIR.PANO" href="#src.interface.pano.DIR.PANO">PANO</a></code></li>
+<li><code><a title="src.interface.pano.DIR.RAW" href="#src.interface.pano.DIR.RAW">RAW</a></code></li>
+<li><code><a title="src.interface.pano.DIR.RGST" href="#src.interface.pano.DIR.RGST">RGST</a></code></li>
+<li><code><a title="src.interface.pano.DIR.SEG" href="#src.interface.pano.DIR.SEG">SEG</a></code></li>
+<li><code><a title="src.interface.pano.DIR.VIS" href="#src.interface.pano.DIR.VIS">VIS</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="src.interface.pano.FN" href="#src.interface.pano.FN">FN</a></code></h4>
+<ul class="two-column">
+<li><code><a title="src.interface.pano.FN.COLOR" href="#src.interface.pano.FN.COLOR">COLOR</a></code></li>
+<li><code><a title="src.interface.pano.FN.LL" href="#src.interface.pano.FN.LL">LL</a></code></li>
+<li><code><a title="src.interface.pano.FN.LS" href="#src.interface.pano.FN.LS">LS</a></code></li>
+<li><code><a title="src.interface.pano.FN.NPY" href="#src.interface.pano.FN.NPY">NPY</a></code></li>
+<li><code><a title="src.interface.pano.FN.PANO_MASK" href="#src.interface.pano.FN.PANO_MASK">PANO_MASK</a></code></li>
+<li><code><a title="src.interface.pano.FN.RGST_CMPR" href="#src.interface.pano.FN.RGST_CMPR">RGST_CMPR</a></code></li>
+<li><code><a title="src.interface.pano.FN.RGST_VIS" href="#src.interface.pano.FN.RGST_VIS">RGST_VIS</a></code></li>
+<li><code><a title="src.interface.pano.FN.SEG_FIG" href="#src.interface.pano.FN.SEG_FIG">SEG_FIG</a></code></li>
+<li><code><a title="src.interface.pano.FN.SEG_MASK" href="#src.interface.pano.FN.SEG_MASK">SEG_MASK</a></code></li>
+<li><code><a title="src.interface.pano.FN.SEG_VIS" href="#src.interface.pano.FN.SEG_VIS">SEG_VIS</a></code></li>
+</ul>
+</li>
 <li>
 <h4><code><a title="src.interface.pano.ThermalPanorama" href="#src.interface.pano.ThermalPanorama">ThermalPanorama</a></code></h4>
 <ul class="">

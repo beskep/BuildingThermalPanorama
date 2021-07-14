@@ -1,7 +1,7 @@
 camera:
     IR_VIS_scale:
-    IR_AOV: 32 # degree
-    VIS_AOV: 42 # degree
+    IR_AOV: 32 # [degree]
+    VIS_AOV: 42 # [degree]
 color:
     colormap: iron # optional, {"iron", "inferno", "rainbow", ...}
     extract_color_image: True
@@ -44,12 +44,24 @@ panorama:
             gaussian_args: # optional
                 ksize: [5, 5]
                 sigmaX: 0
+distort_correction:
+    threshold: 5 # [degree]
+    ransac_iter: 2000
+    clip_factor: 5
+    vp_iter: 5
+    canny: # optional
+        sigma: 2.0
+        low_threshold: Null
+        high_threshold: Null
+        use_quantiles: false
+    hough: # optional
+        threshold: 10
+        line_length: 50
+        line_gap: 10
 file:
+    size_limit: 10000 # [pixel]
     FLIR:
         IR: "*.jpg"
     testo:
         IR: "*.xlsx"
         VIS: "*_실화상 이미지.JPG"
-    save_ext:
-        IR: ".npy"
-        VIS: ".png"

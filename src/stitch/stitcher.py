@@ -1,3 +1,7 @@
+"""
+영상을 stitch하고 파노라마를 생성
+"""
+
 from dataclasses import dataclass
 from typing import Callable, Iterable, List, Optional, Tuple
 
@@ -30,6 +34,7 @@ _AVAILABLE_WARPER = (
 
 @dataclass
 class StitchedImage:
+  """Stitch 결과"""
   panorama: np.ndarray
   mask: np.ndarray
   graph: str
@@ -594,7 +599,7 @@ class Stitcher:
       image: np.ndarray,
       mask: np.ndarray,
       camera: cv.detail_CameraParams,
-  ) -> Tuple[np.ndarray, np.ndarray, Tuple[int, int, int, int]]:
+  ) -> Tuple[np.ndarray, np.ndarray, Tuple[int]]:
     """
     Camera parameter에 따라 영상을 변형.
 
@@ -609,8 +614,12 @@ class Stitcher:
 
     Returns
     -------
-    Tuple[np.ndarray, np.ndarray, Tuple[int, int, int, int]]
-        변형된 영상, 변형된 영상의 마스크, Region of interest
+    warped_image : np.ndarray
+        변형된 영상
+    warped_mask : np.ndarray
+        변형된 영상의 마스크
+    roi: Tuple[int]
+        Region of interest
 
     Raises
     ------

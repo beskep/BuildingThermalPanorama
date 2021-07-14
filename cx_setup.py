@@ -1,3 +1,5 @@
+"""cx_Freeze를 통해 실행 파일 생성을 위한 코드"""
+
 from pathlib import Path
 
 import cx_Freeze

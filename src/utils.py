@@ -1,3 +1,5 @@
+"""경로 및 로거 설정"""
+
 import sys
 from pathlib import Path
 from typing import Optional, Union
@@ -6,11 +8,13 @@ from loguru import logger
 from rich.console import Console
 from rich.logging import RichHandler
 
-SRC_DIR = Path(__file__).parent.resolve()
-ROOT_DIR = SRC_DIR.parent
-DATA_DIR = ROOT_DIR.joinpath('data')
 
-_SRC_DIR = SRC_DIR.as_posix()
+class DIR:
+  SRC = Path(__file__).parent.resolve()
+  ROOT = SRC.parent
+
+
+_SRC_DIR = DIR.SRC.as_posix()
 if _SRC_DIR not in sys.path:
   sys.path.insert(0, _SRC_DIR)
 
@@ -26,7 +30,7 @@ def set_logger(level: Optional[Union[int, str]] = None):
     else:
       level = 'INFO'
 
-  rich_handler = RichHandler(show_time=True, console=console)
+  rich_handler = RichHandler(console=console, log_time_format='[%y-%m-%d %X]')
   logger.add(rich_handler, level=level, format='{message}', enqueue=True)
   logger.add('pano.log',
              level='DEBUG',

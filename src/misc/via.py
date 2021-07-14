@@ -1,6 +1,7 @@
 """
 VGG Image Annotator (VIA)의 프로젝트 저장 결과로부터 annotation 해석
 """
+
 import json
 from collections import defaultdict
 from pathlib import Path

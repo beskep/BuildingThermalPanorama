@@ -1,3 +1,5 @@
+"""FLIR 촬영 영상에 저장된 colormap 추출 및 영상 데이터에 적용"""
+
 from pathlib import Path
 from typing import Union
 

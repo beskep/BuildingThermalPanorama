@@ -1,10 +1,12 @@
+"""영상 파일의 Exif 정보 추출"""
+
 from subprocess import DEVNULL, check_output
 
 import utils
 
 import yaml
 
-EXIFTOOL_PATH = utils.SRC_DIR.joinpath('exiftool.exe')
+EXIFTOOL_PATH = utils.DIR.SRC.joinpath('exiftool.exe')
 if not EXIFTOOL_PATH.exists():
   raise FileNotFoundError(EXIFTOOL_PATH)
 

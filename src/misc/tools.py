@@ -1,3 +1,5 @@
+"""기타 영상 처리 함수들"""
+
 from pathlib import Path
 from typing import Optional, Tuple, Union
 from warnings import warn
@@ -9,6 +11,7 @@ import PIL.Image
 import yaml
 from skimage.exposure import equalize_hist, rescale_intensity
 from skimage.io import imread, imsave
+from skimage.transform import resize
 from skimage.util import compare_images
 
 
@@ -182,6 +185,22 @@ def prep_compare_images(image1: np.ndarray,
   image = compare_images(image1, image2, method=method, **kwargs)
 
   return image
+
+
+def limit_size(image: np.ndarray, limit: int) -> np.ndarray:
+  max_shape = np.max(image.shape[:2]).astype(float)
+  if max_shape <= limit:
+    return image
+
+  ratio = limit / max_shape
+  target_shape = (int(image.shape[0] * ratio), int(image.shape[1] * ratio))
+
+  resized = resize(image=image,
+                   output_shape=target_shape,
+                   preserve_range=True,
+                   anti_aliasing=True)
+
+  return resized
 
 
 class ImageIO:

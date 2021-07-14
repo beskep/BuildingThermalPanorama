@@ -1,3 +1,5 @@
+"""Document 생성"""
+
 import re
 from pathlib import Path
 from warnings import catch_warnings
@@ -7,7 +9,7 @@ import utils
 import pdoc
 from loguru import logger
 
-OUTPUT_DIR = utils.ROOT_DIR.joinpath('docs')
+OUTPUT_DIR = utils.DIR.ROOT.joinpath('docs')
 utils.set_logger(level='DEBUG')
 
 

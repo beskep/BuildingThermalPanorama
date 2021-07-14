@@ -1,3 +1,5 @@
+"""추출해둔 FLIR 컬러맵, 또는 `matplotlib` 컬러맵 설정"""
+
 import utils
 
 from loguru import logger
@@ -24,7 +26,7 @@ def get_iron_colormap() -> ListedColormap:
   FileNotFoundError
       파일이 존재하지 않는 경우
   """
-  path = utils.DATA_DIR.joinpath('iron_colormap_rgb.txt')
+  path = utils.DIR.ROOT.joinpath('data/iron_colormap_rgb.txt')
   if not path.exists():
     raise FileNotFoundError(f'컬러맵 파일이 존재하지 않습니다. ({path})')
 

@@ -1,3 +1,7 @@
+"""
+파노라마 영상처리 CLI
+"""
+
 import os
 import sys
 
