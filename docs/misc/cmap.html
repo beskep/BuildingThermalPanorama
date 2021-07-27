@@ -93,7 +93,7 @@ class FLIRColormap(ListedColormap):
 
     if color_space == &#39;ycrcb&#39;:
       colors = colors.reshape([1, -1, 3])
-      colors = cv.cvtColr(colors, code=cv.COLOR_YCrCb2RGB)
+      colors = cv.cvtColor(colors, code=cv.COLOR_YCrCb2RGB)
 
     colors = colors.astype(&#39;float&#39;).reshape([-1, 3]) / 255.0
     instance = cls(colors=colors)
@@ -338,7 +338,7 @@ If ::</p>
 
     if color_space == &#39;ycrcb&#39;:
       colors = colors.reshape([1, -1, 3])
-      colors = cv.cvtColr(colors, code=cv.COLOR_YCrCb2RGB)
+      colors = cv.cvtColor(colors, code=cv.COLOR_YCrCb2RGB)
 
     colors = colors.astype(&#39;float&#39;).reshape([-1, 3]) / 255.0
     instance = cls(colors=colors)
@@ -480,7 +480,7 @@ def from_uint8_colors(cls,
 
   if color_space == &#39;ycrcb&#39;:
     colors = colors.reshape([1, -1, 3])
-    colors = cv.cvtColr(colors, code=cv.COLOR_YCrCb2RGB)
+    colors = cv.cvtColor(colors, code=cv.COLOR_YCrCb2RGB)
 
   colors = colors.astype(&#39;float&#39;).reshape([-1, 3]) / 255.0
   instance = cls(colors=colors)

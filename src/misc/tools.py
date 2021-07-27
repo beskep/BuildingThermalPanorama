@@ -4,6 +4,8 @@ from pathlib import Path
 from typing import Optional, Tuple, Union
 from warnings import warn
 
+from utils import StrPath
+
 import cv2 as cv
 import numpy as np
 import pandas as pd
@@ -71,7 +73,8 @@ def _mask_range(mask, axis):
   return int(c1), int(c2)
 
 
-def mask_bbox(mask: np.ndarray, morphology_open=True) -> Tuple[int]:
+def mask_bbox(mask: np.ndarray,
+              morphology_open=True) -> Tuple[int, int, int, int]:
   """
   마스크 영상 중 True인 영역의 bounding box 좌표를 찾음
 
@@ -218,7 +221,7 @@ class ImageIO:
     return path.with_name(f'{path.stem}{cls.META_SUFFIX}{cls.META_EXT}')
 
   @classmethod
-  def read(cls, path: Union[str, Path]) -> np.ndarray:
+  def read(cls, path: StrPath) -> np.ndarray:
     """
     주어진 path의 확장자에 따라 영상 파일 해석
 
@@ -255,7 +258,7 @@ class ImageIO:
 
   @classmethod
   def read_with_meta(cls,
-                     path: Union[str, Path],
+                     path: StrPath,
                      scale=False) -> Tuple[np.ndarray, Optional[dict]]:
     """
     주어진 path의 확장자에 따라 영상 파일 및 메타 정보 해석.
@@ -267,7 +270,7 @@ class ImageIO:
         대상 파일 경로
     scale : bool, optional
         `True`이며 대상 파일이 영상 확장자 (`.png` 등)인 경우,
-        `save_image_and_meta` 함수로 저장된 메타 정보 파일로부터 읽은
+        `save_with_meta` 함수로 저장된 메타 정보 파일로부터 읽은
         원본 범위로 픽셀 값을 scale함.
 
     Returns
@@ -301,10 +304,7 @@ class ImageIO:
     return image, meta
 
   @classmethod
-  def save(cls,
-           path: Union[str, Path],
-           array: np.ndarray,
-           check_contrast=False):
+  def save(cls, path: StrPath, array: np.ndarray, check_contrast=False):
     """
     주어진 path의 확장자에 따라 영상 파일 저장
 
@@ -353,7 +353,7 @@ class ImageIO:
 
   @classmethod
   def save_with_meta(cls,
-                     path: Union[str, Path],
+                     path: StrPath,
                      array: np.ndarray,
                      exts: list,
                      meta: Optional[dict] = None,

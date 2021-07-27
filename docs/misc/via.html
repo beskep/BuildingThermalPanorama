@@ -143,10 +143,10 @@ class VIAProject:
         대상 영상의 shape
     &#34;&#34;&#34;
     save_dir = Path(save_dir).resolve()
-    fname_stem = Path(fname).stem
+    fname = Path(fname)
     class_count = defaultdict(int)
 
-    for rclass, rshape in self.regions(fname):
+    for rclass, rshape in self.regions(fname.name):
       class_count[rclass] += 1
       mask = draw_mask(shape=shape,
                        rows=rshape[&#39;all_points_y&#39;],
@@ -154,8 +154,8 @@ class VIAProject:
       mask = mask.astype(&#39;uint8&#39;) * 255
 
       path = save_dir.joinpath(&#39;{}_{}_{}&#39;.format(
-          fname_stem, rclass, class_count[rclass])).with_suffix(&#39;.png&#39;)
-      imsave(fname=path, arr=mask, check_contrast=False)</code></pre>
+          fname.stem, rclass, class_count[rclass])).with_suffix(&#39;.png&#39;)
+      imsave(fname=path.as_posix(), arr=mask, check_contrast=False)</code></pre>
 </details>
 </section>
 <section>
@@ -304,10 +304,10 @@ class VIAProject:
         대상 영상의 shape
     &#34;&#34;&#34;
     save_dir = Path(save_dir).resolve()
-    fname_stem = Path(fname).stem
+    fname = Path(fname)
     class_count = defaultdict(int)
 
-    for rclass, rshape in self.regions(fname):
+    for rclass, rshape in self.regions(fname.name):
       class_count[rclass] += 1
       mask = draw_mask(shape=shape,
                        rows=rshape[&#39;all_points_y&#39;],
@@ -315,8 +315,8 @@ class VIAProject:
       mask = mask.astype(&#39;uint8&#39;) * 255
 
       path = save_dir.joinpath(&#39;{}_{}_{}&#39;.format(
-          fname_stem, rclass, class_count[rclass])).with_suffix(&#39;.png&#39;)
-      imsave(fname=path, arr=mask, check_contrast=False)</code></pre>
+          fname.stem, rclass, class_count[rclass])).with_suffix(&#39;.png&#39;)
+      imsave(fname=path.as_posix(), arr=mask, check_contrast=False)</code></pre>
 </details>
 <h3>Instance variables</h3>
 <dl>
@@ -433,10 +433,10 @@ def files(self):
       대상 영상의 shape
   &#34;&#34;&#34;
   save_dir = Path(save_dir).resolve()
-  fname_stem = Path(fname).stem
+  fname = Path(fname)
   class_count = defaultdict(int)
 
-  for rclass, rshape in self.regions(fname):
+  for rclass, rshape in self.regions(fname.name):
     class_count[rclass] += 1
     mask = draw_mask(shape=shape,
                      rows=rshape[&#39;all_points_y&#39;],
@@ -444,8 +444,8 @@ def files(self):
     mask = mask.astype(&#39;uint8&#39;) * 255
 
     path = save_dir.joinpath(&#39;{}_{}_{}&#39;.format(
-        fname_stem, rclass, class_count[rclass])).with_suffix(&#39;.png&#39;)
-    imsave(fname=path, arr=mask, check_contrast=False)</code></pre>
+        fname.stem, rclass, class_count[rclass])).with_suffix(&#39;.png&#39;)
+    imsave(fname=path.as_posix(), arr=mask, check_contrast=False)</code></pre>
 </details>
 </dd>
 </dl>

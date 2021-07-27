@@ -30,9 +30,9 @@
 from typing import Tuple
 
 import numpy as np
-from skimage.io import imsave
 
 from misc.exif import EXIFTOOL_PATH
+from misc.tools import ImageIO
 
 from ._flir_image_extractor import FlirImageExtractor
 
@@ -90,7 +90,9 @@ class FlirExtractor:
   def _vis(self) -&gt; np.ndarray:
     vis = self.extractor.rgb_image_np
     if vis is None:
-      raise ValueError(&#39;실화상 추출 실패&#39;)
+      # `EmbeddedImage` 태그가 없는 등의 이유로 FLIR 실화상 파일 추출에 실패한 경우,
+      # 원본 파일을 대신 읽음
+      vis = ImageIO.read(self._path)
 
     return vis
 
@@ -109,23 +111,7 @@ class FlirExtractor:
   def extract_vis(self, path=None) -&gt; np.ndarray:
     self._check_path(path)
 
-    return self._vis()
-
-  def write_data(self, ir_path, vis_path, image_path=None, csv_fmt=&#39;%.3e&#39;):
-    ir_array, vis_array = self.extract_data(image_path)
-
-    if ir_path:
-      ir_path = Path(ir_path)
-      ir_suffix = ir_path.suffix
-
-      if ir_suffix == &#39;.npy&#39;:
-        np.save(ir_path.as_posix(), ir_array)
-
-      elif ir_suffix == &#39;.csv&#39;:
-        np.savetxt(ir_path.as_posix(), ir_array, fmt=csv_fmt, delimiter=&#39;,&#39;)
-
-    if vis_path:
-      imsave(vis_path, vis_array)</code></pre>
+    return self._vis()</code></pre>
 </details>
 </section>
 <section>
@@ -200,7 +186,9 @@ class FlirExtractor:
   def _vis(self) -&gt; np.ndarray:
     vis = self.extractor.rgb_image_np
     if vis is None:
-      raise ValueError(&#39;실화상 추출 실패&#39;)
+      # `EmbeddedImage` 태그가 없는 등의 이유로 FLIR 실화상 파일 추출에 실패한 경우,
+      # 원본 파일을 대신 읽음
+      vis = ImageIO.read(self._path)
 
     return vis
 
@@ -219,23 +207,7 @@ class FlirExtractor:
   def extract_vis(self, path=None) -&gt; np.ndarray:
     self._check_path(path)
 
-    return self._vis()
-
-  def write_data(self, ir_path, vis_path, image_path=None, csv_fmt=&#39;%.3e&#39;):
-    ir_array, vis_array = self.extract_data(image_path)
-
-    if ir_path:
-      ir_path = Path(ir_path)
-      ir_suffix = ir_path.suffix
-
-      if ir_suffix == &#39;.npy&#39;:
-        np.save(ir_path.as_posix(), ir_array)
-
-      elif ir_suffix == &#39;.csv&#39;:
-        np.savetxt(ir_path.as_posix(), ir_array, fmt=csv_fmt, delimiter=&#39;,&#39;)
-
-    if vis_path:
-      imsave(vis_path, vis_array)</code></pre>
+    return self._vis()</code></pre>
 </details>
 <h3>Instance variables</h3>
 <dl>
@@ -319,32 +291,6 @@ def extractor(self):
   self._path = path</code></pre>
 </details>
 </dd>
-<dt id="src.flir.extract.FlirExtractor.write_data"><code class="name flex">
-<span>def <span class="ident">write_data</span></span>(<span>self, ir_path, vis_path, image_path=None, csv_fmt='%.3e')</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def write_data(self, ir_path, vis_path, image_path=None, csv_fmt=&#39;%.3e&#39;):
-  ir_array, vis_array = self.extract_data(image_path)
-
-  if ir_path:
-    ir_path = Path(ir_path)
-    ir_suffix = ir_path.suffix
-
-    if ir_suffix == &#39;.npy&#39;:
-      np.save(ir_path.as_posix(), ir_array)
-
-    elif ir_suffix == &#39;.csv&#39;:
-      np.savetxt(ir_path.as_posix(), ir_array, fmt=csv_fmt, delimiter=&#39;,&#39;)
-
-  if vis_path:
-    imsave(vis_path, vis_array)</code></pre>
-</details>
-</dd>
 </dl>
 </dd>
 </dl>
@@ -365,13 +311,12 @@ def extractor(self):
 <ul>
 <li>
 <h4><code><a title="src.flir.extract.FlirExtractor" href="#src.flir.extract.FlirExtractor">FlirExtractor</a></code></h4>
-<ul class="two-column">
+<ul class="">
 <li><code><a title="src.flir.extract.FlirExtractor.extract_data" href="#src.flir.extract.FlirExtractor.extract_data">extract_data</a></code></li>
 <li><code><a title="src.flir.extract.FlirExtractor.extract_ir" href="#src.flir.extract.FlirExtractor.extract_ir">extract_ir</a></code></li>
 <li><code><a title="src.flir.extract.FlirExtractor.extract_vis" href="#src.flir.extract.FlirExtractor.extract_vis">extract_vis</a></code></li>
 <li><code><a title="src.flir.extract.FlirExtractor.extractor" href="#src.flir.extract.FlirExtractor.extractor">extractor</a></code></li>
 <li><code><a title="src.flir.extract.FlirExtractor.process_image" href="#src.flir.extract.FlirExtractor.process_image">process_image</a></code></li>
-<li><code><a title="src.flir.extract.FlirExtractor.write_data" href="#src.flir.extract.FlirExtractor.write_data">write_data</a></code></li>
 </ul>
 </li>
 </ul>

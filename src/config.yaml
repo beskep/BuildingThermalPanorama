@@ -5,6 +5,14 @@ camera:
 color:
     colormap: iron # optional, {"iron", "inferno", "rainbow", ...}
     extract_color_image: True
+file:
+    size_limit: 10000 # [pixel]
+    FLIR:
+        IR: "*.jpg"
+    testo:
+        IR: "*.xlsx"
+        VIS: "*_실화상 이미지.JPG"
+    force_horizontal: false
 registration:
     metric: JointHistMI # {"JointHistMI", "MattesMI", ...}
     transformation: Similarity # {"Similarity", "Affine"}
@@ -58,10 +66,3 @@ distort_correction:
         threshold: 10
         line_length: 50
         line_gap: 10
-file:
-    size_limit: 10000 # [pixel]
-    FLIR:
-        IR: "*.jpg"
-    testo:
-        IR: "*.xlsx"
-        VIS: "*_실화상 이미지.JPG"

@@ -37,10 +37,11 @@ bins = ['ITK']
 
 try:
   import mkl
-  bins.append('mkl_intel_thread')
-  includes.append('mkl')
 except ImportError:
   pass
+else:
+  bins.append('mkl_intel_thread')
+  includes.append('mkl')
 
 lib_bin = Path(cx_Freeze.__path__[0]).parents[2].joinpath('Library/bin')
 for b in bins:
@@ -63,6 +64,6 @@ executables = [
 
 setup(name='app',
       version='0.1',
-      description='description',
+      description='ThermalPanorama',
       options=options,
       executables=executables)

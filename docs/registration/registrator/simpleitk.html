@@ -1,0 +1,1212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.2" />
+<title>src.registration.registrator.simpleitk API documentation</title>
+<meta name="description" content="SimpleITK 라이브러리와 수치적 최적화를 통해 영상 정합" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>src.registration.registrator.simpleitk</code></h1>
+</header>
+<section id="section-intro">
+<p>SimpleITK 라이브러리와 수치적 최적화를 통해 영상 정합</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;SimpleITK 라이브러리와 수치적 최적화를 통해 영상 정합&#34;&#34;&#34;
+
+import enum
+from typing import Callable, Optional, Tuple, Union
+
+import numpy as np
+import SimpleITK as sitk
+from loguru import logger
+from numpy.linalg import inv
+from skimage.transform import estimate_transform
+
+from misc.tools import bin_size
+
+from .registrator import (BaseRegistrator, RegisteringImage,
+                          RegistrationPreprocess)
+
+
+class Metric(enum.Enum):
+  &#34;&#34;&#34;최적화 대상 metric&#34;&#34;&#34;
+  MeanSquare = enum.auto()
+  Corr = enum.auto()
+  ANTSNCorr = enum.auto()
+  JointHistMI = enum.auto()
+  MattesMI = enum.auto()
+
+
+class Transformation(enum.Enum):
+  &#34;&#34;&#34;정합을 위한 영상 변환 방법&#34;&#34;&#34;
+  Similarity = enum.auto()
+  Affine = enum.auto()
+
+
+def to_sitk_image(image: np.ndarray, set_origin=False) -&gt; sitk.Image:
+  &#34;&#34;&#34;
+  SimpleITK 형식 image로 변환
+
+  Parameters
+  ----------
+  image : np.ndarray
+      대상 영상
+  set_origin : bool, optional
+      True일 경우 영상 중심을 회전축으로 설정
+
+  Returns
+  -------
+  sitk.Image
+      변환된 영상
+  &#34;&#34;&#34;
+  sitk_image = sitk.GetImageFromArray(image)
+  if set_origin:
+    sitk_image.SetOrigin(np.divide(image.shape, 2.0))
+
+  return sitk_image
+
+
+class SITKRegistrator(BaseRegistrator):
+  # pylint: disable=no-member
+
+  def __init__(self,
+               transformation=Transformation.Similarity,
+               metric=Metric.JointHistMI,
+               bins: Union[str, int] = &#39;auto&#39;) -&gt; None:
+    &#34;&#34;&#34;
+    SimpleITK 라이브러리와 수치적 최적화를 통해 영상 정합
+
+    Parameters
+    ----------
+    transformation : Transformation, optional
+        정합하기 위한 moving_image의 변환 방법
+    metric : Metric, optional
+        최적화 대상 metric
+    bins : Union[str, int], optional
+        `metric`이 `JointHistMI` 혹은 `MattesMI`인 경우 히스토그램과
+        엔트로피 계산을 위한 bins 개수.
+        string으로 설정하는 경우 `numpy.histogram_bin_edges`의 설정을 따름.
+    &#34;&#34;&#34;
+    self._method = sitk.ImageRegistrationMethod()
+
+    self._transformation: Transformation = transformation
+    self._metric: Metric = metric
+    self._bins = bins
+    self._scale0: Optional[float] = None  # initial scale factor
+
+    self._metric_options = {}
+    if isinstance(bins, int):
+      self.set_metric(metric=metric)
+
+    self._method.SetMetricSamplingStrategy(self._method.NONE)  # 모든 픽셀 고려
+    self._method.SetMetricSamplingPercentage(1.0)
+    self.set_multi_resolution()
+
+    self._method.SetInterpolator(sitk.sitkLinear)
+    self._method.SetOptimizerAsPowell(numberOfIterations=200)
+
+    # 각 parameter의 scaling factor 결정 방법
+    self._method.SetOptimizerScalesFromPhysicalShift()
+
+  @property
+  def method(self) -&gt; sitk.ImageRegistrationMethod:
+    &#34;&#34;&#34;
+    simpleitk 라이브러리의 영상 정합을 위한 클래스
+
+    Returns
+    -------
+    sitk.ImageRegistrationMethod
+    &#34;&#34;&#34;
+    return self._method
+
+  @property
+  def metric(self) -&gt; Metric:
+    &#34;&#34;&#34;
+    정합 결과 판단 지표의 종류
+
+    Returns
+    -------
+    Metric
+    &#34;&#34;&#34;
+    return self._metric
+
+  def _set_method_metric(self,
+                         metric: Metric,
+                         bins=20,
+                         pdf_var=1.5,
+                         ants_radius=2):
+    if metric is Metric.MeanSquare:
+      self.method.SetMetricAsMeanSquares()
+    elif metric is Metric.Corr:
+      self.method.SetMetricAsCorrelation()
+    elif metric is Metric.ANTSNCorr:
+      self.method.SetMetricAsANTSNeighborhoodCorrelation(radius=ants_radius)
+    elif metric is Metric.JointHistMI:
+      self.method.SetMetricAsJointHistogramMutualInformation(
+          numberOfHistogramBins=bins, varianceForJointPDFSmoothing=pdf_var)
+    elif metric is Metric.MattesMI:
+      self.method.SetMetricAsMattesMutualInformation(numberOfHistogramBins=bins)
+    else:
+      raise ValueError(metric)
+
+  def set_metric(self,
+                 metric: Metric,
+                 bins: Union[int, str] = &#39;auto&#39;,
+                 pdf_var=1.5,
+                 ants_radius=2):
+    self._metric = metric
+    self._bins = bins
+    self._metric_options = {&#39;pdf_var&#39;: pdf_var, &#39;ants_radius&#39;: ants_radius}
+
+    if isinstance(bins, int):
+      self._set_method_metric(metric=metric,
+                              bins=bins,
+                              pdf_var=pdf_var,
+                              ants_radius=ants_radius)
+
+  @property
+  def transformation(self):
+    return self._transformation
+
+  @transformation.setter
+  def transformation(self, value: Transformation):
+    self._transformation = value
+
+  @staticmethod
+  def _get_transformation(transformation: Transformation,
+                          scale0: Optional[float] = None):
+    if scale0 is None:
+      logger.warning(&#39;초기 scale이 설정되지 않았습니다. 정합 결과가 부정확할 수 있습니다.&#39;)
+      scale0 = 1.0
+
+    # 초기 scale 설정
+    if transformation is Transformation.Similarity:
+      trsf = sitk.Similarity2DTransform()
+      trsf.SetScale(scale0)
+    elif transformation is Transformation.Affine:
+      trsf = sitk.AffineTransform(2)
+      trsf.SetParameters((scale0, 0.0, 0.0, scale0, 0.0, 0.0))
+    else:
+      raise ValueError(transformation)
+
+    return trsf
+
+  @staticmethod
+  def get_transform_matrix(transform: sitk.Transform) -&gt; np.ndarray:
+    &#34;&#34;&#34;
+    추정한 transform으로부터 transform matrix 추정
+
+    Parameters
+    ----------
+    transform : sitk.Transform
+        최적화를 통해 추정한 transform
+
+    Returns
+    -------
+    np.ndarray
+        Transform matrix
+    &#34;&#34;&#34;
+    params = transform.GetParameters()
+    assert len(params) in (4, 6)  # similarity의 경우 4개, affine은 6개
+
+    # 수치적으로 tranform matrix 추정
+    # (simpleitk의 문서가 부실해서 parameter를 해석할 수 없음)
+    src = np.array([[0, 0], [1, 0], [0, 1], [1, 1]], dtype=&#39;float&#39;)
+    dst = np.array([transform.TransformPoint(x) for x in src])
+    ttype = &#39;similarity&#39; if len(params) == 4 else &#39;affine&#39;
+    trsf = estimate_transform(ttype=ttype, src=src, dst=dst)
+    matrix = inv(trsf.params)
+
+    return matrix
+
+  def set_multi_resolution(self,
+                           shrink_factors=(4, 2, 1),
+                           smoothing_sigmas=(2, 1, 0)):
+    self.method.SetShrinkFactorsPerLevel(shrink_factors)
+    self.method.SetSmoothingSigmasPerLevel(smoothing_sigmas)
+    self.method.SmoothingSigmasAreSpecifiedInPhysicalUnitsOn()
+
+  def set_initial_scale_factor(self,
+                               scale0: Optional[float] = None,
+                               fixed_alpha: Optional[float] = None,
+                               moving_alpha: Optional[float] = None):
+    &#34;&#34;&#34;
+    정합을 위한 translation의 초기 scale factor 지정.
+    fixed, moving image의 화각 (AOV; Angle of View)을 통해 추정 가능.
+    모두 None으로 입력하면 초기 scale factor를 설정하지 않음.
+
+    Parameters
+    ----------
+    scale0 : Optional[float], optional
+        Initial scale factor, by default None
+    fixed_alpha : Optional[float], optional
+        AOV of fixed image [radian], by default None
+    moving_alpha : Optional[float], optional
+        AOV of moving image [radian], by default None
+    &#34;&#34;&#34;
+    if scale0 is not None:
+      self._scale0 = scale0
+    else:
+      if not (fixed_alpha is None or moving_alpha is None):
+        self._scale0 = np.tan(fixed_alpha / 2.0) / np.tan(moving_alpha / 2.0)
+      else:
+        self._scale0 = None
+
+  def _registration_results(
+      self,
+      fixed_simg: sitk.Image,
+      moving_simg: sitk.Image,
+      trsf: sitk.Transform,
+      set_origin: bool,
+  ) -&gt; Tuple[np.ndarray, Optional[Callable], Optional[np.ndarray]]:
+    # 정합된 영상 추출
+    registered = sitk.Resample(image1=moving_simg,
+                               referenceImage=fixed_simg,
+                               transform=trsf,
+                               interpolator=sitk.sitkLinear,
+                               defaultPixelValue=0.0,
+                               outputPixelType=moving_simg.GetPixelID())
+    registered_image = sitk.GetArrayFromImage(registered)
+
+    # 변환 행렬
+    matrix = self.get_transform_matrix(trsf)
+
+    def register(image: np.ndarray) -&gt; np.ndarray:
+      &#34;&#34;&#34;
+      새 영상을 받아 추정한 transformation을 적용하는 함수
+
+      Parameters
+      ----------
+      image : np.ndarray
+          변환 대상 영상
+
+      Returns
+      -------
+      np.ndarray
+          변환된 영상
+      &#34;&#34;&#34;
+      simg = to_sitk_image(image, set_origin=set_origin)
+      registered_simg = sitk.Resample(simg,
+                                      referenceImage=fixed_simg,
+                                      transform=trsf,
+                                      interpolator=sitk.sitkLinear,
+                                      defaultPixelValue=0.0,
+                                      outputPixelType=moving_simg.GetPixelID())
+      registered_image = sitk.GetArrayFromImage(registered_simg)
+
+      return registered_image
+
+    return registered_image, register, matrix
+
+  def register(
+      self,
+      fixed_image: np.ndarray,
+      moving_image: np.ndarray,
+      **kwargs,
+  ) -&gt; Tuple[np.ndarray, Optional[Callable], Optional[np.ndarray]]:
+    &#34;&#34;&#34;
+    Register image
+
+    Parameters
+    ----------
+    fixed_image : np.ndarray
+        Fixed image (정합의 기준이 되는 고정된 영상)
+    moving_image : np.ndarray
+        Moving image (정합을 위해 변환하는 영상)
+    set_origin : bool
+        `True`일 경우 초기 회전 중심을 영상 중심으로 설정 (default: `False`)
+
+        `True`인 경우 **transform matrix를 적용 전 영상 중심을 조정해야 함**.
+
+    Returns
+    -------
+    np.ndarray
+        Registered image
+    Optional[Callable]
+        Registration function (f: moving image -&gt; registered image)
+    Optional[np.ndarray]
+        Transform matrix
+    &#34;&#34;&#34;
+    set_origin = kwargs.get(&#39;set_origin&#39;, False)
+
+    fixed = to_sitk_image(fixed_image, set_origin=set_origin)
+    moving = to_sitk_image(moving_image, set_origin=set_origin)
+
+    if isinstance(self._bins, str):
+      # 적절한 bin 개수 추정
+      bins = bin_size(fixed_image, moving_image, bins=self._bins)
+      self._set_method_metric(self.metric, bins=bins, **self._metric_options)
+
+    trsf = self._get_transformation(self._transformation, scale0=self._scale0)
+
+    # 초기 transformation 설정
+    # (`operationMode=GEOMETRY` -&gt; 영상의 기하학적 중심을 초기 회전축으로 설정)
+    initial_trsf = sitk.CenteredTransformInitializer(
+        fixedImage=fixed,
+        movingImage=moving,
+        transform=trsf,
+        operationMode=sitk.CenteredTransformInitializerFilter.GEOMETRY)
+    self.method.SetInitialTransform(initial_trsf, inPlace=False)
+
+    # 연산
+    final_trsf = self.method.Execute(sitk.Cast(fixed, sitk.sitkFloat32),
+                                     sitk.Cast(moving, sitk.sitkFloat32))
+    logger.debug(&#39;Optimizer stopping condition: {}&#39;,
+                 self.method.GetOptimizerStopConditionDescription())
+
+    return self._registration_results(fixed_simg=fixed,
+                                      moving_simg=moving,
+                                      trsf=final_trsf,
+                                      set_origin=set_origin)
+
+  # def prep_and_register(
+  #     self,
+  #     fixed_image: np.ndarray,
+  #     moving_image: np.ndarray,
+  #     preprocess: RegistrationPreprocess,
+  #     **kwargs,
+  # ) -&gt; Tuple[RegisteringImage, RegisteringImage]:
+  #   return super().prep_and_register(fixed_image, moving_image, preprocess,
+  #                                    **kwargs)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="src.registration.registrator.simpleitk.to_sitk_image"><code class="name flex">
+<span>def <span class="ident">to_sitk_image</span></span>(<span>image: numpy.ndarray, set_origin=False) ‑> SimpleITK.SimpleITK.Image</span>
+</code></dt>
+<dd>
+<div class="desc"><p>SimpleITK 형식 image로 변환</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>image</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>대상 영상</dd>
+<dt><strong><code>set_origin</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>True일 경우 영상 중심을 회전축으로 설정</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>sitk.Image</code></dt>
+<dd>변환된 영상</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def to_sitk_image(image: np.ndarray, set_origin=False) -&gt; sitk.Image:
+  &#34;&#34;&#34;
+  SimpleITK 형식 image로 변환
+
+  Parameters
+  ----------
+  image : np.ndarray
+      대상 영상
+  set_origin : bool, optional
+      True일 경우 영상 중심을 회전축으로 설정
+
+  Returns
+  -------
+  sitk.Image
+      변환된 영상
+  &#34;&#34;&#34;
+  sitk_image = sitk.GetImageFromArray(image)
+  if set_origin:
+    sitk_image.SetOrigin(np.divide(image.shape, 2.0))
+
+  return sitk_image</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="src.registration.registrator.simpleitk.Metric"><code class="flex name class">
+<span>class <span class="ident">Metric</span></span>
+<span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>최적화 대상 metric</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Metric(enum.Enum):
+  &#34;&#34;&#34;최적화 대상 metric&#34;&#34;&#34;
+  MeanSquare = enum.auto()
+  Corr = enum.auto()
+  ANTSNCorr = enum.auto()
+  JointHistMI = enum.auto()
+  MattesMI = enum.auto()</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>enum.Enum</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="src.registration.registrator.simpleitk.Metric.ANTSNCorr"><code class="name">var <span class="ident">ANTSNCorr</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="src.registration.registrator.simpleitk.Metric.Corr"><code class="name">var <span class="ident">Corr</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="src.registration.registrator.simpleitk.Metric.JointHistMI"><code class="name">var <span class="ident">JointHistMI</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="src.registration.registrator.simpleitk.Metric.MattesMI"><code class="name">var <span class="ident">MattesMI</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="src.registration.registrator.simpleitk.Metric.MeanSquare"><code class="name">var <span class="ident">MeanSquare</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="src.registration.registrator.simpleitk.SITKRegistrator"><code class="flex name class">
+<span>class <span class="ident">SITKRegistrator</span></span>
+<span>(</span><span>transformation=Transformation.Similarity, metric=Metric.JointHistMI, bins: Union[str, int] = 'auto')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<p>SimpleITK 라이브러리와 수치적 최적화를 통해 영상 정합</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>transformation</code></strong> :&ensp;<code><a title="src.registration.registrator.simpleitk.Transformation" href="#src.registration.registrator.simpleitk.Transformation">Transformation</a></code>, optional</dt>
+<dd>정합하기 위한 moving_image의 변환 방법</dd>
+<dt><strong><code>metric</code></strong> :&ensp;<code><a title="src.registration.registrator.simpleitk.Metric" href="#src.registration.registrator.simpleitk.Metric">Metric</a></code>, optional</dt>
+<dd>최적화 대상 metric</dd>
+<dt><strong><code>bins</code></strong> :&ensp;<code>Union[str, int]</code>, optional</dt>
+<dd><code>metric</code>이 <code>JointHistMI</code> 혹은 <code>MattesMI</code>인 경우 히스토그램과
+엔트로피 계산을 위한 bins 개수.
+string으로 설정하는 경우 <code>numpy.histogram_bin_edges</code>의 설정을 따름.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SITKRegistrator(BaseRegistrator):
+  # pylint: disable=no-member
+
+  def __init__(self,
+               transformation=Transformation.Similarity,
+               metric=Metric.JointHistMI,
+               bins: Union[str, int] = &#39;auto&#39;) -&gt; None:
+    &#34;&#34;&#34;
+    SimpleITK 라이브러리와 수치적 최적화를 통해 영상 정합
+
+    Parameters
+    ----------
+    transformation : Transformation, optional
+        정합하기 위한 moving_image의 변환 방법
+    metric : Metric, optional
+        최적화 대상 metric
+    bins : Union[str, int], optional
+        `metric`이 `JointHistMI` 혹은 `MattesMI`인 경우 히스토그램과
+        엔트로피 계산을 위한 bins 개수.
+        string으로 설정하는 경우 `numpy.histogram_bin_edges`의 설정을 따름.
+    &#34;&#34;&#34;
+    self._method = sitk.ImageRegistrationMethod()
+
+    self._transformation: Transformation = transformation
+    self._metric: Metric = metric
+    self._bins = bins
+    self._scale0: Optional[float] = None  # initial scale factor
+
+    self._metric_options = {}
+    if isinstance(bins, int):
+      self.set_metric(metric=metric)
+
+    self._method.SetMetricSamplingStrategy(self._method.NONE)  # 모든 픽셀 고려
+    self._method.SetMetricSamplingPercentage(1.0)
+    self.set_multi_resolution()
+
+    self._method.SetInterpolator(sitk.sitkLinear)
+    self._method.SetOptimizerAsPowell(numberOfIterations=200)
+
+    # 각 parameter의 scaling factor 결정 방법
+    self._method.SetOptimizerScalesFromPhysicalShift()
+
+  @property
+  def method(self) -&gt; sitk.ImageRegistrationMethod:
+    &#34;&#34;&#34;
+    simpleitk 라이브러리의 영상 정합을 위한 클래스
+
+    Returns
+    -------
+    sitk.ImageRegistrationMethod
+    &#34;&#34;&#34;
+    return self._method
+
+  @property
+  def metric(self) -&gt; Metric:
+    &#34;&#34;&#34;
+    정합 결과 판단 지표의 종류
+
+    Returns
+    -------
+    Metric
+    &#34;&#34;&#34;
+    return self._metric
+
+  def _set_method_metric(self,
+                         metric: Metric,
+                         bins=20,
+                         pdf_var=1.5,
+                         ants_radius=2):
+    if metric is Metric.MeanSquare:
+      self.method.SetMetricAsMeanSquares()
+    elif metric is Metric.Corr:
+      self.method.SetMetricAsCorrelation()
+    elif metric is Metric.ANTSNCorr:
+      self.method.SetMetricAsANTSNeighborhoodCorrelation(radius=ants_radius)
+    elif metric is Metric.JointHistMI:
+      self.method.SetMetricAsJointHistogramMutualInformation(
+          numberOfHistogramBins=bins, varianceForJointPDFSmoothing=pdf_var)
+    elif metric is Metric.MattesMI:
+      self.method.SetMetricAsMattesMutualInformation(numberOfHistogramBins=bins)
+    else:
+      raise ValueError(metric)
+
+  def set_metric(self,
+                 metric: Metric,
+                 bins: Union[int, str] = &#39;auto&#39;,
+                 pdf_var=1.5,
+                 ants_radius=2):
+    self._metric = metric
+    self._bins = bins
+    self._metric_options = {&#39;pdf_var&#39;: pdf_var, &#39;ants_radius&#39;: ants_radius}
+
+    if isinstance(bins, int):
+      self._set_method_metric(metric=metric,
+                              bins=bins,
+                              pdf_var=pdf_var,
+                              ants_radius=ants_radius)
+
+  @property
+  def transformation(self):
+    return self._transformation
+
+  @transformation.setter
+  def transformation(self, value: Transformation):
+    self._transformation = value
+
+  @staticmethod
+  def _get_transformation(transformation: Transformation,
+                          scale0: Optional[float] = None):
+    if scale0 is None:
+      logger.warning(&#39;초기 scale이 설정되지 않았습니다. 정합 결과가 부정확할 수 있습니다.&#39;)
+      scale0 = 1.0
+
+    # 초기 scale 설정
+    if transformation is Transformation.Similarity:
+      trsf = sitk.Similarity2DTransform()
+      trsf.SetScale(scale0)
+    elif transformation is Transformation.Affine:
+      trsf = sitk.AffineTransform(2)
+      trsf.SetParameters((scale0, 0.0, 0.0, scale0, 0.0, 0.0))
+    else:
+      raise ValueError(transformation)
+
+    return trsf
+
+  @staticmethod
+  def get_transform_matrix(transform: sitk.Transform) -&gt; np.ndarray:
+    &#34;&#34;&#34;
+    추정한 transform으로부터 transform matrix 추정
+
+    Parameters
+    ----------
+    transform : sitk.Transform
+        최적화를 통해 추정한 transform
+
+    Returns
+    -------
+    np.ndarray
+        Transform matrix
+    &#34;&#34;&#34;
+    params = transform.GetParameters()
+    assert len(params) in (4, 6)  # similarity의 경우 4개, affine은 6개
+
+    # 수치적으로 tranform matrix 추정
+    # (simpleitk의 문서가 부실해서 parameter를 해석할 수 없음)
+    src = np.array([[0, 0], [1, 0], [0, 1], [1, 1]], dtype=&#39;float&#39;)
+    dst = np.array([transform.TransformPoint(x) for x in src])
+    ttype = &#39;similarity&#39; if len(params) == 4 else &#39;affine&#39;
+    trsf = estimate_transform(ttype=ttype, src=src, dst=dst)
+    matrix = inv(trsf.params)
+
+    return matrix
+
+  def set_multi_resolution(self,
+                           shrink_factors=(4, 2, 1),
+                           smoothing_sigmas=(2, 1, 0)):
+    self.method.SetShrinkFactorsPerLevel(shrink_factors)
+    self.method.SetSmoothingSigmasPerLevel(smoothing_sigmas)
+    self.method.SmoothingSigmasAreSpecifiedInPhysicalUnitsOn()
+
+  def set_initial_scale_factor(self,
+                               scale0: Optional[float] = None,
+                               fixed_alpha: Optional[float] = None,
+                               moving_alpha: Optional[float] = None):
+    &#34;&#34;&#34;
+    정합을 위한 translation의 초기 scale factor 지정.
+    fixed, moving image의 화각 (AOV; Angle of View)을 통해 추정 가능.
+    모두 None으로 입력하면 초기 scale factor를 설정하지 않음.
+
+    Parameters
+    ----------
+    scale0 : Optional[float], optional
+        Initial scale factor, by default None
+    fixed_alpha : Optional[float], optional
+        AOV of fixed image [radian], by default None
+    moving_alpha : Optional[float], optional
+        AOV of moving image [radian], by default None
+    &#34;&#34;&#34;
+    if scale0 is not None:
+      self._scale0 = scale0
+    else:
+      if not (fixed_alpha is None or moving_alpha is None):
+        self._scale0 = np.tan(fixed_alpha / 2.0) / np.tan(moving_alpha / 2.0)
+      else:
+        self._scale0 = None
+
+  def _registration_results(
+      self,
+      fixed_simg: sitk.Image,
+      moving_simg: sitk.Image,
+      trsf: sitk.Transform,
+      set_origin: bool,
+  ) -&gt; Tuple[np.ndarray, Optional[Callable], Optional[np.ndarray]]:
+    # 정합된 영상 추출
+    registered = sitk.Resample(image1=moving_simg,
+                               referenceImage=fixed_simg,
+                               transform=trsf,
+                               interpolator=sitk.sitkLinear,
+                               defaultPixelValue=0.0,
+                               outputPixelType=moving_simg.GetPixelID())
+    registered_image = sitk.GetArrayFromImage(registered)
+
+    # 변환 행렬
+    matrix = self.get_transform_matrix(trsf)
+
+    def register(image: np.ndarray) -&gt; np.ndarray:
+      &#34;&#34;&#34;
+      새 영상을 받아 추정한 transformation을 적용하는 함수
+
+      Parameters
+      ----------
+      image : np.ndarray
+          변환 대상 영상
+
+      Returns
+      -------
+      np.ndarray
+          변환된 영상
+      &#34;&#34;&#34;
+      simg = to_sitk_image(image, set_origin=set_origin)
+      registered_simg = sitk.Resample(simg,
+                                      referenceImage=fixed_simg,
+                                      transform=trsf,
+                                      interpolator=sitk.sitkLinear,
+                                      defaultPixelValue=0.0,
+                                      outputPixelType=moving_simg.GetPixelID())
+      registered_image = sitk.GetArrayFromImage(registered_simg)
+
+      return registered_image
+
+    return registered_image, register, matrix
+
+  def register(
+      self,
+      fixed_image: np.ndarray,
+      moving_image: np.ndarray,
+      **kwargs,
+  ) -&gt; Tuple[np.ndarray, Optional[Callable], Optional[np.ndarray]]:
+    &#34;&#34;&#34;
+    Register image
+
+    Parameters
+    ----------
+    fixed_image : np.ndarray
+        Fixed image (정합의 기준이 되는 고정된 영상)
+    moving_image : np.ndarray
+        Moving image (정합을 위해 변환하는 영상)
+    set_origin : bool
+        `True`일 경우 초기 회전 중심을 영상 중심으로 설정 (default: `False`)
+
+        `True`인 경우 **transform matrix를 적용 전 영상 중심을 조정해야 함**.
+
+    Returns
+    -------
+    np.ndarray
+        Registered image
+    Optional[Callable]
+        Registration function (f: moving image -&gt; registered image)
+    Optional[np.ndarray]
+        Transform matrix
+    &#34;&#34;&#34;
+    set_origin = kwargs.get(&#39;set_origin&#39;, False)
+
+    fixed = to_sitk_image(fixed_image, set_origin=set_origin)
+    moving = to_sitk_image(moving_image, set_origin=set_origin)
+
+    if isinstance(self._bins, str):
+      # 적절한 bin 개수 추정
+      bins = bin_size(fixed_image, moving_image, bins=self._bins)
+      self._set_method_metric(self.metric, bins=bins, **self._metric_options)
+
+    trsf = self._get_transformation(self._transformation, scale0=self._scale0)
+
+    # 초기 transformation 설정
+    # (`operationMode=GEOMETRY` -&gt; 영상의 기하학적 중심을 초기 회전축으로 설정)
+    initial_trsf = sitk.CenteredTransformInitializer(
+        fixedImage=fixed,
+        movingImage=moving,
+        transform=trsf,
+        operationMode=sitk.CenteredTransformInitializerFilter.GEOMETRY)
+    self.method.SetInitialTransform(initial_trsf, inPlace=False)
+
+    # 연산
+    final_trsf = self.method.Execute(sitk.Cast(fixed, sitk.sitkFloat32),
+                                     sitk.Cast(moving, sitk.sitkFloat32))
+    logger.debug(&#39;Optimizer stopping condition: {}&#39;,
+                 self.method.GetOptimizerStopConditionDescription())
+
+    return self._registration_results(fixed_simg=fixed,
+                                      moving_simg=moving,
+                                      trsf=final_trsf,
+                                      set_origin=set_origin)
+
+  # def prep_and_register(
+  #     self,
+  #     fixed_image: np.ndarray,
+  #     moving_image: np.ndarray,
+  #     preprocess: RegistrationPreprocess,
+  #     **kwargs,
+  # ) -&gt; Tuple[RegisteringImage, RegisteringImage]:
+  #   return super().prep_and_register(fixed_image, moving_image, preprocess,
+  #                                    **kwargs)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="src.registration.registrator.registrator.BaseRegistrator" href="registrator.html#src.registration.registrator.registrator.BaseRegistrator">BaseRegistrator</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Static methods</h3>
+<dl>
+<dt id="src.registration.registrator.simpleitk.SITKRegistrator.get_transform_matrix"><code class="name flex">
+<span>def <span class="ident">get_transform_matrix</span></span>(<span>transform: SimpleITK.SimpleITK.Transform) ‑> numpy.ndarray</span>
+</code></dt>
+<dd>
+<div class="desc"><p>추정한 transform으로부터 transform matrix 추정</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>transform</code></strong> :&ensp;<code>sitk.Transform</code></dt>
+<dd>최적화를 통해 추정한 transform</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>np.ndarray</code></dt>
+<dd>Transform matrix</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def get_transform_matrix(transform: sitk.Transform) -&gt; np.ndarray:
+  &#34;&#34;&#34;
+  추정한 transform으로부터 transform matrix 추정
+
+  Parameters
+  ----------
+  transform : sitk.Transform
+      최적화를 통해 추정한 transform
+
+  Returns
+  -------
+  np.ndarray
+      Transform matrix
+  &#34;&#34;&#34;
+  params = transform.GetParameters()
+  assert len(params) in (4, 6)  # similarity의 경우 4개, affine은 6개
+
+  # 수치적으로 tranform matrix 추정
+  # (simpleitk의 문서가 부실해서 parameter를 해석할 수 없음)
+  src = np.array([[0, 0], [1, 0], [0, 1], [1, 1]], dtype=&#39;float&#39;)
+  dst = np.array([transform.TransformPoint(x) for x in src])
+  ttype = &#39;similarity&#39; if len(params) == 4 else &#39;affine&#39;
+  trsf = estimate_transform(ttype=ttype, src=src, dst=dst)
+  matrix = inv(trsf.params)
+
+  return matrix</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="src.registration.registrator.simpleitk.SITKRegistrator.method"><code class="name">var <span class="ident">method</span> : SimpleITK.SimpleITK.ImageRegistrationMethod</code></dt>
+<dd>
+<div class="desc"><p>simpleitk 라이브러리의 영상 정합을 위한 클래스</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>sitk.ImageRegistrationMethod</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def method(self) -&gt; sitk.ImageRegistrationMethod:
+  &#34;&#34;&#34;
+  simpleitk 라이브러리의 영상 정합을 위한 클래스
+
+  Returns
+  -------
+  sitk.ImageRegistrationMethod
+  &#34;&#34;&#34;
+  return self._method</code></pre>
+</details>
+</dd>
+<dt id="src.registration.registrator.simpleitk.SITKRegistrator.metric"><code class="name">var <span class="ident">metric</span> : <a title="src.registration.registrator.simpleitk.Metric" href="#src.registration.registrator.simpleitk.Metric">Metric</a></code></dt>
+<dd>
+<div class="desc"><p>정합 결과 판단 지표의 종류</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="src.registration.registrator.simpleitk.Metric" href="#src.registration.registrator.simpleitk.Metric">Metric</a></code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def metric(self) -&gt; Metric:
+  &#34;&#34;&#34;
+  정합 결과 판단 지표의 종류
+
+  Returns
+  -------
+  Metric
+  &#34;&#34;&#34;
+  return self._metric</code></pre>
+</details>
+</dd>
+<dt id="src.registration.registrator.simpleitk.SITKRegistrator.transformation"><code class="name">var <span class="ident">transformation</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def transformation(self):
+  return self._transformation</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="src.registration.registrator.simpleitk.SITKRegistrator.register"><code class="name flex">
+<span>def <span class="ident">register</span></span>(<span>self, fixed_image: numpy.ndarray, moving_image: numpy.ndarray, **kwargs) ‑> Tuple[numpy.ndarray, Union[Callable, NoneType], Union[numpy.ndarray, NoneType]]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Register image</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>fixed_image</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>Fixed image (정합의 기준이 되는 고정된 영상)</dd>
+<dt><strong><code>moving_image</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>Moving image (정합을 위해 변환하는 영상)</dd>
+<dt><strong><code>set_origin</code></strong> :&ensp;<code>bool</code></dt>
+<dd>
+<p><code>True</code>일 경우 초기 회전 중심을 영상 중심으로 설정 (default: <code>False</code>)</p>
+<p><code>True</code>인 경우 <strong>transform matrix를 적용 전 영상 중심을 조정해야 함</strong>.</p>
+</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>np.ndarray</code></dt>
+<dd>Registered image</dd>
+<dt><code>Optional[Callable]</code></dt>
+<dd>Registration function (f: moving image -&gt; registered image)</dd>
+<dt><code>Optional[np.ndarray]</code></dt>
+<dd>Transform matrix</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def register(
+    self,
+    fixed_image: np.ndarray,
+    moving_image: np.ndarray,
+    **kwargs,
+) -&gt; Tuple[np.ndarray, Optional[Callable], Optional[np.ndarray]]:
+  &#34;&#34;&#34;
+  Register image
+
+  Parameters
+  ----------
+  fixed_image : np.ndarray
+      Fixed image (정합의 기준이 되는 고정된 영상)
+  moving_image : np.ndarray
+      Moving image (정합을 위해 변환하는 영상)
+  set_origin : bool
+      `True`일 경우 초기 회전 중심을 영상 중심으로 설정 (default: `False`)
+
+      `True`인 경우 **transform matrix를 적용 전 영상 중심을 조정해야 함**.
+
+  Returns
+  -------
+  np.ndarray
+      Registered image
+  Optional[Callable]
+      Registration function (f: moving image -&gt; registered image)
+  Optional[np.ndarray]
+      Transform matrix
+  &#34;&#34;&#34;
+  set_origin = kwargs.get(&#39;set_origin&#39;, False)
+
+  fixed = to_sitk_image(fixed_image, set_origin=set_origin)
+  moving = to_sitk_image(moving_image, set_origin=set_origin)
+
+  if isinstance(self._bins, str):
+    # 적절한 bin 개수 추정
+    bins = bin_size(fixed_image, moving_image, bins=self._bins)
+    self._set_method_metric(self.metric, bins=bins, **self._metric_options)
+
+  trsf = self._get_transformation(self._transformation, scale0=self._scale0)
+
+  # 초기 transformation 설정
+  # (`operationMode=GEOMETRY` -&gt; 영상의 기하학적 중심을 초기 회전축으로 설정)
+  initial_trsf = sitk.CenteredTransformInitializer(
+      fixedImage=fixed,
+      movingImage=moving,
+      transform=trsf,
+      operationMode=sitk.CenteredTransformInitializerFilter.GEOMETRY)
+  self.method.SetInitialTransform(initial_trsf, inPlace=False)
+
+  # 연산
+  final_trsf = self.method.Execute(sitk.Cast(fixed, sitk.sitkFloat32),
+                                   sitk.Cast(moving, sitk.sitkFloat32))
+  logger.debug(&#39;Optimizer stopping condition: {}&#39;,
+               self.method.GetOptimizerStopConditionDescription())
+
+  return self._registration_results(fixed_simg=fixed,
+                                    moving_simg=moving,
+                                    trsf=final_trsf,
+                                    set_origin=set_origin)</code></pre>
+</details>
+</dd>
+<dt id="src.registration.registrator.simpleitk.SITKRegistrator.set_initial_scale_factor"><code class="name flex">
+<span>def <span class="ident">set_initial_scale_factor</span></span>(<span>self, scale0: Union[float, NoneType] = None, fixed_alpha: Union[float, NoneType] = None, moving_alpha: Union[float, NoneType] = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>정합을 위한 translation의 초기 scale factor 지정.
+fixed, moving image의 화각 (AOV; Angle of View)을 통해 추정 가능.
+모두 None으로 입력하면 초기 scale factor를 설정하지 않음.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>scale0</code></strong> :&ensp;<code>Optional[float]</code>, optional</dt>
+<dd>Initial scale factor, by default None</dd>
+<dt><strong><code>fixed_alpha</code></strong> :&ensp;<code>Optional[float]</code>, optional</dt>
+<dd>AOV of fixed image [radian], by default None</dd>
+<dt><strong><code>moving_alpha</code></strong> :&ensp;<code>Optional[float]</code>, optional</dt>
+<dd>AOV of moving image [radian], by default None</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_initial_scale_factor(self,
+                             scale0: Optional[float] = None,
+                             fixed_alpha: Optional[float] = None,
+                             moving_alpha: Optional[float] = None):
+  &#34;&#34;&#34;
+  정합을 위한 translation의 초기 scale factor 지정.
+  fixed, moving image의 화각 (AOV; Angle of View)을 통해 추정 가능.
+  모두 None으로 입력하면 초기 scale factor를 설정하지 않음.
+
+  Parameters
+  ----------
+  scale0 : Optional[float], optional
+      Initial scale factor, by default None
+  fixed_alpha : Optional[float], optional
+      AOV of fixed image [radian], by default None
+  moving_alpha : Optional[float], optional
+      AOV of moving image [radian], by default None
+  &#34;&#34;&#34;
+  if scale0 is not None:
+    self._scale0 = scale0
+  else:
+    if not (fixed_alpha is None or moving_alpha is None):
+      self._scale0 = np.tan(fixed_alpha / 2.0) / np.tan(moving_alpha / 2.0)
+    else:
+      self._scale0 = None</code></pre>
+</details>
+</dd>
+<dt id="src.registration.registrator.simpleitk.SITKRegistrator.set_metric"><code class="name flex">
+<span>def <span class="ident">set_metric</span></span>(<span>self, metric: <a title="src.registration.registrator.simpleitk.Metric" href="#src.registration.registrator.simpleitk.Metric">Metric</a>, bins: Union[int, str] = 'auto', pdf_var=1.5, ants_radius=2)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_metric(self,
+               metric: Metric,
+               bins: Union[int, str] = &#39;auto&#39;,
+               pdf_var=1.5,
+               ants_radius=2):
+  self._metric = metric
+  self._bins = bins
+  self._metric_options = {&#39;pdf_var&#39;: pdf_var, &#39;ants_radius&#39;: ants_radius}
+
+  if isinstance(bins, int):
+    self._set_method_metric(metric=metric,
+                            bins=bins,
+                            pdf_var=pdf_var,
+                            ants_radius=ants_radius)</code></pre>
+</details>
+</dd>
+<dt id="src.registration.registrator.simpleitk.SITKRegistrator.set_multi_resolution"><code class="name flex">
+<span>def <span class="ident">set_multi_resolution</span></span>(<span>self, shrink_factors=(4, 2, 1), smoothing_sigmas=(2, 1, 0))</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_multi_resolution(self,
+                         shrink_factors=(4, 2, 1),
+                         smoothing_sigmas=(2, 1, 0)):
+  self.method.SetShrinkFactorsPerLevel(shrink_factors)
+  self.method.SetSmoothingSigmasPerLevel(smoothing_sigmas)
+  self.method.SmoothingSigmasAreSpecifiedInPhysicalUnitsOn()</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="src.registration.registrator.simpleitk.Transformation"><code class="flex name class">
+<span>class <span class="ident">Transformation</span></span>
+<span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>정합을 위한 영상 변환 방법</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Transformation(enum.Enum):
+  &#34;&#34;&#34;정합을 위한 영상 변환 방법&#34;&#34;&#34;
+  Similarity = enum.auto()
+  Affine = enum.auto()</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>enum.Enum</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="src.registration.registrator.simpleitk.Transformation.Affine"><code class="name">var <span class="ident">Affine</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="src.registration.registrator.simpleitk.Transformation.Similarity"><code class="name">var <span class="ident">Similarity</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="src.registration.registrator" href="index.html">src.registration.registrator</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="src.registration.registrator.simpleitk.to_sitk_image" href="#src.registration.registrator.simpleitk.to_sitk_image">to_sitk_image</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="src.registration.registrator.simpleitk.Metric" href="#src.registration.registrator.simpleitk.Metric">Metric</a></code></h4>
+<ul class="">
+<li><code><a title="src.registration.registrator.simpleitk.Metric.ANTSNCorr" href="#src.registration.registrator.simpleitk.Metric.ANTSNCorr">ANTSNCorr</a></code></li>
+<li><code><a title="src.registration.registrator.simpleitk.Metric.Corr" href="#src.registration.registrator.simpleitk.Metric.Corr">Corr</a></code></li>
+<li><code><a title="src.registration.registrator.simpleitk.Metric.JointHistMI" href="#src.registration.registrator.simpleitk.Metric.JointHistMI">JointHistMI</a></code></li>
+<li><code><a title="src.registration.registrator.simpleitk.Metric.MattesMI" href="#src.registration.registrator.simpleitk.Metric.MattesMI">MattesMI</a></code></li>
+<li><code><a title="src.registration.registrator.simpleitk.Metric.MeanSquare" href="#src.registration.registrator.simpleitk.Metric.MeanSquare">MeanSquare</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="src.registration.registrator.simpleitk.SITKRegistrator" href="#src.registration.registrator.simpleitk.SITKRegistrator">SITKRegistrator</a></code></h4>
+<ul class="">
+<li><code><a title="src.registration.registrator.simpleitk.SITKRegistrator.get_transform_matrix" href="#src.registration.registrator.simpleitk.SITKRegistrator.get_transform_matrix">get_transform_matrix</a></code></li>
+<li><code><a title="src.registration.registrator.simpleitk.SITKRegistrator.method" href="#src.registration.registrator.simpleitk.SITKRegistrator.method">method</a></code></li>
+<li><code><a title="src.registration.registrator.simpleitk.SITKRegistrator.metric" href="#src.registration.registrator.simpleitk.SITKRegistrator.metric">metric</a></code></li>
+<li><code><a title="src.registration.registrator.simpleitk.SITKRegistrator.register" href="#src.registration.registrator.simpleitk.SITKRegistrator.register">register</a></code></li>
+<li><code><a title="src.registration.registrator.simpleitk.SITKRegistrator.set_initial_scale_factor" href="#src.registration.registrator.simpleitk.SITKRegistrator.set_initial_scale_factor">set_initial_scale_factor</a></code></li>
+<li><code><a title="src.registration.registrator.simpleitk.SITKRegistrator.set_metric" href="#src.registration.registrator.simpleitk.SITKRegistrator.set_metric">set_metric</a></code></li>
+<li><code><a title="src.registration.registrator.simpleitk.SITKRegistrator.set_multi_resolution" href="#src.registration.registrator.simpleitk.SITKRegistrator.set_multi_resolution">set_multi_resolution</a></code></li>
+<li><code><a title="src.registration.registrator.simpleitk.SITKRegistrator.transformation" href="#src.registration.registrator.simpleitk.SITKRegistrator.transformation">transformation</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="src.registration.registrator.simpleitk.Transformation" href="#src.registration.registrator.simpleitk.Transformation">Transformation</a></code></h4>
+<ul class="">
+<li><code><a title="src.registration.registrator.simpleitk.Transformation.Affine" href="#src.registration.registrator.simpleitk.Transformation.Affine">Affine</a></code></li>
+<li><code><a title="src.registration.registrator.simpleitk.Transformation.Similarity" href="#src.registration.registrator.simpleitk.Transformation.Similarity">Similarity</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+</footer>
+</body>
+</html>

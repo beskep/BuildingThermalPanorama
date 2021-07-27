@@ -14,9 +14,7 @@ CONFIG_FNAME = 'config.yaml'
 DEFAULT_CONFIG_PATH = utils.DIR.SRC.joinpath(CONFIG_FNAME)
 
 
-def read_config(wd: Optional[Path] = None,
-                read_only=True,
-                default=False) -> DictConfig:
+def read_config(wd: Path, read_only=True, default=False) -> DictConfig:
   """
   config 파일 로드
 

@@ -1,0 +1,1197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.2" />
+<title>src.registration.evaluation.metrics API documentation</title>
+<meta name="description" content="두 영상의 유사도/정합 정확도 평가" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>src.registration.evaluation.metrics</code></h1>
+</header>
+<section id="section-intro">
+<p>두 영상의 유사도/정합 정확도 평가</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;두 영상의 유사도/정합 정확도 평가&#34;&#34;&#34;
+
+from functools import cached_property
+from typing import Tuple, Union
+
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.stats import entropy as calculate_entropy
+
+from misc.tools import bin_size, normalize_image
+
+
+def _check_shape(image1: np.ndarray, image2: np.ndarray):
+  if image1.shape != image2.shape:
+    raise ValueError(&#39;shape1 != shape2&#39;)
+
+
+def compute_sse(image1: np.ndarray, image2: np.ndarray, norm=True):
+  &#34;&#34;&#34;
+  Compute SSE (Sum of Squared Error) of image1 and image 2.
+
+  Parameters
+  ----------
+  image1 : np.ndarray
+      Target image 1
+  image2 : np.ndarray
+      Target image 2
+  norm : bool, optional
+      If true, normalize pixel values to range [0, 1], by default True
+
+  Returns
+  -------
+  float
+      Sum of Squared Error
+  &#34;&#34;&#34;
+  _check_shape(image1, image2)
+
+  if norm:
+    image1 = normalize_image(image1)
+    image2 = normalize_image(image2)
+
+  sse = np.sum(np.square(image1 - image2))
+
+  return sse
+
+
+def compute_rmse(image1: np.ndarray, image2: np.ndarray, norm=True):
+  &#34;&#34;&#34;
+  Compute RMSE (Root Mean Squared Error) of image1 and image 2.
+
+  Parameters
+  ----------
+  image1 : np.ndarray
+      Target image 1
+  image2 : np.ndarray
+      Target image 2
+  norm : bool, optional
+      If true, normalize pixel values to range [0, 1], by default True
+
+  Returns
+  -------
+  float
+      Root Mean Squared Error
+  &#34;&#34;&#34;
+  sse = compute_sse(image1=image1, image2=image2, norm=norm)
+  rmse = np.sqrt(sse / image1.size)
+
+  return rmse
+
+
+def compute_ncc(image1: np.ndarray, image2: np.ndarray):
+  &#34;&#34;&#34;
+  Compute NCC (Normalized Cross Correlation) of image1 and image 2.
+
+  Parameters
+  ----------
+  image1 : np.ndarray
+      Target image 1
+  image2 : np.ndarray
+      Target image 2
+
+  Returns
+  -------
+  float
+      Normalized Cross Correlation
+
+  References
+  ----------
+  [1] Dwith Chenna, Y., Ghassemi, P., Pfefer, T., Casamento, J., &amp; Wang, Q.
+  (2018). Free-Form Deformation Approach for Registration of Visible and
+  Infrared Facial Images in Fever Screening. Sensors, 18(2), 125.
+  https://doi.org/10.3390/s18010125
+  &#34;&#34;&#34;
+  _check_shape(image1, image2)
+
+  img1 = image1 - np.average(image1)
+  img2 = image2 - np.average(image2)
+  ncc = (np.sum(img1 * img2) /
+         np.sqrt(np.sum(np.square(img1)) * np.sum(np.square(img2))))
+
+  return ncc
+
+
+def image_entropy(image: np.ndarray, bins: int, base=2) -&gt; float:
+  hist, edges = np.histogram(image.ravel(), bins=bins)
+  entropy = calculate_entropy(hist, base=base)
+
+  return entropy
+
+
+class MutualInformation:
+  &#34;&#34;&#34;
+  두 영상의 entropy, joint entropy, mutual information 계산
+
+  Parameters
+  ----------
+  image1 : np.ndarray
+      Target image 1
+  image2 : np.ndarray
+      Target image 2
+  bins : Union[int, str], optional
+      영상의 histogram, entropy 계산을 위한 bin 개수. str인 경우
+      `numpy.histogram_bin_edges`의 설정을 따름.
+  base : int, optional
+      Entropy 계산을 위한 log의 밑.
+
+  References
+  ----------
+  [1] Dwith Chenna, Y., Ghassemi, P., Pfefer, T., Casamento, J., &amp; Wang, Q.
+  (2018). Free-Form Deformation Approach for Registration of Visible and
+  Infrared Facial Images in Fever Screening. Sensors, 18(2), 125.
+  https://doi.org/10.3390/s18010125
+
+  [2] Nan, A., Tennant, M., Rubin, U., &amp; Ray, N. (2020, September).
+  Drmime: Differentiable mutual information and matrix exponential
+  for multi-resolution image registration. In Medical Imaging
+  with Deep Learning (pp. 527-543). PMLR.
+  &#34;&#34;&#34;
+
+  def __init__(self,
+               image1: np.ndarray,
+               image2: np.ndarray,
+               bins: Union[int, str] = &#39;auto&#39;,
+               base=2) -&gt; None:
+    _check_shape(image1, image2)
+
+    self._image1 = image1
+    self._image2 = image2
+    self._base = base
+
+    if isinstance(bins, str):
+      self._bins = bin_size(image1=image1, image2=image2, bins=bins)
+    else:
+      self._bins = int(bins)
+
+  @property
+  def image1(self):
+    return self._image1
+
+  @property
+  def image2(self):
+    return self._image2
+
+  @property
+  def bins(self):
+    return self._bins
+
+  @property
+  def base(self):
+    return self._base
+
+  @cached_property
+  def image1_entropy(self):
+    return image_entropy(image=self.image1, bins=self.bins, base=self.base)
+
+  @cached_property
+  def image2_entropy(self):
+    return image_entropy(image=self.image2, bins=self.bins, base=self.base)
+
+  @cached_property
+  def joint_hist(self) -&gt; np.ndarray:
+    &#34;&#34;&#34;
+    Image 1, 2의 joint Histogram. Bin 개수는 초기 설정값을 따름.
+
+    Returns
+    -------
+    np.ndarray
+        Joint histogram (shape: (bins, bins))
+    &#34;&#34;&#34;
+    return np.histogram2d(x=self._image1.ravel(),
+                          y=self._image2.ravel(),
+                          bins=self._bins)[0]
+
+  @cached_property
+  def joint_entropy(self) -&gt; float:
+    &#34;&#34;&#34;
+    Image 1, 2의 joint entropy. Histogram의 bin 개수, log의 밑은 초기
+    설정값을 따름.
+
+    Returns
+    -------
+    float
+        Joint entropy
+    &#34;&#34;&#34;
+    return calculate_entropy(self.joint_hist.ravel(), base=self.base)
+
+  @cached_property
+  def mutual_information(self) -&gt; float:
+    &#34;&#34;&#34;
+    Image 1, 2의 mutual information
+
+    Returns
+    -------
+    float
+        Mutual information
+
+    References
+    ----------
+    [1] Dwith Chenna, Y., Ghassemi, P., Pfefer, T., Casamento, J., &amp; Wang, Q.
+    (2018). Free-Form Deformation Approach for Registration of Visible and
+    Infrared Facial Images in Fever Screening. Sensors, 18(2), 125.
+    https://doi.org/10.3390/s18010125
+    &#34;&#34;&#34;
+    return self.image1_entropy + self.image2_entropy - self.joint_entropy
+
+  @cached_property
+  def mattes_mutual_information(self):
+    &#34;&#34;&#34;
+    Mattes Mutual Information 계산.
+    mutual_information()과 결과 동일함.
+
+    Returns
+    -------
+    float
+        Mattes mutual information
+
+    References
+    ----------
+    [1] Nan, A., Tennant, M., Rubin, U., &amp; Ray, N. (2020, September).
+    Drmime: Differentiable mutual information and matrix exponential
+    for multi-resolution image registration. In Medical Imaging
+    with Deep Learning (pp. 527-543). PMLR.
+    &#34;&#34;&#34;
+    hist = self.joint_hist
+    pxy = hist / np.sum(hist)
+    px = np.sum(pxy, axis=0)
+    py = np.sum(pxy, axis=1).reshape([-1, 1])
+
+    pxy_pxpy = np.divide(pxy, px * py, out=np.ones_like(pxy), where=(pxy != 0))
+    mmi = np.sum(pxy * np.log2(pxy_pxpy)) / np.log2(self.base)
+
+    return mmi
+
+  def mi_plot(self) -&gt; Tuple[plt.Figure, np.ndarray]:
+    &#34;&#34;&#34;
+    두 영상, joint histogram을 plot
+
+    Returns
+    -------
+    Tuple[plt.Figure, np.ndarray]
+    &#34;&#34;&#34;
+    fig, axes = plt.subplots(1, 3)
+
+    axes[0].imshow(self.image1, cmap=&#39;gray&#39;)
+    axes[1].imshow(self.image2, cmap=&#39;gray&#39;)
+    axes[2].matshow(self.joint_hist)
+
+    axes[0].set_title(&#39;Image 1 | entropy: {:.3f}&#39;.format(self.image1_entropy))
+    axes[1].set_title(&#39;Image 2 | entropy: {:.3f}&#39;.format(self.image2_entropy))
+    axes[2].set_title(&#39;Entropy: {:.3f} | MI: {:.3f}&#39;.format(
+        self.joint_entropy, self.mutual_information))
+
+    return fig, axes
+
+
+def calculate_all_metrics(image1: np.ndarray,
+                          image2: np.ndarray,
+                          bins: Union[int, str] = &#39;auto&#39;,
+                          base=2) -&gt; dict:
+  &#34;&#34;&#34;
+  지원하는 모든 metric을 계산
+
+  Parameters
+  ----------
+  image1 : np.ndarray
+      Target image 1
+  image2 : np.ndarray
+      Target image 2
+  bins : Union[int, str], optional
+      bins 개수 설정 (`MutualInformation` 설정 참조)
+  base : int, optional
+      log 함수의 밑 (`MutualInformation` 설정 참조)
+
+  Returns
+  -------
+  dict
+      {metric: value}
+      metric list: [&#39;RMSE&#39;, &#39;NCC&#39;, &#39;Entropy&#39;, &#39;MI&#39;]
+  &#34;&#34;&#34;
+  mi = MutualInformation(image1=image1, image2=image2, bins=bins, base=base)
+  rmse = compute_rmse(image1, image2)
+  ncc = compute_ncc(image1, image2)
+
+  metrics = {
+      &#39;RMSE&#39;: rmse,
+      &#39;NCC&#39;: ncc,
+      &#39;Entropy&#39;: mi.joint_entropy,
+      &#39;MI&#39;: mi.mutual_information,
+      # &#39;MMI&#39;: mi.mattes_mutual_information,
+  }
+
+  return metrics</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="src.registration.evaluation.metrics.calculate_all_metrics"><code class="name flex">
+<span>def <span class="ident">calculate_all_metrics</span></span>(<span>image1: numpy.ndarray, image2: numpy.ndarray, bins: Union[int, str] = 'auto', base=2) ‑> dict</span>
+</code></dt>
+<dd>
+<div class="desc"><p>지원하는 모든 metric을 계산</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>image1</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>Target image 1</dd>
+<dt><strong><code>image2</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>Target image 2</dd>
+<dt><strong><code>bins</code></strong> :&ensp;<code>Union[int, str]</code>, optional</dt>
+<dd>bins 개수 설정 (<code><a title="src.registration.evaluation.metrics.MutualInformation" href="#src.registration.evaluation.metrics.MutualInformation">MutualInformation</a></code> 설정 참조)</dd>
+<dt><strong><code>base</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>log 함수의 밑 (<code><a title="src.registration.evaluation.metrics.MutualInformation" href="#src.registration.evaluation.metrics.MutualInformation">MutualInformation</a></code> 설정 참조)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>dict</code></dt>
+<dd>{metric: value}
+metric list: ['RMSE', 'NCC', 'Entropy', 'MI']</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def calculate_all_metrics(image1: np.ndarray,
+                          image2: np.ndarray,
+                          bins: Union[int, str] = &#39;auto&#39;,
+                          base=2) -&gt; dict:
+  &#34;&#34;&#34;
+  지원하는 모든 metric을 계산
+
+  Parameters
+  ----------
+  image1 : np.ndarray
+      Target image 1
+  image2 : np.ndarray
+      Target image 2
+  bins : Union[int, str], optional
+      bins 개수 설정 (`MutualInformation` 설정 참조)
+  base : int, optional
+      log 함수의 밑 (`MutualInformation` 설정 참조)
+
+  Returns
+  -------
+  dict
+      {metric: value}
+      metric list: [&#39;RMSE&#39;, &#39;NCC&#39;, &#39;Entropy&#39;, &#39;MI&#39;]
+  &#34;&#34;&#34;
+  mi = MutualInformation(image1=image1, image2=image2, bins=bins, base=base)
+  rmse = compute_rmse(image1, image2)
+  ncc = compute_ncc(image1, image2)
+
+  metrics = {
+      &#39;RMSE&#39;: rmse,
+      &#39;NCC&#39;: ncc,
+      &#39;Entropy&#39;: mi.joint_entropy,
+      &#39;MI&#39;: mi.mutual_information,
+      # &#39;MMI&#39;: mi.mattes_mutual_information,
+  }
+
+  return metrics</code></pre>
+</details>
+</dd>
+<dt id="src.registration.evaluation.metrics.compute_ncc"><code class="name flex">
+<span>def <span class="ident">compute_ncc</span></span>(<span>image1: numpy.ndarray, image2: numpy.ndarray)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Compute NCC (Normalized Cross Correlation) of image1 and image 2.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>image1</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>Target image 1</dd>
+<dt><strong><code>image2</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>Target image 2</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>float</code></dt>
+<dd>Normalized Cross Correlation</dd>
+</dl>
+<h2 id="references">References</h2>
+<p>[1] Dwith Chenna, Y., Ghassemi, P., Pfefer, T., Casamento, J., &amp; Wang, Q.
+(2018). Free-Form Deformation Approach for Registration of Visible and
+Infrared Facial Images in Fever Screening. Sensors, 18(2), 125.
+<a href="https://doi.org/10.3390/s18010125">https://doi.org/10.3390/s18010125</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def compute_ncc(image1: np.ndarray, image2: np.ndarray):
+  &#34;&#34;&#34;
+  Compute NCC (Normalized Cross Correlation) of image1 and image 2.
+
+  Parameters
+  ----------
+  image1 : np.ndarray
+      Target image 1
+  image2 : np.ndarray
+      Target image 2
+
+  Returns
+  -------
+  float
+      Normalized Cross Correlation
+
+  References
+  ----------
+  [1] Dwith Chenna, Y., Ghassemi, P., Pfefer, T., Casamento, J., &amp; Wang, Q.
+  (2018). Free-Form Deformation Approach for Registration of Visible and
+  Infrared Facial Images in Fever Screening. Sensors, 18(2), 125.
+  https://doi.org/10.3390/s18010125
+  &#34;&#34;&#34;
+  _check_shape(image1, image2)
+
+  img1 = image1 - np.average(image1)
+  img2 = image2 - np.average(image2)
+  ncc = (np.sum(img1 * img2) /
+         np.sqrt(np.sum(np.square(img1)) * np.sum(np.square(img2))))
+
+  return ncc</code></pre>
+</details>
+</dd>
+<dt id="src.registration.evaluation.metrics.compute_rmse"><code class="name flex">
+<span>def <span class="ident">compute_rmse</span></span>(<span>image1: numpy.ndarray, image2: numpy.ndarray, norm=True)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Compute RMSE (Root Mean Squared Error) of image1 and image 2.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>image1</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>Target image 1</dd>
+<dt><strong><code>image2</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>Target image 2</dd>
+<dt><strong><code>norm</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>If true, normalize pixel values to range [0, 1], by default True</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>float</code></dt>
+<dd>Root Mean Squared Error</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def compute_rmse(image1: np.ndarray, image2: np.ndarray, norm=True):
+  &#34;&#34;&#34;
+  Compute RMSE (Root Mean Squared Error) of image1 and image 2.
+
+  Parameters
+  ----------
+  image1 : np.ndarray
+      Target image 1
+  image2 : np.ndarray
+      Target image 2
+  norm : bool, optional
+      If true, normalize pixel values to range [0, 1], by default True
+
+  Returns
+  -------
+  float
+      Root Mean Squared Error
+  &#34;&#34;&#34;
+  sse = compute_sse(image1=image1, image2=image2, norm=norm)
+  rmse = np.sqrt(sse / image1.size)
+
+  return rmse</code></pre>
+</details>
+</dd>
+<dt id="src.registration.evaluation.metrics.compute_sse"><code class="name flex">
+<span>def <span class="ident">compute_sse</span></span>(<span>image1: numpy.ndarray, image2: numpy.ndarray, norm=True)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Compute SSE (Sum of Squared Error) of image1 and image 2.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>image1</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>Target image 1</dd>
+<dt><strong><code>image2</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>Target image 2</dd>
+<dt><strong><code>norm</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>If true, normalize pixel values to range [0, 1], by default True</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>float</code></dt>
+<dd>Sum of Squared Error</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def compute_sse(image1: np.ndarray, image2: np.ndarray, norm=True):
+  &#34;&#34;&#34;
+  Compute SSE (Sum of Squared Error) of image1 and image 2.
+
+  Parameters
+  ----------
+  image1 : np.ndarray
+      Target image 1
+  image2 : np.ndarray
+      Target image 2
+  norm : bool, optional
+      If true, normalize pixel values to range [0, 1], by default True
+
+  Returns
+  -------
+  float
+      Sum of Squared Error
+  &#34;&#34;&#34;
+  _check_shape(image1, image2)
+
+  if norm:
+    image1 = normalize_image(image1)
+    image2 = normalize_image(image2)
+
+  sse = np.sum(np.square(image1 - image2))
+
+  return sse</code></pre>
+</details>
+</dd>
+<dt id="src.registration.evaluation.metrics.image_entropy"><code class="name flex">
+<span>def <span class="ident">image_entropy</span></span>(<span>image: numpy.ndarray, bins: int, base=2) ‑> float</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def image_entropy(image: np.ndarray, bins: int, base=2) -&gt; float:
+  hist, edges = np.histogram(image.ravel(), bins=bins)
+  entropy = calculate_entropy(hist, base=base)
+
+  return entropy</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="src.registration.evaluation.metrics.MutualInformation"><code class="flex name class">
+<span>class <span class="ident">MutualInformation</span></span>
+<span>(</span><span>image1: numpy.ndarray, image2: numpy.ndarray, bins: Union[int, str] = 'auto', base=2)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>두 영상의 entropy, joint entropy, mutual information 계산</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>image1</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>Target image 1</dd>
+<dt><strong><code>image2</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>Target image 2</dd>
+<dt><strong><code>bins</code></strong> :&ensp;<code>Union[int, str]</code>, optional</dt>
+<dd>영상의 histogram, entropy 계산을 위한 bin 개수. str인 경우
+<code>numpy.histogram_bin_edges</code>의 설정을 따름.</dd>
+<dt><strong><code>base</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>Entropy 계산을 위한 log의 밑.</dd>
+</dl>
+<h2 id="references">References</h2>
+<p>[1] Dwith Chenna, Y., Ghassemi, P., Pfefer, T., Casamento, J., &amp; Wang, Q.
+(2018). Free-Form Deformation Approach for Registration of Visible and
+Infrared Facial Images in Fever Screening. Sensors, 18(2), 125.
+<a href="https://doi.org/10.3390/s18010125">https://doi.org/10.3390/s18010125</a></p>
+<p>[2] Nan, A., Tennant, M., Rubin, U., &amp; Ray, N. (2020, September).
+Drmime: Differentiable mutual information and matrix exponential
+for multi-resolution image registration. In Medical Imaging
+with Deep Learning (pp. 527-543). PMLR.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MutualInformation:
+  &#34;&#34;&#34;
+  두 영상의 entropy, joint entropy, mutual information 계산
+
+  Parameters
+  ----------
+  image1 : np.ndarray
+      Target image 1
+  image2 : np.ndarray
+      Target image 2
+  bins : Union[int, str], optional
+      영상의 histogram, entropy 계산을 위한 bin 개수. str인 경우
+      `numpy.histogram_bin_edges`의 설정을 따름.
+  base : int, optional
+      Entropy 계산을 위한 log의 밑.
+
+  References
+  ----------
+  [1] Dwith Chenna, Y., Ghassemi, P., Pfefer, T., Casamento, J., &amp; Wang, Q.
+  (2018). Free-Form Deformation Approach for Registration of Visible and
+  Infrared Facial Images in Fever Screening. Sensors, 18(2), 125.
+  https://doi.org/10.3390/s18010125
+
+  [2] Nan, A., Tennant, M., Rubin, U., &amp; Ray, N. (2020, September).
+  Drmime: Differentiable mutual information and matrix exponential
+  for multi-resolution image registration. In Medical Imaging
+  with Deep Learning (pp. 527-543). PMLR.
+  &#34;&#34;&#34;
+
+  def __init__(self,
+               image1: np.ndarray,
+               image2: np.ndarray,
+               bins: Union[int, str] = &#39;auto&#39;,
+               base=2) -&gt; None:
+    _check_shape(image1, image2)
+
+    self._image1 = image1
+    self._image2 = image2
+    self._base = base
+
+    if isinstance(bins, str):
+      self._bins = bin_size(image1=image1, image2=image2, bins=bins)
+    else:
+      self._bins = int(bins)
+
+  @property
+  def image1(self):
+    return self._image1
+
+  @property
+  def image2(self):
+    return self._image2
+
+  @property
+  def bins(self):
+    return self._bins
+
+  @property
+  def base(self):
+    return self._base
+
+  @cached_property
+  def image1_entropy(self):
+    return image_entropy(image=self.image1, bins=self.bins, base=self.base)
+
+  @cached_property
+  def image2_entropy(self):
+    return image_entropy(image=self.image2, bins=self.bins, base=self.base)
+
+  @cached_property
+  def joint_hist(self) -&gt; np.ndarray:
+    &#34;&#34;&#34;
+    Image 1, 2의 joint Histogram. Bin 개수는 초기 설정값을 따름.
+
+    Returns
+    -------
+    np.ndarray
+        Joint histogram (shape: (bins, bins))
+    &#34;&#34;&#34;
+    return np.histogram2d(x=self._image1.ravel(),
+                          y=self._image2.ravel(),
+                          bins=self._bins)[0]
+
+  @cached_property
+  def joint_entropy(self) -&gt; float:
+    &#34;&#34;&#34;
+    Image 1, 2의 joint entropy. Histogram의 bin 개수, log의 밑은 초기
+    설정값을 따름.
+
+    Returns
+    -------
+    float
+        Joint entropy
+    &#34;&#34;&#34;
+    return calculate_entropy(self.joint_hist.ravel(), base=self.base)
+
+  @cached_property
+  def mutual_information(self) -&gt; float:
+    &#34;&#34;&#34;
+    Image 1, 2의 mutual information
+
+    Returns
+    -------
+    float
+        Mutual information
+
+    References
+    ----------
+    [1] Dwith Chenna, Y., Ghassemi, P., Pfefer, T., Casamento, J., &amp; Wang, Q.
+    (2018). Free-Form Deformation Approach for Registration of Visible and
+    Infrared Facial Images in Fever Screening. Sensors, 18(2), 125.
+    https://doi.org/10.3390/s18010125
+    &#34;&#34;&#34;
+    return self.image1_entropy + self.image2_entropy - self.joint_entropy
+
+  @cached_property
+  def mattes_mutual_information(self):
+    &#34;&#34;&#34;
+    Mattes Mutual Information 계산.
+    mutual_information()과 결과 동일함.
+
+    Returns
+    -------
+    float
+        Mattes mutual information
+
+    References
+    ----------
+    [1] Nan, A., Tennant, M., Rubin, U., &amp; Ray, N. (2020, September).
+    Drmime: Differentiable mutual information and matrix exponential
+    for multi-resolution image registration. In Medical Imaging
+    with Deep Learning (pp. 527-543). PMLR.
+    &#34;&#34;&#34;
+    hist = self.joint_hist
+    pxy = hist / np.sum(hist)
+    px = np.sum(pxy, axis=0)
+    py = np.sum(pxy, axis=1).reshape([-1, 1])
+
+    pxy_pxpy = np.divide(pxy, px * py, out=np.ones_like(pxy), where=(pxy != 0))
+    mmi = np.sum(pxy * np.log2(pxy_pxpy)) / np.log2(self.base)
+
+    return mmi
+
+  def mi_plot(self) -&gt; Tuple[plt.Figure, np.ndarray]:
+    &#34;&#34;&#34;
+    두 영상, joint histogram을 plot
+
+    Returns
+    -------
+    Tuple[plt.Figure, np.ndarray]
+    &#34;&#34;&#34;
+    fig, axes = plt.subplots(1, 3)
+
+    axes[0].imshow(self.image1, cmap=&#39;gray&#39;)
+    axes[1].imshow(self.image2, cmap=&#39;gray&#39;)
+    axes[2].matshow(self.joint_hist)
+
+    axes[0].set_title(&#39;Image 1 | entropy: {:.3f}&#39;.format(self.image1_entropy))
+    axes[1].set_title(&#39;Image 2 | entropy: {:.3f}&#39;.format(self.image2_entropy))
+    axes[2].set_title(&#39;Entropy: {:.3f} | MI: {:.3f}&#39;.format(
+        self.joint_entropy, self.mutual_information))
+
+    return fig, axes</code></pre>
+</details>
+<h3>Instance variables</h3>
+<dl>
+<dt id="src.registration.evaluation.metrics.MutualInformation.base"><code class="name">var <span class="ident">base</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def base(self):
+  return self._base</code></pre>
+</details>
+</dd>
+<dt id="src.registration.evaluation.metrics.MutualInformation.bins"><code class="name">var <span class="ident">bins</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def bins(self):
+  return self._bins</code></pre>
+</details>
+</dd>
+<dt id="src.registration.evaluation.metrics.MutualInformation.image1"><code class="name">var <span class="ident">image1</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def image1(self):
+  return self._image1</code></pre>
+</details>
+</dd>
+<dt id="src.registration.evaluation.metrics.MutualInformation.image1_entropy"><code class="name">var <span class="ident">image1_entropy</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, instance, owner=None):
+    if instance is None:
+        return self
+    if self.attrname is None:
+        raise TypeError(
+            &#34;Cannot use cached_property instance without calling __set_name__ on it.&#34;)
+    try:
+        cache = instance.__dict__
+    except AttributeError:  # not all objects have __dict__ (e.g. class defines slots)
+        msg = (
+            f&#34;No &#39;__dict__&#39; attribute on {type(instance).__name__!r} &#34;
+            f&#34;instance to cache {self.attrname!r} property.&#34;
+        )
+        raise TypeError(msg) from None
+    val = cache.get(self.attrname, _NOT_FOUND)
+    if val is _NOT_FOUND:
+        with self.lock:
+            # check if another thread filled cache while we awaited lock
+            val = cache.get(self.attrname, _NOT_FOUND)
+            if val is _NOT_FOUND:
+                val = self.func(instance)
+                try:
+                    cache[self.attrname] = val
+                except TypeError:
+                    msg = (
+                        f&#34;The &#39;__dict__&#39; attribute on {type(instance).__name__!r} instance &#34;
+                        f&#34;does not support item assignment for caching {self.attrname!r} property.&#34;
+                    )
+                    raise TypeError(msg) from None
+    return val</code></pre>
+</details>
+</dd>
+<dt id="src.registration.evaluation.metrics.MutualInformation.image2"><code class="name">var <span class="ident">image2</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def image2(self):
+  return self._image2</code></pre>
+</details>
+</dd>
+<dt id="src.registration.evaluation.metrics.MutualInformation.image2_entropy"><code class="name">var <span class="ident">image2_entropy</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, instance, owner=None):
+    if instance is None:
+        return self
+    if self.attrname is None:
+        raise TypeError(
+            &#34;Cannot use cached_property instance without calling __set_name__ on it.&#34;)
+    try:
+        cache = instance.__dict__
+    except AttributeError:  # not all objects have __dict__ (e.g. class defines slots)
+        msg = (
+            f&#34;No &#39;__dict__&#39; attribute on {type(instance).__name__!r} &#34;
+            f&#34;instance to cache {self.attrname!r} property.&#34;
+        )
+        raise TypeError(msg) from None
+    val = cache.get(self.attrname, _NOT_FOUND)
+    if val is _NOT_FOUND:
+        with self.lock:
+            # check if another thread filled cache while we awaited lock
+            val = cache.get(self.attrname, _NOT_FOUND)
+            if val is _NOT_FOUND:
+                val = self.func(instance)
+                try:
+                    cache[self.attrname] = val
+                except TypeError:
+                    msg = (
+                        f&#34;The &#39;__dict__&#39; attribute on {type(instance).__name__!r} instance &#34;
+                        f&#34;does not support item assignment for caching {self.attrname!r} property.&#34;
+                    )
+                    raise TypeError(msg) from None
+    return val</code></pre>
+</details>
+</dd>
+<dt id="src.registration.evaluation.metrics.MutualInformation.joint_entropy"><code class="name">var <span class="ident">joint_entropy</span></code></dt>
+<dd>
+<div class="desc"><p>Image 1, 2의 joint entropy. Histogram의 bin 개수, log의 밑은 초기
+설정값을 따름.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>float</code></dt>
+<dd>Joint entropy</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, instance, owner=None):
+    if instance is None:
+        return self
+    if self.attrname is None:
+        raise TypeError(
+            &#34;Cannot use cached_property instance without calling __set_name__ on it.&#34;)
+    try:
+        cache = instance.__dict__
+    except AttributeError:  # not all objects have __dict__ (e.g. class defines slots)
+        msg = (
+            f&#34;No &#39;__dict__&#39; attribute on {type(instance).__name__!r} &#34;
+            f&#34;instance to cache {self.attrname!r} property.&#34;
+        )
+        raise TypeError(msg) from None
+    val = cache.get(self.attrname, _NOT_FOUND)
+    if val is _NOT_FOUND:
+        with self.lock:
+            # check if another thread filled cache while we awaited lock
+            val = cache.get(self.attrname, _NOT_FOUND)
+            if val is _NOT_FOUND:
+                val = self.func(instance)
+                try:
+                    cache[self.attrname] = val
+                except TypeError:
+                    msg = (
+                        f&#34;The &#39;__dict__&#39; attribute on {type(instance).__name__!r} instance &#34;
+                        f&#34;does not support item assignment for caching {self.attrname!r} property.&#34;
+                    )
+                    raise TypeError(msg) from None
+    return val</code></pre>
+</details>
+</dd>
+<dt id="src.registration.evaluation.metrics.MutualInformation.joint_hist"><code class="name">var <span class="ident">joint_hist</span></code></dt>
+<dd>
+<div class="desc"><p>Image 1, 2의 joint Histogram. Bin 개수는 초기 설정값을 따름.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>np.ndarray</code></dt>
+<dd>Joint histogram (shape: (bins, bins))</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, instance, owner=None):
+    if instance is None:
+        return self
+    if self.attrname is None:
+        raise TypeError(
+            &#34;Cannot use cached_property instance without calling __set_name__ on it.&#34;)
+    try:
+        cache = instance.__dict__
+    except AttributeError:  # not all objects have __dict__ (e.g. class defines slots)
+        msg = (
+            f&#34;No &#39;__dict__&#39; attribute on {type(instance).__name__!r} &#34;
+            f&#34;instance to cache {self.attrname!r} property.&#34;
+        )
+        raise TypeError(msg) from None
+    val = cache.get(self.attrname, _NOT_FOUND)
+    if val is _NOT_FOUND:
+        with self.lock:
+            # check if another thread filled cache while we awaited lock
+            val = cache.get(self.attrname, _NOT_FOUND)
+            if val is _NOT_FOUND:
+                val = self.func(instance)
+                try:
+                    cache[self.attrname] = val
+                except TypeError:
+                    msg = (
+                        f&#34;The &#39;__dict__&#39; attribute on {type(instance).__name__!r} instance &#34;
+                        f&#34;does not support item assignment for caching {self.attrname!r} property.&#34;
+                    )
+                    raise TypeError(msg) from None
+    return val</code></pre>
+</details>
+</dd>
+<dt id="src.registration.evaluation.metrics.MutualInformation.mattes_mutual_information"><code class="name">var <span class="ident">mattes_mutual_information</span></code></dt>
+<dd>
+<div class="desc"><p>Mattes Mutual Information 계산.
+mutual_information()과 결과 동일함.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>float</code></dt>
+<dd>Mattes mutual information</dd>
+</dl>
+<h2 id="references">References</h2>
+<p>[1] Nan, A., Tennant, M., Rubin, U., &amp; Ray, N. (2020, September).
+Drmime: Differentiable mutual information and matrix exponential
+for multi-resolution image registration. In Medical Imaging
+with Deep Learning (pp. 527-543). PMLR.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, instance, owner=None):
+    if instance is None:
+        return self
+    if self.attrname is None:
+        raise TypeError(
+            &#34;Cannot use cached_property instance without calling __set_name__ on it.&#34;)
+    try:
+        cache = instance.__dict__
+    except AttributeError:  # not all objects have __dict__ (e.g. class defines slots)
+        msg = (
+            f&#34;No &#39;__dict__&#39; attribute on {type(instance).__name__!r} &#34;
+            f&#34;instance to cache {self.attrname!r} property.&#34;
+        )
+        raise TypeError(msg) from None
+    val = cache.get(self.attrname, _NOT_FOUND)
+    if val is _NOT_FOUND:
+        with self.lock:
+            # check if another thread filled cache while we awaited lock
+            val = cache.get(self.attrname, _NOT_FOUND)
+            if val is _NOT_FOUND:
+                val = self.func(instance)
+                try:
+                    cache[self.attrname] = val
+                except TypeError:
+                    msg = (
+                        f&#34;The &#39;__dict__&#39; attribute on {type(instance).__name__!r} instance &#34;
+                        f&#34;does not support item assignment for caching {self.attrname!r} property.&#34;
+                    )
+                    raise TypeError(msg) from None
+    return val</code></pre>
+</details>
+</dd>
+<dt id="src.registration.evaluation.metrics.MutualInformation.mutual_information"><code class="name">var <span class="ident">mutual_information</span></code></dt>
+<dd>
+<div class="desc"><p>Image 1, 2의 mutual information</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>float</code></dt>
+<dd>Mutual information</dd>
+</dl>
+<h2 id="references">References</h2>
+<p>[1] Dwith Chenna, Y., Ghassemi, P., Pfefer, T., Casamento, J., &amp; Wang, Q.
+(2018). Free-Form Deformation Approach for Registration of Visible and
+Infrared Facial Images in Fever Screening. Sensors, 18(2), 125.
+<a href="https://doi.org/10.3390/s18010125">https://doi.org/10.3390/s18010125</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __get__(self, instance, owner=None):
+    if instance is None:
+        return self
+    if self.attrname is None:
+        raise TypeError(
+            &#34;Cannot use cached_property instance without calling __set_name__ on it.&#34;)
+    try:
+        cache = instance.__dict__
+    except AttributeError:  # not all objects have __dict__ (e.g. class defines slots)
+        msg = (
+            f&#34;No &#39;__dict__&#39; attribute on {type(instance).__name__!r} &#34;
+            f&#34;instance to cache {self.attrname!r} property.&#34;
+        )
+        raise TypeError(msg) from None
+    val = cache.get(self.attrname, _NOT_FOUND)
+    if val is _NOT_FOUND:
+        with self.lock:
+            # check if another thread filled cache while we awaited lock
+            val = cache.get(self.attrname, _NOT_FOUND)
+            if val is _NOT_FOUND:
+                val = self.func(instance)
+                try:
+                    cache[self.attrname] = val
+                except TypeError:
+                    msg = (
+                        f&#34;The &#39;__dict__&#39; attribute on {type(instance).__name__!r} instance &#34;
+                        f&#34;does not support item assignment for caching {self.attrname!r} property.&#34;
+                    )
+                    raise TypeError(msg) from None
+    return val</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="src.registration.evaluation.metrics.MutualInformation.mi_plot"><code class="name flex">
+<span>def <span class="ident">mi_plot</span></span>(<span>self) ‑> Tuple[matplotlib.figure.Figure, numpy.ndarray]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>두 영상, joint histogram을 plot</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Tuple[plt.Figure, np.ndarray]</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def mi_plot(self) -&gt; Tuple[plt.Figure, np.ndarray]:
+  &#34;&#34;&#34;
+  두 영상, joint histogram을 plot
+
+  Returns
+  -------
+  Tuple[plt.Figure, np.ndarray]
+  &#34;&#34;&#34;
+  fig, axes = plt.subplots(1, 3)
+
+  axes[0].imshow(self.image1, cmap=&#39;gray&#39;)
+  axes[1].imshow(self.image2, cmap=&#39;gray&#39;)
+  axes[2].matshow(self.joint_hist)
+
+  axes[0].set_title(&#39;Image 1 | entropy: {:.3f}&#39;.format(self.image1_entropy))
+  axes[1].set_title(&#39;Image 2 | entropy: {:.3f}&#39;.format(self.image2_entropy))
+  axes[2].set_title(&#39;Entropy: {:.3f} | MI: {:.3f}&#39;.format(
+      self.joint_entropy, self.mutual_information))
+
+  return fig, axes</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="src.registration.evaluation" href="index.html">src.registration.evaluation</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="src.registration.evaluation.metrics.calculate_all_metrics" href="#src.registration.evaluation.metrics.calculate_all_metrics">calculate_all_metrics</a></code></li>
+<li><code><a title="src.registration.evaluation.metrics.compute_ncc" href="#src.registration.evaluation.metrics.compute_ncc">compute_ncc</a></code></li>
+<li><code><a title="src.registration.evaluation.metrics.compute_rmse" href="#src.registration.evaluation.metrics.compute_rmse">compute_rmse</a></code></li>
+<li><code><a title="src.registration.evaluation.metrics.compute_sse" href="#src.registration.evaluation.metrics.compute_sse">compute_sse</a></code></li>
+<li><code><a title="src.registration.evaluation.metrics.image_entropy" href="#src.registration.evaluation.metrics.image_entropy">image_entropy</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="src.registration.evaluation.metrics.MutualInformation" href="#src.registration.evaluation.metrics.MutualInformation">MutualInformation</a></code></h4>
+<ul class="">
+<li><code><a title="src.registration.evaluation.metrics.MutualInformation.base" href="#src.registration.evaluation.metrics.MutualInformation.base">base</a></code></li>
+<li><code><a title="src.registration.evaluation.metrics.MutualInformation.bins" href="#src.registration.evaluation.metrics.MutualInformation.bins">bins</a></code></li>
+<li><code><a title="src.registration.evaluation.metrics.MutualInformation.image1" href="#src.registration.evaluation.metrics.MutualInformation.image1">image1</a></code></li>
+<li><code><a title="src.registration.evaluation.metrics.MutualInformation.image1_entropy" href="#src.registration.evaluation.metrics.MutualInformation.image1_entropy">image1_entropy</a></code></li>
+<li><code><a title="src.registration.evaluation.metrics.MutualInformation.image2" href="#src.registration.evaluation.metrics.MutualInformation.image2">image2</a></code></li>
+<li><code><a title="src.registration.evaluation.metrics.MutualInformation.image2_entropy" href="#src.registration.evaluation.metrics.MutualInformation.image2_entropy">image2_entropy</a></code></li>
+<li><code><a title="src.registration.evaluation.metrics.MutualInformation.joint_entropy" href="#src.registration.evaluation.metrics.MutualInformation.joint_entropy">joint_entropy</a></code></li>
+<li><code><a title="src.registration.evaluation.metrics.MutualInformation.joint_hist" href="#src.registration.evaluation.metrics.MutualInformation.joint_hist">joint_hist</a></code></li>
+<li><code><a title="src.registration.evaluation.metrics.MutualInformation.mattes_mutual_information" href="#src.registration.evaluation.metrics.MutualInformation.mattes_mutual_information">mattes_mutual_information</a></code></li>
+<li><code><a title="src.registration.evaluation.metrics.MutualInformation.mi_plot" href="#src.registration.evaluation.metrics.MutualInformation.mi_plot">mi_plot</a></code></li>
+<li><code><a title="src.registration.evaluation.metrics.MutualInformation.mutual_information" href="#src.registration.evaluation.metrics.MutualInformation.mutual_information">mutual_information</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+</footer>
+</body>
+</html>

@@ -1,6 +1,4 @@
-"""
-영상을 stitch하고 파노라마를 생성
-"""
+"""영상을 stitch하고 파노라마를 생성"""
 
 from dataclasses import dataclass
 from typing import Callable, Iterable, List, Optional, Tuple
@@ -44,7 +42,7 @@ class StitchedImage:
   graph: str
   indices: list
   cameras: list
-  crop_range: Optional[List[int]]
+  crop_range: Optional[Tuple[int, int, int, int]]
   image_names: List[str]
 
   def included(self):
@@ -89,9 +87,9 @@ class StitchingImages:
     if (preprocess is not None) and not callable(preprocess):
       raise ValueError
 
-    self._arrays = None
-    self._arrays_count = None
-    self._ndim = None
+    self._arrays = []
+    self._arrays_count = 0
+    self._ndim = 0
 
     self.arrays = arrays
     self._preprocess = preprocess
@@ -100,12 +98,12 @@ class StitchingImages:
     self._in_range = (np.min(minmax[:, 0]), np.max(minmax[:, 1]))
 
   @property
-  def arrays(self):
+  def arrays(self) -> List[np.ndarray]:
     """영상 원본"""
     return self._arrays
 
   @arrays.setter
-  def arrays(self, value):
+  def arrays(self, value: List[np.ndarray]):
     ndim = value[0].ndim
     if not all(x.ndim == ndim for x in value):
       raise ValueError('영상의 채널 수가 동일하지 않음')
@@ -193,7 +191,7 @@ class StitchingImages:
       images = self.arrays
       masks = [None for _ in range(self.count)]
     else:
-      prep = [self._preprocess(x.copy()) for x in self._arrays]
+      prep = [self._preprocess(x.copy()) for x in self.arrays]
       images = [x[0] for x in prep]
       masks = [x[1] for x in prep]
 
@@ -306,16 +304,19 @@ class Stitcher:
     return self._refine_mask
 
   @property
-  def warper(self) -> Optional[cv.PyRotationWarper]:
+  def warper(self) -> cv.PyRotationWarper:
     """
     파노라마를 구성하는 영상의 변형 (warp) 방법.
     3차원 공간에 위치한 영상을 평면에 투영하는 방법을 결정함.
-    `warper_type`을 통해 설정.
+    `warper_type`, `set_warper`를 통해 설정.
     """
+    if self._warper is None:
+      raise ValueError('Warper 설정되지 않음')
+
     return self._warper
 
   @property
-  def warper_type(self) -> str:
+  def warper_type(self) -> Optional[str]:
     """
     `warper`의 종류. `available_warper_types` 중에서 선택 가능함.
 
@@ -442,7 +443,7 @@ class Stitcher:
 
     self._mode = mode
 
-  def find_features(self, image: np.ndarray, mask: np.ndarray):
+  def find_features(self, image: np.ndarray, mask: Optional[np.ndarray]):
     """
     대상 영상의 특징점 추출
 
@@ -450,7 +451,7 @@ class Stitcher:
     ----------
     image : np.ndarray
         대상 영상
-    mask : np.ndarray
+    mask : Optional[np.ndarray]
         대상 영역의 마스크
     """
     if self.features_finder is None:
@@ -574,11 +575,11 @@ class Stitcher:
     pairwise_matches = self.features_matcher.apply2(features=features)
     self.features_matcher.collectGarbage()
 
-    indices: np.ndarray = cv.detail.leaveBiggestComponent(
+    indices_arr: np.ndarray = cv.detail.leaveBiggestComponent(
         features=features,
         pairwise_matches=pairwise_matches,
         conf_threshold=0.3)
-    indices = indices.ravel().tolist()
+    indices: list = indices_arr.ravel().tolist()
     if len(indices) < 2:
       raise StitchError('Need more images (valid images are less than two)')
 
@@ -623,7 +624,7 @@ class Stitcher:
       image: np.ndarray,
       mask: np.ndarray,
       camera: cv.detail_CameraParams,
-  ) -> Tuple[np.ndarray, np.ndarray, Tuple[int]]:
+  ) -> Tuple[np.ndarray, np.ndarray, Tuple[int, int, int, int]]:
     """
     Camera parameter에 따라 영상을 변형.
 
@@ -642,7 +643,7 @@ class Stitcher:
         변형된 영상
     warped_mask : np.ndarray
         변형된 영상의 마스크
-    roi: Tuple[int]
+    roi: Tuple[int, int, int, int]
         Region of interest
 
     Raises
@@ -848,8 +849,8 @@ class Stitcher:
   def crop(
       image: np.ndarray,
       mask: Optional[np.ndarray] = None,
-      crop_range: Optional[list] = None,
-  ) -> Tuple[np.ndarray, np.ndarray, tuple]:
+      crop_range: Optional[Tuple[int, int, int, int]] = None
+  ) -> Tuple[np.ndarray, np.ndarray, Tuple[int, int, int, int]]:
     """
     image와 mask를 일부 영역으로 crop
 
@@ -880,7 +881,7 @@ class Stitcher:
         raise ValueError('`mask`나 `crop_range` 중 하나를 설정해야 함.')
 
       x1, x2, y1, y2 = mask_bbox(mask=mask, morphology_open=True)
-      crop_range = [x1, x2, y1, y2]
+      crop_range = (x1, x2, y1, y2)
 
     cropped_image = image[y1:y2, x1:x2]
     cropped_mask = None if mask is None else mask[y1:y2, x1:x2]

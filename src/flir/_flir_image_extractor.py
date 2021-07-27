@@ -58,12 +58,7 @@ class FlirImageExtractor:
       self.use_thumbnail = True
       self.fix_endian = False
 
-    try:
-      self.rgb_image_np = self.extract_embedded_image()
-    except UnidentifiedImageError:
-      self.use_thumbnail = True
-      self.rgb_image_np = self.extract_embedded_image()
-
+    self.rgb_image_np = self.extract_embedded_image()
     self.thermal_image_np = self.extract_thermal_image()
 
   def get_image_type(self):
@@ -106,7 +101,6 @@ class FlirImageExtractor:
     extracts the visual image as 2D numpy array of RGB values
     """
     image_tag = "-EmbeddedImage"
-    # FIXME 실화상이 저장되지 않은 경우 (`EmbeddedImage`가 없는 경우)
     # ThumbnailImage 대신 적용
     if self.use_thumbnail:
       image_tag = "-ThumbnailImage"
@@ -120,8 +114,11 @@ class FlirImageExtractor:
     visual_img_bytes = subprocess.check_output(args, stderr=subprocess.DEVNULL)
     visual_img_stream = io.BytesIO(visual_img_bytes)
 
-    visual_img = Image.open(visual_img_stream)
-    visual_np = np.array(visual_img)
+    try:
+      visual_img = Image.open(visual_img_stream)
+      visual_np = np.array(visual_img)
+    except UnidentifiedImageError:
+      visual_np = None
 
     return visual_np
 

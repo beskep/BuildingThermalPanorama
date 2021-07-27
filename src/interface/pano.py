@@ -11,6 +11,7 @@ from loguru import logger
 from rich.progress import track
 
 import flir
+import registration.registrator.simpleitk as rsitk
 import stitch
 from misc import exif, tools
 from misc.tools import ImageIO as IIO
@@ -50,7 +51,8 @@ class FN:
 
 
 class ThermalPanorama:
-  # TODO wd에 각 명령어 성공 여부 log 저장
+  SP_DIR = {'IR': DIR.IR, 'VIS': DIR.RGST}
+  SP_KOR = {'IR': '열화상', 'VIS': '실화상'}
 
   def __init__(self, directory: Union[str, Path], default_config=False) -> None:
     # working directory
@@ -139,12 +141,8 @@ class ThermalPanorama:
 
     return files
 
-  @property
-  def _working_dir(self) -> Path:
-    return self._wd
-
   def _dir(self, folder: str, mkdir=True):
-    d = self._working_dir.joinpath(folder)
+    d = self._wd.joinpath(folder)
     if mkdir and not d.exists():
       d.mkdir()
 
@@ -154,11 +152,17 @@ class ThermalPanorama:
     ir, vis = self._flir_ext.extract_data(path)
     meta = {'Exif': exif.get_exif_tags(path.as_posix())[0]}
 
-    # FIXME 임시로 만듬 - Exif Orientation 태그 정보에 따라 회전하기
-    if ir.shape[0] > ir.shape[1]:
-      logger.debug('rot90 ({})', path.name)
+    if self._config['file']['force_horizontal'] and (ir.shape[0] > ir.shape[1]):
+      # 수직 영상을 수평으로 만들기 위해 90도 회전
+      logger.debug('rot90 `{}`', path.name)
       ir = np.rot90(ir, k=1, axes=(0, 1))
       vis = np.rot90(vis, k=1, axes=(0, 1))
+
+    # FLIR One로 찍은 사진은 수직으로 촬영해도 orientation 번호가
+    # `1` (`Horizontal (normal)`)로 표시되어서 아래 정보가 쓸모가 없음...
+
+    # tag = exif.get_exif_tags(path.as_posix(), '-Orientation', '-n')
+    # orientation = tag['Orientation']
 
     return ir, vis, meta
 
@@ -232,6 +236,66 @@ class ThermalPanorama:
                         description='Extracting images...',
                         console=utils.console):
         self._extract_raw_file(file=file)
+
+  def _init_registrator(self, shape):
+    ropt: DictConfig = self._config['registration']
+    copt: DictConfig = self._config['camera']
+
+    trsf = rsitk.Transformation[ropt['transformation']]
+    metric = rsitk.Metric[ropt['metric']]
+    registrator = rsitk.SITKRegistrator(transformation=trsf,
+                                        metric=metric,
+                                        bins=ropt['bins'])
+    aov = [
+        np.deg2rad(copt[x]) if copt[x] else None for x in ['IR_AOV', 'VIS_AOV']
+    ]
+    registrator.set_initial_scale_factor(scale0=copt['IR_VIS_scale'],
+                                         fixed_alpha=aov[0],
+                                         moving_alpha=aov[1])
+    prep = rsitk.RegistrationPreprocess(
+        shape=shape,
+        eqhist=ropt['preprocess']['equalize_histogram'],
+        unsharp=ropt['preprocess']['unsharp'])
+
+    return registrator, prep
+
+  def register(self):
+    self._extract_raw_files()
+    ir_files = self._files(DIR.IR)
+    vis_files = self._files(DIR.VIS)
+    rgst_dir = self._dir(DIR.RGST)
+
+    registrator, prep = None, None
+    for irf, visf in track(sequence=zip(ir_files, vis_files),
+                           description='Registering...',
+                           total=len(ir_files),
+                           console=utils.console):
+      ir = IIO.read(irf)
+      vis = IIO.read(visf)
+
+      if registrator is None:
+        registrator, prep = self._init_registrator(shape=ir.shape)
+
+      logger.debug('Registering `{}`', irf.stem)
+      fri, mri = registrator.prep_and_register(fixed_image=ir,
+                                               moving_image=vis,
+                                               preprocess=prep)
+      rgst_color_img = mri.registered_orig_image()
+
+      # 정합한 실화상
+      vis_fname = f'{irf.stem}{FN.RGST_VIS}{FN.LL}'
+      IIO.save(path=rgst_dir.joinpath(vis_fname),
+               array=tools.uint8_image(rgst_color_img))
+
+      # 비교 영상
+      # TODO 비교 영상 fig로 (fixed, moved, chessboard, diff)
+      compare_image = tools.prep_compare_images(fri.resized_image(gray=True),
+                                                mri.registered_prep_image())
+      compare_fname = f'{irf.stem}{FN.RGST_CMPR}{FN.LL}'
+      IIO.save(path=rgst_dir.joinpath(compare_fname),
+               array=tools.uint8_image(compare_image))
+
+    logger.info('정합 완료')
 
   def _init_stitcher(self) -> stitch.Stitcher:
     sopt: DictConfig = self._config['panorama']['stitch']
@@ -312,7 +376,7 @@ class ThermalPanorama:
       else:
         # 실화상 저장
         IIO.save_with_meta(path=pano_dir.joinpath(f'{fname}{FN.LS}'),
-                           array=res.panorama,
+                           array=np.round(res.panorama).astype(np.uint8),
                            exts=[FN.LS],
                            meta=meta)
 
@@ -320,17 +384,6 @@ class ThermalPanorama:
         # 마스크 저장
         IIO.save(path=pano_dir.joinpath(f'{fname}{FN.PANO_MASK}{FN.LL}'),
                  array=tools.uint8_image(res.mask))
-
-  @staticmethod
-  def _pano_target(spectrum):
-    if spectrum == 'IR':
-      d = DIR.IR
-    elif spectrum == 'VIS':
-      d = DIR.RGST
-    else:
-      raise ValueError
-
-    return d
 
   def panorama(self):
     # FIXME 함수 정리, size_limit 적용
@@ -341,7 +394,7 @@ class ThermalPanorama:
     self._extract_raw_files()
 
     # 지정한 spectrum 파노라마
-    files = self._files(self._pano_target(spectrum))
+    files = self._files(self.SP_DIR[spectrum])
     images = [IIO.read(x) for x in files]
 
     # 파노라마 생성

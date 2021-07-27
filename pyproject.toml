@@ -1,0 +1,52 @@
+[tool.yapf]
+BASED_ON_STYLE = 'google'
+INDENT_WIDTH = 2
+
+[tool.yapfignore]
+ignore_patterns = ["build/"]
+
+[tool.isort]
+known_util = ['utils', 'context']
+sections = [
+    'FUTURE',
+    'STDLIB',
+    'UTIL',
+    'THIRDPARTY',
+    'FIRSTPARTY',
+    'LOCALFOLDER',
+]
+
+[tool.pylint.messages_control]
+enable = [
+    'F',
+    'E',
+    'anomalous-backslash-in-string',
+    'bad-format-string',
+    'bad-open-mode',
+    'binary-op-exception',
+    'duplicate-key',
+    'global-variable-not-assigned',
+    'unnecessary-semicolon',
+    'unreachable',
+    'unused-variable',
+]
+disable = [
+    'bad-indentation',
+    'fixme',
+    'import-error',
+    'invalid-name',
+    'missing-class-docstring',
+    'missing-function-docstring',
+    'missing-module-docstring',
+    'protected-access',
+    'redefined-outer-name',
+    'superfluous-parens',
+    'trailing-whitespace',
+    'unused-argument',
+    'unused-import',
+    'unused-variable',
+    'wrong-import-order',
+]
+
+[tool.mypy]
+disable_error_code = ['var-annotated']

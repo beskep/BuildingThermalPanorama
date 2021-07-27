@@ -2,9 +2,9 @@ from pathlib import Path
 from typing import Tuple
 
 import numpy as np
-from skimage.io import imsave
 
 from misc.exif import EXIFTOOL_PATH
+from misc.tools import ImageIO
 
 from ._flir_image_extractor import FlirImageExtractor
 
@@ -62,7 +62,9 @@ class FlirExtractor:
   def _vis(self) -> np.ndarray:
     vis = self.extractor.rgb_image_np
     if vis is None:
-      raise ValueError('실화상 추출 실패')
+      # `EmbeddedImage` 태그가 없는 등의 이유로 FLIR 실화상 파일 추출에 실패한 경우,
+      # 원본 파일을 대신 읽음
+      vis = ImageIO.read(self._path)
 
     return vis
 
@@ -82,19 +84,3 @@ class FlirExtractor:
     self._check_path(path)
 
     return self._vis()
-
-  def write_data(self, ir_path, vis_path, image_path=None, csv_fmt='%.3e'):
-    ir_array, vis_array = self.extract_data(image_path)
-
-    if ir_path:
-      ir_path = Path(ir_path)
-      ir_suffix = ir_path.suffix
-
-      if ir_suffix == '.npy':
-        np.save(ir_path.as_posix(), ir_array)
-
-      elif ir_suffix == '.csv':
-        np.savetxt(ir_path.as_posix(), ir_array, fmt=csv_fmt, delimiter=',')
-
-    if vis_path:
-      imsave(vis_path, vis_array)

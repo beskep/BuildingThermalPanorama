@@ -134,7 +134,7 @@ class CameraCalibration:
 
     ext = params_path.suffix
     if ext == '.npz':
-      npz_file = np.load(params_path)
+      npz_file = np.load(params_path.as_posix())
 
       self._img_size = tuple(npz_file['image_size'])
       self._matrix = npz_file['matrix']

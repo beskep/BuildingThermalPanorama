@@ -27,9 +27,7 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">&#34;&#34;&#34;
-영상을 stitch하고 파노라마를 생성
-&#34;&#34;&#34;
+<pre><code class="python">&#34;&#34;&#34;영상을 stitch하고 파노라마를 생성&#34;&#34;&#34;
 
 from dataclasses import dataclass
 from typing import Callable, Iterable, List, Optional, Tuple
@@ -73,7 +71,7 @@ class StitchedImage:
   graph: str
   indices: list
   cameras: list
-  crop_range: Optional[List[int]]
+  crop_range: Optional[Tuple[int, int, int, int]]
   image_names: List[str]
 
   def included(self):
@@ -118,9 +116,9 @@ class StitchingImages:
     if (preprocess is not None) and not callable(preprocess):
       raise ValueError
 
-    self._arrays = None
-    self._arrays_count = None
-    self._ndim = None
+    self._arrays = []
+    self._arrays_count = 0
+    self._ndim = 0
 
     self.arrays = arrays
     self._preprocess = preprocess
@@ -129,12 +127,12 @@ class StitchingImages:
     self._in_range = (np.min(minmax[:, 0]), np.max(minmax[:, 1]))
 
   @property
-  def arrays(self):
+  def arrays(self) -&gt; List[np.ndarray]:
     &#34;&#34;&#34;영상 원본&#34;&#34;&#34;
     return self._arrays
 
   @arrays.setter
-  def arrays(self, value):
+  def arrays(self, value: List[np.ndarray]):
     ndim = value[0].ndim
     if not all(x.ndim == ndim for x in value):
       raise ValueError(&#39;영상의 채널 수가 동일하지 않음&#39;)
@@ -222,7 +220,7 @@ class StitchingImages:
       images = self.arrays
       masks = [None for _ in range(self.count)]
     else:
-      prep = [self._preprocess(x.copy()) for x in self._arrays]
+      prep = [self._preprocess(x.copy()) for x in self.arrays]
       images = [x[0] for x in prep]
       masks = [x[1] for x in prep]
 
@@ -335,16 +333,19 @@ class Stitcher:
     return self._refine_mask
 
   @property
-  def warper(self) -&gt; Optional[cv.PyRotationWarper]:
+  def warper(self) -&gt; cv.PyRotationWarper:
     &#34;&#34;&#34;
     파노라마를 구성하는 영상의 변형 (warp) 방법.
     3차원 공간에 위치한 영상을 평면에 투영하는 방법을 결정함.
-    `warper_type`을 통해 설정.
+    `warper_type`, `set_warper`를 통해 설정.
     &#34;&#34;&#34;
+    if self._warper is None:
+      raise ValueError(&#39;Warper 설정되지 않음&#39;)
+
     return self._warper
 
   @property
-  def warper_type(self) -&gt; str:
+  def warper_type(self) -&gt; Optional[str]:
     &#34;&#34;&#34;
     `warper`의 종류. `available_warper_types` 중에서 선택 가능함.
 
@@ -471,7 +472,7 @@ class Stitcher:
 
     self._mode = mode
 
-  def find_features(self, image: np.ndarray, mask: np.ndarray):
+  def find_features(self, image: np.ndarray, mask: Optional[np.ndarray]):
     &#34;&#34;&#34;
     대상 영상의 특징점 추출
 
@@ -479,7 +480,7 @@ class Stitcher:
     ----------
     image : np.ndarray
         대상 영상
-    mask : np.ndarray
+    mask : Optional[np.ndarray]
         대상 영역의 마스크
     &#34;&#34;&#34;
     if self.features_finder is None:
@@ -603,11 +604,11 @@ class Stitcher:
     pairwise_matches = self.features_matcher.apply2(features=features)
     self.features_matcher.collectGarbage()
 
-    indices: np.ndarray = cv.detail.leaveBiggestComponent(
+    indices_arr: np.ndarray = cv.detail.leaveBiggestComponent(
         features=features,
         pairwise_matches=pairwise_matches,
         conf_threshold=0.3)
-    indices = indices.ravel().tolist()
+    indices: list = indices_arr.ravel().tolist()
     if len(indices) &lt; 2:
       raise StitchError(&#39;Need more images (valid images are less than two)&#39;)
 
@@ -652,7 +653,7 @@ class Stitcher:
       image: np.ndarray,
       mask: np.ndarray,
       camera: cv.detail_CameraParams,
-  ) -&gt; Tuple[np.ndarray, np.ndarray, Tuple[int]]:
+  ) -&gt; Tuple[np.ndarray, np.ndarray, Tuple[int, int, int, int]]:
     &#34;&#34;&#34;
     Camera parameter에 따라 영상을 변형.
 
@@ -671,7 +672,7 @@ class Stitcher:
         변형된 영상
     warped_mask : np.ndarray
         변형된 영상의 마스크
-    roi: Tuple[int]
+    roi: Tuple[int, int, int, int]
         Region of interest
 
     Raises
@@ -877,8 +878,8 @@ class Stitcher:
   def crop(
       image: np.ndarray,
       mask: Optional[np.ndarray] = None,
-      crop_range: Optional[list] = None,
-  ) -&gt; Tuple[np.ndarray, np.ndarray, tuple]:
+      crop_range: Optional[Tuple[int, int, int, int]] = None
+  ) -&gt; Tuple[np.ndarray, np.ndarray, Tuple[int, int, int, int]]:
     &#34;&#34;&#34;
     image와 mask를 일부 영역으로 crop
 
@@ -909,7 +910,7 @@ class Stitcher:
         raise ValueError(&#39;`mask`나 `crop_range` 중 하나를 설정해야 함.&#39;)
 
       x1, x2, y1, y2 = mask_bbox(mask=mask, morphology_open=True)
-      crop_range = [x1, x2, y1, y2]
+      crop_range = (x1, x2, y1, y2)
 
     cropped_image = image[y1:y2, x1:x2]
     cropped_mask = None if mask is None else mask[y1:y2, x1:x2]
@@ -948,7 +949,7 @@ class Stitcher:
 </dd>
 <dt id="src.stitch.stitcher.StitchedImage"><code class="flex name class">
 <span>class <span class="ident">StitchedImage</span></span>
-<span>(</span><span>panorama: numpy.ndarray, mask: numpy.ndarray, graph: str, indices: list, cameras: list, crop_range: Union[List[int], NoneType], image_names: List[str])</span>
+<span>(</span><span>panorama: numpy.ndarray, mask: numpy.ndarray, graph: str, indices: list, cameras: list, crop_range: Union[Tuple[int, int, int, int], NoneType], image_names: List[str])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Stitch 결과</p></div>
@@ -963,7 +964,7 @@ class Stitcher:
   graph: str
   indices: list
   cameras: list
-  crop_range: Optional[List[int]]
+  crop_range: Optional[Tuple[int, int, int, int]]
   image_names: List[str]
 
   def included(self):
@@ -990,7 +991,7 @@ class Stitcher:
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.stitch.stitcher.StitchedImage.crop_range"><code class="name">var <span class="ident">crop_range</span> : Union[List[int], NoneType]</code></dt>
+<dt id="src.stitch.stitcher.StitchedImage.crop_range"><code class="name">var <span class="ident">crop_range</span> : Union[Tuple[int, int, int, int], NoneType]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1197,16 +1198,19 @@ class Stitcher:
     return self._refine_mask
 
   @property
-  def warper(self) -&gt; Optional[cv.PyRotationWarper]:
+  def warper(self) -&gt; cv.PyRotationWarper:
     &#34;&#34;&#34;
     파노라마를 구성하는 영상의 변형 (warp) 방법.
     3차원 공간에 위치한 영상을 평면에 투영하는 방법을 결정함.
-    `warper_type`을 통해 설정.
+    `warper_type`, `set_warper`를 통해 설정.
     &#34;&#34;&#34;
+    if self._warper is None:
+      raise ValueError(&#39;Warper 설정되지 않음&#39;)
+
     return self._warper
 
   @property
-  def warper_type(self) -&gt; str:
+  def warper_type(self) -&gt; Optional[str]:
     &#34;&#34;&#34;
     `warper`의 종류. `available_warper_types` 중에서 선택 가능함.
 
@@ -1333,7 +1337,7 @@ class Stitcher:
 
     self._mode = mode
 
-  def find_features(self, image: np.ndarray, mask: np.ndarray):
+  def find_features(self, image: np.ndarray, mask: Optional[np.ndarray]):
     &#34;&#34;&#34;
     대상 영상의 특징점 추출
 
@@ -1341,7 +1345,7 @@ class Stitcher:
     ----------
     image : np.ndarray
         대상 영상
-    mask : np.ndarray
+    mask : Optional[np.ndarray]
         대상 영역의 마스크
     &#34;&#34;&#34;
     if self.features_finder is None:
@@ -1465,11 +1469,11 @@ class Stitcher:
     pairwise_matches = self.features_matcher.apply2(features=features)
     self.features_matcher.collectGarbage()
 
-    indices: np.ndarray = cv.detail.leaveBiggestComponent(
+    indices_arr: np.ndarray = cv.detail.leaveBiggestComponent(
         features=features,
         pairwise_matches=pairwise_matches,
         conf_threshold=0.3)
-    indices = indices.ravel().tolist()
+    indices: list = indices_arr.ravel().tolist()
     if len(indices) &lt; 2:
       raise StitchError(&#39;Need more images (valid images are less than two)&#39;)
 
@@ -1514,7 +1518,7 @@ class Stitcher:
       image: np.ndarray,
       mask: np.ndarray,
       camera: cv.detail_CameraParams,
-  ) -&gt; Tuple[np.ndarray, np.ndarray, Tuple[int]]:
+  ) -&gt; Tuple[np.ndarray, np.ndarray, Tuple[int, int, int, int]]:
     &#34;&#34;&#34;
     Camera parameter에 따라 영상을 변형.
 
@@ -1533,7 +1537,7 @@ class Stitcher:
         변형된 영상
     warped_mask : np.ndarray
         변형된 영상의 마스크
-    roi: Tuple[int]
+    roi: Tuple[int, int, int, int]
         Region of interest
 
     Raises
@@ -1739,8 +1743,8 @@ class Stitcher:
   def crop(
       image: np.ndarray,
       mask: Optional[np.ndarray] = None,
-      crop_range: Optional[list] = None,
-  ) -&gt; Tuple[np.ndarray, np.ndarray, tuple]:
+      crop_range: Optional[Tuple[int, int, int, int]] = None
+  ) -&gt; Tuple[np.ndarray, np.ndarray, Tuple[int, int, int, int]]:
     &#34;&#34;&#34;
     image와 mask를 일부 영역으로 crop
 
@@ -1771,7 +1775,7 @@ class Stitcher:
         raise ValueError(&#39;`mask`나 `crop_range` 중 하나를 설정해야 함.&#39;)
 
       x1, x2, y1, y2 = mask_bbox(mask=mask, morphology_open=True)
-      crop_range = [x1, x2, y1, y2]
+      crop_range = (x1, x2, y1, y2)
 
     cropped_image = image[y1:y2, x1:x2]
     cropped_mask = None if mask is None else mask[y1:y2, x1:x2]
@@ -1795,7 +1799,7 @@ def available_warper_types():
 </details>
 </dd>
 <dt id="src.stitch.stitcher.Stitcher.crop"><code class="name flex">
-<span>def <span class="ident">crop</span></span>(<span>image: numpy.ndarray, mask: Union[numpy.ndarray, NoneType] = None, crop_range: Union[list, NoneType] = None) ‑> Tuple[numpy.ndarray, numpy.ndarray, tuple]</span>
+<span>def <span class="ident">crop</span></span>(<span>image: numpy.ndarray, mask: Union[numpy.ndarray, NoneType] = None, crop_range: Union[Tuple[int, int, int, int], NoneType] = None) ‑> Tuple[numpy.ndarray, numpy.ndarray, Tuple[int, int, int, int]]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>image와 mask를 일부 영역으로 crop</p>
@@ -1827,8 +1831,8 @@ def available_warper_types():
 def crop(
     image: np.ndarray,
     mask: Optional[np.ndarray] = None,
-    crop_range: Optional[list] = None,
-) -&gt; Tuple[np.ndarray, np.ndarray, tuple]:
+    crop_range: Optional[Tuple[int, int, int, int]] = None
+) -&gt; Tuple[np.ndarray, np.ndarray, Tuple[int, int, int, int]]:
   &#34;&#34;&#34;
   image와 mask를 일부 영역으로 crop
 
@@ -1859,7 +1863,7 @@ def crop(
       raise ValueError(&#39;`mask`나 `crop_range` 중 하나를 설정해야 함.&#39;)
 
     x1, x2, y1, y2 = mask_bbox(mask=mask, morphology_open=True)
-    crop_range = [x1, x2, y1, y2]
+    crop_range = (x1, x2, y1, y2)
 
   cropped_image = image[y1:y2, x1:x2]
   cropped_mask = None if mask is None else mask[y1:y2, x1:x2]
@@ -1976,26 +1980,29 @@ def refine_mask(self) -&gt; np.ndarray:
   return self._refine_mask</code></pre>
 </details>
 </dd>
-<dt id="src.stitch.stitcher.Stitcher.warper"><code class="name">var <span class="ident">warper</span> : Union[cv2.PyRotationWarper, NoneType]</code></dt>
+<dt id="src.stitch.stitcher.Stitcher.warper"><code class="name">var <span class="ident">warper</span> : cv2.PyRotationWarper</code></dt>
 <dd>
 <div class="desc"><p>파노라마를 구성하는 영상의 변형 (warp) 방법.
 3차원 공간에 위치한 영상을 평면에 투영하는 방법을 결정함.
-<code>warper_type</code>을 통해 설정.</p></div>
+<code>warper_type</code>, <code>set_warper</code>를 통해 설정.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
-def warper(self) -&gt; Optional[cv.PyRotationWarper]:
+def warper(self) -&gt; cv.PyRotationWarper:
   &#34;&#34;&#34;
   파노라마를 구성하는 영상의 변형 (warp) 방법.
   3차원 공간에 위치한 영상을 평면에 투영하는 방법을 결정함.
-  `warper_type`을 통해 설정.
+  `warper_type`, `set_warper`를 통해 설정.
   &#34;&#34;&#34;
+  if self._warper is None:
+    raise ValueError(&#39;Warper 설정되지 않음&#39;)
+
   return self._warper</code></pre>
 </details>
 </dd>
-<dt id="src.stitch.stitcher.Stitcher.warper_type"><code class="name">var <span class="ident">warper_type</span> : str</code></dt>
+<dt id="src.stitch.stitcher.Stitcher.warper_type"><code class="name">var <span class="ident">warper_type</span> : Union[str, NoneType]</code></dt>
 <dd>
 <div class="desc"><p><code>warper</code>의 종류. <code>available_warper_types</code> 중에서 선택 가능함.</p>
 <p><code>'plane'</code> : Rectilinear Projection.</p>
@@ -2007,7 +2014,7 @@ def warper(self) -&gt; Optional[cv.PyRotationWarper]:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
-def warper_type(self) -&gt; str:
+def warper_type(self) -&gt; Optional[str]:
   &#34;&#34;&#34;
   `warper`의 종류. `available_warper_types` 중에서 선택 가능함.
 
@@ -2082,11 +2089,11 @@ def warper_type(self) -&gt; str:
   pairwise_matches = self.features_matcher.apply2(features=features)
   self.features_matcher.collectGarbage()
 
-  indices: np.ndarray = cv.detail.leaveBiggestComponent(
+  indices_arr: np.ndarray = cv.detail.leaveBiggestComponent(
       features=features,
       pairwise_matches=pairwise_matches,
       conf_threshold=0.3)
-  indices = indices.ravel().tolist()
+  indices: list = indices_arr.ravel().tolist()
   if len(indices) &lt; 2:
     raise StitchError(&#39;Need more images (valid images are less than two)&#39;)
 
@@ -2128,7 +2135,7 @@ def warper_type(self) -&gt; str:
 </details>
 </dd>
 <dt id="src.stitch.stitcher.Stitcher.find_features"><code class="name flex">
-<span>def <span class="ident">find_features</span></span>(<span>self, image: numpy.ndarray, mask: numpy.ndarray)</span>
+<span>def <span class="ident">find_features</span></span>(<span>self, image: numpy.ndarray, mask: Union[numpy.ndarray, NoneType])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>대상 영상의 특징점 추출</p>
@@ -2136,14 +2143,14 @@ def warper_type(self) -&gt; str:
 <dl>
 <dt><strong><code>image</code></strong> :&ensp;<code>np.ndarray</code></dt>
 <dd>대상 영상</dd>
-<dt><strong><code>mask</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dt><strong><code>mask</code></strong> :&ensp;<code>Optional[np.ndarray]</code></dt>
 <dd>대상 영역의 마스크</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def find_features(self, image: np.ndarray, mask: np.ndarray):
+<pre><code class="python">def find_features(self, image: np.ndarray, mask: Optional[np.ndarray]):
   &#34;&#34;&#34;
   대상 영상의 특징점 추출
 
@@ -2151,7 +2158,7 @@ def warper_type(self) -&gt; str:
   ----------
   image : np.ndarray
       대상 영상
-  mask : np.ndarray
+  mask : Optional[np.ndarray]
       대상 영역의 마스크
   &#34;&#34;&#34;
   if self.features_finder is None:
@@ -2476,9 +2483,9 @@ The default is 0.3 for ORB and 0.65 for other feature types.</dd>
     if (preprocess is not None) and not callable(preprocess):
       raise ValueError
 
-    self._arrays = None
-    self._arrays_count = None
-    self._ndim = None
+    self._arrays = []
+    self._arrays_count = 0
+    self._ndim = 0
 
     self.arrays = arrays
     self._preprocess = preprocess
@@ -2487,12 +2494,12 @@ The default is 0.3 for ORB and 0.65 for other feature types.</dd>
     self._in_range = (np.min(minmax[:, 0]), np.max(minmax[:, 1]))
 
   @property
-  def arrays(self):
+  def arrays(self) -&gt; List[np.ndarray]:
     &#34;&#34;&#34;영상 원본&#34;&#34;&#34;
     return self._arrays
 
   @arrays.setter
-  def arrays(self, value):
+  def arrays(self, value: List[np.ndarray]):
     ndim = value[0].ndim
     if not all(x.ndim == ndim for x in value):
       raise ValueError(&#39;영상의 채널 수가 동일하지 않음&#39;)
@@ -2580,7 +2587,7 @@ The default is 0.3 for ORB and 0.65 for other feature types.</dd>
       images = self.arrays
       masks = [None for _ in range(self.count)]
     else:
-      prep = [self._preprocess(x.copy()) for x in self._arrays]
+      prep = [self._preprocess(x.copy()) for x in self.arrays]
       images = [x[0] for x in prep]
       masks = [x[1] for x in prep]
 
@@ -2591,7 +2598,7 @@ The default is 0.3 for ORB and 0.65 for other feature types.</dd>
 </details>
 <h3>Instance variables</h3>
 <dl>
-<dt id="src.stitch.stitcher.StitchingImages.arrays"><code class="name">var <span class="ident">arrays</span></code></dt>
+<dt id="src.stitch.stitcher.StitchingImages.arrays"><code class="name">var <span class="ident">arrays</span> : List[numpy.ndarray]</code></dt>
 <dd>
 <div class="desc"><p>영상 원본</p></div>
 <details class="source">
@@ -2599,7 +2606,7 @@ The default is 0.3 for ORB and 0.65 for other feature types.</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
-def arrays(self):
+def arrays(self) -&gt; List[np.ndarray]:
   &#34;&#34;&#34;영상 원본&#34;&#34;&#34;
   return self._arrays</code></pre>
 </details>
@@ -2664,7 +2671,7 @@ def ndim(self) -&gt; int:
     images = self.arrays
     masks = [None for _ in range(self.count)]
   else:
-    prep = [self._preprocess(x.copy()) for x in self._arrays]
+    prep = [self._preprocess(x.copy()) for x in self.arrays]
     images = [x[0] for x in prep]
     masks = [x[1] for x in prep]
 

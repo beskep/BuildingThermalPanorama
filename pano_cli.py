@@ -24,19 +24,21 @@ from interface.pano import ThermalPanorama
 
 class _ThermalPanorama(ThermalPanorama):
 
-  def __init__(self, directory, debug=False) -> None:
+  def __init__(self, directory: str, default_config=False, debug=False) -> None:
     """
     Parameters
     ----------
     directory : str
         Working directory
+    default_config : bool, optional
+        If `True`, use default config
     debug : bool, optional
-        If true, log debug message
+        If `True`, log debug message
     """
     self._level = 'DEBUG' if debug else 'INFO'
     utils.set_logger(level=self._level)
 
-    super().__init__(directory)
+    super().__init__(directory, default_config=default_config)
 
   def register(self):
     try:

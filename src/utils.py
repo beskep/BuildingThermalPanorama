@@ -1,8 +1,9 @@
 """경로 및 로거 설정"""
 
 import sys
+from os import PathLike
 from pathlib import Path
-from typing import Optional, Union
+from typing import Union
 
 from loguru import logger
 from rich.console import Console
@@ -19,9 +20,10 @@ if _SRC_DIR not in sys.path:
   sys.path.insert(0, _SRC_DIR)
 
 console = Console()
+StrPath = Union[str, PathLike]
 
 
-def set_logger(level: Optional[Union[int, str]] = None):
+def set_logger(level: Union[int, str, None] = None):
   logger.remove()
 
   if level is None:

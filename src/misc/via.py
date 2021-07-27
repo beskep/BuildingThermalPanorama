@@ -114,10 +114,10 @@ class VIAProject:
         대상 영상의 shape
     """
     save_dir = Path(save_dir).resolve()
-    fname_stem = Path(fname).stem
+    fname = Path(fname)
     class_count = defaultdict(int)
 
-    for rclass, rshape in self.regions(fname):
+    for rclass, rshape in self.regions(fname.name):
       class_count[rclass] += 1
       mask = draw_mask(shape=shape,
                        rows=rshape['all_points_y'],
@@ -125,5 +125,5 @@ class VIAProject:
       mask = mask.astype('uint8') * 255
 
       path = save_dir.joinpath('{}_{}_{}'.format(
-          fname_stem, rclass, class_count[rclass])).with_suffix('.png')
-      imsave(fname=path, arr=mask, check_contrast=False)
+          fname.stem, rclass, class_count[rclass])).with_suffix('.png')
+      imsave(fname=path.as_posix(), arr=mask, check_contrast=False)

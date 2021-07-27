@@ -64,7 +64,7 @@ class FLIRColormap(ListedColormap):
 
     if color_space == 'ycrcb':
       colors = colors.reshape([1, -1, 3])
-      colors = cv.cvtColr(colors, code=cv.COLOR_YCrCb2RGB)
+      colors = cv.cvtColor(colors, code=cv.COLOR_YCrCb2RGB)
 
     colors = colors.astype('float').reshape([-1, 3]) / 255.0
     instance = cls(colors=colors)
