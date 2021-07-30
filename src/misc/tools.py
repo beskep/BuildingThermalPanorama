@@ -1,12 +1,13 @@
 """기타 영상 처리 함수들"""
 
 from pathlib import Path
-from typing import Optional, Tuple, Union
+from typing import Optional, Tuple
 from warnings import warn
 
 from utils import StrPath
 
 import cv2 as cv
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import PIL.Image
@@ -143,11 +144,32 @@ def bin_size(image1: np.ndarray,
   return bins_count
 
 
+def _check_and_prep(image1: np.ndarray, image2: np.ndarray, normalize: bool,
+                    eq_hist: bool) -> Tuple[np.ndarray, np.ndarray]:
+  if image1.shape != image2.shape:
+    raise ValueError('image1.shape != image2.shape')
+  if image1.ndim != 2:
+    raise ValueError('image1.ndim != 2')
+  if image2.ndim != 2:
+    raise ValueError('image2.ndim != 2')
+
+  if normalize:
+    image1 = normalize_image(image1)
+    image2 = normalize_image(image2)
+
+  if eq_hist:
+    image1 = equalize_hist(normalize_image(image1))
+    image2 = equalize_hist(normalize_image(image2))
+
+  return image1, image2
+
+
 def prep_compare_images(image1: np.ndarray,
                         image2: np.ndarray,
+                        norm=False,
                         eq_hist=True,
                         method='checkerboard',
-                        **kwargs) -> np.ndarray:
+                        n_tiles=(8, 8)) -> np.ndarray:
   """
   두 영상의 전처리 및 비교 영상 생성.
   두 영상 모두 2차원 (gray image)이며 해상도 (ndarray.shape)이 동일해야 함.
@@ -158,12 +180,14 @@ def prep_compare_images(image1: np.ndarray,
       대상 영상 1
   image2 : np.ndarray
       대상 영상 2
+  norm : bool, optional
+      `True`이면 픽셀 밝기 단위를 0에서 1까지 normalize
   eq_hist : bool, optional
       명암 개선을 위해 Histogram Equalization 적용 여부
   method : str, optional
       `skimage.exposure.compare_images` 옵션
-  **kwargs
-      `skimage.exposure.compare_images` 옵션
+  n_tiles : tuple, optional
+      Checkerboard 타일 개수
 
   Returns
   -------
@@ -172,38 +196,99 @@ def prep_compare_images(image1: np.ndarray,
   Raises
   ------
   ValueError
-      두 영상의 해상도 (shape)이 다르거나 2차원이 아닌 경우 raise
+      두 영상의 해상도 (shape)이 다르거나 2차원이 아닌 경우
   """
-  if image1.shape != image2.shape:
-    raise ValueError
-  if image1.ndim != 2:
-    raise ValueError
-  if image2.ndim != 2:
-    raise ValueError
+  img1, img2 = _check_and_prep(image1=image1,
+                               image2=image2,
+                               normalize=norm,
+                               eq_hist=eq_hist)
 
-  if eq_hist:
-    image1 = equalize_hist(normalize_image(image1))
-    image2 = equalize_hist(normalize_image(image2))
-
-  image = compare_images(image1, image2, method=method, **kwargs)
+  image = compare_images(img1, img2, method=method, n_tiles=n_tiles)
 
   return image
 
 
-def limit_size(image: np.ndarray, limit: int) -> np.ndarray:
+def prep_compare_fig(images: Tuple[np.ndarray, np.ndarray],
+                     titles=('Image 1', 'Image 2'),
+                     norm=False,
+                     eq_hist=True,
+                     n_tiles=(8, 8)):
+  """
+  두 영상의 전처리 및 비교 영상 생성.
+  두 영상 모두 2차원 (gray image)이며 해상도 (ndarray.shape)이 동일해야 함.
+
+  Parameters
+  ----------
+  images : Tuple[np.ndarray, np.ndarray]
+      대상 영상
+  titles : tuple
+      figure에 표시할 각 영상 제목
+  norm : bool, optional
+      `True`이면 픽셀 밝기 단위를 0에서 1까지 normalize
+  eq_hist : bool, optional
+      명암 개선을 위해 Histogram Equalization 적용 여부
+  n_tiles : tuple, optional
+      Checkerboard 타일 개수
+
+  Returns
+  -------
+  tuple:
+      plt.Figure
+
+      np.ndarray of plt.Axes
+
+  Raises
+  ------
+  ValueError
+      두 영상의 해상도 (shape)이 다르거나 2차원이 아닌 경우
+  """
+  img1, img2 = _check_and_prep(image1=images[0],
+                               image2=images[1],
+                               normalize=norm,
+                               eq_hist=eq_hist)
+
+  fig, axes = plt.subplots(2, 2, figsize=(16, 9))
+  cmap = 'gray'
+
+  axes[0, 0].imshow(images[0], cmap=cmap)
+  axes[0, 0].set_title(titles[0])
+
+  axes[0, 1].imshow(images[1], cmap=cmap)
+  axes[0, 1].set_title(titles[1])
+
+  cb = compare_images(img1, img2, method='checkerboard', n_tiles=n_tiles)
+
+  axes[1, 0].imshow(cb, cmap=cmap)
+  axes[1, 0].set_title('Compare (checkerboard)')
+
+  diff = compare_images(img1, img2, method='diff')
+  axes[1, 1].imshow(diff, cmap=cmap)
+  axes[1, 1].set_title('Compare (difference)')
+
+  for ax in axes.ravel():
+    ax.set_axis_off()
+
+  fig.tight_layout()
+
+  return fig, axes
+
+
+def limit_image_size(image: np.ndarray, limit: int) -> np.ndarray:
   max_shape = np.max(image.shape[:2]).astype(float)
   if max_shape <= limit:
     return image
 
+  dtype = image.dtype
+
   ratio = limit / max_shape
   target_shape = (int(image.shape[0] * ratio), int(image.shape[1] * ratio))
 
-  resized = resize(image=image,
+  resized = resize(image=image.astype(np.float32),
                    output_shape=target_shape,
                    preserve_range=True,
                    anti_aliasing=True)
 
-  return resized
+  return resized.astype(dtype)
 
 
 class ImageIO:
@@ -407,3 +492,15 @@ class ImageIO:
       meta_path = cls.meta_path(path)
       with open(meta_path, 'w', encoding=cls.ENCODING) as f:
         yaml.safe_dump(meta, f, indent=4, sort_keys=False)
+
+
+class SegMask:
+  _scale = 60
+
+  @classmethod
+  def index_to_vis(cls, array: np.ndarray):
+    return array.astype(np.uint8) * cls._scale
+
+  @classmethod
+  def vis_to_index(cls, array: np.ndarray):
+    return (array / cls._scale).astype(np.uint8)

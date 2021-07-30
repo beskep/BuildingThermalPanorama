@@ -7,41 +7,33 @@ from cx_Freeze import Executable, setup
 
 include_files = [
     'src',
-    'config.yaml',
     ('data/DeepLabV3', 'data/DeepLabV3'),
-    ('data/MainBldgBackLoc1PanTiltTripod',
-     'data/MainBldgBackLoc1PanTiltTripod'),
+    ('data/iron_colormap_rgb.txt', 'data/iron_colormap_rgb.txt'),
 ]
 includes = [
+    'click',
+    'cv2',
     'loguru',
-    'rich',
-    'rich.console',
-    'rich.progress',
-    'rich.logging',
-    'pydoc',
+    'matplotlib',
+    'omegaconf',
     'pdb',
     'PIL',
+    'pydoc',
+    'rich.console',
+    'rich.logging',
+    'rich.progress',
+    'rich',
     'scipy.spatial.transform._rotation_groups',
-    'matplotlib',
-    'skimage',
+    'SimpleITK',
     'skimage.feature._orb_descriptor_positions',
     'skimage.io._plugins.pil_plugin',
-    'cv2',
+    'skimage',
     'tensorflow',
-    'PyQt5',
-    'SimpleITK',
+    # 'PyQt5',
 ]
-excludes = ['tkinter', 'locket', 'PySide2']
+excludes = ['tkinter', 'locket', 'PySide2', 'PyQt5']
 zip_include_packages = []
 bins = ['ITK']
-
-try:
-  import mkl
-except ImportError:
-  pass
-else:
-  bins.append('mkl_intel_thread')
-  includes.append('mkl')
 
 lib_bin = Path(cx_Freeze.__path__[0]).parents[2].joinpath('Library/bin')
 for b in bins:
@@ -55,11 +47,12 @@ options = {
         'includes': includes,
         'zip_include_packages': zip_include_packages,
         'excludes': excludes,
+        'optimize': 1
     }
 }
 
 executables = [
-    Executable('pano_cli.py'),
+    Executable(script='cli_click.py', target_name='CLI'),
 ]
 
 setup(name='app',

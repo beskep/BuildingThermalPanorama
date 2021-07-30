@@ -20,6 +20,7 @@ registration:
     preprocess:
         equalize_histogram: True
         unsharp: False
+        edge: False
 panorama:
     target: IR # {"IR", "VIS"}
     stitch:
@@ -53,6 +54,7 @@ panorama:
                 ksize: [5, 5]
                 sigmaX: 0
 distort_correction:
+    apply_mask: True
     threshold: 5 # [degree]
     ransac_iter: 2000
     clip_factor: 5

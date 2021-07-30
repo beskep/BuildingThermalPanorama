@@ -12,7 +12,6 @@ if _SRC_DIR not in sys.path:
   sys.path.insert(0, _SRC_DIR)
 
 # pylint: disable=wrong-import-position
-import distortion
 import flir
 import misc
 import registration

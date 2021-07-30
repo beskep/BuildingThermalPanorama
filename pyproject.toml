@@ -3,7 +3,7 @@ BASED_ON_STYLE = 'google'
 INDENT_WIDTH = 2
 
 [tool.yapfignore]
-ignore_patterns = ["build/"]
+ignore_patterns = ['build/']
 
 [tool.isort]
 known_util = ['utils', 'context']

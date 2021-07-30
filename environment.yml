@@ -18,6 +18,7 @@ dependencies:
     - omegaconf
     - pdoc3
     - fire
+    - click
     # data analysis
     - numpy
     - matplotlib

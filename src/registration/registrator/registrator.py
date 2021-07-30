@@ -7,7 +7,7 @@ import numpy as np
 from numpy.linalg import inv
 from skimage.color import rgb2gray
 from skimage.exposure import equalize_hist
-from skimage.filters import unsharp_mask
+from skimage.filters import scharr, unsharp_mask
 from skimage.transform import resize, warp
 
 from misc.tools import normalize_image
@@ -18,7 +18,8 @@ class RegistrationPreprocess:
   def __init__(self,
                shape: tuple,
                eqhist: Union[bool, Tuple[bool, bool]] = True,
-               unsharp: Union[bool, Tuple[bool, bool]] = False) -> None:
+               unsharp: Union[bool, Tuple[bool, bool]] = False,
+               edge: Union[bool, Tuple[bool, bool]] = False) -> None:
     """
     영상 정합을 위한 전처리 방법.
     `eqhist`, `unsharp`는 상응하는 전처리 방법 적용 여부.
@@ -33,18 +34,21 @@ class RegistrationPreprocess:
         Histogram equalization, by default True
     unsharp : Union[bool, Tuple[bool, bool]], optional
         Unsharp masking filter, by default False
+    edge : Union[bool, Tuple[bool, bool]], optional
+        Detect edge of image, by default False
     """
     if isinstance(eqhist, bool):
       eqhist = (eqhist, eqhist)
     if isinstance(unsharp, bool):
       unsharp = (unsharp, unsharp)
-    # if isinstance(sobel, bool):
-    #   sobel = (sobel, sobel)
+    if isinstance(edge, bool):
+      edge = (edge, edge)
 
     self._shape = shape
+
     self._eqhist = eqhist
     self._unsharp = unsharp
-    # self._sobel = sobel
+    self._edge = edge
 
   def parameters(self):
     for name, value in zip(['eqhist', 'unsharp'],
@@ -55,13 +59,16 @@ class RegistrationPreprocess:
       yield name, value
 
   def fixed_preprocess(self, image: np.ndarray) -> np.ndarray:
+    image = normalize_image(image)
+
     if self._eqhist[0]:
       image = equalize_hist(image)
 
-    image = normalize_image(image)
-
     if self._unsharp[0]:
-      image = unsharp_mask(image, radius=5)
+      image = unsharp_mask(image, radius=10)
+
+    if self._edge[0]:
+      image = normalize_image(scharr(image))
 
     return image
 
@@ -69,13 +76,16 @@ class RegistrationPreprocess:
     if image.ndim == 3:
       image = rgb2gray(image)
 
+    image = normalize_image(image)
+
     if self._eqhist[1]:
       image = equalize_hist(image)
 
-    image = normalize_image(image)
-
     if self._unsharp[1]:
-      image = unsharp_mask(image, radius=5)
+      image = unsharp_mask(image, radius=10)
+
+    if self._edge[1]:
+      image = normalize_image(scharr(image))
 
     return image
 

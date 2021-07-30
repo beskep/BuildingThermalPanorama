@@ -59,6 +59,7 @@ class SITKRegistrator(BaseRegistrator):
   def __init__(self,
                transformation=Transformation.Similarity,
                metric=Metric.JointHistMI,
+               optimizer='powell',
                bins: Union[str, int] = 'auto') -> None:
     """
     SimpleITK 라이브러리와 수치적 최적화를 통해 영상 정합
@@ -69,6 +70,8 @@ class SITKRegistrator(BaseRegistrator):
         정합하기 위한 moving_image의 변환 방법
     metric : Metric, optional
         최적화 대상 metric
+    optimizer : str, optional
+        최적화 방법. {'powell', 'gradient_descent'}
     bins : Union[str, int], optional
         `metric`이 `JointHistMI` 혹은 `MattesMI`인 경우 히스토그램과
         엔트로피 계산을 위한 bins 개수.
@@ -90,7 +93,14 @@ class SITKRegistrator(BaseRegistrator):
     self.set_multi_resolution()
 
     self._method.SetInterpolator(sitk.sitkLinear)
-    self._method.SetOptimizerAsPowell(numberOfIterations=200)
+
+    if optimizer == 'powell':
+      self._method.SetOptimizerAsPowell(numberOfIterations=200)
+    elif optimizer == 'gradient_descent':
+      self._method.SetOptimizerAsGradientDescent(learningRate=0.01,
+                                                 numberOfIterations=200)
+    else:
+      raise ValueError(r'optimizer not in {"powell", "gradient_descent"}')
 
     # 각 parameter의 scaling factor 결정 방법
     self._method.SetOptimizerScalesFromPhysicalShift()

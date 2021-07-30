@@ -508,8 +508,8 @@ class Stitcher:
 
     if len(indices) != len(prep_images):
       images.select_images(indices=[int(x) for x in indices])
-      logger.debug('Stitching에 필요 없는 이미지 제거 (indices: {})',
-                   set(range(len(prep_images))) - set(indices))
+      logger.info('Stitching에 필요 없는 이미지 제거 (indices: {})',
+                  set(range(len(prep_images))) - set(indices))
 
     panorama, panorama_mask, warp_indices = self.warp_and_blend(images=images,
                                                                 cameras=cameras,
@@ -567,7 +567,7 @@ class Stitcher:
     matches_graph : str
         매칭 graph (영상 간 연결 관계) 정보
     """
-    logger.debug('Feature finding and matching')
+    logger.trace('Feature finding and matching')
     # note: find_features에는 마스크 적용하지 않음
     # (~mask에 0 대입한 영상으로 feature 탐색)
     features = [self.find_features(image=image, mask=None) for image in images]
@@ -583,19 +583,19 @@ class Stitcher:
     if len(indices) < 2:
       raise StitchError('Need more images (valid images are less than two)')
 
-    logger.debug('Matches graph')
+    logger.trace('Matches graph')
     matches_graph: str = cv.detail.matchesGraphAsString(
         pathes=image_names,
         pairwise_matches=pairwise_matches,
         conf_threshold=1.0)
 
-    logger.debug('Estimate camera')
+    logger.trace('Estimate camera')
     estimate_status, cameras = self.estimator.apply(
         features=features, pairwise_matches=pairwise_matches, cameras=None)
     if not estimate_status:
       raise StitchError('Homography estimation failed')
 
-    logger.debug('Bundle adjust')
+    logger.trace('Bundle adjust')
     self.bundle_adjuster.setConfThresh(1)
     self.bundle_adjuster.setRefinementMask(self.refine_mask)
 
@@ -607,7 +607,7 @@ class Stitcher:
     if not adjuster_status:
       raise StitchError('Camera parameters adjusting failed')
 
-    logger.debug('Wave correction')
+    logger.trace('Wave correction')
     Rs = [np.copy(camera.R) for camera in cameras]
     try:
       cv.detail.waveCorrect(Rs, cv.detail.WAVE_CORRECT_HORIZ)
@@ -796,7 +796,7 @@ class Stitcher:
     # blend width 계산, blender type 결정
     blend_width = (np.sqrt(dst_size[2] * dst_size[3]) * self._blend_strength)
     blend_type = 'no' if blend_width < 1 else self.blend_type
-    logger.debug('Blend type: {}', blend_type.title())
+    logger.trace('Blend type: {}', blend_type.title())
 
     # blender 생성
     if blend_type == 'no':
