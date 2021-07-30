@@ -88,6 +88,7 @@ class SITKRegistrator(BaseRegistrator):
   def __init__(self,
                transformation=Transformation.Similarity,
                metric=Metric.JointHistMI,
+               optimizer=&#39;powell&#39;,
                bins: Union[str, int] = &#39;auto&#39;) -&gt; None:
     &#34;&#34;&#34;
     SimpleITK 라이브러리와 수치적 최적화를 통해 영상 정합
@@ -98,6 +99,8 @@ class SITKRegistrator(BaseRegistrator):
         정합하기 위한 moving_image의 변환 방법
     metric : Metric, optional
         최적화 대상 metric
+    optimizer : str, optional
+        최적화 방법. {&#39;powell&#39;, &#39;gradient_descent&#39;}
     bins : Union[str, int], optional
         `metric`이 `JointHistMI` 혹은 `MattesMI`인 경우 히스토그램과
         엔트로피 계산을 위한 bins 개수.
@@ -119,7 +122,14 @@ class SITKRegistrator(BaseRegistrator):
     self.set_multi_resolution()
 
     self._method.SetInterpolator(sitk.sitkLinear)
-    self._method.SetOptimizerAsPowell(numberOfIterations=200)
+
+    if optimizer == &#39;powell&#39;:
+      self._method.SetOptimizerAsPowell(numberOfIterations=200)
+    elif optimizer == &#39;gradient_descent&#39;:
+      self._method.SetOptimizerAsGradientDescent(learningRate=0.01,
+                                                 numberOfIterations=200)
+    else:
+      raise ValueError(r&#39;optimizer not in {&#34;powell&#34;, &#34;gradient_descent&#34;}&#39;)
 
     # 각 parameter의 scaling factor 결정 방법
     self._method.SetOptimizerScalesFromPhysicalShift()
@@ -490,7 +500,7 @@ class SITKRegistrator(BaseRegistrator):
 </dd>
 <dt id="src.registration.registrator.simpleitk.SITKRegistrator"><code class="flex name class">
 <span>class <span class="ident">SITKRegistrator</span></span>
-<span>(</span><span>transformation=Transformation.Similarity, metric=Metric.JointHistMI, bins: Union[str, int] = 'auto')</span>
+<span>(</span><span>transformation=Transformation.Similarity, metric=Metric.JointHistMI, optimizer='powell', bins: Union[str, int] = 'auto')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Helper class that provides a standard way to create an ABC using
@@ -502,6 +512,8 @@ inheritance.</p>
 <dd>정합하기 위한 moving_image의 변환 방법</dd>
 <dt><strong><code>metric</code></strong> :&ensp;<code><a title="src.registration.registrator.simpleitk.Metric" href="#src.registration.registrator.simpleitk.Metric">Metric</a></code>, optional</dt>
 <dd>최적화 대상 metric</dd>
+<dt><strong><code>optimizer</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>최적화 방법. {'powell', 'gradient_descent'}</dd>
 <dt><strong><code>bins</code></strong> :&ensp;<code>Union[str, int]</code>, optional</dt>
 <dd><code>metric</code>이 <code>JointHistMI</code> 혹은 <code>MattesMI</code>인 경우 히스토그램과
 엔트로피 계산을 위한 bins 개수.
@@ -517,6 +529,7 @@ string으로 설정하는 경우 <code>numpy.histogram_bin_edges</code>의 설�
   def __init__(self,
                transformation=Transformation.Similarity,
                metric=Metric.JointHistMI,
+               optimizer=&#39;powell&#39;,
                bins: Union[str, int] = &#39;auto&#39;) -&gt; None:
     &#34;&#34;&#34;
     SimpleITK 라이브러리와 수치적 최적화를 통해 영상 정합
@@ -527,6 +540,8 @@ string으로 설정하는 경우 <code>numpy.histogram_bin_edges</code>의 설�
         정합하기 위한 moving_image의 변환 방법
     metric : Metric, optional
         최적화 대상 metric
+    optimizer : str, optional
+        최적화 방법. {&#39;powell&#39;, &#39;gradient_descent&#39;}
     bins : Union[str, int], optional
         `metric`이 `JointHistMI` 혹은 `MattesMI`인 경우 히스토그램과
         엔트로피 계산을 위한 bins 개수.
@@ -548,7 +563,14 @@ string으로 설정하는 경우 <code>numpy.histogram_bin_edges</code>의 설�
     self.set_multi_resolution()
 
     self._method.SetInterpolator(sitk.sitkLinear)
-    self._method.SetOptimizerAsPowell(numberOfIterations=200)
+
+    if optimizer == &#39;powell&#39;:
+      self._method.SetOptimizerAsPowell(numberOfIterations=200)
+    elif optimizer == &#39;gradient_descent&#39;:
+      self._method.SetOptimizerAsGradientDescent(learningRate=0.01,
+                                                 numberOfIterations=200)
+    else:
+      raise ValueError(r&#39;optimizer not in {&#34;powell&#34;, &#34;gradient_descent&#34;}&#39;)
 
     # 각 parameter의 scaling factor 결정 방법
     self._method.SetOptimizerScalesFromPhysicalShift()

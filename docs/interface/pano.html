@@ -44,13 +44,14 @@ import registration.registrator.simpleitk as rsitk
 import stitch
 from misc import exif, tools
 from misc.tools import ImageIO as IIO
+from misc.tools import limit_image_size as limit_size
 
 from .cmap import apply_colormap, get_thermal_colormap
 from .config import DictConfig, read_config
 
 
 class DIR:
-  # directory
+  &#34;&#34;&#34;Working directory&#34;&#34;&#34;
   RAW = &#39;Raw&#39;
   IR = &#39;00 IR&#39;
   VIS = &#39;00 VIS&#39;
@@ -61,8 +62,7 @@ class DIR:
 
 
 class FN:
-  # file suffix, ext
-
+  &#34;&#34;&#34;Files suffix, ext&#34;&#34;&#34;
   NPY = &#39;.npy&#39;
   LL = &#39;.png&#39;  # Lossless
   LS = &#39;.jpg&#39;  # Loss
@@ -73,15 +73,14 @@ class FN:
   RGST_CMPR = &#39;_compare&#39;
 
   SEG_MASK = &#39;_mask&#39;
-  SEG_VIS = &#39;_vis&#39;
   SEG_FIG = &#39;_fig&#39;
 
   PANO_MASK = &#39;_mask&#39;
 
 
 class ThermalPanorama:
-  SP_DIR = {&#39;IR&#39;: DIR.IR, &#39;VIS&#39;: DIR.RGST}
-  SP_KOR = {&#39;IR&#39;: &#39;열화상&#39;, &#39;VIS&#39;: &#39;실화상&#39;}
+  _SP_DIR = {&#39;IR&#39;: DIR.IR, &#39;VIS&#39;: DIR.RGST}
+  _SP_KOR = {&#39;IR&#39;: &#39;열화상&#39;, &#39;VIS&#39;: &#39;실화상&#39;}
 
   def __init__(self, directory: Union[str, Path], default_config=False) -&gt; None:
     # working directory
@@ -96,7 +95,7 @@ class ThermalPanorama:
     self._manufacturer = self._check_manufacturer()
     logger.debug(&#39;Manufacturer: {}&#39;, self._manufacturer)
     if self._manufacturer == &#39;FLIR&#39;:
-      self._flir_ext = flir.FlirExtractor()
+      self._flir_ext: Optional[flir.FlirExtractor] = flir.FlirExtractor()
     else:
       self._flir_ext = None
 
@@ -178,6 +177,7 @@ class ThermalPanorama:
     return d
 
   def _extract_flir_image(self, path: Path):
+    assert self._flir_ext is not None
     ir, vis = self._flir_ext.extract_data(path)
     meta = {&#39;Exif&#39;: exif.get_exif_tags(path.as_posix())[0]}
 
@@ -272,8 +272,10 @@ class ThermalPanorama:
 
     trsf = rsitk.Transformation[ropt[&#39;transformation&#39;]]
     metric = rsitk.Metric[ropt[&#39;metric&#39;]]
+    optimizer = &#39;gradient_descent&#39; if ropt[&#39;preprocess&#39;][&#39;edge&#39;] else &#39;powell&#39;
     registrator = rsitk.SITKRegistrator(transformation=trsf,
                                         metric=metric,
+                                        optimizer=optimizer,
                                         bins=ropt[&#39;bins&#39;])
     aov = [
         np.deg2rad(copt[x]) if copt[x] else None for x in [&#39;IR_AOV&#39;, &#39;VIS_AOV&#39;]
@@ -284,7 +286,8 @@ class ThermalPanorama:
     prep = rsitk.RegistrationPreprocess(
         shape=shape,
         eqhist=ropt[&#39;preprocess&#39;][&#39;equalize_histogram&#39;],
-        unsharp=ropt[&#39;preprocess&#39;][&#39;unsharp&#39;])
+        unsharp=ropt[&#39;preprocess&#39;][&#39;unsharp&#39;],
+        edge=ropt[&#39;preprocess&#39;][&#39;edge&#39;])
 
     return registrator, prep
 
@@ -317,14 +320,14 @@ class ThermalPanorama:
                array=tools.uint8_image(rgst_color_img))
 
       # 비교 영상
-      # TODO 비교 영상 fig로 (fixed, moved, chessboard, diff)
-      compare_image = tools.prep_compare_images(fri.resized_image(gray=True),
-                                                mri.registered_prep_image())
       compare_fname = f&#39;{irf.stem}{FN.RGST_CMPR}{FN.LL}&#39;
-      IIO.save(path=rgst_dir.joinpath(compare_fname),
-               array=tools.uint8_image(compare_image))
+      compare_fig, _ = tools.prep_compare_fig(
+          images=(fri.prep_image(), mri.registered_prep_image()),
+          titles=(&#39;Thermal image (prep)&#39;, &#39;Visible image (prep)&#39;))
+      compare_fig.savefig(rgst_dir.joinpath(compare_fname))
+      plt.close(compare_fig)
 
-    logger.info(&#39;정합 완료&#39;)
+    logger.success(&#39;열화상-실화상 정합 완료&#39;)
 
   def _init_stitcher(self) -&gt; stitch.Stitcher:
     sopt: DictConfig = self._config[&#39;panorama&#39;][&#39;stitch&#39;]
@@ -379,6 +382,11 @@ class ThermalPanorama:
                      save_meta=True):
     pano_dir = self._dir(DIR.PANO)
 
+    if max(res.panorama.shape[:2]) &gt; self._size_limit:
+      res.panorama = limit_size(res.panorama, self._size_limit)
+      res.mask = limit_size(res.mask, self._size_limit)
+
+    meta = None
     if save_meta:
       meta = {
           &#39;panorama&#39;: {
@@ -387,8 +395,6 @@ class ThermalPanorama:
               &#39;graph&#39;: res.graph_list()
           }
       }
-    else:
-      meta = None
 
     with utils.console.status(&#39;Saving...&#39;):
       if spectrum == &#39;IR&#39;:
@@ -415,7 +421,6 @@ class ThermalPanorama:
                  array=tools.uint8_image(res.mask))
 
   def panorama(self):
-    # FIXME 함수 정리, size_limit 적용
     spectrum = self._config[&#39;panorama&#39;][&#39;target&#39;].upper()
     stitcher = self._init_stitcher()
 
@@ -423,7 +428,7 @@ class ThermalPanorama:
     self._extract_raw_files()
 
     # 지정한 spectrum 파노라마
-    files = self._files(self.SP_DIR[spectrum])
+    files = self._files(self._SP_DIR[spectrum])
     images = [IIO.read(x) for x in files]
 
     # 파노라마 생성
@@ -450,13 +455,13 @@ class ThermalPanorama:
 <span>class <span class="ident">DIR</span></span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Working directory</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class DIR:
-  # directory
+  &#34;&#34;&#34;Working directory&#34;&#34;&#34;
   RAW = &#39;Raw&#39;
   IR = &#39;00 IR&#39;
   VIS = &#39;00 VIS&#39;
@@ -501,14 +506,13 @@ class ThermalPanorama:
 <span>class <span class="ident">FN</span></span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Files suffix, ext</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class FN:
-  # file suffix, ext
-
+  &#34;&#34;&#34;Files suffix, ext&#34;&#34;&#34;
   NPY = &#39;.npy&#39;
   LL = &#39;.png&#39;  # Lossless
   LS = &#39;.jpg&#39;  # Loss
@@ -519,7 +523,6 @@ class ThermalPanorama:
   RGST_CMPR = &#39;_compare&#39;
 
   SEG_MASK = &#39;_mask&#39;
-  SEG_VIS = &#39;_vis&#39;
   SEG_FIG = &#39;_fig&#39;
 
   PANO_MASK = &#39;_mask&#39;</code></pre>
@@ -562,10 +565,6 @@ class ThermalPanorama:
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.interface.pano.FN.SEG_VIS"><code class="name">var <span class="ident">SEG_VIS</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
 </dl>
 </dd>
 <dt id="src.interface.pano.ThermalPanorama"><code class="flex name class">
@@ -579,8 +578,8 @@ class ThermalPanorama:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ThermalPanorama:
-  SP_DIR = {&#39;IR&#39;: DIR.IR, &#39;VIS&#39;: DIR.RGST}
-  SP_KOR = {&#39;IR&#39;: &#39;열화상&#39;, &#39;VIS&#39;: &#39;실화상&#39;}
+  _SP_DIR = {&#39;IR&#39;: DIR.IR, &#39;VIS&#39;: DIR.RGST}
+  _SP_KOR = {&#39;IR&#39;: &#39;열화상&#39;, &#39;VIS&#39;: &#39;실화상&#39;}
 
   def __init__(self, directory: Union[str, Path], default_config=False) -&gt; None:
     # working directory
@@ -595,7 +594,7 @@ class ThermalPanorama:
     self._manufacturer = self._check_manufacturer()
     logger.debug(&#39;Manufacturer: {}&#39;, self._manufacturer)
     if self._manufacturer == &#39;FLIR&#39;:
-      self._flir_ext = flir.FlirExtractor()
+      self._flir_ext: Optional[flir.FlirExtractor] = flir.FlirExtractor()
     else:
       self._flir_ext = None
 
@@ -677,6 +676,7 @@ class ThermalPanorama:
     return d
 
   def _extract_flir_image(self, path: Path):
+    assert self._flir_ext is not None
     ir, vis = self._flir_ext.extract_data(path)
     meta = {&#39;Exif&#39;: exif.get_exif_tags(path.as_posix())[0]}
 
@@ -771,8 +771,10 @@ class ThermalPanorama:
 
     trsf = rsitk.Transformation[ropt[&#39;transformation&#39;]]
     metric = rsitk.Metric[ropt[&#39;metric&#39;]]
+    optimizer = &#39;gradient_descent&#39; if ropt[&#39;preprocess&#39;][&#39;edge&#39;] else &#39;powell&#39;
     registrator = rsitk.SITKRegistrator(transformation=trsf,
                                         metric=metric,
+                                        optimizer=optimizer,
                                         bins=ropt[&#39;bins&#39;])
     aov = [
         np.deg2rad(copt[x]) if copt[x] else None for x in [&#39;IR_AOV&#39;, &#39;VIS_AOV&#39;]
@@ -783,7 +785,8 @@ class ThermalPanorama:
     prep = rsitk.RegistrationPreprocess(
         shape=shape,
         eqhist=ropt[&#39;preprocess&#39;][&#39;equalize_histogram&#39;],
-        unsharp=ropt[&#39;preprocess&#39;][&#39;unsharp&#39;])
+        unsharp=ropt[&#39;preprocess&#39;][&#39;unsharp&#39;],
+        edge=ropt[&#39;preprocess&#39;][&#39;edge&#39;])
 
     return registrator, prep
 
@@ -816,14 +819,14 @@ class ThermalPanorama:
                array=tools.uint8_image(rgst_color_img))
 
       # 비교 영상
-      # TODO 비교 영상 fig로 (fixed, moved, chessboard, diff)
-      compare_image = tools.prep_compare_images(fri.resized_image(gray=True),
-                                                mri.registered_prep_image())
       compare_fname = f&#39;{irf.stem}{FN.RGST_CMPR}{FN.LL}&#39;
-      IIO.save(path=rgst_dir.joinpath(compare_fname),
-               array=tools.uint8_image(compare_image))
+      compare_fig, _ = tools.prep_compare_fig(
+          images=(fri.prep_image(), mri.registered_prep_image()),
+          titles=(&#39;Thermal image (prep)&#39;, &#39;Visible image (prep)&#39;))
+      compare_fig.savefig(rgst_dir.joinpath(compare_fname))
+      plt.close(compare_fig)
 
-    logger.info(&#39;정합 완료&#39;)
+    logger.success(&#39;열화상-실화상 정합 완료&#39;)
 
   def _init_stitcher(self) -&gt; stitch.Stitcher:
     sopt: DictConfig = self._config[&#39;panorama&#39;][&#39;stitch&#39;]
@@ -878,6 +881,11 @@ class ThermalPanorama:
                      save_meta=True):
     pano_dir = self._dir(DIR.PANO)
 
+    if max(res.panorama.shape[:2]) &gt; self._size_limit:
+      res.panorama = limit_size(res.panorama, self._size_limit)
+      res.mask = limit_size(res.mask, self._size_limit)
+
+    meta = None
     if save_meta:
       meta = {
           &#39;panorama&#39;: {
@@ -886,8 +894,6 @@ class ThermalPanorama:
               &#39;graph&#39;: res.graph_list()
           }
       }
-    else:
-      meta = None
 
     with utils.console.status(&#39;Saving...&#39;):
       if spectrum == &#39;IR&#39;:
@@ -914,7 +920,6 @@ class ThermalPanorama:
                  array=tools.uint8_image(res.mask))
 
   def panorama(self):
-    # FIXME 함수 정리, size_limit 적용
     spectrum = self._config[&#39;panorama&#39;][&#39;target&#39;].upper()
     stitcher = self._init_stitcher()
 
@@ -922,7 +927,7 @@ class ThermalPanorama:
     self._extract_raw_files()
 
     # 지정한 spectrum 파노라마
-    files = self._files(self.SP_DIR[spectrum])
+    files = self._files(self._SP_DIR[spectrum])
     images = [IIO.read(x) for x in files]
 
     # 파노라마 생성
@@ -935,17 +940,6 @@ class ThermalPanorama:
     warp = self._config[&#39;panorama&#39;][&#39;stitch&#39;][&#39;warp&#39;]
     self._save_panorama(fname=f&#39;{spectrum}_{warp}&#39;, spectrum=spectrum, res=res)</code></pre>
 </details>
-<h3>Class variables</h3>
-<dl>
-<dt id="src.interface.pano.ThermalPanorama.SP_DIR"><code class="name">var <span class="ident">SP_DIR</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="src.interface.pano.ThermalPanorama.SP_KOR"><code class="name">var <span class="ident">SP_KOR</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="src.interface.pano.ThermalPanorama.panorama"><code class="name flex">
@@ -958,7 +952,6 @@ class ThermalPanorama:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def panorama(self):
-  # FIXME 함수 정리, size_limit 적용
   spectrum = self._config[&#39;panorama&#39;][&#39;target&#39;].upper()
   stitcher = self._init_stitcher()
 
@@ -966,7 +959,7 @@ class ThermalPanorama:
   self._extract_raw_files()
 
   # 지정한 spectrum 파노라마
-  files = self._files(self.SP_DIR[spectrum])
+  files = self._files(self._SP_DIR[spectrum])
   images = [IIO.read(x) for x in files]
 
   # 파노라마 생성
@@ -1018,14 +1011,14 @@ class ThermalPanorama:
              array=tools.uint8_image(rgst_color_img))
 
     # 비교 영상
-    # TODO 비교 영상 fig로 (fixed, moved, chessboard, diff)
-    compare_image = tools.prep_compare_images(fri.resized_image(gray=True),
-                                              mri.registered_prep_image())
     compare_fname = f&#39;{irf.stem}{FN.RGST_CMPR}{FN.LL}&#39;
-    IIO.save(path=rgst_dir.joinpath(compare_fname),
-             array=tools.uint8_image(compare_image))
+    compare_fig, _ = tools.prep_compare_fig(
+        images=(fri.prep_image(), mri.registered_prep_image()),
+        titles=(&#39;Thermal image (prep)&#39;, &#39;Visible image (prep)&#39;))
+    compare_fig.savefig(rgst_dir.joinpath(compare_fname))
+    plt.close(compare_fig)
 
-  logger.info(&#39;정합 완료&#39;)</code></pre>
+  logger.success(&#39;열화상-실화상 정합 완료&#39;)</code></pre>
 </details>
 </dd>
 </dl>
@@ -1070,14 +1063,11 @@ class ThermalPanorama:
 <li><code><a title="src.interface.pano.FN.RGST_VIS" href="#src.interface.pano.FN.RGST_VIS">RGST_VIS</a></code></li>
 <li><code><a title="src.interface.pano.FN.SEG_FIG" href="#src.interface.pano.FN.SEG_FIG">SEG_FIG</a></code></li>
 <li><code><a title="src.interface.pano.FN.SEG_MASK" href="#src.interface.pano.FN.SEG_MASK">SEG_MASK</a></code></li>
-<li><code><a title="src.interface.pano.FN.SEG_VIS" href="#src.interface.pano.FN.SEG_VIS">SEG_VIS</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="src.interface.pano.ThermalPanorama" href="#src.interface.pano.ThermalPanorama">ThermalPanorama</a></code></h4>
 <ul class="">
-<li><code><a title="src.interface.pano.ThermalPanorama.SP_DIR" href="#src.interface.pano.ThermalPanorama.SP_DIR">SP_DIR</a></code></li>
-<li><code><a title="src.interface.pano.ThermalPanorama.SP_KOR" href="#src.interface.pano.ThermalPanorama.SP_KOR">SP_KOR</a></code></li>
 <li><code><a title="src.interface.pano.ThermalPanorama.panorama" href="#src.interface.pano.ThermalPanorama.panorama">panorama</a></code></li>
 <li><code><a title="src.interface.pano.ThermalPanorama.register" href="#src.interface.pano.ThermalPanorama.register">register</a></code></li>
 </ul>

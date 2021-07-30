@@ -36,7 +36,7 @@ import numpy as np
 from numpy.linalg import inv
 from skimage.color import rgb2gray
 from skimage.exposure import equalize_hist
-from skimage.filters import unsharp_mask
+from skimage.filters import scharr, unsharp_mask
 from skimage.transform import resize, warp
 
 from misc.tools import normalize_image
@@ -47,7 +47,8 @@ class RegistrationPreprocess:
   def __init__(self,
                shape: tuple,
                eqhist: Union[bool, Tuple[bool, bool]] = True,
-               unsharp: Union[bool, Tuple[bool, bool]] = False) -&gt; None:
+               unsharp: Union[bool, Tuple[bool, bool]] = False,
+               edge: Union[bool, Tuple[bool, bool]] = False) -&gt; None:
     &#34;&#34;&#34;
     영상 정합을 위한 전처리 방법.
     `eqhist`, `unsharp`는 상응하는 전처리 방법 적용 여부.
@@ -62,18 +63,21 @@ class RegistrationPreprocess:
         Histogram equalization, by default True
     unsharp : Union[bool, Tuple[bool, bool]], optional
         Unsharp masking filter, by default False
+    edge : Union[bool, Tuple[bool, bool]], optional
+        Detect edge of image, by default False
     &#34;&#34;&#34;
     if isinstance(eqhist, bool):
       eqhist = (eqhist, eqhist)
     if isinstance(unsharp, bool):
       unsharp = (unsharp, unsharp)
-    # if isinstance(sobel, bool):
-    #   sobel = (sobel, sobel)
+    if isinstance(edge, bool):
+      edge = (edge, edge)
 
     self._shape = shape
+
     self._eqhist = eqhist
     self._unsharp = unsharp
-    # self._sobel = sobel
+    self._edge = edge
 
   def parameters(self):
     for name, value in zip([&#39;eqhist&#39;, &#39;unsharp&#39;],
@@ -84,13 +88,16 @@ class RegistrationPreprocess:
       yield name, value
 
   def fixed_preprocess(self, image: np.ndarray) -&gt; np.ndarray:
+    image = normalize_image(image)
+
     if self._eqhist[0]:
       image = equalize_hist(image)
 
-    image = normalize_image(image)
-
     if self._unsharp[0]:
-      image = unsharp_mask(image, radius=5)
+      image = unsharp_mask(image, radius=10)
+
+    if self._edge[0]:
+      image = normalize_image(scharr(image))
 
     return image
 
@@ -98,13 +105,16 @@ class RegistrationPreprocess:
     if image.ndim == 3:
       image = rgb2gray(image)
 
+    image = normalize_image(image)
+
     if self._eqhist[1]:
       image = equalize_hist(image)
 
-    image = normalize_image(image)
-
     if self._unsharp[1]:
-      image = unsharp_mask(image, radius=5)
+      image = unsharp_mask(image, radius=10)
+
+    if self._edge[1]:
+      image = normalize_image(scharr(image))
 
     return image
 
@@ -1027,7 +1037,7 @@ def orig_image(self) -&gt; np.ndarray:
 </dd>
 <dt id="src.registration.registrator.registrator.RegistrationPreprocess"><code class="flex name class">
 <span>class <span class="ident">RegistrationPreprocess</span></span>
-<span>(</span><span>shape: tuple, eqhist: Union[bool, Tuple[bool, bool]] = True, unsharp: Union[bool, Tuple[bool, bool]] = False)</span>
+<span>(</span><span>shape: tuple, eqhist: Union[bool, Tuple[bool, bool]] = True, unsharp: Union[bool, Tuple[bool, bool]] = False, edge: Union[bool, Tuple[bool, bool]] = False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>영상 정합을 위한 전처리 방법.
@@ -1042,6 +1052,8 @@ tuple로 입력한 경우 (e.g. (<code>True</code>, <code>False</code>)), 각각
 <dd>Histogram equalization, by default True</dd>
 <dt><strong><code>unsharp</code></strong> :&ensp;<code>Union[bool, Tuple[bool, bool]]</code>, optional</dt>
 <dd>Unsharp masking filter, by default False</dd>
+<dt><strong><code>edge</code></strong> :&ensp;<code>Union[bool, Tuple[bool, bool]]</code>, optional</dt>
+<dd>Detect edge of image, by default False</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -1052,7 +1064,8 @@ tuple로 입력한 경우 (e.g. (<code>True</code>, <code>False</code>)), 각각
   def __init__(self,
                shape: tuple,
                eqhist: Union[bool, Tuple[bool, bool]] = True,
-               unsharp: Union[bool, Tuple[bool, bool]] = False) -&gt; None:
+               unsharp: Union[bool, Tuple[bool, bool]] = False,
+               edge: Union[bool, Tuple[bool, bool]] = False) -&gt; None:
     &#34;&#34;&#34;
     영상 정합을 위한 전처리 방법.
     `eqhist`, `unsharp`는 상응하는 전처리 방법 적용 여부.
@@ -1067,18 +1080,21 @@ tuple로 입력한 경우 (e.g. (<code>True</code>, <code>False</code>)), 각각
         Histogram equalization, by default True
     unsharp : Union[bool, Tuple[bool, bool]], optional
         Unsharp masking filter, by default False
+    edge : Union[bool, Tuple[bool, bool]], optional
+        Detect edge of image, by default False
     &#34;&#34;&#34;
     if isinstance(eqhist, bool):
       eqhist = (eqhist, eqhist)
     if isinstance(unsharp, bool):
       unsharp = (unsharp, unsharp)
-    # if isinstance(sobel, bool):
-    #   sobel = (sobel, sobel)
+    if isinstance(edge, bool):
+      edge = (edge, edge)
 
     self._shape = shape
+
     self._eqhist = eqhist
     self._unsharp = unsharp
-    # self._sobel = sobel
+    self._edge = edge
 
   def parameters(self):
     for name, value in zip([&#39;eqhist&#39;, &#39;unsharp&#39;],
@@ -1089,13 +1105,16 @@ tuple로 입력한 경우 (e.g. (<code>True</code>, <code>False</code>)), 각각
       yield name, value
 
   def fixed_preprocess(self, image: np.ndarray) -&gt; np.ndarray:
+    image = normalize_image(image)
+
     if self._eqhist[0]:
       image = equalize_hist(image)
 
-    image = normalize_image(image)
-
     if self._unsharp[0]:
-      image = unsharp_mask(image, radius=5)
+      image = unsharp_mask(image, radius=10)
+
+    if self._edge[0]:
+      image = normalize_image(scharr(image))
 
     return image
 
@@ -1103,13 +1122,16 @@ tuple로 입력한 경우 (e.g. (<code>True</code>, <code>False</code>)), 각각
     if image.ndim == 3:
       image = rgb2gray(image)
 
+    image = normalize_image(image)
+
     if self._eqhist[1]:
       image = equalize_hist(image)
 
-    image = normalize_image(image)
-
     if self._unsharp[1]:
-      image = unsharp_mask(image, radius=5)
+      image = unsharp_mask(image, radius=10)
+
+    if self._edge[1]:
+      image = normalize_image(scharr(image))
 
     return image</code></pre>
 </details>
@@ -1125,13 +1147,16 @@ tuple로 입력한 경우 (e.g. (<code>True</code>, <code>False</code>)), 각각
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def fixed_preprocess(self, image: np.ndarray) -&gt; np.ndarray:
+  image = normalize_image(image)
+
   if self._eqhist[0]:
     image = equalize_hist(image)
 
-  image = normalize_image(image)
-
   if self._unsharp[0]:
-    image = unsharp_mask(image, radius=5)
+    image = unsharp_mask(image, radius=10)
+
+  if self._edge[0]:
+    image = normalize_image(scharr(image))
 
   return image</code></pre>
 </details>
@@ -1149,13 +1174,16 @@ tuple로 입력한 경우 (e.g. (<code>True</code>, <code>False</code>)), 각각
   if image.ndim == 3:
     image = rgb2gray(image)
 
+  image = normalize_image(image)
+
   if self._eqhist[1]:
     image = equalize_hist(image)
 
-  image = normalize_image(image)
-
   if self._unsharp[1]:
-    image = unsharp_mask(image, radius=5)
+    image = unsharp_mask(image, radius=10)
+
+  if self._edge[1]:
+    image = normalize_image(scharr(image))
 
   return image</code></pre>
 </details>

@@ -537,8 +537,8 @@ class Stitcher:
 
     if len(indices) != len(prep_images):
       images.select_images(indices=[int(x) for x in indices])
-      logger.debug(&#39;Stitching에 필요 없는 이미지 제거 (indices: {})&#39;,
-                   set(range(len(prep_images))) - set(indices))
+      logger.info(&#39;Stitching에 필요 없는 이미지 제거 (indices: {})&#39;,
+                  set(range(len(prep_images))) - set(indices))
 
     panorama, panorama_mask, warp_indices = self.warp_and_blend(images=images,
                                                                 cameras=cameras,
@@ -596,7 +596,7 @@ class Stitcher:
     matches_graph : str
         매칭 graph (영상 간 연결 관계) 정보
     &#34;&#34;&#34;
-    logger.debug(&#39;Feature finding and matching&#39;)
+    logger.trace(&#39;Feature finding and matching&#39;)
     # note: find_features에는 마스크 적용하지 않음
     # (~mask에 0 대입한 영상으로 feature 탐색)
     features = [self.find_features(image=image, mask=None) for image in images]
@@ -612,19 +612,19 @@ class Stitcher:
     if len(indices) &lt; 2:
       raise StitchError(&#39;Need more images (valid images are less than two)&#39;)
 
-    logger.debug(&#39;Matches graph&#39;)
+    logger.trace(&#39;Matches graph&#39;)
     matches_graph: str = cv.detail.matchesGraphAsString(
         pathes=image_names,
         pairwise_matches=pairwise_matches,
         conf_threshold=1.0)
 
-    logger.debug(&#39;Estimate camera&#39;)
+    logger.trace(&#39;Estimate camera&#39;)
     estimate_status, cameras = self.estimator.apply(
         features=features, pairwise_matches=pairwise_matches, cameras=None)
     if not estimate_status:
       raise StitchError(&#39;Homography estimation failed&#39;)
 
-    logger.debug(&#39;Bundle adjust&#39;)
+    logger.trace(&#39;Bundle adjust&#39;)
     self.bundle_adjuster.setConfThresh(1)
     self.bundle_adjuster.setRefinementMask(self.refine_mask)
 
@@ -636,7 +636,7 @@ class Stitcher:
     if not adjuster_status:
       raise StitchError(&#39;Camera parameters adjusting failed&#39;)
 
-    logger.debug(&#39;Wave correction&#39;)
+    logger.trace(&#39;Wave correction&#39;)
     Rs = [np.copy(camera.R) for camera in cameras]
     try:
       cv.detail.waveCorrect(Rs, cv.detail.WAVE_CORRECT_HORIZ)
@@ -825,7 +825,7 @@ class Stitcher:
     # blend width 계산, blender type 결정
     blend_width = (np.sqrt(dst_size[2] * dst_size[3]) * self._blend_strength)
     blend_type = &#39;no&#39; if blend_width &lt; 1 else self.blend_type
-    logger.debug(&#39;Blend type: {}&#39;, blend_type.title())
+    logger.trace(&#39;Blend type: {}&#39;, blend_type.title())
 
     # blender 생성
     if blend_type == &#39;no&#39;:
@@ -1402,8 +1402,8 @@ class Stitcher:
 
     if len(indices) != len(prep_images):
       images.select_images(indices=[int(x) for x in indices])
-      logger.debug(&#39;Stitching에 필요 없는 이미지 제거 (indices: {})&#39;,
-                   set(range(len(prep_images))) - set(indices))
+      logger.info(&#39;Stitching에 필요 없는 이미지 제거 (indices: {})&#39;,
+                  set(range(len(prep_images))) - set(indices))
 
     panorama, panorama_mask, warp_indices = self.warp_and_blend(images=images,
                                                                 cameras=cameras,
@@ -1461,7 +1461,7 @@ class Stitcher:
     matches_graph : str
         매칭 graph (영상 간 연결 관계) 정보
     &#34;&#34;&#34;
-    logger.debug(&#39;Feature finding and matching&#39;)
+    logger.trace(&#39;Feature finding and matching&#39;)
     # note: find_features에는 마스크 적용하지 않음
     # (~mask에 0 대입한 영상으로 feature 탐색)
     features = [self.find_features(image=image, mask=None) for image in images]
@@ -1477,19 +1477,19 @@ class Stitcher:
     if len(indices) &lt; 2:
       raise StitchError(&#39;Need more images (valid images are less than two)&#39;)
 
-    logger.debug(&#39;Matches graph&#39;)
+    logger.trace(&#39;Matches graph&#39;)
     matches_graph: str = cv.detail.matchesGraphAsString(
         pathes=image_names,
         pairwise_matches=pairwise_matches,
         conf_threshold=1.0)
 
-    logger.debug(&#39;Estimate camera&#39;)
+    logger.trace(&#39;Estimate camera&#39;)
     estimate_status, cameras = self.estimator.apply(
         features=features, pairwise_matches=pairwise_matches, cameras=None)
     if not estimate_status:
       raise StitchError(&#39;Homography estimation failed&#39;)
 
-    logger.debug(&#39;Bundle adjust&#39;)
+    logger.trace(&#39;Bundle adjust&#39;)
     self.bundle_adjuster.setConfThresh(1)
     self.bundle_adjuster.setRefinementMask(self.refine_mask)
 
@@ -1501,7 +1501,7 @@ class Stitcher:
     if not adjuster_status:
       raise StitchError(&#39;Camera parameters adjusting failed&#39;)
 
-    logger.debug(&#39;Wave correction&#39;)
+    logger.trace(&#39;Wave correction&#39;)
     Rs = [np.copy(camera.R) for camera in cameras]
     try:
       cv.detail.waveCorrect(Rs, cv.detail.WAVE_CORRECT_HORIZ)
@@ -1690,7 +1690,7 @@ class Stitcher:
     # blend width 계산, blender type 결정
     blend_width = (np.sqrt(dst_size[2] * dst_size[3]) * self._blend_strength)
     blend_type = &#39;no&#39; if blend_width &lt; 1 else self.blend_type
-    logger.debug(&#39;Blend type: {}&#39;, blend_type.title())
+    logger.trace(&#39;Blend type: {}&#39;, blend_type.title())
 
     # blender 생성
     if blend_type == &#39;no&#39;:
@@ -2081,7 +2081,7 @@ def warper_type(self) -&gt; Optional[str]:
   matches_graph : str
       매칭 graph (영상 간 연결 관계) 정보
   &#34;&#34;&#34;
-  logger.debug(&#39;Feature finding and matching&#39;)
+  logger.trace(&#39;Feature finding and matching&#39;)
   # note: find_features에는 마스크 적용하지 않음
   # (~mask에 0 대입한 영상으로 feature 탐색)
   features = [self.find_features(image=image, mask=None) for image in images]
@@ -2097,19 +2097,19 @@ def warper_type(self) -&gt; Optional[str]:
   if len(indices) &lt; 2:
     raise StitchError(&#39;Need more images (valid images are less than two)&#39;)
 
-  logger.debug(&#39;Matches graph&#39;)
+  logger.trace(&#39;Matches graph&#39;)
   matches_graph: str = cv.detail.matchesGraphAsString(
       pathes=image_names,
       pairwise_matches=pairwise_matches,
       conf_threshold=1.0)
 
-  logger.debug(&#39;Estimate camera&#39;)
+  logger.trace(&#39;Estimate camera&#39;)
   estimate_status, cameras = self.estimator.apply(
       features=features, pairwise_matches=pairwise_matches, cameras=None)
   if not estimate_status:
     raise StitchError(&#39;Homography estimation failed&#39;)
 
-  logger.debug(&#39;Bundle adjust&#39;)
+  logger.trace(&#39;Bundle adjust&#39;)
   self.bundle_adjuster.setConfThresh(1)
   self.bundle_adjuster.setRefinementMask(self.refine_mask)
 
@@ -2121,7 +2121,7 @@ def warper_type(self) -&gt; Optional[str]:
   if not adjuster_status:
     raise StitchError(&#39;Camera parameters adjusting failed&#39;)
 
-  logger.debug(&#39;Wave correction&#39;)
+  logger.trace(&#39;Wave correction&#39;)
   Rs = [np.copy(camera.R) for camera in cameras]
   try:
     cv.detail.waveCorrect(Rs, cv.detail.WAVE_CORRECT_HORIZ)
@@ -2368,8 +2368,8 @@ The default is 0.3 for ORB and 0.65 for other feature types.</dd>
 
   if len(indices) != len(prep_images):
     images.select_images(indices=[int(x) for x in indices])
-    logger.debug(&#39;Stitching에 필요 없는 이미지 제거 (indices: {})&#39;,
-                 set(range(len(prep_images))) - set(indices))
+    logger.info(&#39;Stitching에 필요 없는 이미지 제거 (indices: {})&#39;,
+                set(range(len(prep_images))) - set(indices))
 
   panorama, panorama_mask, warp_indices = self.warp_and_blend(images=images,
                                                               cameras=cameras,

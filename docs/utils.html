@@ -30,6 +30,7 @@
 <pre><code class="python">&#34;&#34;&#34;경로 및 로거 설정&#34;&#34;&#34;
 
 import sys
+from logging import LogRecord
 from os import PathLike
 from pathlib import Path
 from typing import Union
@@ -37,6 +38,7 @@ from typing import Union
 from loguru import logger
 from rich.console import Console
 from rich.logging import RichHandler
+from rich.theme import Theme
 
 
 class DIR:
@@ -44,11 +46,24 @@ class DIR:
   ROOT = SRC.parent
 
 
+class _Handler(RichHandler):
+  _levels = {5: &#39;TRACE&#39;, 25: &#39;SUCCESS&#39;}
+
+  def emit(self, record: LogRecord) -&gt; None:
+    if record.levelno in self._levels:
+      record.levelname = self._levels[record.levelno]
+
+    return super().emit(record)
+
+
 _SRC_DIR = DIR.SRC.as_posix()
 if _SRC_DIR not in sys.path:
   sys.path.insert(0, _SRC_DIR)
 
-console = Console()
+console = Console(theme=Theme({
+    &#39;logging.level.success&#39;: &#39;blue&#39;,
+    &#39;logging.level.warning&#39;: &#39;yellow&#39;
+}))
 StrPath = Union[str, PathLike]
 
 
@@ -56,12 +71,9 @@ def set_logger(level: Union[int, str, None] = None):
   logger.remove()
 
   if level is None:
-    if any(&#39;debug&#39; in x.lower() for x in sys.argv):
-      level = &#39;DEBUG&#39;
-    else:
-      level = &#39;INFO&#39;
+    level = &#39;INFO&#39;
 
-  rich_handler = RichHandler(console=console, log_time_format=&#39;[%y-%m-%d %X]&#39;)
+  rich_handler = _Handler(console=console, log_time_format=&#39;[%y-%m-%d %X]&#39;)
   logger.add(rich_handler, level=level, format=&#39;{message}&#39;, enqueue=True)
   logger.add(&#39;pano.log&#39;,
              level=&#39;DEBUG&#39;,
@@ -91,12 +103,9 @@ def set_logger(level: Union[int, str, None] = None):
   logger.remove()
 
   if level is None:
-    if any(&#39;debug&#39; in x.lower() for x in sys.argv):
-      level = &#39;DEBUG&#39;
-    else:
-      level = &#39;INFO&#39;
+    level = &#39;INFO&#39;
 
-  rich_handler = RichHandler(console=console, log_time_format=&#39;[%y-%m-%d %X]&#39;)
+  rich_handler = _Handler(console=console, log_time_format=&#39;[%y-%m-%d %X]&#39;)
   logger.add(rich_handler, level=level, format=&#39;{message}&#39;, enqueue=True)
   logger.add(&#39;pano.log&#39;,
              level=&#39;DEBUG&#39;,
