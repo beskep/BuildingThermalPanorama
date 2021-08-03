@@ -41,8 +41,7 @@ def cli(directory: str, command: str, default: bool, debug: bool,
   level = min(loglevel, (10 if debug else 20))
   utils.set_logger(level=level)
 
-  logger.debug('Directory: {}', directory)
-  logger.debug('Command: {}', command)
+  logger.info('Execute "{}" on "{}"', command.upper(), directory)
   command = command.lower()
 
   if command not in commands:

@@ -1,7 +1,7 @@
 """영상을 stitch하고 파노라마를 생성"""
 
 from dataclasses import dataclass
-from typing import Callable, Iterable, List, Optional, Tuple
+from typing import Callable, Iterable, List, Optional, Tuple, Union
 
 import cv2 as cv
 import numpy as np
@@ -35,7 +35,7 @@ class StitchError(ValueError):
 
 
 @dataclass
-class StitchedImage:
+class Panorama:
   """Stitch 결과"""
   panorama: np.ndarray
   mask: np.ndarray
@@ -354,6 +354,14 @@ class Stitcher:
 
     self._blend_type = value
 
+  def set_blend_type(self, value: Union[bool, str]):
+    if isinstance(value, str):
+      value = value.lower()
+    else:
+      value = 'feather' if value else 'no'
+
+    self.blend_type = value
+
   @property
   def blend_strength(self) -> float:
     """Blend 강도"""
@@ -466,7 +474,7 @@ class Stitcher:
              images: StitchingImages,
              masks: Optional[List[np.ndarray]] = None,
              names: Optional[List[str]] = None,
-             crop=True) -> StitchedImage:
+             crop=True) -> Panorama:
     """
     영상의 특징점을 기반으로 정합 (stitch)하여 파노라마 영상 생성
 
@@ -483,14 +491,7 @@ class Stitcher:
 
     Returns
     -------
-    image : np.ndarray
-        파노라마 영상
-    mask : np.ndarray
-        파노라마 영역의 마스크
-    matches_graph : str
-        그래프 정보 (영상 간 연결 관계)
-    indices : np.ndarray
-        파노라마를 구성하는 영상의 index
+    Panorama
     """
     if names is None:
       names = ['Image {}'.format(x + 1) for x in range(images.count)]
@@ -533,15 +534,15 @@ class Stitcher:
                                                       mask=panorama_mask,
                                                       crop_range=None)
 
-    res = StitchedImage(panorama=panorama,
-                        mask=panorama_mask,
-                        graph=matches_graph,
-                        indices=indices,
-                        cameras=cameras,
-                        crop_range=crop_range,
-                        image_names=names)
+    pano = Panorama(panorama=panorama,
+                    mask=panorama_mask,
+                    graph=matches_graph,
+                    indices=indices,
+                    cameras=cameras,
+                    crop_range=crop_range,
+                    image_names=names)
 
-    return res
+    return pano
 
   def calculate_camera_matrix(
       self,
@@ -836,7 +837,16 @@ class Stitcher:
         images=images.arrays, cameras=cameras, masks=masks, names=names)
 
     # stitch and blend
-    scaled_images = [images.scale(x, out_range='int16') for x in warped_images]
+    if self.blend_type == 'feather':
+
+      def _scale(img):
+        return images.scale(img, out_range=np.uint8).astype(np.int16)
+    else:
+
+      def _scale(img):
+        return images.scale(img, out_range=np.int16)
+
+    scaled_images = [_scale(x) for x in warped_images]
     scaled_panorama, panorama_mask = self._blend(images=scaled_images,
                                                  masks=warped_masks,
                                                  rois=rois)

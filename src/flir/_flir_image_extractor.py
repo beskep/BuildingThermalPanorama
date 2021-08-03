@@ -128,7 +128,8 @@ class FlirImageExtractor:
     """
 
     # read image metadata needed for conversion of the raw sensor values
-    # E=1,SD=1,RTemp=20,ATemp=RTemp,IRWTemp=RTemp,IRT=1,RH=50,PR1=21106.77,PB=1501,PF=1,PO=-7340,PR2=0.012545258
+    # E=1,SD=1,RTemp=20,ATemp=RTemp,IRWTemp=RTemp,IRT=1,RH=50,
+    # PR1=21106.77,PB=1501,PF=1,PO=-7340,PR2=0.012545258
     meta_args = [
         self.exiftool_path,
         self.flir_img_filename,

@@ -30,7 +30,7 @@
 <pre><code class="python">&#34;&#34;&#34;영상을 stitch하고 파노라마를 생성&#34;&#34;&#34;
 
 from dataclasses import dataclass
-from typing import Callable, Iterable, List, Optional, Tuple
+from typing import Callable, Iterable, List, Optional, Tuple, Union
 
 import cv2 as cv
 import numpy as np
@@ -64,7 +64,7 @@ class StitchError(ValueError):
 
 
 @dataclass
-class StitchedImage:
+class Panorama:
   &#34;&#34;&#34;Stitch 결과&#34;&#34;&#34;
   panorama: np.ndarray
   mask: np.ndarray
@@ -383,6 +383,14 @@ class Stitcher:
 
     self._blend_type = value
 
+  def set_blend_type(self, value: Union[bool, str]):
+    if isinstance(value, str):
+      value = value.lower()
+    else:
+      value = &#39;feather&#39; if value else &#39;no&#39;
+
+    self.blend_type = value
+
   @property
   def blend_strength(self) -&gt; float:
     &#34;&#34;&#34;Blend 강도&#34;&#34;&#34;
@@ -495,7 +503,7 @@ class Stitcher:
              images: StitchingImages,
              masks: Optional[List[np.ndarray]] = None,
              names: Optional[List[str]] = None,
-             crop=True) -&gt; StitchedImage:
+             crop=True) -&gt; Panorama:
     &#34;&#34;&#34;
     영상의 특징점을 기반으로 정합 (stitch)하여 파노라마 영상 생성
 
@@ -512,14 +520,7 @@ class Stitcher:
 
     Returns
     -------
-    image : np.ndarray
-        파노라마 영상
-    mask : np.ndarray
-        파노라마 영역의 마스크
-    matches_graph : str
-        그래프 정보 (영상 간 연결 관계)
-    indices : np.ndarray
-        파노라마를 구성하는 영상의 index
+    Panorama
     &#34;&#34;&#34;
     if names is None:
       names = [&#39;Image {}&#39;.format(x + 1) for x in range(images.count)]
@@ -562,15 +563,15 @@ class Stitcher:
                                                       mask=panorama_mask,
                                                       crop_range=None)
 
-    res = StitchedImage(panorama=panorama,
-                        mask=panorama_mask,
-                        graph=matches_graph,
-                        indices=indices,
-                        cameras=cameras,
-                        crop_range=crop_range,
-                        image_names=names)
+    pano = Panorama(panorama=panorama,
+                    mask=panorama_mask,
+                    graph=matches_graph,
+                    indices=indices,
+                    cameras=cameras,
+                    crop_range=crop_range,
+                    image_names=names)
 
-    return res
+    return pano
 
   def calculate_camera_matrix(
       self,
@@ -865,7 +866,16 @@ class Stitcher:
         images=images.arrays, cameras=cameras, masks=masks, names=names)
 
     # stitch and blend
-    scaled_images = [images.scale(x, out_range=&#39;int16&#39;) for x in warped_images]
+    if self.blend_type == &#39;feather&#39;:
+
+      def _scale(img):
+        return images.scale(img, out_range=np.uint8).astype(np.int16)
+    else:
+
+      def _scale(img):
+        return images.scale(img, out_range=np.int16)
+
+    scaled_images = [_scale(x) for x in warped_images]
     scaled_panorama, panorama_mask = self._blend(images=scaled_images,
                                                  masks=warped_masks,
                                                  rois=rois)
@@ -927,28 +937,8 @@ class Stitcher:
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="src.stitch.stitcher.StitchError"><code class="flex name class">
-<span>class <span class="ident">StitchError</span></span>
-<span>(</span><span>*args, **kwargs)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Inappropriate argument value (of correct type).</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class StitchError(ValueError):
-  pass</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li>builtins.ValueError</li>
-<li>builtins.Exception</li>
-<li>builtins.BaseException</li>
-</ul>
-</dd>
-<dt id="src.stitch.stitcher.StitchedImage"><code class="flex name class">
-<span>class <span class="ident">StitchedImage</span></span>
+<dt id="src.stitch.stitcher.Panorama"><code class="flex name class">
+<span>class <span class="ident">Panorama</span></span>
 <span>(</span><span>panorama: numpy.ndarray, mask: numpy.ndarray, graph: str, indices: list, cameras: list, crop_range: Union[Tuple[int, int, int, int], NoneType], image_names: List[str])</span>
 </code></dt>
 <dd>
@@ -957,7 +947,7 @@ class Stitcher:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class StitchedImage:
+<pre><code class="python">class Panorama:
   &#34;&#34;&#34;Stitch 결과&#34;&#34;&#34;
   panorama: np.ndarray
   mask: np.ndarray
@@ -987,38 +977,38 @@ class Stitcher:
 </details>
 <h3>Class variables</h3>
 <dl>
-<dt id="src.stitch.stitcher.StitchedImage.cameras"><code class="name">var <span class="ident">cameras</span> : list</code></dt>
+<dt id="src.stitch.stitcher.Panorama.cameras"><code class="name">var <span class="ident">cameras</span> : list</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.stitch.stitcher.StitchedImage.crop_range"><code class="name">var <span class="ident">crop_range</span> : Union[Tuple[int, int, int, int], NoneType]</code></dt>
+<dt id="src.stitch.stitcher.Panorama.crop_range"><code class="name">var <span class="ident">crop_range</span> : Union[Tuple[int, int, int, int], NoneType]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.stitch.stitcher.StitchedImage.graph"><code class="name">var <span class="ident">graph</span> : str</code></dt>
+<dt id="src.stitch.stitcher.Panorama.graph"><code class="name">var <span class="ident">graph</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.stitch.stitcher.StitchedImage.image_names"><code class="name">var <span class="ident">image_names</span> : List[str]</code></dt>
+<dt id="src.stitch.stitcher.Panorama.image_names"><code class="name">var <span class="ident">image_names</span> : List[str]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.stitch.stitcher.StitchedImage.indices"><code class="name">var <span class="ident">indices</span> : list</code></dt>
+<dt id="src.stitch.stitcher.Panorama.indices"><code class="name">var <span class="ident">indices</span> : list</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.stitch.stitcher.StitchedImage.mask"><code class="name">var <span class="ident">mask</span> : numpy.ndarray</code></dt>
+<dt id="src.stitch.stitcher.Panorama.mask"><code class="name">var <span class="ident">mask</span> : numpy.ndarray</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.stitch.stitcher.StitchedImage.panorama"><code class="name">var <span class="ident">panorama</span> : numpy.ndarray</code></dt>
+<dt id="src.stitch.stitcher.Panorama.panorama"><code class="name">var <span class="ident">panorama</span> : numpy.ndarray</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="src.stitch.stitcher.StitchedImage.graph_list"><code class="name flex">
+<dt id="src.stitch.stitcher.Panorama.graph_list"><code class="name flex">
 <span>def <span class="ident">graph_list</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -1035,7 +1025,7 @@ class Stitcher:
   return [x.replace(&#34;&#39;&#34;, &#39;&#39;).replace(&#39;&#34;&#39;, &#39;&#39;) for x in gl[1:-1]]</code></pre>
 </details>
 </dd>
-<dt id="src.stitch.stitcher.StitchedImage.included"><code class="name flex">
+<dt id="src.stitch.stitcher.Panorama.included"><code class="name flex">
 <span>def <span class="ident">included</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -1048,7 +1038,7 @@ class Stitcher:
   return [self.image_names[x] for x in sorted(self.indices)]</code></pre>
 </details>
 </dd>
-<dt id="src.stitch.stitcher.StitchedImage.not_included"><code class="name flex">
+<dt id="src.stitch.stitcher.Panorama.not_included"><code class="name flex">
 <span>def <span class="ident">not_included</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -1067,6 +1057,26 @@ class Stitcher:
 </details>
 </dd>
 </dl>
+</dd>
+<dt id="src.stitch.stitcher.StitchError"><code class="flex name class">
+<span>class <span class="ident">StitchError</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Inappropriate argument value (of correct type).</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class StitchError(ValueError):
+  pass</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.ValueError</li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
 </dd>
 <dt id="src.stitch.stitcher.Stitcher"><code class="flex name class">
 <span>class <span class="ident">Stitcher</span></span>
@@ -1248,6 +1258,14 @@ class Stitcher:
 
     self._blend_type = value
 
+  def set_blend_type(self, value: Union[bool, str]):
+    if isinstance(value, str):
+      value = value.lower()
+    else:
+      value = &#39;feather&#39; if value else &#39;no&#39;
+
+    self.blend_type = value
+
   @property
   def blend_strength(self) -&gt; float:
     &#34;&#34;&#34;Blend 강도&#34;&#34;&#34;
@@ -1360,7 +1378,7 @@ class Stitcher:
              images: StitchingImages,
              masks: Optional[List[np.ndarray]] = None,
              names: Optional[List[str]] = None,
-             crop=True) -&gt; StitchedImage:
+             crop=True) -&gt; Panorama:
     &#34;&#34;&#34;
     영상의 특징점을 기반으로 정합 (stitch)하여 파노라마 영상 생성
 
@@ -1377,14 +1395,7 @@ class Stitcher:
 
     Returns
     -------
-    image : np.ndarray
-        파노라마 영상
-    mask : np.ndarray
-        파노라마 영역의 마스크
-    matches_graph : str
-        그래프 정보 (영상 간 연결 관계)
-    indices : np.ndarray
-        파노라마를 구성하는 영상의 index
+    Panorama
     &#34;&#34;&#34;
     if names is None:
       names = [&#39;Image {}&#39;.format(x + 1) for x in range(images.count)]
@@ -1427,15 +1438,15 @@ class Stitcher:
                                                       mask=panorama_mask,
                                                       crop_range=None)
 
-    res = StitchedImage(panorama=panorama,
-                        mask=panorama_mask,
-                        graph=matches_graph,
-                        indices=indices,
-                        cameras=cameras,
-                        crop_range=crop_range,
-                        image_names=names)
+    pano = Panorama(panorama=panorama,
+                    mask=panorama_mask,
+                    graph=matches_graph,
+                    indices=indices,
+                    cameras=cameras,
+                    crop_range=crop_range,
+                    image_names=names)
 
-    return res
+    return pano
 
   def calculate_camera_matrix(
       self,
@@ -1730,7 +1741,16 @@ class Stitcher:
         images=images.arrays, cameras=cameras, masks=masks, names=names)
 
     # stitch and blend
-    scaled_images = [images.scale(x, out_range=&#39;int16&#39;) for x in warped_images]
+    if self.blend_type == &#39;feather&#39;:
+
+      def _scale(img):
+        return images.scale(img, out_range=np.uint8).astype(np.int16)
+    else:
+
+      def _scale(img):
+        return images.scale(img, out_range=np.int16)
+
+    scaled_images = [_scale(x) for x in warped_images]
     scaled_panorama, panorama_mask = self._blend(images=scaled_images,
                                                  masks=warped_masks,
                                                  rois=rois)
@@ -2170,6 +2190,24 @@ def warper_type(self) -&gt; Optional[str]:
   return features</code></pre>
 </details>
 </dd>
+<dt id="src.stitch.stitcher.Stitcher.set_blend_type"><code class="name flex">
+<span>def <span class="ident">set_blend_type</span></span>(<span>self, value: Union[bool, str])</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_blend_type(self, value: Union[bool, str]):
+  if isinstance(value, str):
+    value = value.lower()
+  else:
+    value = &#39;feather&#39; if value else &#39;no&#39;
+
+  self.blend_type = value</code></pre>
+</details>
+</dd>
 <dt id="src.stitch.stitcher.Stitcher.set_bundle_adjuster_refine_mask"><code class="name flex">
 <span>def <span class="ident">set_bundle_adjuster_refine_mask</span></span>(<span>self, fx=True, skew=True, ppx=True, aspect=True, ppy=True)</span>
 </code></dt>
@@ -2292,7 +2330,7 @@ The default is 0.3 for ORB and 0.65 for other feature types.</dd>
 </details>
 </dd>
 <dt id="src.stitch.stitcher.Stitcher.stitch"><code class="name flex">
-<span>def <span class="ident">stitch</span></span>(<span>self, images: <a title="src.stitch.stitcher.StitchingImages" href="#src.stitch.stitcher.StitchingImages">StitchingImages</a>, masks: Union[List[numpy.ndarray], NoneType] = None, names: Union[List[str], NoneType] = None, crop=True) ‑> <a title="src.stitch.stitcher.StitchedImage" href="#src.stitch.stitcher.StitchedImage">StitchedImage</a></span>
+<span>def <span class="ident">stitch</span></span>(<span>self, images: <a title="src.stitch.stitcher.StitchingImages" href="#src.stitch.stitcher.StitchingImages">StitchingImages</a>, masks: Union[List[numpy.ndarray], NoneType] = None, names: Union[List[str], NoneType] = None, crop=True) ‑> <a title="src.stitch.stitcher.Panorama" href="#src.stitch.stitcher.Panorama">Panorama</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>영상의 특징점을 기반으로 정합 (stitch)하여 파노라마 영상 생성</p>
@@ -2309,14 +2347,8 @@ The default is 0.3 for ORB and 0.65 for other feature types.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>image</code></strong> :&ensp;<code>np.ndarray</code></dt>
-<dd>파노라마 영상</dd>
-<dt><strong><code>mask</code></strong> :&ensp;<code>np.ndarray</code></dt>
-<dd>파노라마 영역의 마스크</dd>
-<dt><strong><code>matches_graph</code></strong> :&ensp;<code>str</code></dt>
-<dd>그래프 정보 (영상 간 연결 관계)</dd>
-<dt><strong><code>indices</code></strong> :&ensp;<code>np.ndarray</code></dt>
-<dd>파노라마를 구성하는 영상의 index</dd>
+<dt><code><a title="src.stitch.stitcher.Panorama" href="#src.stitch.stitcher.Panorama">Panorama</a></code></dt>
+<dd>&nbsp;</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -2326,7 +2358,7 @@ The default is 0.3 for ORB and 0.65 for other feature types.</dd>
            images: StitchingImages,
            masks: Optional[List[np.ndarray]] = None,
            names: Optional[List[str]] = None,
-           crop=True) -&gt; StitchedImage:
+           crop=True) -&gt; Panorama:
   &#34;&#34;&#34;
   영상의 특징점을 기반으로 정합 (stitch)하여 파노라마 영상 생성
 
@@ -2343,14 +2375,7 @@ The default is 0.3 for ORB and 0.65 for other feature types.</dd>
 
   Returns
   -------
-  image : np.ndarray
-      파노라마 영상
-  mask : np.ndarray
-      파노라마 영역의 마스크
-  matches_graph : str
-      그래프 정보 (영상 간 연결 관계)
-  indices : np.ndarray
-      파노라마를 구성하는 영상의 index
+  Panorama
   &#34;&#34;&#34;
   if names is None:
     names = [&#39;Image {}&#39;.format(x + 1) for x in range(images.count)]
@@ -2393,15 +2418,15 @@ The default is 0.3 for ORB and 0.65 for other feature types.</dd>
                                                     mask=panorama_mask,
                                                     crop_range=None)
 
-  res = StitchedImage(panorama=panorama,
-                      mask=panorama_mask,
-                      graph=matches_graph,
-                      indices=indices,
-                      cameras=cameras,
-                      crop_range=crop_range,
-                      image_names=names)
+  pano = Panorama(panorama=panorama,
+                  mask=panorama_mask,
+                  graph=matches_graph,
+                  indices=indices,
+                  cameras=cameras,
+                  crop_range=crop_range,
+                  image_names=names)
 
-  return res</code></pre>
+  return pano</code></pre>
 </details>
 </dd>
 <dt id="src.stitch.stitcher.Stitcher.warp_and_blend"><code class="name flex">
@@ -2425,7 +2450,16 @@ The default is 0.3 for ORB and 0.65 for other feature types.</dd>
       images=images.arrays, cameras=cameras, masks=masks, names=names)
 
   # stitch and blend
-  scaled_images = [images.scale(x, out_range=&#39;int16&#39;) for x in warped_images]
+  if self.blend_type == &#39;feather&#39;:
+
+    def _scale(img):
+      return images.scale(img, out_range=np.uint8).astype(np.int16)
+  else:
+
+    def _scale(img):
+      return images.scale(img, out_range=np.int16)
+
+  scaled_images = [_scale(x) for x in warped_images]
   scaled_panorama, panorama_mask = self._blend(images=scaled_images,
                                                masks=warped_masks,
                                                rois=rois)
@@ -2823,22 +2857,22 @@ def ndim(self) -&gt; int:
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="src.stitch.stitcher.StitchError" href="#src.stitch.stitcher.StitchError">StitchError</a></code></h4>
+<h4><code><a title="src.stitch.stitcher.Panorama" href="#src.stitch.stitcher.Panorama">Panorama</a></code></h4>
+<ul class="two-column">
+<li><code><a title="src.stitch.stitcher.Panorama.cameras" href="#src.stitch.stitcher.Panorama.cameras">cameras</a></code></li>
+<li><code><a title="src.stitch.stitcher.Panorama.crop_range" href="#src.stitch.stitcher.Panorama.crop_range">crop_range</a></code></li>
+<li><code><a title="src.stitch.stitcher.Panorama.graph" href="#src.stitch.stitcher.Panorama.graph">graph</a></code></li>
+<li><code><a title="src.stitch.stitcher.Panorama.graph_list" href="#src.stitch.stitcher.Panorama.graph_list">graph_list</a></code></li>
+<li><code><a title="src.stitch.stitcher.Panorama.image_names" href="#src.stitch.stitcher.Panorama.image_names">image_names</a></code></li>
+<li><code><a title="src.stitch.stitcher.Panorama.included" href="#src.stitch.stitcher.Panorama.included">included</a></code></li>
+<li><code><a title="src.stitch.stitcher.Panorama.indices" href="#src.stitch.stitcher.Panorama.indices">indices</a></code></li>
+<li><code><a title="src.stitch.stitcher.Panorama.mask" href="#src.stitch.stitcher.Panorama.mask">mask</a></code></li>
+<li><code><a title="src.stitch.stitcher.Panorama.not_included" href="#src.stitch.stitcher.Panorama.not_included">not_included</a></code></li>
+<li><code><a title="src.stitch.stitcher.Panorama.panorama" href="#src.stitch.stitcher.Panorama.panorama">panorama</a></code></li>
+</ul>
 </li>
 <li>
-<h4><code><a title="src.stitch.stitcher.StitchedImage" href="#src.stitch.stitcher.StitchedImage">StitchedImage</a></code></h4>
-<ul class="two-column">
-<li><code><a title="src.stitch.stitcher.StitchedImage.cameras" href="#src.stitch.stitcher.StitchedImage.cameras">cameras</a></code></li>
-<li><code><a title="src.stitch.stitcher.StitchedImage.crop_range" href="#src.stitch.stitcher.StitchedImage.crop_range">crop_range</a></code></li>
-<li><code><a title="src.stitch.stitcher.StitchedImage.graph" href="#src.stitch.stitcher.StitchedImage.graph">graph</a></code></li>
-<li><code><a title="src.stitch.stitcher.StitchedImage.graph_list" href="#src.stitch.stitcher.StitchedImage.graph_list">graph_list</a></code></li>
-<li><code><a title="src.stitch.stitcher.StitchedImage.image_names" href="#src.stitch.stitcher.StitchedImage.image_names">image_names</a></code></li>
-<li><code><a title="src.stitch.stitcher.StitchedImage.included" href="#src.stitch.stitcher.StitchedImage.included">included</a></code></li>
-<li><code><a title="src.stitch.stitcher.StitchedImage.indices" href="#src.stitch.stitcher.StitchedImage.indices">indices</a></code></li>
-<li><code><a title="src.stitch.stitcher.StitchedImage.mask" href="#src.stitch.stitcher.StitchedImage.mask">mask</a></code></li>
-<li><code><a title="src.stitch.stitcher.StitchedImage.not_included" href="#src.stitch.stitcher.StitchedImage.not_included">not_included</a></code></li>
-<li><code><a title="src.stitch.stitcher.StitchedImage.panorama" href="#src.stitch.stitcher.StitchedImage.panorama">panorama</a></code></li>
-</ul>
+<h4><code><a title="src.stitch.stitcher.StitchError" href="#src.stitch.stitcher.StitchError">StitchError</a></code></h4>
 </li>
 <li>
 <h4><code><a title="src.stitch.stitcher.Stitcher" href="#src.stitch.stitcher.Stitcher">Stitcher</a></code></h4>
@@ -2854,6 +2888,7 @@ def ndim(self) -&gt; int:
 <li><code><a title="src.stitch.stitcher.Stitcher.features_matcher" href="#src.stitch.stitcher.Stitcher.features_matcher">features_matcher</a></code></li>
 <li><code><a title="src.stitch.stitcher.Stitcher.find_features" href="#src.stitch.stitcher.Stitcher.find_features">find_features</a></code></li>
 <li><code><a title="src.stitch.stitcher.Stitcher.refine_mask" href="#src.stitch.stitcher.Stitcher.refine_mask">refine_mask</a></code></li>
+<li><code><a title="src.stitch.stitcher.Stitcher.set_blend_type" href="#src.stitch.stitcher.Stitcher.set_blend_type">set_blend_type</a></code></li>
 <li><code><a title="src.stitch.stitcher.Stitcher.set_bundle_adjuster_refine_mask" href="#src.stitch.stitcher.Stitcher.set_bundle_adjuster_refine_mask">set_bundle_adjuster_refine_mask</a></code></li>
 <li><code><a title="src.stitch.stitcher.Stitcher.set_features_matcher" href="#src.stitch.stitcher.Stitcher.set_features_matcher">set_features_matcher</a></code></li>
 <li><code><a title="src.stitch.stitcher.Stitcher.set_mode" href="#src.stitch.stitcher.Stitcher.set_mode">set_mode</a></code></li>

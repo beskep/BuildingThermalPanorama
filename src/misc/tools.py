@@ -79,7 +79,8 @@ def mask_bbox(mask: np.ndarray,
   """
   마스크 영상 중 True인 영역의 bounding box 좌표를 찾음
 
-  참조: https://stackoverflow.com/questions/39206986/numpy-get-rectangle-area-just-the-size-of-mask/48346079
+  참조:
+  https://stackoverflow.com/questions/39206986/numpy-get-rectangle-area-just-the-size-of-mask/48346079
 
   Parameters
   ----------
@@ -111,6 +112,13 @@ def mask_bbox(mask: np.ndarray,
   yy = _mask_range(mask=mask_, axis=1)
 
   return xx + yy
+
+
+def erode(image: np.ndarray, iterations=1) -> np.ndarray:
+  kernel = cv.getStructuringElement(cv.MORPH_RECT, (3, 3))
+  eroded = cv.erode(image, kernel, iterations=iterations)
+
+  return eroded
 
 
 def bin_size(image1: np.ndarray,

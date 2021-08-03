@@ -13,6 +13,7 @@ from rich.progress import track
 import flir
 import registration.registrator.simpleitk as rsitk
 import stitch
+from distortion import perspective as persp
 from misc import exif, tools
 from misc.tools import ImageIO as IIO
 from misc.tools import limit_image_size as limit_size
@@ -319,7 +320,7 @@ class ThermalPanorama:
       images: List[np.ndarray],
       names: List[str],
       spectrum: str,
-  ) -> stitch.StitchedImage:
+  ) -> stitch.Panorama:
     popt: DictConfig = self._config['panorama']['preprocess'][spectrum]
 
     # 전처리 정의
@@ -348,22 +349,22 @@ class ThermalPanorama:
   def _save_panorama(self,
                      fname: str,
                      spectrum: str,
-                     res: stitch.StitchedImage,
+                     panorama: stitch.Panorama,
                      save_mask=True,
                      save_meta=True):
     pano_dir = self._dir(DIR.PANO)
 
-    if max(res.panorama.shape[:2]) > self._size_limit:
-      res.panorama = limit_size(res.panorama, self._size_limit)
-      res.mask = limit_size(res.mask, self._size_limit)
+    if max(panorama.panorama.shape[:2]) > self._size_limit:
+      panorama.panorama = limit_size(panorama.panorama, self._size_limit)
+      panorama.mask = limit_size(panorama.mask, self._size_limit)
 
     meta = None
     if save_meta:
       meta = {
           'panorama': {
-              'including': res.included(),
-              'not_including': res.not_included(),
-              'graph': res.graph_list()
+              'including': panorama.included(),
+              'not_including': panorama.not_included(),
+              'graph': panorama.graph_list()
           }
       }
 
@@ -371,28 +372,70 @@ class ThermalPanorama:
       if spectrum == 'IR':
         # 적외선 수치, meta 정보 저장
         IIO.save_with_meta(path=pano_dir.joinpath(fname),
-                           array=res.panorama.astype(np.float16),
+                           array=panorama.panorama.astype(np.float16),
                            exts=[FN.NPY],
                            meta=meta)
 
         # 적외선 colormap 영상 저장
-        color_panorama = apply_colormap(res.panorama, self._cmap)
+        color_panorama = apply_colormap(panorama.panorama, self._cmap)
         IIO.save(path=pano_dir.joinpath(f'{fname}{FN.COLOR}{FN.LL}'),
                  array=color_panorama)
       else:
         # 실화상 저장
         IIO.save_with_meta(path=pano_dir.joinpath(f'{fname}{FN.LS}'),
-                           array=np.round(res.panorama).astype(np.uint8),
+                           array=np.round(panorama.panorama).astype(np.uint8),
                            exts=[FN.LS],
                            meta=meta)
 
       if save_mask:
         # 마스크 저장
         IIO.save(path=pano_dir.joinpath(f'{fname}{FN.PANO_MASK}{FN.LL}'),
-                 array=tools.uint8_image(res.mask))
+                 array=tools.uint8_image(panorama.mask))
+
+  def _stitch_others(
+      self,
+      stitcher: stitch.Stitcher,
+      panorama: stitch.Panorama,
+      files: List[Path],
+      spectrum: str,
+  ):
+    if spectrum not in ('IR', 'VIS', 'seg'):
+      raise ValueError
+
+    warp = self._config['panorama']['stitch']['warp']
+    images = [IIO.read(x) for x in files]
+    pano, _, _ = stitcher.warp_and_blend(
+        images=stitch.StitchingImages(arrays=images),
+        cameras=panorama.cameras,
+        masks=None,
+        names=[x.name for x in files])
+
+    if panorama.crop_range:
+      pano, _, _ = stitcher.crop(pano,
+                                 mask=None,
+                                 crop_range=panorama.crop_range)
+
+    if spectrum == 'IR':
+      pano = pano[:, :, 0]
+      pano = pano.astype(np.float16)
+    else:
+      pano = np.round(pano).astype(np.uint8)
+
+    fname = f'{spectrum}_{warp}'
+    if spectrum == 'seg':
+      IIO.save(path=self._dir(DIR.PANO).joinpath(fname + FN.LL),
+               array=limit_size(pano, self._size_limit))
+    else:
+      panorama.panorama = pano
+      self._save_panorama(fname=fname,
+                          spectrum=spectrum,
+                          panorama=panorama,
+                          save_mask=False,
+                          save_meta=False)
 
   def panorama(self):
     spectrum = self._config['panorama']['target'].upper()
+    sopt = self._config['panorama']['stitch']
     stitcher = self._init_stitcher()
 
     # Raw 파일 추출
@@ -403,11 +446,128 @@ class ThermalPanorama:
     images = [IIO.read(x) for x in files]
 
     # 파노라마 생성
-    res = self._stitch(stitcher=stitcher,
-                       images=images,
-                       names=[x.stem for x in files],
-                       spectrum=spectrum)
+    stitcher.set_blend_type(sopt['blend'][spectrum])
+    pano = self._stitch(stitcher=stitcher,
+                        images=images,
+                        names=[x.stem for x in files],
+                        spectrum=spectrum)
 
     # 저장
+    self._save_panorama(fname='{}_{}'.format(spectrum, sopt['warp']),
+                        spectrum=spectrum,
+                        panorama=pano)
+
+    # segmention mask 저장
+    try:
+      seg_files = self._files(DIR.SEG)
+    except FileNotFoundError as e:
+      logger.warning('{} 부위 인식 파노라마를 생성하지 않습니다.', e)
+    else:
+      logger.debug('부위 인식 파노라마 생성')
+      stitcher.set_blend_type(False)
+      self._stitch_others(stitcher=stitcher,
+                          panorama=pano,
+                          files=seg_files,
+                          spectrum='seg')
+
+    # 나머지 영상의 파노라마 생성/저장
+    sp2 = 'VIS' if spectrum == 'IR' else 'IR'
+    try:
+      files2 = self._files(self._SP_DIR[sp2])
+    except FileNotFoundError as e:
+      logger.warning('{} {} 파노라마를 생성하지 않습니다.', e, self._SP_KOR[sp2])
+    else:
+      logger.debug('{} 파노라마 생성', self._SP_KOR[sp2])
+      files2 = [files2[x] for x in pano.indices]  # TODO 파일 이름과 대조
+      stitcher.set_blend_type(sopt['blend'][sp2])
+
+      self._stitch_others(stitcher=stitcher,
+                          panorama=pano,
+                          files=files2,
+                          spectrum=sp2)
+
+    logger.success('파노라마 생성 완료')
+
+  def _init_perspective_correction(self):
+    options = self._config['distort_correction']
+
+    canny_options = persp.CannyOptions(**options['canny'])
+    hough_options = persp.HoughOptions(**options['hough'])
+    correction_opts = persp.CorrectionOptions(**options['correction'])
+
+    pc = persp.PerspectiveCorrection(canny_options=canny_options,
+                                     hough_options=hough_options,
+                                     correction_options=correction_opts)
+    return pc
+
+  def correct(self):
+    pc = self._init_perspective_correction()
+
     warp = self._config['panorama']['stitch']['warp']
-    self._save_panorama(fname=f'{spectrum}_{warp}', spectrum=spectrum, res=res)
+    ir_fname = f'IR_{warp}'  # FIXME {warp} 제거
+    pano_dir = self._dir(DIR.PANO, mkdir=False)
+
+    ir_path = pano_dir.joinpath(ir_fname + FN.NPY)
+    if not ir_path.exists():
+      logger.error('생성된 파노라마 파일이 없습니다.')
+      return
+
+    logger.debug('Init perspective correction')
+
+    # 적외선 파노라마
+    ir_pano = IIO.read(ir_path).astype(np.float32)
+    mask = None
+    if self._config['distort_correction']['apply_mask']:
+      mask = IIO.read(ir_path.with_name(
+          f'{ir_path.stem}{FN.PANO_MASK}{FN.LL}')).astype(bool)
+
+    # 왜곡 보정
+    try:
+      corrected = pc.perspective_correct(image=ir_pano, mask=mask)
+    except persp.NotEnoughEdgelets:
+      logger.critical('시점 왜곡을 추정할 edge의 개수가 부족합니다. '
+                      'Edge 추출 옵션을 변경하거나 높은 해상도의 파노라마를 사용하세요.')
+      return
+
+    logger.debug('IR 파노라마 왜곡 보정 완료 (shape: {})', corrected.output_shape)
+
+    # plot 저장
+    cor_dir = self._dir(DIR.COR)
+    fig, _ = corrected.process_plot()
+    fig.savefig(cor_dir.joinpath(f'plot{FN.LS}'))
+    plt.close(fig)
+
+    if corrected.success():
+      # 적외선 파노라마 저장
+      corrected_ir = limit_size(corrected.corrected_image, self._size_limit)
+      IIO.save_with_meta(path=cor_dir.joinpath(ir_fname),
+                         array=corrected_ir.astype(np.float16),
+                         exts=[FN.NPY])
+      # colormap 적용 버전 저장
+      IIO.save(path=cor_dir.joinpath(f'{ir_fname}{FN.COLOR}{FN.LL}'),
+               array=apply_colormap(corrected_ir, self._cmap))
+      logger.debug('IR 파노라마 보정 파일 저장')
+
+      # 실화상 파노라마 보정
+      vis_path = pano_dir.joinpath(f'VIS_{warp}{FN.LS}')
+      if not vis_path.exists():
+        logger.warning('실화상 파노라마가 존재하지 않습니다.')
+      else:
+        vis_pano = IIO.read(path=vis_path)
+        vis_corrected = limit_size(
+            corrected.correct(vis_pano).astype(np.uint8), self._size_limit)
+        IIO.save(path=cor_dir.joinpath(vis_path.name), array=vis_corrected)
+        logger.debug('실화상 파노라마 왜곡 보정 저장')
+
+      # segmentation 파노라마 보정
+      seg_path = pano_dir.joinpath(f'seg_{warp}{FN.LL}')
+      if not seg_path.exists():
+        logger.warning('부위 인식 파노라마가 존재하지 않습니다.')
+      else:
+        seg_pano = IIO.read(path=seg_path)
+        seg_corrected = limit_size(
+            corrected.correct(seg_pano).astype(np.uint8), self._size_limit)
+        IIO.save(path=cor_dir.joinpath(seg_path.name), array=seg_corrected)
+        logger.debug('부위 인식 파노라마 왜곡 보정 저장')
+
+    logger.success('파노라마 왜곡 보정 완료')

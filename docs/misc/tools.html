@@ -108,7 +108,8 @@ def mask_bbox(mask: np.ndarray,
   &#34;&#34;&#34;
   마스크 영상 중 True인 영역의 bounding box 좌표를 찾음
 
-  참조: https://stackoverflow.com/questions/39206986/numpy-get-rectangle-area-just-the-size-of-mask/48346079
+  참조:
+  https://stackoverflow.com/questions/39206986/numpy-get-rectangle-area-just-the-size-of-mask/48346079
 
   Parameters
   ----------
@@ -140,6 +141,13 @@ def mask_bbox(mask: np.ndarray,
   yy = _mask_range(mask=mask_, axis=1)
 
   return xx + yy
+
+
+def erode(image: np.ndarray, iterations=1) -&gt; np.ndarray:
+  kernel = cv.getStructuringElement(cv.MORPH_RECT, (3, 3))
+  eroded = cv.erode(image, kernel, iterations=iterations)
+
+  return eroded
 
 
 def bin_size(image1: np.ndarray,
@@ -600,6 +608,22 @@ class SegMask:
   return bins_count</code></pre>
 </details>
 </dd>
+<dt id="src.misc.tools.erode"><code class="name flex">
+<span>def <span class="ident">erode</span></span>(<span>image: numpy.ndarray, iterations=1) ‑> numpy.ndarray</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def erode(image: np.ndarray, iterations=1) -&gt; np.ndarray:
+  kernel = cv.getStructuringElement(cv.MORPH_RECT, (3, 3))
+  eroded = cv.erode(image, kernel, iterations=iterations)
+
+  return eroded</code></pre>
+</details>
+</dd>
 <dt id="src.misc.tools.limit_image_size"><code class="name flex">
 <span>def <span class="ident">limit_image_size</span></span>(<span>image: numpy.ndarray, limit: int) ‑> numpy.ndarray</span>
 </code></dt>
@@ -632,7 +656,8 @@ class SegMask:
 </code></dt>
 <dd>
 <div class="desc"><p>마스크 영상 중 True인 영역의 bounding box 좌표를 찾음</p>
-<p>참조: <a href="https://stackoverflow.com/questions/39206986/numpy-get-rectangle-area-just-the-size-of-mask/48346079">https://stackoverflow.com/questions/39206986/numpy-get-rectangle-area-just-the-size-of-mask/48346079</a></p>
+<p>참조:
+<a href="https://stackoverflow.com/questions/39206986/numpy-get-rectangle-area-just-the-size-of-mask/48346079">https://stackoverflow.com/questions/39206986/numpy-get-rectangle-area-just-the-size-of-mask/48346079</a></p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>mask</code></strong> :&ensp;<code>np.ndarray</code></dt>
@@ -659,7 +684,8 @@ class SegMask:
   &#34;&#34;&#34;
   마스크 영상 중 True인 영역의 bounding box 좌표를 찾음
 
-  참조: https://stackoverflow.com/questions/39206986/numpy-get-rectangle-area-just-the-size-of-mask/48346079
+  참조:
+  https://stackoverflow.com/questions/39206986/numpy-get-rectangle-area-just-the-size-of-mask/48346079
 
   Parameters
   ----------
@@ -1574,6 +1600,7 @@ def vis_to_index(cls, array: np.ndarray):
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="src.misc.tools.bin_size" href="#src.misc.tools.bin_size">bin_size</a></code></li>
+<li><code><a title="src.misc.tools.erode" href="#src.misc.tools.erode">erode</a></code></li>
 <li><code><a title="src.misc.tools.limit_image_size" href="#src.misc.tools.limit_image_size">limit_image_size</a></code></li>
 <li><code><a title="src.misc.tools.mask_bbox" href="#src.misc.tools.mask_bbox">mask_bbox</a></code></li>
 <li><code><a title="src.misc.tools.normalize_image" href="#src.misc.tools.normalize_image">normalize_image</a></code></li>

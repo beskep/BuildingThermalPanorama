@@ -30,6 +30,9 @@ panorama:
         work_scale: 1.0
         warp_threshold: 20.0
         crop: True
+        blend:
+            IR: True
+            VIS: False
     preprocess:
         IR:
             masking_threshold: -30.0
@@ -55,16 +58,18 @@ panorama:
                 sigmaX: 0
 distort_correction:
     apply_mask: True
-    threshold: 5 # [degree]
-    ransac_iter: 2000
-    clip_factor: 5
-    vp_iter: 5
+    correction:
+        threshold: 5 # [degree]
+        ransac_iter: 2000
+        clip_factor: 5
+        vp_iter: 5
+        erode: 50 # [pixcel/iteration]
     canny: # optional
         sigma: 2.0
         low_threshold: Null
         high_threshold: Null
         use_quantiles: false
     hough: # optional
-        threshold: 10
-        line_length: 50
+        threshold: 50
+        line_length: 25
         line_gap: 10
