@@ -7,7 +7,7 @@ import numpy as np
 from numpy.linalg import inv
 from skimage.color import rgb2gray
 from skimage.exposure import equalize_hist
-from skimage.filters import scharr, unsharp_mask
+from skimage.filters import sobel, unsharp_mask
 from skimage.transform import resize, warp
 
 from misc.tools import normalize_image
@@ -68,7 +68,8 @@ class RegistrationPreprocess:
       image = unsharp_mask(image, radius=10)
 
     if self._edge[0]:
-      image = normalize_image(scharr(image))
+      # image = normalize_image(scharr(image))
+      image = sobel(image)
 
     return image
 
@@ -85,7 +86,8 @@ class RegistrationPreprocess:
       image = unsharp_mask(image, radius=10)
 
     if self._edge[1]:
-      image = normalize_image(scharr(image))
+      # image = normalize_image(scharr(image))
+      image = sobel(image)
 
     return image
 
@@ -119,6 +121,10 @@ class RegisteringImage:
 
     self._trsf_mtx: Optional[np.ndarray] = None
     self._trsf_fn: Optional[Callable] = None
+
+  @property
+  def matrix(self):
+    return self._trsf_mtx
 
   @property
   def orig_image(self) -> np.ndarray:

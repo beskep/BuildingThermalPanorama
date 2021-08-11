@@ -224,7 +224,7 @@ def ransac_3_line(
   third_index_space = arg_sort[:num_pts // 2]
 
   invfsq = 1 / (focal_length**2)
-  flarr = np.array([invfsq, invfsq, 1.0])  # TODO 변수 이름
+  farr = np.array([invfsq, invfsq, 1.0])
 
   best_model = (None, None)
   best_votes = 0
@@ -243,7 +243,7 @@ def ransac_3_line(
     # The vanishing line polar to v1
     # h = np.dot(vp1, [1 / focal_length**2, 1 / focal_length**2, 1])
     # h = [vp1[0] * invfsq, vp1[1] * invfsq, vp1[2]]
-    h = vp1 * flarr
+    h = vp1 * farr
     vp2 = np.cross(h, l3)
 
     if np.sum(vp1**2) < 1 or vp1[2] == 0:

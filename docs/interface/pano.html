@@ -36,6 +36,7 @@ import utils
 
 import matplotlib.pyplot as plt
 import numpy as np
+import yaml
 from loguru import logger
 from rich.progress import track
 
@@ -76,6 +77,7 @@ class FN:
   SEG_MASK = &#39;_mask&#39;
   SEG_FIG = &#39;_fig&#39;
 
+  PANO = &#39;_panorama&#39;
   PANO_MASK = &#39;_mask&#39;
 
 
@@ -94,13 +96,15 @@ class ThermalPanorama:
     self._config = read_config(wd=wd, default=default_config)
 
     self._manufacturer = self._check_manufacturer()
-    logger.debug(&#39;Manufacturer: {}&#39;, self._manufacturer)
-    if self._manufacturer == &#39;FLIR&#39;:
-      self._flir_ext: Optional[flir.FlirExtractor] = flir.FlirExtractor()
-    else:
+    logger.info(&#39;Manufacturer: {}&#39;, self._manufacturer)
+    if self._manufacturer != &#39;FLIR&#39;:
       self._flir_ext = None
+    else:
+      self._flir_ext = flir.FlirExtractor()
 
-    # colormap
+    self._camera = self._check_camera_model()
+    logger.info(&#39;Camera: {}&#39;, self._camera)
+
     self._cmap = get_thermal_colormap(
         name=self._config[&#39;color&#39;].get(&#39;colormap&#39;, &#39;iron&#39;))
 
@@ -119,7 +123,7 @@ class ThermalPanorama:
     elif flir_files:
       manufacturer = &#39;FLIR&#39;
     else:
-      raise ValueError(&#39;Raw 파일 설정 오류&#39;)
+      raise ValueError(&#39;지원하지 않는 Raw 파일 형식입니다.&#39;)
 
     return manufacturer
 
@@ -177,14 +181,41 @@ class ThermalPanorama:
 
     return d
 
+  def _check_camera_model(self) -&gt; Optional[str]:
+    tags = [&#39;Model&#39;, &#39;CameraModel&#39;]
+    raw_files = self._files(DIR.RAW)
+
+    def _get_model(exif: dict):
+      # iterable 중 조건을 만족하는 첫 element
+      tag = next((x for x in exif.keys() if x in tags), None)
+      if tag is None:
+        return None
+
+      return exif[tag]
+
+    exifs = exif.get_exif(files=[x.as_posix() for x in raw_files], tags=tags)
+    models = [_get_model(exif) for exif in exifs]
+    models = [x for x in models if x is not None]
+
+    if not models:
+      logger.debug(&#39;Exif로부터 카메라 기종 추정 불가&#39;)
+      return None
+
+    if any(models[0] != x for x in models[1:]):
+      logger.warning(&#39;다수의 카메라로 촬영된 Raw 파일을 입력했습니다 ({}). &#39;
+                     &#39;카메라 기종을 추정할 수 없습니다.&#39;, set(models))
+      return None
+
+    return models[0]
+
   def _extract_flir_image(self, path: Path):
     assert self._flir_ext is not None
     ir, vis = self._flir_ext.extract_data(path)
-    meta = {&#39;Exif&#39;: exif.get_exif_tags(path.as_posix())[0]}
+    meta = {&#39;Exif&#39;: exif.get_exif(files=path.as_posix())[0]}
 
     if self._config[&#39;file&#39;][&#39;force_horizontal&#39;] and (ir.shape[0] &gt; ir.shape[1]):
       # 수직 영상을 수평으로 만들기 위해 90도 회전
-      logger.debug(&#39;rot90 `{}`&#39;, path.name)
+      logger.debug(&#39;rot90 &#34;{}&#34;&#39;, path.name)
       ir = np.rot90(ir, k=1, axes=(0, 1))
       vis = np.rot90(vis, k=1, axes=(0, 1))
 
@@ -241,7 +272,7 @@ class ThermalPanorama:
     if ir_path.exists() and vis_path.exists():
       return
 
-    logger.debug(&#39;Extracting `{}`&#39;, file.name)
+    logger.debug(&#39;Extracting &#34;{}&#34;&#39;, file.name)
 
     if self._manufacturer == &#39;FLIR&#39;:
       ir, vis, meta = self._extract_flir_image(path=file)
@@ -269,11 +300,18 @@ class ThermalPanorama:
 
   def _init_registrator(self, shape):
     ropt: DictConfig = self._config[&#39;registration&#39;]
-    copt: DictConfig = self._config[&#39;camera&#39;]
+
+    if self._camera in self._config[&#39;camera&#39;][&#39;preset&#39;]:
+      copt: DictConfig = self._config[&#39;camera&#39;][&#39;preset&#39;][self._camera]
+      logger.debug(&#39;Regestering preset: {}&#39;, self._camera)
+    else:
+      copt: DictConfig = self._config[&#39;camera&#39;][&#39;default&#39;]
+      logger.debug(&#39;Regestering preset: default&#39;)
 
     trsf = rsitk.Transformation[ropt[&#39;transformation&#39;]]
     metric = rsitk.Metric[ropt[&#39;metric&#39;]]
-    optimizer = &#39;gradient_descent&#39; if ropt[&#39;preprocess&#39;][&#39;edge&#39;] else &#39;powell&#39;
+    optimizer = ropt[&#39;optimizer&#39;]
+
     registrator = rsitk.SITKRegistrator(transformation=trsf,
                                         metric=metric,
                                         optimizer=optimizer,
@@ -281,9 +319,10 @@ class ThermalPanorama:
     aov = [
         np.deg2rad(copt[x]) if copt[x] else None for x in [&#39;IR_AOV&#39;, &#39;VIS_AOV&#39;]
     ]
-    registrator.set_initial_scale_factor(scale0=copt[&#39;IR_VIS_scale&#39;],
-                                         fixed_alpha=aov[0],
-                                         moving_alpha=aov[1])
+    registrator.set_initial_params(scale=copt[&#39;scale&#39;],
+                                   fixed_alpha=aov[0],
+                                   moving_alpha=aov[1],
+                                   translation=copt[&#39;translation&#39;])
     prep = rsitk.RegistrationPreprocess(
         shape=shape,
         eqhist=ropt[&#39;preprocess&#39;][&#39;equalize_histogram&#39;],
@@ -299,6 +338,7 @@ class ThermalPanorama:
     rgst_dir = self._dir(DIR.RGST)
 
     registrator, prep = None, None
+    mtx = {}
     for irf, visf in track(sequence=zip(ir_files, vis_files),
                            description=&#39;Registering...&#39;,
                            total=len(ir_files),
@@ -309,11 +349,13 @@ class ThermalPanorama:
       if registrator is None:
         registrator, prep = self._init_registrator(shape=ir.shape)
 
-      logger.debug(&#39;Registering `{}`&#39;, irf.stem)
+      logger.debug(&#39;Registering &#34;{}&#34;&#39;, irf.stem)
       fri, mri = registrator.prep_and_register(fixed_image=ir,
                                                moving_image=vis,
                                                preprocess=prep)
       rgst_color_img = mri.registered_orig_image()
+      if mri.matrix is not None:
+        mtx[irf.stem] = mri.matrix.tolist()
 
       # 정합한 실화상
       vis_fname = f&#39;{irf.stem}{FN.RGST_VIS}{FN.LL}&#39;
@@ -327,6 +369,9 @@ class ThermalPanorama:
           titles=(&#39;Thermal image (prep)&#39;, &#39;Visible image (prep)&#39;))
       compare_fig.savefig(rgst_dir.joinpath(compare_fname))
       plt.close(compare_fig)
+
+    with open(rgst_dir.joinpath(&#39;transform matrix.yaml&#39;), &#39;w&#39;) as f:
+      yaml.safe_dump(data=mtx, stream=f, indent=4)
 
     logger.success(&#39;열화상-실화상 정합 완료&#39;)
 
@@ -428,10 +473,9 @@ class ThermalPanorama:
       files: List[Path],
       spectrum: str,
   ):
-    if spectrum not in (&#39;IR&#39;, &#39;VIS&#39;, &#39;seg&#39;):
+    if spectrum not in (&#39;IR&#39;, &#39;VIS&#39;, &#39;Seg&#39;):
       raise ValueError
 
-    warp = self._config[&#39;panorama&#39;][&#39;stitch&#39;][&#39;warp&#39;]
     images = [IIO.read(x) for x in files]
     pano, _, _ = stitcher.warp_and_blend(
         images=stitch.StitchingImages(arrays=images),
@@ -450,8 +494,8 @@ class ThermalPanorama:
     else:
       pano = np.round(pano).astype(np.uint8)
 
-    fname = f&#39;{spectrum}_{warp}&#39;
-    if spectrum == &#39;seg&#39;:
+    fname = f&#39;{spectrum}{FN.PANO}&#39;
+    if spectrum == &#39;Seg&#39;:
       IIO.save(path=self._dir(DIR.PANO).joinpath(fname + FN.LL),
                array=limit_size(pano, self._size_limit))
     else:
@@ -482,7 +526,7 @@ class ThermalPanorama:
                         spectrum=spectrum)
 
     # 저장
-    self._save_panorama(fname=&#39;{}_{}&#39;.format(spectrum, sopt[&#39;warp&#39;]),
+    self._save_panorama(fname=f&#39;{spectrum}{FN.PANO}&#39;,
                         spectrum=spectrum,
                         panorama=pano)
 
@@ -497,7 +541,7 @@ class ThermalPanorama:
       self._stitch_others(stitcher=stitcher,
                           panorama=pano,
                           files=seg_files,
-                          spectrum=&#39;seg&#39;)
+                          spectrum=&#39;Seg&#39;)
 
     # 나머지 영상의 파노라마 생성/저장
     sp2 = &#39;VIS&#39; if spectrum == &#39;IR&#39; else &#39;IR&#39;
@@ -532,8 +576,7 @@ class ThermalPanorama:
   def correct(self):
     pc = self._init_perspective_correction()
 
-    warp = self._config[&#39;panorama&#39;][&#39;stitch&#39;][&#39;warp&#39;]
-    ir_fname = f&#39;IR_{warp}&#39;  # FIXME {warp} 제거
+    ir_fname = f&#39;IR{FN.PANO}&#39;
     pano_dir = self._dir(DIR.PANO, mkdir=False)
 
     ir_path = pano_dir.joinpath(ir_fname + FN.NPY)
@@ -541,7 +584,7 @@ class ThermalPanorama:
       logger.error(&#39;생성된 파노라마 파일이 없습니다.&#39;)
       return
 
-    logger.debug(&#39;Init perspective correction&#39;)
+    logger.trace(&#39;Init perspective correction&#39;)
 
     # 적외선 파노라마
     ir_pano = IIO.read(ir_path).astype(np.float32)
@@ -563,7 +606,7 @@ class ThermalPanorama:
     # plot 저장
     cor_dir = self._dir(DIR.COR)
     fig, _ = corrected.process_plot()
-    fig.savefig(cor_dir.joinpath(f&#39;plot{FN.LS}&#39;))
+    fig.savefig(cor_dir.joinpath(f&#39;plot{FN.LS}&#39;), dpi=300)
     plt.close(fig)
 
     if corrected.success():
@@ -578,7 +621,7 @@ class ThermalPanorama:
       logger.debug(&#39;IR 파노라마 보정 파일 저장&#39;)
 
       # 실화상 파노라마 보정
-      vis_path = pano_dir.joinpath(f&#39;VIS_{warp}{FN.LS}&#39;)
+      vis_path = pano_dir.joinpath(f&#39;VIS{FN.PANO}{FN.LS}&#39;)
       if not vis_path.exists():
         logger.warning(&#39;실화상 파노라마가 존재하지 않습니다.&#39;)
       else:
@@ -589,7 +632,7 @@ class ThermalPanorama:
         logger.debug(&#39;실화상 파노라마 왜곡 보정 저장&#39;)
 
       # segmentation 파노라마 보정
-      seg_path = pano_dir.joinpath(f&#39;seg_{warp}{FN.LL}&#39;)
+      seg_path = pano_dir.joinpath(f&#39;Seg{FN.PANO}{FN.LL}&#39;)
       if not seg_path.exists():
         logger.warning(&#39;부위 인식 파노라마가 존재하지 않습니다.&#39;)
       else:
@@ -685,6 +728,7 @@ class ThermalPanorama:
   SEG_MASK = &#39;_mask&#39;
   SEG_FIG = &#39;_fig&#39;
 
+  PANO = &#39;_panorama&#39;
   PANO_MASK = &#39;_mask&#39;</code></pre>
 </details>
 <h3>Class variables</h3>
@@ -702,6 +746,10 @@ class ThermalPanorama:
 <div class="desc"></div>
 </dd>
 <dt id="src.interface.pano.FN.NPY"><code class="name">var <span class="ident">NPY</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="src.interface.pano.FN.PANO"><code class="name">var <span class="ident">PANO</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -752,13 +800,15 @@ class ThermalPanorama:
     self._config = read_config(wd=wd, default=default_config)
 
     self._manufacturer = self._check_manufacturer()
-    logger.debug(&#39;Manufacturer: {}&#39;, self._manufacturer)
-    if self._manufacturer == &#39;FLIR&#39;:
-      self._flir_ext: Optional[flir.FlirExtractor] = flir.FlirExtractor()
-    else:
+    logger.info(&#39;Manufacturer: {}&#39;, self._manufacturer)
+    if self._manufacturer != &#39;FLIR&#39;:
       self._flir_ext = None
+    else:
+      self._flir_ext = flir.FlirExtractor()
 
-    # colormap
+    self._camera = self._check_camera_model()
+    logger.info(&#39;Camera: {}&#39;, self._camera)
+
     self._cmap = get_thermal_colormap(
         name=self._config[&#39;color&#39;].get(&#39;colormap&#39;, &#39;iron&#39;))
 
@@ -777,7 +827,7 @@ class ThermalPanorama:
     elif flir_files:
       manufacturer = &#39;FLIR&#39;
     else:
-      raise ValueError(&#39;Raw 파일 설정 오류&#39;)
+      raise ValueError(&#39;지원하지 않는 Raw 파일 형식입니다.&#39;)
 
     return manufacturer
 
@@ -835,14 +885,41 @@ class ThermalPanorama:
 
     return d
 
+  def _check_camera_model(self) -&gt; Optional[str]:
+    tags = [&#39;Model&#39;, &#39;CameraModel&#39;]
+    raw_files = self._files(DIR.RAW)
+
+    def _get_model(exif: dict):
+      # iterable 중 조건을 만족하는 첫 element
+      tag = next((x for x in exif.keys() if x in tags), None)
+      if tag is None:
+        return None
+
+      return exif[tag]
+
+    exifs = exif.get_exif(files=[x.as_posix() for x in raw_files], tags=tags)
+    models = [_get_model(exif) for exif in exifs]
+    models = [x for x in models if x is not None]
+
+    if not models:
+      logger.debug(&#39;Exif로부터 카메라 기종 추정 불가&#39;)
+      return None
+
+    if any(models[0] != x for x in models[1:]):
+      logger.warning(&#39;다수의 카메라로 촬영된 Raw 파일을 입력했습니다 ({}). &#39;
+                     &#39;카메라 기종을 추정할 수 없습니다.&#39;, set(models))
+      return None
+
+    return models[0]
+
   def _extract_flir_image(self, path: Path):
     assert self._flir_ext is not None
     ir, vis = self._flir_ext.extract_data(path)
-    meta = {&#39;Exif&#39;: exif.get_exif_tags(path.as_posix())[0]}
+    meta = {&#39;Exif&#39;: exif.get_exif(files=path.as_posix())[0]}
 
     if self._config[&#39;file&#39;][&#39;force_horizontal&#39;] and (ir.shape[0] &gt; ir.shape[1]):
       # 수직 영상을 수평으로 만들기 위해 90도 회전
-      logger.debug(&#39;rot90 `{}`&#39;, path.name)
+      logger.debug(&#39;rot90 &#34;{}&#34;&#39;, path.name)
       ir = np.rot90(ir, k=1, axes=(0, 1))
       vis = np.rot90(vis, k=1, axes=(0, 1))
 
@@ -899,7 +976,7 @@ class ThermalPanorama:
     if ir_path.exists() and vis_path.exists():
       return
 
-    logger.debug(&#39;Extracting `{}`&#39;, file.name)
+    logger.debug(&#39;Extracting &#34;{}&#34;&#39;, file.name)
 
     if self._manufacturer == &#39;FLIR&#39;:
       ir, vis, meta = self._extract_flir_image(path=file)
@@ -927,11 +1004,18 @@ class ThermalPanorama:
 
   def _init_registrator(self, shape):
     ropt: DictConfig = self._config[&#39;registration&#39;]
-    copt: DictConfig = self._config[&#39;camera&#39;]
+
+    if self._camera in self._config[&#39;camera&#39;][&#39;preset&#39;]:
+      copt: DictConfig = self._config[&#39;camera&#39;][&#39;preset&#39;][self._camera]
+      logger.debug(&#39;Regestering preset: {}&#39;, self._camera)
+    else:
+      copt: DictConfig = self._config[&#39;camera&#39;][&#39;default&#39;]
+      logger.debug(&#39;Regestering preset: default&#39;)
 
     trsf = rsitk.Transformation[ropt[&#39;transformation&#39;]]
     metric = rsitk.Metric[ropt[&#39;metric&#39;]]
-    optimizer = &#39;gradient_descent&#39; if ropt[&#39;preprocess&#39;][&#39;edge&#39;] else &#39;powell&#39;
+    optimizer = ropt[&#39;optimizer&#39;]
+
     registrator = rsitk.SITKRegistrator(transformation=trsf,
                                         metric=metric,
                                         optimizer=optimizer,
@@ -939,9 +1023,10 @@ class ThermalPanorama:
     aov = [
         np.deg2rad(copt[x]) if copt[x] else None for x in [&#39;IR_AOV&#39;, &#39;VIS_AOV&#39;]
     ]
-    registrator.set_initial_scale_factor(scale0=copt[&#39;IR_VIS_scale&#39;],
-                                         fixed_alpha=aov[0],
-                                         moving_alpha=aov[1])
+    registrator.set_initial_params(scale=copt[&#39;scale&#39;],
+                                   fixed_alpha=aov[0],
+                                   moving_alpha=aov[1],
+                                   translation=copt[&#39;translation&#39;])
     prep = rsitk.RegistrationPreprocess(
         shape=shape,
         eqhist=ropt[&#39;preprocess&#39;][&#39;equalize_histogram&#39;],
@@ -957,6 +1042,7 @@ class ThermalPanorama:
     rgst_dir = self._dir(DIR.RGST)
 
     registrator, prep = None, None
+    mtx = {}
     for irf, visf in track(sequence=zip(ir_files, vis_files),
                            description=&#39;Registering...&#39;,
                            total=len(ir_files),
@@ -967,11 +1053,13 @@ class ThermalPanorama:
       if registrator is None:
         registrator, prep = self._init_registrator(shape=ir.shape)
 
-      logger.debug(&#39;Registering `{}`&#39;, irf.stem)
+      logger.debug(&#39;Registering &#34;{}&#34;&#39;, irf.stem)
       fri, mri = registrator.prep_and_register(fixed_image=ir,
                                                moving_image=vis,
                                                preprocess=prep)
       rgst_color_img = mri.registered_orig_image()
+      if mri.matrix is not None:
+        mtx[irf.stem] = mri.matrix.tolist()
 
       # 정합한 실화상
       vis_fname = f&#39;{irf.stem}{FN.RGST_VIS}{FN.LL}&#39;
@@ -985,6 +1073,9 @@ class ThermalPanorama:
           titles=(&#39;Thermal image (prep)&#39;, &#39;Visible image (prep)&#39;))
       compare_fig.savefig(rgst_dir.joinpath(compare_fname))
       plt.close(compare_fig)
+
+    with open(rgst_dir.joinpath(&#39;transform matrix.yaml&#39;), &#39;w&#39;) as f:
+      yaml.safe_dump(data=mtx, stream=f, indent=4)
 
     logger.success(&#39;열화상-실화상 정합 완료&#39;)
 
@@ -1086,10 +1177,9 @@ class ThermalPanorama:
       files: List[Path],
       spectrum: str,
   ):
-    if spectrum not in (&#39;IR&#39;, &#39;VIS&#39;, &#39;seg&#39;):
+    if spectrum not in (&#39;IR&#39;, &#39;VIS&#39;, &#39;Seg&#39;):
       raise ValueError
 
-    warp = self._config[&#39;panorama&#39;][&#39;stitch&#39;][&#39;warp&#39;]
     images = [IIO.read(x) for x in files]
     pano, _, _ = stitcher.warp_and_blend(
         images=stitch.StitchingImages(arrays=images),
@@ -1108,8 +1198,8 @@ class ThermalPanorama:
     else:
       pano = np.round(pano).astype(np.uint8)
 
-    fname = f&#39;{spectrum}_{warp}&#39;
-    if spectrum == &#39;seg&#39;:
+    fname = f&#39;{spectrum}{FN.PANO}&#39;
+    if spectrum == &#39;Seg&#39;:
       IIO.save(path=self._dir(DIR.PANO).joinpath(fname + FN.LL),
                array=limit_size(pano, self._size_limit))
     else:
@@ -1140,7 +1230,7 @@ class ThermalPanorama:
                         spectrum=spectrum)
 
     # 저장
-    self._save_panorama(fname=&#39;{}_{}&#39;.format(spectrum, sopt[&#39;warp&#39;]),
+    self._save_panorama(fname=f&#39;{spectrum}{FN.PANO}&#39;,
                         spectrum=spectrum,
                         panorama=pano)
 
@@ -1155,7 +1245,7 @@ class ThermalPanorama:
       self._stitch_others(stitcher=stitcher,
                           panorama=pano,
                           files=seg_files,
-                          spectrum=&#39;seg&#39;)
+                          spectrum=&#39;Seg&#39;)
 
     # 나머지 영상의 파노라마 생성/저장
     sp2 = &#39;VIS&#39; if spectrum == &#39;IR&#39; else &#39;IR&#39;
@@ -1190,8 +1280,7 @@ class ThermalPanorama:
   def correct(self):
     pc = self._init_perspective_correction()
 
-    warp = self._config[&#39;panorama&#39;][&#39;stitch&#39;][&#39;warp&#39;]
-    ir_fname = f&#39;IR_{warp}&#39;  # FIXME {warp} 제거
+    ir_fname = f&#39;IR{FN.PANO}&#39;
     pano_dir = self._dir(DIR.PANO, mkdir=False)
 
     ir_path = pano_dir.joinpath(ir_fname + FN.NPY)
@@ -1199,7 +1288,7 @@ class ThermalPanorama:
       logger.error(&#39;생성된 파노라마 파일이 없습니다.&#39;)
       return
 
-    logger.debug(&#39;Init perspective correction&#39;)
+    logger.trace(&#39;Init perspective correction&#39;)
 
     # 적외선 파노라마
     ir_pano = IIO.read(ir_path).astype(np.float32)
@@ -1221,7 +1310,7 @@ class ThermalPanorama:
     # plot 저장
     cor_dir = self._dir(DIR.COR)
     fig, _ = corrected.process_plot()
-    fig.savefig(cor_dir.joinpath(f&#39;plot{FN.LS}&#39;))
+    fig.savefig(cor_dir.joinpath(f&#39;plot{FN.LS}&#39;), dpi=300)
     plt.close(fig)
 
     if corrected.success():
@@ -1236,7 +1325,7 @@ class ThermalPanorama:
       logger.debug(&#39;IR 파노라마 보정 파일 저장&#39;)
 
       # 실화상 파노라마 보정
-      vis_path = pano_dir.joinpath(f&#39;VIS_{warp}{FN.LS}&#39;)
+      vis_path = pano_dir.joinpath(f&#39;VIS{FN.PANO}{FN.LS}&#39;)
       if not vis_path.exists():
         logger.warning(&#39;실화상 파노라마가 존재하지 않습니다.&#39;)
       else:
@@ -1247,7 +1336,7 @@ class ThermalPanorama:
         logger.debug(&#39;실화상 파노라마 왜곡 보정 저장&#39;)
 
       # segmentation 파노라마 보정
-      seg_path = pano_dir.joinpath(f&#39;seg_{warp}{FN.LL}&#39;)
+      seg_path = pano_dir.joinpath(f&#39;Seg{FN.PANO}{FN.LL}&#39;)
       if not seg_path.exists():
         logger.warning(&#39;부위 인식 파노라마가 존재하지 않습니다.&#39;)
       else:
@@ -1273,8 +1362,7 @@ class ThermalPanorama:
 <pre><code class="python">def correct(self):
   pc = self._init_perspective_correction()
 
-  warp = self._config[&#39;panorama&#39;][&#39;stitch&#39;][&#39;warp&#39;]
-  ir_fname = f&#39;IR_{warp}&#39;  # FIXME {warp} 제거
+  ir_fname = f&#39;IR{FN.PANO}&#39;
   pano_dir = self._dir(DIR.PANO, mkdir=False)
 
   ir_path = pano_dir.joinpath(ir_fname + FN.NPY)
@@ -1282,7 +1370,7 @@ class ThermalPanorama:
     logger.error(&#39;생성된 파노라마 파일이 없습니다.&#39;)
     return
 
-  logger.debug(&#39;Init perspective correction&#39;)
+  logger.trace(&#39;Init perspective correction&#39;)
 
   # 적외선 파노라마
   ir_pano = IIO.read(ir_path).astype(np.float32)
@@ -1304,7 +1392,7 @@ class ThermalPanorama:
   # plot 저장
   cor_dir = self._dir(DIR.COR)
   fig, _ = corrected.process_plot()
-  fig.savefig(cor_dir.joinpath(f&#39;plot{FN.LS}&#39;))
+  fig.savefig(cor_dir.joinpath(f&#39;plot{FN.LS}&#39;), dpi=300)
   plt.close(fig)
 
   if corrected.success():
@@ -1319,7 +1407,7 @@ class ThermalPanorama:
     logger.debug(&#39;IR 파노라마 보정 파일 저장&#39;)
 
     # 실화상 파노라마 보정
-    vis_path = pano_dir.joinpath(f&#39;VIS_{warp}{FN.LS}&#39;)
+    vis_path = pano_dir.joinpath(f&#39;VIS{FN.PANO}{FN.LS}&#39;)
     if not vis_path.exists():
       logger.warning(&#39;실화상 파노라마가 존재하지 않습니다.&#39;)
     else:
@@ -1330,7 +1418,7 @@ class ThermalPanorama:
       logger.debug(&#39;실화상 파노라마 왜곡 보정 저장&#39;)
 
     # segmentation 파노라마 보정
-    seg_path = pano_dir.joinpath(f&#39;seg_{warp}{FN.LL}&#39;)
+    seg_path = pano_dir.joinpath(f&#39;Seg{FN.PANO}{FN.LL}&#39;)
     if not seg_path.exists():
       logger.warning(&#39;부위 인식 파노라마가 존재하지 않습니다.&#39;)
     else:
@@ -1372,7 +1460,7 @@ class ThermalPanorama:
                       spectrum=spectrum)
 
   # 저장
-  self._save_panorama(fname=&#39;{}_{}&#39;.format(spectrum, sopt[&#39;warp&#39;]),
+  self._save_panorama(fname=f&#39;{spectrum}{FN.PANO}&#39;,
                       spectrum=spectrum,
                       panorama=pano)
 
@@ -1387,7 +1475,7 @@ class ThermalPanorama:
     self._stitch_others(stitcher=stitcher,
                         panorama=pano,
                         files=seg_files,
-                        spectrum=&#39;seg&#39;)
+                        spectrum=&#39;Seg&#39;)
 
   # 나머지 영상의 파노라마 생성/저장
   sp2 = &#39;VIS&#39; if spectrum == &#39;IR&#39; else &#39;IR&#39;
@@ -1424,6 +1512,7 @@ class ThermalPanorama:
   rgst_dir = self._dir(DIR.RGST)
 
   registrator, prep = None, None
+  mtx = {}
   for irf, visf in track(sequence=zip(ir_files, vis_files),
                          description=&#39;Registering...&#39;,
                          total=len(ir_files),
@@ -1434,11 +1523,13 @@ class ThermalPanorama:
     if registrator is None:
       registrator, prep = self._init_registrator(shape=ir.shape)
 
-    logger.debug(&#39;Registering `{}`&#39;, irf.stem)
+    logger.debug(&#39;Registering &#34;{}&#34;&#39;, irf.stem)
     fri, mri = registrator.prep_and_register(fixed_image=ir,
                                              moving_image=vis,
                                              preprocess=prep)
     rgst_color_img = mri.registered_orig_image()
+    if mri.matrix is not None:
+      mtx[irf.stem] = mri.matrix.tolist()
 
     # 정합한 실화상
     vis_fname = f&#39;{irf.stem}{FN.RGST_VIS}{FN.LL}&#39;
@@ -1452,6 +1543,9 @@ class ThermalPanorama:
         titles=(&#39;Thermal image (prep)&#39;, &#39;Visible image (prep)&#39;))
     compare_fig.savefig(rgst_dir.joinpath(compare_fname))
     plt.close(compare_fig)
+
+  with open(rgst_dir.joinpath(&#39;transform matrix.yaml&#39;), &#39;w&#39;) as f:
+    yaml.safe_dump(data=mtx, stream=f, indent=4)
 
   logger.success(&#39;열화상-실화상 정합 완료&#39;)</code></pre>
 </details>
@@ -1493,6 +1587,7 @@ class ThermalPanorama:
 <li><code><a title="src.interface.pano.FN.LL" href="#src.interface.pano.FN.LL">LL</a></code></li>
 <li><code><a title="src.interface.pano.FN.LS" href="#src.interface.pano.FN.LS">LS</a></code></li>
 <li><code><a title="src.interface.pano.FN.NPY" href="#src.interface.pano.FN.NPY">NPY</a></code></li>
+<li><code><a title="src.interface.pano.FN.PANO" href="#src.interface.pano.FN.PANO">PANO</a></code></li>
 <li><code><a title="src.interface.pano.FN.PANO_MASK" href="#src.interface.pano.FN.PANO_MASK">PANO_MASK</a></code></li>
 <li><code><a title="src.interface.pano.FN.RGST_CMPR" href="#src.interface.pano.FN.RGST_CMPR">RGST_CMPR</a></code></li>
 <li><code><a title="src.interface.pano.FN.RGST_VIS" href="#src.interface.pano.FN.RGST_VIS">RGST_VIS</a></code></li>

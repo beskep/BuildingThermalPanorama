@@ -16,6 +16,8 @@ from misc.tools import erode, normalize_image
 
 from . import rectification
 
+# TODO correct 결과 마스킹, crop
+
 
 class NotEnoughEdgelets(ValueError):
   pass
@@ -57,7 +59,7 @@ class CorrectionOptions:
   ransac_iter: int = 1000
   clip_factor: float = 0.0
   vp_iter: int = 5
-  erode: int = 50  # [pixel]
+  erode: int = 50  # [pixel/iterations]
 
   strict: bool = False
   margin: float = 0.1
@@ -106,7 +108,7 @@ class VanishingPoint:
   SOFT = {HORIZ, VERT, DIAG}
   STRICT = {HORIZ, VERT}
 
-  POS_DICT = {
+  _POS_DICT = {
       (True, True): DIAG,
       (True, False): HORIZ,
       (False, True): VERT,
@@ -141,7 +143,7 @@ class VanishingPoint:
     rxy = (self.xy - shape / 2.0) / shape
     hv = np.abs(rxy) > 0.5 + margin
 
-    self._pos = self.POS_DICT[(hv[0], hv[1])]
+    self._pos = self._POS_DICT[(hv[0], hv[1])]
 
 
 def compute_edgelets(
@@ -311,27 +313,24 @@ class CorrectedImage:
 
     fig, axes = plt.subplots(2, 3, figsize=(16, 9))
 
-    # original image
-    axes[0, 0].set_title('Original image')
-    axes[0, 0].imshow(self.image)
-
     # preprocessed image
-    axes[0, 1].set_title('Preprocess')
-    axes[0, 1].imshow(self.preprocessed)
+    axes[0, 0].set_title('Preped Image')
+    axes[0, 0].imshow(self.preprocessed)
 
-    # edges (canny and hough lines)
-    axes[0, 2].set_title('Edges')
+    # edges (canny)
+    axes[0, 1].set_title('Edges')
+    axes[0, 1].imshow(self.edges)
+
+    # lines (canny and hough lines)
+    axes[0, 2].set_title('Lines')
     axes[0, 2].imshow(self.edges)
 
     half_strengths = self.edgelets.strengths.reshape([-1, 1]) / 2.0
     pt1 = self.edgelets.locations - self.edgelets.directions * half_strengths
     pt2 = self.edgelets.locations + self.edgelets.directions * half_strengths
     for idx in range(self.edgelets.count):
-      axes[0, 2].plot(
-          [pt1[idx, 0], pt2[idx, 0]],
-          [pt1[idx, 1], pt2[idx, 1]],
-          'r-',
-      )
+      axes[0, 2].plot([pt1[idx, 0], pt2[idx, 0]], [pt1[idx, 1], pt2[idx, 1]],
+                      'r-')
 
     # vanishing points
     axes[1, 0].set_title('Vanishing point 1')
@@ -345,7 +344,7 @@ class CorrectedImage:
       self._visualize_model(ax=axes[1, 1], vp=self.vp2)
 
     # corrected image
-    axes[1, 2].set_title('Corrected image')
+    axes[1, 2].set_title('Corrected Image')
     if self.success():
       axes[1, 2].imshow(self.corrected_image)
 

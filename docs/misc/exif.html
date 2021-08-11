@@ -30,6 +30,7 @@
 <pre><code class="python">&#34;&#34;&#34;영상 파일의 Exif 정보 추출&#34;&#34;&#34;
 
 from subprocess import DEVNULL, check_output
+from typing import List, Optional, Union
 
 import utils
 
@@ -50,25 +51,34 @@ def run_exif_tool(*args):
   return res
 
 
-def get_exif_tags(image_path: str, *args) -&gt; dict:
+def get_exif(files: Union[str, List[str]],
+             tags: Optional[List[str]] = None) -&gt; List[dict]:
   &#34;&#34;&#34;
-  지정한 Exif tag 추출
+  촬영 파일로부터 Exif tag 추출
 
   Parameters
   ----------
-  image_path : str
-      영상 경로
-  *args
-      추출할 태그 목록
+  files : Union[str, List[str]]
+      대상 파일 경로, 혹은 경로의 목록
+  tags : Optional[List[str]], optional
+      추출할 tag. `None`인 경우 모든 tag 추출, by default None
 
   Returns
   -------
-  dict
+  List[dict]
   &#34;&#34;&#34;
-  tag_byte = run_exif_tool(image_path, &#39;-j&#39;, *args)
-  tag = yaml.safe_load(tag_byte.decode())
+  if isinstance(files, str):
+    files = [files]
 
-  return tag
+  if tags is None:
+    tags = []
+  else:
+    tags = [(x if x.startswith(&#39;-&#39;) else &#39;-&#39; + x) for x in tags]
+
+  exifs_byte = run_exif_tool(&#39;-j&#39;, *tags, *files)
+  exifs = yaml.safe_load(exifs_byte.decode())
+
+  return exifs
 
 
 def get_exif_binary(image_path: str, tag):
@@ -95,6 +105,57 @@ def get_exif_binary(image_path: str, tag):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="src.misc.exif.get_exif"><code class="name flex">
+<span>def <span class="ident">get_exif</span></span>(<span>files: Union[str, List[str]], tags: Union[List[str], NoneType] = None) ‑> List[dict]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>촬영 파일로부터 Exif tag 추출</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>files</code></strong> :&ensp;<code>Union[str, List[str]]</code></dt>
+<dd>대상 파일 경로, 혹은 경로의 목록</dd>
+<dt><strong><code>tags</code></strong> :&ensp;<code>Optional[List[str]]</code>, optional</dt>
+<dd>추출할 tag. <code>None</code>인 경우 모든 tag 추출, by default None</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>List[dict]</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_exif(files: Union[str, List[str]],
+             tags: Optional[List[str]] = None) -&gt; List[dict]:
+  &#34;&#34;&#34;
+  촬영 파일로부터 Exif tag 추출
+
+  Parameters
+  ----------
+  files : Union[str, List[str]]
+      대상 파일 경로, 혹은 경로의 목록
+  tags : Optional[List[str]], optional
+      추출할 tag. `None`인 경우 모든 tag 추출, by default None
+
+  Returns
+  -------
+  List[dict]
+  &#34;&#34;&#34;
+  if isinstance(files, str):
+    files = [files]
+
+  if tags is None:
+    tags = []
+  else:
+    tags = [(x if x.startswith(&#39;-&#39;) else &#39;-&#39; + x) for x in tags]
+
+  exifs_byte = run_exif_tool(&#39;-j&#39;, *tags, *files)
+  exifs = yaml.safe_load(exifs_byte.decode())
+
+  return exifs</code></pre>
+</details>
+</dd>
 <dt id="src.misc.exif.get_exif_binary"><code class="name flex">
 <span>def <span class="ident">get_exif_binary</span></span>(<span>image_path: str, tag)</span>
 </code></dt>
@@ -127,48 +188,6 @@ def get_exif_binary(image_path: str, tag):
   res = run_exif_tool(tag, &#39;-b&#39;, image_path)
 
   return res</code></pre>
-</details>
-</dd>
-<dt id="src.misc.exif.get_exif_tags"><code class="name flex">
-<span>def <span class="ident">get_exif_tags</span></span>(<span>image_path: str, *args) ‑> dict</span>
-</code></dt>
-<dd>
-<div class="desc"><p>지정한 Exif tag 추출</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>image_path</code></strong> :&ensp;<code>str</code></dt>
-<dd>영상 경로</dd>
-<dt><strong><code>*args</code></strong></dt>
-<dd>추출할 태그 목록</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>dict</code></dt>
-<dd>&nbsp;</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_exif_tags(image_path: str, *args) -&gt; dict:
-  &#34;&#34;&#34;
-  지정한 Exif tag 추출
-
-  Parameters
-  ----------
-  image_path : str
-      영상 경로
-  *args
-      추출할 태그 목록
-
-  Returns
-  -------
-  dict
-  &#34;&#34;&#34;
-  tag_byte = run_exif_tool(image_path, &#39;-j&#39;, *args)
-  tag = yaml.safe_load(tag_byte.decode())
-
-  return tag</code></pre>
 </details>
 </dd>
 <dt id="src.misc.exif.run_exif_tool"><code class="name flex">
@@ -208,8 +227,8 @@ def get_exif_binary(image_path: str, tag):
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="src.misc.exif.get_exif" href="#src.misc.exif.get_exif">get_exif</a></code></li>
 <li><code><a title="src.misc.exif.get_exif_binary" href="#src.misc.exif.get_exif_binary">get_exif_binary</a></code></li>
-<li><code><a title="src.misc.exif.get_exif_tags" href="#src.misc.exif.get_exif_tags">get_exif_tags</a></code></li>
 <li><code><a title="src.misc.exif.run_exif_tool" href="#src.misc.exif.run_exif_tool">run_exif_tool</a></code></li>
 </ul>
 </li>

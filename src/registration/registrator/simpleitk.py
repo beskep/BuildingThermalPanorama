@@ -82,7 +82,9 @@ class SITKRegistrator(BaseRegistrator):
     self._transformation: Transformation = transformation
     self._metric: Metric = metric
     self._bins = bins
+
     self._scale0: Optional[float] = None  # initial scale factor
+    self._trnsl0: Optional[tuple] = None  # inital translation factor
 
     self._metric_options = {}
     if isinstance(bins, int):
@@ -95,12 +97,21 @@ class SITKRegistrator(BaseRegistrator):
     self._method.SetInterpolator(sitk.sitkLinear)
 
     if optimizer == 'powell':
-      self._method.SetOptimizerAsPowell(numberOfIterations=200)
+      self._method.SetOptimizerAsPowell(numberOfIterations=500,
+                                        maximumLineIterations=100,
+                                        stepLength=1,
+                                        stepTolerance=1e-8,
+                                        valueTolerance=1e-8)
     elif optimizer == 'gradient_descent':
-      self._method.SetOptimizerAsGradientDescent(learningRate=0.01,
-                                                 numberOfIterations=200)
+      self._method.SetOptimizerAsGradientDescent(
+          learningRate=0.01,
+          numberOfIterations=500,
+          convergenceMinimumValue=1e-4,
+          convergenceWindowSize=20,
+          maximumStepSizeInPhysicalUnits=2)
     else:
-      raise ValueError(r'optimizer not in {"powell", "gradient_descent"}')
+      raise ValueError(
+          f'Optimizer `{optimizer}` not in ["powell", "gradient_descent"]')
 
     # 각 parameter의 scaling factor 결정 방법
     self._method.SetOptimizerScalesFromPhysicalShift()
@@ -171,18 +182,29 @@ class SITKRegistrator(BaseRegistrator):
 
   @staticmethod
   def _get_transformation(transformation: Transformation,
-                          scale0: Optional[float] = None):
-    if scale0 is None:
+                          scale: Optional[float] = None,
+                          translation: Optional[tuple] = None):
+    if scale is None:
       logger.warning('초기 scale이 설정되지 않았습니다. 정합 결과가 부정확할 수 있습니다.')
-      scale0 = 1.0
+      scale = 1.0
 
     # 초기 scale 설정
     if transformation is Transformation.Similarity:
+      # params: (scale, angle, translation0, translation1)
       trsf = sitk.Similarity2DTransform()
-      trsf.SetScale(scale0)
+
+      trsf.SetScale(scale)
+      if translation is not None:
+        trsf.SetTranslation(translation)
+
     elif transformation is Transformation.Affine:
+      # params: mtx.flatten(), translation[0], translation[1]
       trsf = sitk.AffineTransform(2)
-      trsf.SetParameters((scale0, 0.0, 0.0, scale0, 0.0, 0.0))
+
+      if translation is None:
+        translation = (0.0, 0.0)
+      trsf.SetParameters(
+          (scale, 0.0, 0.0, scale, translation[0], translation[1]))
     else:
       raise ValueError(transformation)
 
@@ -223,31 +245,43 @@ class SITKRegistrator(BaseRegistrator):
     self.method.SetSmoothingSigmasPerLevel(smoothing_sigmas)
     self.method.SmoothingSigmasAreSpecifiedInPhysicalUnitsOn()
 
-  def set_initial_scale_factor(self,
-                               scale0: Optional[float] = None,
-                               fixed_alpha: Optional[float] = None,
-                               moving_alpha: Optional[float] = None):
+  def set_initial_params(self,
+                         scale: Optional[float] = None,
+                         fixed_alpha: Optional[float] = None,
+                         moving_alpha: Optional[float] = None,
+                         translation: Optional[list] = None):
     """
-    정합을 위한 translation의 초기 scale factor 지정.
-    fixed, moving image의 화각 (AOV; Angle of View)을 통해 추정 가능.
+    정합을 위한 translation의 초기 패러미터 지정.
+
+    scale (fixed/moving)의 경우 fixed, moving image의 화각
+    (AOV; Angle of View)을 통해 추정 가능.
     모두 None으로 입력하면 초기 scale factor를 설정하지 않음.
+
+    translation은 기존 정합 결과를 참고해서 추정값 적용.
+    e.g. FLIR T540의 경우 (5, -14).
 
     Parameters
     ----------
-    scale0 : Optional[float], optional
-        Initial scale factor, by default None
+    scale : Optional[float], optional
+        Initial scale factor
     fixed_alpha : Optional[float], optional
-        AOV of fixed image [radian], by default None
+        AOV of fixed image [radian]
     moving_alpha : Optional[float], optional
-        AOV of moving image [radian], by default None
+        AOV of moving image [radian]
+    translation : Optional[tuple], optional
+        Inital translation
     """
-    if scale0 is not None:
-      self._scale0 = scale0
+    if scale is not None:
+      self._scale0 = scale
     else:
       if not (fixed_alpha is None or moving_alpha is None):
         self._scale0 = np.tan(fixed_alpha / 2.0) / np.tan(moving_alpha / 2.0)
       else:
         self._scale0 = None
+
+    self._trnsl0 = None if translation is None else tuple(translation)
+    logger.debug('Initial scale: {} | translation: {}', self._scale0,
+                 self._trnsl0)
 
   def _registration_results(
       self,
@@ -334,7 +368,9 @@ class SITKRegistrator(BaseRegistrator):
       bins = bin_size(fixed_image, moving_image, bins=self._bins)
       self._set_method_metric(self.metric, bins=bins, **self._metric_options)
 
-    trsf = self._get_transformation(self._transformation, scale0=self._scale0)
+    trsf = self._get_transformation(self._transformation,
+                                    scale=self._scale0,
+                                    translation=self._trnsl0)
 
     # 초기 transformation 설정
     # (`operationMode=GEOMETRY` -> 영상의 기하학적 중심을 초기 회전축으로 설정)
@@ -346,10 +382,13 @@ class SITKRegistrator(BaseRegistrator):
     self.method.SetInitialTransform(initial_trsf, inPlace=False)
 
     # 연산
-    final_trsf = self.method.Execute(sitk.Cast(fixed, sitk.sitkFloat32),
-                                     sitk.Cast(moving, sitk.sitkFloat32))
+    final_trsf: sitk.Transform = self.method.Execute(
+        sitk.Cast(fixed, sitk.sitkFloat32),
+        sitk.Cast(moving, sitk.sitkFloat32),
+    )
     logger.debug('Optimizer stopping condition: {}',
                  self.method.GetOptimizerStopConditionDescription())
+    logger.debug('Final param: {}', final_trsf.GetParameters())
 
     return self._registration_results(fixed_simg=fixed,
                                       moving_simg=moving,

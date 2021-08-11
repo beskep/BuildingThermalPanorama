@@ -46,8 +46,18 @@ class DIR:
   ROOT = SRC.parent
 
 
+_SRC_DIR = DIR.SRC.as_posix()
+if _SRC_DIR not in sys.path:
+  sys.path.insert(0, _SRC_DIR)
+
+StrPath = Union[str, PathLike]
+
+console = Console(theme=Theme({&#39;logging.level.success&#39;: &#39;blue&#39;}))
+_BLANK_NO = 21
+
+
 class _Handler(RichHandler):
-  _levels = {5: &#39;TRACE&#39;, 25: &#39;SUCCESS&#39;}
+  _levels = {5: &#39;TRACE&#39;, 25: &#39;SUCCESS&#39;, _BLANK_NO: &#39;&#39;}
 
   def emit(self, record: LogRecord) -&gt; None:
     if record.levelno in self._levels:
@@ -56,31 +66,43 @@ class _Handler(RichHandler):
     return super().emit(record)
 
 
-_SRC_DIR = DIR.SRC.as_posix()
-if _SRC_DIR not in sys.path:
-  sys.path.insert(0, _SRC_DIR)
-
-console = Console(theme=Theme({
-    &#39;logging.level.success&#39;: &#39;blue&#39;,
-    &#39;logging.level.warning&#39;: &#39;yellow&#39;
-}))
-StrPath = Union[str, PathLike]
+_handler = _Handler(console=console, log_time_format=&#39;[%X]&#39;)
 
 
-def set_logger(level: Union[int, str, None] = None):
-  logger.remove()
+def set_logger(level: Union[int, str] = 20):
+  if isinstance(level, str):
+    levels = {
+        &#39;TRACE&#39;: 5,
+        &#39;DEBUG&#39;: 10,
+        &#39;INFO&#39;: 20,
+        &#39;SUCCESS&#39;: 25,
+        &#39;WARNING&#39;: 30,
+        &#39;ERROR&#39;: 40,
+        &#39;CRITICAL&#39;: 50
+    }
+    try:
+      level = levels[level]
+    except KeyError as e:
+      raise KeyError(&#39;`{}` not in {}&#39;.format(level, set(levels.keys()))) from e
 
-  if level is None:
-    level = &#39;INFO&#39;
+  if getattr(logger, &#39;lvl&#39;, -1) != level:
+    logger.remove()
 
-  rich_handler = _Handler(console=console, log_time_format=&#39;[%y-%m-%d %X]&#39;)
-  logger.add(rich_handler, level=level, format=&#39;{message}&#39;, enqueue=True)
-  logger.add(&#39;pano.log&#39;,
-             level=&#39;DEBUG&#39;,
-             rotation=&#39;1 week&#39;,
-             retention=&#39;1 month&#39;,
-             encoding=&#39;UTF-8-SIG&#39;,
-             enqueue=True)</code></pre>
+    logger.add(_handler, level=level, format=&#39;{message}&#39;, enqueue=True)
+    logger.add(&#39;pano.log&#39;,
+               level=&#39;DEBUG&#39;,
+               rotation=&#39;1 week&#39;,
+               retention=&#39;1 month&#39;,
+               encoding=&#39;UTF-8-SIG&#39;,
+               enqueue=True)
+
+    setattr(logger, &#39;lvl&#39;, level)
+
+  try:
+    logger.level(&#39;BLANK&#39;)
+  except ValueError:
+    # 빈 칸 표시하는 &#39;BLANK&#39; level 새로 등록
+    logger.level(name=&#39;BLANK&#39;, no=_BLANK_NO)</code></pre>
 </details>
 </section>
 <section>
@@ -91,7 +113,7 @@ def set_logger(level: Union[int, str, None] = None):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="src.utils.set_logger"><code class="name flex">
-<span>def <span class="ident">set_logger</span></span>(<span>level: Union[int, str, NoneType] = None)</span>
+<span>def <span class="ident">set_logger</span></span>(<span>level: Union[int, str] = 20)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -99,20 +121,40 @@ def set_logger(level: Union[int, str, None] = None):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def set_logger(level: Union[int, str, None] = None):
-  logger.remove()
+<pre><code class="python">def set_logger(level: Union[int, str] = 20):
+  if isinstance(level, str):
+    levels = {
+        &#39;TRACE&#39;: 5,
+        &#39;DEBUG&#39;: 10,
+        &#39;INFO&#39;: 20,
+        &#39;SUCCESS&#39;: 25,
+        &#39;WARNING&#39;: 30,
+        &#39;ERROR&#39;: 40,
+        &#39;CRITICAL&#39;: 50
+    }
+    try:
+      level = levels[level]
+    except KeyError as e:
+      raise KeyError(&#39;`{}` not in {}&#39;.format(level, set(levels.keys()))) from e
 
-  if level is None:
-    level = &#39;INFO&#39;
+  if getattr(logger, &#39;lvl&#39;, -1) != level:
+    logger.remove()
 
-  rich_handler = _Handler(console=console, log_time_format=&#39;[%y-%m-%d %X]&#39;)
-  logger.add(rich_handler, level=level, format=&#39;{message}&#39;, enqueue=True)
-  logger.add(&#39;pano.log&#39;,
-             level=&#39;DEBUG&#39;,
-             rotation=&#39;1 week&#39;,
-             retention=&#39;1 month&#39;,
-             encoding=&#39;UTF-8-SIG&#39;,
-             enqueue=True)</code></pre>
+    logger.add(_handler, level=level, format=&#39;{message}&#39;, enqueue=True)
+    logger.add(&#39;pano.log&#39;,
+               level=&#39;DEBUG&#39;,
+               rotation=&#39;1 week&#39;,
+               retention=&#39;1 month&#39;,
+               encoding=&#39;UTF-8-SIG&#39;,
+               enqueue=True)
+
+    setattr(logger, &#39;lvl&#39;, level)
+
+  try:
+    logger.level(&#39;BLANK&#39;)
+  except ValueError:
+    # 빈 칸 표시하는 &#39;BLANK&#39; level 새로 등록
+    logger.level(name=&#39;BLANK&#39;, no=_BLANK_NO)</code></pre>
 </details>
 </dd>
 </dl>

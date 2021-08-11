@@ -17,8 +17,18 @@ class DIR:
   ROOT = SRC.parent
 
 
+_SRC_DIR = DIR.SRC.as_posix()
+if _SRC_DIR not in sys.path:
+  sys.path.insert(0, _SRC_DIR)
+
+StrPath = Union[str, PathLike]
+
+console = Console(theme=Theme({'logging.level.success': 'blue'}))
+_BLANK_NO = 21
+
+
 class _Handler(RichHandler):
-  _levels = {5: 'TRACE', 25: 'SUCCESS'}
+  _levels = {5: 'TRACE', 25: 'SUCCESS', _BLANK_NO: ''}
 
   def emit(self, record: LogRecord) -> None:
     if record.levelno in self._levels:
@@ -27,28 +37,40 @@ class _Handler(RichHandler):
     return super().emit(record)
 
 
-_SRC_DIR = DIR.SRC.as_posix()
-if _SRC_DIR not in sys.path:
-  sys.path.insert(0, _SRC_DIR)
-
-console = Console(theme=Theme({
-    'logging.level.success': 'blue',
-    'logging.level.warning': 'yellow'
-}))
-StrPath = Union[str, PathLike]
+_handler = _Handler(console=console, log_time_format='[%X]')
 
 
-def set_logger(level: Union[int, str, None] = None):
-  logger.remove()
+def set_logger(level: Union[int, str] = 20):
+  if isinstance(level, str):
+    levels = {
+        'TRACE': 5,
+        'DEBUG': 10,
+        'INFO': 20,
+        'SUCCESS': 25,
+        'WARNING': 30,
+        'ERROR': 40,
+        'CRITICAL': 50
+    }
+    try:
+      level = levels[level]
+    except KeyError as e:
+      raise KeyError('`{}` not in {}'.format(level, set(levels.keys()))) from e
 
-  if level is None:
-    level = 'INFO'
+  if getattr(logger, 'lvl', -1) != level:
+    logger.remove()
 
-  rich_handler = _Handler(console=console, log_time_format='[%y-%m-%d %X]')
-  logger.add(rich_handler, level=level, format='{message}', enqueue=True)
-  logger.add('pano.log',
-             level='DEBUG',
-             rotation='1 week',
-             retention='1 month',
-             encoding='UTF-8-SIG',
-             enqueue=True)
+    logger.add(_handler, level=level, format='{message}', enqueue=True)
+    logger.add('pano.log',
+               level='DEBUG',
+               rotation='1 week',
+               retention='1 month',
+               encoding='UTF-8-SIG',
+               enqueue=True)
+
+    setattr(logger, 'lvl', level)
+
+  try:
+    logger.level('BLANK')
+  except ValueError:
+    # 빈 칸 표시하는 'BLANK' level 새로 등록
+    logger.level(name='BLANK', no=_BLANK_NO)

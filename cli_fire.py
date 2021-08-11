@@ -7,6 +7,7 @@ import fire
 import skimage.io
 from loguru import logger
 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 skimage.io.use_plugin('pil')
 sys.path.insert(0, os.path.normpath('./src'))
 

@@ -14,6 +14,9 @@ import registration.registrator.simpleitk as rsitk
 class TestSITK:
 
   registrator = rsitk.SITKRegistrator()
+  # test용으로 iteration 적게 설정
+  registrator.method.SetOptimizerAsGradientDescent(learningRate=0.01,
+                                                   numberOfIterations=10)
   fixed_image: np.ndarray = None
   moving_image: np.ndarray = None
 

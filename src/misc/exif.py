@@ -1,6 +1,7 @@
 """영상 파일의 Exif 정보 추출"""
 
 from subprocess import DEVNULL, check_output
+from typing import List, Optional, Union
 
 import utils
 
@@ -21,25 +22,34 @@ def run_exif_tool(*args):
   return res
 
 
-def get_exif_tags(image_path: str, *args) -> dict:
+def get_exif(files: Union[str, List[str]],
+             tags: Optional[List[str]] = None) -> List[dict]:
   """
-  지정한 Exif tag 추출
+  촬영 파일로부터 Exif tag 추출
 
   Parameters
   ----------
-  image_path : str
-      영상 경로
-  *args
-      추출할 태그 목록
+  files : Union[str, List[str]]
+      대상 파일 경로, 혹은 경로의 목록
+  tags : Optional[List[str]], optional
+      추출할 tag. `None`인 경우 모든 tag 추출, by default None
 
   Returns
   -------
-  dict
+  List[dict]
   """
-  tag_byte = run_exif_tool(image_path, '-j', *args)
-  tag = yaml.safe_load(tag_byte.decode())
+  if isinstance(files, str):
+    files = [files]
 
-  return tag
+  if tags is None:
+    tags = []
+  else:
+    tags = [(x if x.startswith('-') else '-' + x) for x in tags]
+
+  exifs_byte = run_exif_tool('-j', *tags, *files)
+  exifs = yaml.safe_load(exifs_byte.decode())
+
+  return exifs
 
 
 def get_exif_binary(image_path: str, tag):

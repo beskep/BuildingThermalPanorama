@@ -28,9 +28,6 @@ enable = [
     'global-variable-not-assigned',
     'unnecessary-semicolon',
     'unreachable',
-    'unused-argument',
-    'unused-import',
-    'unused-variable',
 ]
 disable = [
     'bad-indentation',
@@ -51,9 +48,8 @@ disable = [
 ]
 
 [tool.mypy]
-disable_error_code = ['var-annotated']
+disable_error_code = ['var-annotated', 'import']
 
 [tool.pyright]
 include = ['src']
-reportUnusedClass = true
-reportUnusedFunction = true
+ignore = ['**/__init__.py']

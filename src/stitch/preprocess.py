@@ -1,6 +1,4 @@
-"""
-Stitcher용 전처리 함수, 클래스
-"""
+"""Stitcher용 전처리 함수, 클래스"""
 
 from typing import Optional, Tuple
 

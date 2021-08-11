@@ -1,10 +1,23 @@
 camera:
-    IR_VIS_scale:
-    IR_AOV: 32 # [degree]
-    VIS_AOV: 42 # [degree]
+    default:
+        scale: 0.75 # IR / VIS image scale
+        IR_AOV: null # 열화상 시야각 [degree]
+        VIS_AOV: null # 열화상 시야각 [degree]
+        translation: null
+    preset:
+        FLIR E95:
+            scale: null
+            IR_AOV: 32
+            VIS_AOV: 42
+            translation: null
+        FLIR T540:
+            scale: 0.75
+            IR_AOV: null
+            VIS_AOV: null
+            translation: [5, -14]
 color:
     colormap: iron # optional, {"iron", "inferno", "rainbow", ...}
-    extract_color_image: True
+    extract_color_image: true
 file:
     size_limit: 10000 # [pixel]
     FLIR:
@@ -14,13 +27,14 @@ file:
         VIS: "*_실화상 이미지.JPG"
     force_horizontal: false
 registration:
-    metric: JointHistMI # {"JointHistMI", "MattesMI", ...}
+    metric: JointHistMI # {"JointHistMI", "MattesMI", "MeanSquare", ...}
     transformation: Similarity # {"Similarity", "Affine"}
     bins: auto # {int, "auto", "fd", "sqrt", ...}
+    optimizer: gradient_descent # {"gradient_descent", "powell"}
     preprocess:
-        equalize_histogram: True
-        unsharp: False
-        edge: False
+        equalize_histogram: true
+        unsharp: false
+        edge: false
 panorama:
     target: IR # {"IR", "VIS"}
     stitch:
@@ -29,15 +43,15 @@ panorama:
         compose_scale: 1.0
         work_scale: 1.0
         warp_threshold: 20.0
-        crop: True
+        crop: true
         blend:
-            IR: True
-            VIS: False
+            IR: true
+            VIS: false
     preprocess:
         IR:
             masking_threshold: -30.0
-            contrast: equalization # {"equalization", "normalization", Null}
-            denoise: bilateral # {"bilateral", "gaussian", Null}
+            contrast: equalization # {"equalization", "normalization", null}
+            denoise: bilateral # {"bilateral", "gaussian", null}
             bilateral_args: # optional
                 d: -1
                 sigmaColor: 20
@@ -46,9 +60,9 @@ panorama:
                 ksize: [5, 5]
                 sigmaX: 0
         VIS:
-            masking_threshold: Null
-            contrast: normalization # {"equalization", "normalization", Null}
-            denoise: gaussian # {"bilateral", "gaussian", Null}
+            masking_threshold: null
+            contrast: normalization # {"equalization", "normalization", null}
+            denoise: gaussian # {"bilateral", "gaussian", null}
             bilateral_args: # optional
                 d: -1
                 sigmaColor: 20
@@ -57,7 +71,7 @@ panorama:
                 ksize: [5, 5]
                 sigmaX: 0
 distort_correction:
-    apply_mask: True
+    apply_mask: true
     correction:
         threshold: 5 # [degree]
         ransac_iter: 2000
@@ -65,11 +79,11 @@ distort_correction:
         vp_iter: 5
         erode: 50 # [pixcel/iteration]
     canny: # optional
-        sigma: 2.0
-        low_threshold: Null
-        high_threshold: Null
+        sigma: 3.0
+        low_threshold: null
+        high_threshold: null
         use_quantiles: false
     hough: # optional
-        threshold: 50
-        line_length: 25
-        line_gap: 10
+        threshold: 10
+        line_length: 10
+        line_gap: 5
