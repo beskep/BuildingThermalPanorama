@@ -132,6 +132,7 @@ class SITKRegistrator(BaseRegistrator):
                                         stepTolerance=1e-8,
                                         valueTolerance=1e-8)
     elif optimizer == &#39;gradient_descent&#39;:
+      # TODO optimizer option 설정
       self._method.SetOptimizerAsGradientDescent(
           learningRate=0.01,
           numberOfIterations=500,
@@ -612,6 +613,7 @@ string으로 설정하는 경우 <code>numpy.histogram_bin_edges</code>의 설�
                                         stepTolerance=1e-8,
                                         valueTolerance=1e-8)
     elif optimizer == &#39;gradient_descent&#39;:
+      # TODO optimizer option 설정
       self._method.SetOptimizerAsGradientDescent(
           learningRate=0.01,
           numberOfIterations=500,

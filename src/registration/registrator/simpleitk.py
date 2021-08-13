@@ -103,6 +103,7 @@ class SITKRegistrator(BaseRegistrator):
                                         stepTolerance=1e-8,
                                         valueTolerance=1e-8)
     elif optimizer == 'gradient_descent':
+      # TODO optimizer option 설정
       self._method.SetOptimizerAsGradientDescent(
           learningRate=0.01,
           numberOfIterations=500,

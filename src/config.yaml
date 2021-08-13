@@ -2,7 +2,7 @@ camera:
     default:
         scale: 0.75 # IR / VIS image scale
         IR_AOV: null # 열화상 시야각 [degree]
-        VIS_AOV: null # 열화상 시야각 [degree]
+        VIS_AOV: null # 실화상 시야각 [degree]
         translation: null
     preset:
         FLIR E95:

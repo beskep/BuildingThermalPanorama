@@ -7,7 +7,6 @@ import utils
 
 import matplotlib.pyplot as plt
 import numpy as np
-import yaml
 from loguru import logger
 from rich.progress import track
 
@@ -16,11 +15,17 @@ import registration.registrator.simpleitk as rsitk
 import stitch
 from distortion import perspective as persp
 from misc import exif, tools
-from misc.tools import ImageIO as IIO
-from misc.tools import limit_image_size as limit_size
+from misc.imageio import ImageIO as IIO
 
 from .cmap import apply_colormap, get_thermal_colormap
 from .config import DictConfig, read_config
+
+
+class Spectrum:
+  # TODO
+  IR = 'IR'
+  VIS = 'VIS'
+  SEG = 'Seg'
 
 
 class DIR:
@@ -54,7 +59,7 @@ class FN:
 
 class ThermalPanorama:
   _SP_DIR = {'IR': DIR.IR, 'VIS': DIR.RGST}
-  _SP_KOR = {'IR': '열화상', 'VIS': '실화상'}
+  _SP_KOR = {'IR': '열화상', 'VIS': '실화상', 'Seg': '부위 인식'}
 
   def __init__(self, directory: Union[str, Path], default_config=False) -> None:
     # working directory
@@ -78,10 +83,6 @@ class ThermalPanorama:
 
     self._cmap = get_thermal_colormap(
         name=self._config['color'].get('colormap', 'iron'))
-
-  @property
-  def _size_limit(self):
-    return self._config['file']['size_limit']
 
   def _check_manufacturer(self) -> str:
     fopt: DictConfig = self._config['file']
@@ -165,7 +166,7 @@ class ThermalPanorama:
       return exif[tag]
 
     exifs = exif.get_exif(files=[x.as_posix() for x in raw_files], tags=tags)
-    models = [_get_model(exif) for exif in exifs]
+    models = [_get_model(x) for x in exifs]
     models = [x for x in models if x is not None]
 
     if not models:
@@ -269,6 +270,13 @@ class ThermalPanorama:
                         console=utils.console):
         self._extract_raw_file(file=file)
 
+  @property
+  def _size_limit(self):
+    return self._config['file']['size_limit']
+
+  def limit_size(self, image: np.ndarray) -> np.ndarray:
+    return tools.limit_image_size(image=image, limit=self._size_limit)
+
   def _init_registrator(self, shape):
     ropt: DictConfig = self._config['registration']
 
@@ -341,8 +349,7 @@ class ThermalPanorama:
       compare_fig.savefig(rgst_dir.joinpath(compare_fname))
       plt.close(compare_fig)
 
-    with open(rgst_dir.joinpath('transform matrix.yaml'), 'w') as f:
-      yaml.safe_dump(data=mtx, stream=f, indent=4)
+    np.savez(rgst_dir.joinpath('transform_matrix.npy'), **mtx)
 
     logger.success('열화상-실화상 정합 완료')
 
@@ -381,7 +388,7 @@ class ThermalPanorama:
     # 대상 영상
     stitching_images = stitch.StitchingImages(arrays=images)
     stitching_images.set_preprocess(prep)
-    logger.debug('Stitch 대상 영상 & 전처리 설정')
+    logger.trace('Stitch 대상 영상 & 전처리 설정')
 
     with utils.console.status('Stitching...'):
       res = stitcher.stitch(images=stitching_images,
@@ -400,8 +407,8 @@ class ThermalPanorama:
     pano_dir = self._dir(DIR.PANO)
 
     if max(panorama.panorama.shape[:2]) > self._size_limit:
-      panorama.panorama = limit_size(panorama.panorama, self._size_limit)
-      panorama.mask = limit_size(panorama.mask, self._size_limit)
+      panorama.panorama = self.limit_size(panorama.panorama)
+      panorama.mask = self.limit_size(panorama.mask)
 
     meta = None
     if save_meta:
@@ -455,9 +462,7 @@ class ThermalPanorama:
         names=[x.name for x in files])
 
     if panorama.crop_range:
-      pano, _, _ = stitcher.crop(pano,
-                                 mask=None,
-                                 crop_range=panorama.crop_range)
+      pano = panorama.crop_range.crop(pano)
 
     if spectrum == 'IR':
       pano = pano[:, :, 0]
@@ -468,7 +473,7 @@ class ThermalPanorama:
     fname = f'{spectrum}{FN.PANO}'
     if spectrum == 'Seg':
       IIO.save(path=self._dir(DIR.PANO).joinpath(fname + FN.LL),
-               array=limit_size(pano, self._size_limit))
+               array=self.limit_size(pano))
     else:
       panorama.panorama = pano
       self._save_panorama(fname=fname,
@@ -544,6 +549,26 @@ class ThermalPanorama:
                                      correction_options=correction_opts)
     return pc
 
+  def _correct_others(self, corrected: persp.Correction, spectrum: str):
+    ext = {'VIS': FN.LS, 'Seg': FN.LL}  # TODO cls var로?
+
+    if spectrum not in ext:
+      raise ValueError
+
+    pano_dir = self._dir(DIR.PANO, mkdir=False)
+    cor_dir = self._dir(DIR.COR, mkdir=False)
+    path = pano_dir.joinpath(f'{spectrum}{FN.PANO}{ext[spectrum]}')
+    if not path.exists():
+      logger.warning('{} 파노라마가 존재하지 않습니다.', self._SP_KOR[spectrum])
+      return
+
+    pano = IIO.read(path=path)
+    pano_corrected = corrected.correct(pano)[0].astype(np.uint8)
+    pano_limited = self.limit_size(pano_corrected)
+
+    IIO.save(path=cor_dir.joinpath(path.name), array=pano_limited)
+    logger.debug('{} 파노라마 왜곡 보정 저장', self._SP_KOR[spectrum])
+
   def correct(self):
     pc = self._init_perspective_correction()
 
@@ -558,59 +583,53 @@ class ThermalPanorama:
     logger.trace('Init perspective correction')
 
     # 적외선 파노라마
-    ir_pano = IIO.read(ir_path).astype(np.float32)
-    mask = None
+    pano = IIO.read(ir_path).astype(np.float32)
     if self._config['distort_correction']['apply_mask']:
       mask = IIO.read(ir_path.with_name(
           f'{ir_path.stem}{FN.PANO_MASK}{FN.LL}')).astype(bool)
+    else:
+      mask = None
 
     # 왜곡 보정
     try:
-      corrected = pc.perspective_correct(image=ir_pano, mask=mask)
+      crct = pc.perspective_correct(image=pano, mask=mask)
     except persp.NotEnoughEdgelets:
       logger.critical('시점 왜곡을 추정할 edge의 개수가 부족합니다. '
                       'Edge 추출 옵션을 변경하거나 높은 해상도의 파노라마를 사용하세요.')
       return
 
-    logger.debug('IR 파노라마 왜곡 보정 완료 (shape: {})', corrected.output_shape)
-
     # plot 저장
     cor_dir = self._dir(DIR.COR)
-    fig, _ = corrected.process_plot()
-    fig.savefig(cor_dir.joinpath(f'plot{FN.LS}'), dpi=300)
+    fig, _ = crct.process_plot(image=pano)
+    fig.savefig(cor_dir.joinpath(f'correction_process{FN.LS}'), dpi=300)
     plt.close(fig)
 
-    if corrected.success():
-      # 적외선 파노라마 저장
-      corrected_ir = limit_size(corrected.corrected_image, self._size_limit)
-      IIO.save_with_meta(path=cor_dir.joinpath(ir_fname),
-                         array=corrected_ir.astype(np.float16),
-                         exts=[FN.NPY])
-      # colormap 적용 버전 저장
-      IIO.save(path=cor_dir.joinpath(f'{ir_fname}{FN.COLOR}{FN.LL}'),
-               array=apply_colormap(corrected_ir, self._cmap))
-      logger.debug('IR 파노라마 보정 파일 저장')
+    if not crct.success():
+      logger.error('IR 파노라마 왜곡 보정 중 오류 발생. 저장된 plot을 참고해주세요.')
+      return
 
-      # 실화상 파노라마 보정
-      vis_path = pano_dir.joinpath(f'VIS{FN.PANO}{FN.LS}')
-      if not vis_path.exists():
-        logger.warning('실화상 파노라마가 존재하지 않습니다.')
-      else:
-        vis_pano = IIO.read(path=vis_path)
-        vis_corrected = limit_size(
-            corrected.correct(vis_pano).astype(np.uint8), self._size_limit)
-        IIO.save(path=cor_dir.joinpath(vis_path.name), array=vis_corrected)
-        logger.debug('실화상 파노라마 왜곡 보정 저장')
+    logger.debug('IR 파노라마 왜곡 보정 완료')
 
-      # segmentation 파노라마 보정
-      seg_path = pano_dir.joinpath(f'Seg{FN.PANO}{FN.LL}')
-      if not seg_path.exists():
-        logger.warning('부위 인식 파노라마가 존재하지 않습니다.')
-      else:
-        seg_pano = IIO.read(path=seg_path)
-        seg_corrected = limit_size(
-            corrected.correct(seg_pano).astype(np.uint8), self._size_limit)
-        IIO.save(path=cor_dir.joinpath(seg_path.name), array=seg_corrected)
-        logger.debug('부위 인식 파노라마 왜곡 보정 저장')
+    # 적외선 파노라마 저장
+    cpano, cmask = crct.correct(pano, mask)
+    cpano = self.limit_size(cpano)
+    IIO.save_with_meta(path=cor_dir.joinpath(ir_fname),
+                       array=cpano.astype(np.float16),
+                       exts=[FN.NPY])
+
+    # colormap 적용 버전 저장
+    IIO.save(path=cor_dir.joinpath(f'{ir_fname}{FN.COLOR}{FN.LL}'),
+             array=apply_colormap(cpano, self._cmap))
+    logger.debug('IR 파노라마 보정 파일 저장')
+
+    # mask 저장
+    if cmask is not None:
+      cmask = self.limit_size(cmask)
+      IIO.save(path=cor_dir.joinpath(f'{ir_fname}{FN.PANO_MASK}{FN.LL}'),
+               array=tools.uint8_image(cmask))
+
+    # 실화상, 부위인식 파노라마 보정
+    self._correct_others(corrected=crct, spectrum='VIS')
+    self._correct_others(corrected=crct, spectrum='Seg')
 
     logger.success('파노라마 왜곡 보정 완료')

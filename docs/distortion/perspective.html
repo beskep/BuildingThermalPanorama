@@ -30,22 +30,18 @@
 <pre><code class="python">&#34;&#34;&#34;시점 왜곡 보정&#34;&#34;&#34;
 
 import dataclasses as dc
-from functools import cached_property
 from typing import Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
 from loguru import logger
-from skimage.color import rgb2gray
 from skimage.exposure.exposure import equalize_hist
 from skimage.feature import canny
 from skimage.transform import probabilistic_hough_line, warp
 
-from misc.tools import erode, normalize_image
+from misc import tools
 
 from . import rectification
-
-# TODO correct 결과 마스킹, crop
 
 
 class NotEnoughEdgelets(ValueError):
@@ -115,12 +111,11 @@ class Edgelets:
   def __post_init__(self):
     count = self.locations.shape[0]
 
-    if self.locations.shape != (count, 2):
-      raise ValueError(&#39;Invalid locations shape&#39;)
-    if self.directions.shape != (count, 2):
-      raise ValueError(&#39;Invalid directions shape&#39;)
-    if self.strengths.shape != (count,):
-      raise ValueError(&#39;Invalid strength shape&#39;)
+    for var, ndim in zip([&#39;locations&#39;, &#39;directions&#39;, &#39;strengths&#39;], [2, 2, 1]):
+      arr: np.ndarray = getattr(self, var)
+      dim = (count, 2) if ndim == 2 else (count,)
+      if arr.shape != dim:
+        raise ValueError(&#39;Invalid {} shape {}&#39;.format(var, arr.shape))
 
     self.count = count
 
@@ -146,7 +141,7 @@ class VanishingPoint:
 
   def __init__(self, array: np.ndarray) -&gt; None:
     if array.shape != (3,):
-      raise ValueError(&#39;Invalid vanishing point shape&#39;)
+      raise ValueError(&#39;Invalid vanishing point shape {}&#39;.format(array.shape))
 
     self._array = array
     self._xy = np.divide(self.array[:2], self._array[2])
@@ -175,113 +170,166 @@ class VanishingPoint:
     self._pos = self._POS_DICT[(hv[0], hv[1])]
 
 
-def compute_edgelets(
-    image: np.ndarray,
-    mask: Optional[np.ndarray] = None,
-    canny_options: Optional[CannyOptions] = None,
-    hough_options: Optional[HoughOptions] = None,
-) -&gt; Tuple[Edgelets, np.ndarray]:
-  &#34;&#34;&#34;
-  영상의 edgelet 추출. `canny`을 통해 edge 추출 후,
-  `probabilistic_hough_line`을 통해 계산한 선분의 중심 위치, 방향, 강도 (길이) 반환.
+def preprocess(image: np.ndarray) -&gt; np.ndarray:
+  &#34;&#34;&#34;전처리 (회색 변환 및 히스토그램 평활화)&#34;&#34;&#34;
+  gray = tools.gray_image(image=image)
+  preprocessed = equalize_hist(image=gray)
 
-  Parameters
-  ----------
-  image : np.ndarray
-      대상 영상. 2차원 흑백 영상이어야 함.
-  mask : Optional[np.ndarray]
-      edgelet을 인식할 영상 영역. dtype: bool
-  canny_options : Optional[CannyOptions]
-      `skimage.feature.canny` 옵션
-  hough_options : Optional[HoughOptions]
-      `skimage.transform.probabilistic_hough_line` 옵션
-
-  Returns
-  -------
-  edgelets : Edgelets
-  edges : np.ndarray
-      `canny` 알고리즘을 통해 추출한 edge 영상
-
-  Raises
-  ------
-  ValueError
-      if image.ndim != 2
-  &#34;&#34;&#34;
-  if image.ndim != 2:
-    raise ValueError(&#39;image.ndim != 2&#39;)
-  if canny_options is None:
-    canny_options = CannyOptions()
-  if hough_options is None:
-    hough_options = HoughOptions()
-
-  edges = canny(image=normalize_image(image),
-                mask=mask,
-                **dc.asdict(canny_options))
-
-  lines = probabilistic_hough_line(edges, **dc.asdict(hough_options))
-  lines = np.array(lines)
-
-  locations = np.average(lines, axis=1)
-  directions = lines[:, 1, :] - lines[:, 0, :]
-  strengths = np.linalg.norm(directions, ord=2, axis=1)
-  directions = np.divide(directions, strengths.reshape([-1, 1]))
-
-  edgelets = Edgelets(locations=locations,
-                      directions=directions,
-                      strengths=strengths)
-
-  return edgelets, edges
+  return preprocessed
 
 
-def ransac_vanishing_point(edgelets: Edgelets,
-                           num_ransac_iter=2000,
-                           threshold_inlier=5):
-  vp_array = rectification.ransac_vanishing_point(
-      edgelets=edgelets.as_tuple(),
-      num_ransac_iter=num_ransac_iter,
-      threshold_inlier=threshold_inlier)
-  vp = VanishingPoint(array=vp_array)
+class _Rectify:
+  &#34;&#34;&#34;rectification warpper&#34;&#34;&#34;
 
-  return vp
+  @staticmethod
+  def compute_edgelets(
+      image: np.ndarray,
+      mask: Optional[np.ndarray] = None,
+      canny_options: Optional[CannyOptions] = None,
+      hough_options: Optional[HoughOptions] = None,
+  ) -&gt; Tuple[Edgelets, np.ndarray]:
+    &#34;&#34;&#34;
+    영상의 edgelet 추출. `canny`을 통해 edge 추출 후,
+    `probabilistic_hough_line`을 통해 계산한 선분의 중심 위치, 방향, 강도 (길이) 반환.
 
+    Parameters
+    ----------
+    image : np.ndarray
+        대상 영상. 2차원 흑백 영상이어야 함.
+    mask : Optional[np.ndarray]
+        edgelet을 인식할 영상 영역. dtype: bool
+    canny_options : Optional[CannyOptions]
+        `skimage.feature.canny` 옵션
+    hough_options : Optional[HoughOptions]
+        `skimage.transform.probabilistic_hough_line` 옵션
 
-def compute_votes(vp: VanishingPoint, edgelets: Edgelets, threshold_inlier=10):
-  return rectification.compute_votes(edgelets=edgelets.as_tuple(),
-                                     model=vp.array,
-                                     threshold_inlier=threshold_inlier)
+    Returns
+    -------
+    edgelets : Edgelets
+    edges : np.ndarray
+        `canny` 알고리즘을 통해 추출한 edge 영상
 
+    Raises
+    ------
+    ValueError
+        if image.ndim != 2
+    &#34;&#34;&#34;
+    if image.ndim != 2:
+      raise ValueError(&#39;image.ndim != 2&#39;)
 
-def remove_inliers(vp: VanishingPoint, edgelets: Edgelets, threshold_inlier=10):
-  edgelets_tuple = rectification.remove_inliers(
-      model=vp.array,
-      edgelets=edgelets.as_tuple(),
-      threshold_inlier=threshold_inlier)
+    if canny_options is None:
+      canny_options = CannyOptions()
+    if hough_options is None:
+      hough_options = HoughOptions()
 
-  return Edgelets(*edgelets_tuple)
+    edges = canny(image=tools.normalize_image(image),
+                  mask=mask,
+                  **dc.asdict(canny_options))
+
+    lines = probabilistic_hough_line(edges, **dc.asdict(hough_options))
+    lines = np.array(lines)
+
+    locations = np.average(lines, axis=1)
+    directions = lines[:, 1, :] - lines[:, 0, :]
+    strengths = np.linalg.norm(directions, ord=2, axis=1)
+    directions = np.divide(directions, strengths.reshape([-1, 1]))
+
+    edgelets = Edgelets(locations=locations,
+                        directions=directions,
+                        strengths=strengths)
+
+    return edgelets, edges
+
+  @staticmethod
+  def ransac_vanishing_point(edgelets: Edgelets,
+                             num_ransac_iter=2000,
+                             threshold_inlier=5.0) -&gt; VanishingPoint:
+    vp_array = rectification.ransac_vanishing_point(
+        edgelets=edgelets.as_tuple(),
+        num_ransac_iter=num_ransac_iter,
+        threshold_inlier=threshold_inlier)
+    vp = VanishingPoint(array=vp_array)
+
+    return vp
+
+  @staticmethod
+  def compute_votes(vp: VanishingPoint,
+                    edgelets: Edgelets,
+                    threshold_inlier=10.0) -&gt; np.ndarray:
+    return rectification.compute_votes(edgelets=edgelets.as_tuple(),
+                                       model=vp.array,
+                                       threshold_inlier=threshold_inlier)
+
+  @classmethod
+  def remove_inliers(cls,
+                     vp: VanishingPoint,
+                     edgelets: Edgelets,
+                     threshold_inlier=10.0) -&gt; Edgelets:
+    votes = cls.compute_votes(vp=vp,
+                              edgelets=edgelets,
+                              threshold_inlier=threshold_inlier)
+    inliers = votes &gt; 0
+    removed = Edgelets(locations=edgelets.locations[~inliers],
+                       directions=edgelets.directions[~inliers],
+                       strengths=edgelets.strengths[~inliers])
+
+    return removed
 
 
 @dc.dataclass
-class CorrectedImage:
-  &#34;&#34;&#34;Perspective correction 결과&#34;&#34;&#34;
-  image: Optional[np.ndarray] = None
-  preprocessed: Optional[np.ndarray] = None
-
-  edges: Optional[np.ndarray] = None
-  edgelets: Optional[Edgelets] = None
-
-  vp1: Optional[VanishingPoint] = None
-  vp2: Optional[VanishingPoint] = None
-
+class Homography:
   Hproject: Optional[np.ndarray] = None
   Haffine: Optional[np.ndarray] = None
   Htranslate: Optional[np.ndarray] = None
 
+  input_shape: Optional[Tuple[int, int]] = None
   output_shape: Optional[Tuple[int, int]] = None
 
-  def success(self) -&gt; bool:
+  def available(self):
     return self.Htranslate is not None
 
-  def correct(self, image: np.ndarray) -&gt; np.ndarray:
+  def warp(self, image: np.ndarray):
+    if not self.available():
+      raise ValueError(&#39;Homography not set&#39;)
+
+    if image.shape[:2] != self.input_shape:
+      raise ValueError(&#39;입력한 영상의 해상도 {}가 &#39;
+                       &#39;시점 왜곡을 추정한 영상의 해상도 {}와 다릅니다.&#39;.format(
+                           image.shape[:2], self.input_shape))
+
+    return warp(image=image,
+                inverse_map=np.linalg.inv(self.Htranslate),
+                output_shape=self.output_shape,
+                preserve_range=True)
+
+
+@dc.dataclass
+class Correction:
+  &#34;&#34;&#34;Perspective correction 결과&#34;&#34;&#34;
+  edges: np.ndarray
+  edgelets: Edgelets
+
+  vp1: Optional[VanishingPoint]
+  vp2: Optional[VanishingPoint]
+
+  homography: Homography
+  crop_range: Optional[tools.CropRange]
+
+  def success(self) -&gt; bool:
+    return self.homography.available()
+
+  def _warp_and_crop(self, image: np.ndarray) -&gt; np.ndarray:
+    img = self.homography.warp(image=image)
+    if self.crop_range is not None:
+      img = self.crop_range.crop(img)
+
+    return img
+
+  def correct(
+      self,
+      image: np.ndarray,
+      mask: Optional[np.ndarray] = None
+  ) -&gt; Tuple[np.ndarray, Optional[np.ndarray]]:
     &#34;&#34;&#34;
     저장된 왜곡 보정 결과를 통해 새 영상 보정
 
@@ -290,43 +338,37 @@ class CorrectedImage:
     image : np.ndarray
         보정 대상 영상.
         보정 계수를 추측한 영상과 크기 (width, height)가 동일해야 함.
+    mask : np.ndarray
+        보정 대상 영상의 분석 대상 영역 mask.
 
     Returns
     -------
     np.ndarray
         Corrected image
+    Optional[np.ndarray]
+        Corrected mask
 
     Raises
     ------
     ValueError
         if image.shape[:2] != self.image.shape[:2]
     &#34;&#34;&#34;
-    assert self.image is not None
-    if image.shape[:2] != self.image.shape[:2]:
-      raise ValueError(&#39;입력한 영상의 해상도가 시점 왜곡을 추정한 영상의 해상도와 다릅니다.&#39;)
+    img = self._warp_and_crop(image)
 
-    return warp(image=image,
-                inverse_map=np.linalg.inv(self.Htranslate),
-                output_shape=self.output_shape,
-                preserve_range=True)
+    if mask is None:
+      msk = None
+    else:
+      msk = self._warp_and_crop(mask)
+      img[np.logical_not(msk)] = np.nanmin(img)
 
-  @cached_property
-  def corrected_image(self) -&gt; np.ndarray:
-    &#34;&#34;&#34;
-    원본 영상 (`image` 변수)를 보정한 결과
-
-    Returns
-    -------
-    np.ndarray
-    &#34;&#34;&#34;
-    return self.correct(self.image)
+    return img, msk
 
   def _visualize_model(self, ax: plt.Axes, vp: VanishingPoint):
     if self.edgelets is None:
       raise ValueError
 
-    inliers = compute_votes(vp=vp, edgelets=self.edgelets,
-                            threshold_inlier=10) &gt; 0
+    inliers = _Rectify.compute_votes(
+        vp=vp, edgelets=self.edgelets, threshold_inlier=10) &gt; 0
 
     locations = self.edgelets.locations[inliers]
     for idx in range(locations.shape[0]):
@@ -335,16 +377,13 @@ class CorrectedImage:
           [locations[idx, 1], vp.xy[1]],  # 소실점 선분 y 좌표
           &#39;b--&#39;)
 
-  def process_plot(self) -&gt; Tuple[plt.Figure, plt.Axes]:
+  def process_plot(self, image: np.ndarray) -&gt; Tuple[plt.Figure, plt.Axes]:
     &#34;&#34;&#34;보정 과정을 확인할 수 있는 matplotlib plot 생성&#34;&#34;&#34;
-    if self.edgelets is None:
-      raise ValueError
-
     fig, axes = plt.subplots(2, 3, figsize=(16, 9))
 
     # preprocessed image
     axes[0, 0].set_title(&#39;Preped Image&#39;)
-    axes[0, 0].imshow(self.preprocessed)
+    axes[0, 0].imshow(preprocess(image))
 
     # edges (canny)
     axes[0, 1].set_title(&#39;Edges&#39;)
@@ -358,8 +397,11 @@ class CorrectedImage:
     pt1 = self.edgelets.locations - self.edgelets.directions * half_strengths
     pt2 = self.edgelets.locations + self.edgelets.directions * half_strengths
     for idx in range(self.edgelets.count):
-      axes[0, 2].plot([pt1[idx, 0], pt2[idx, 0]], [pt1[idx, 1], pt2[idx, 1]],
-                      &#39;r-&#39;)
+      axes[0, 2].plot(
+          [pt1[idx, 0], pt2[idx, 0]],
+          [pt1[idx, 1], pt2[idx, 1]],
+          &#39;r-&#39;,
+      )
 
     # vanishing points
     axes[1, 0].set_title(&#39;Vanishing point 1&#39;)
@@ -375,7 +417,7 @@ class CorrectedImage:
     # corrected image
     axes[1, 2].set_title(&#39;Corrected Image&#39;)
     if self.success():
-      axes[1, 2].imshow(self.corrected_image)
+      axes[1, 2].imshow(self.correct(image)[0])
 
     for ax in axes.ravel():
       ax.set_axis_off()
@@ -414,20 +456,6 @@ class PerspectiveCorrection:
     self._canny_options = canny_options
     self._hough_options = hough_options
     self._opt = correction_options
-
-  @staticmethod
-  def preprocess(image: np.ndarray) -&gt; np.ndarray:
-    &#34;&#34;&#34;전처리 (회색 변환 및 히스토그램 평활화)&#34;&#34;&#34;
-    if image.ndim == 3:
-      gray = rgb2gray(image[:, :, :3])
-    elif image.ndim == 2:
-      gray = image
-    else:
-      raise ValueError(&#39;Dimension error&#39;)
-
-    preprocessed = equalize_hist(image=gray)
-
-    return preprocessed
 
   @staticmethod
   def _compute_affine(vp1: np.ndarray, vp2: np.ndarray,
@@ -498,17 +526,17 @@ class PerspectiveCorrection:
 
   def compute_homography(
       self,
-      image: np.ndarray,
+      image_shape: Tuple[int, int],
       vp1: np.ndarray,
       vp2: np.ndarray,
-  ) -&gt; CorrectedImage:
+  ) -&gt; Homography:
     &#34;&#34;&#34;
     두 개의 소실점으로부터 시점 보정을 위한 homography 행렬 추정
 
     Parameters
     ----------
-    image : np.ndarray
-        대상 영상
+    image_shape: Tuple[int, int]
+        대상 영상 shape
     vp1 : np.ndarray
         소실점 1
     vp2 : np.ndarray
@@ -516,8 +544,7 @@ class PerspectiveCorrection:
 
     Returns
     -------
-    CorrectedImage
-        보정 결과. (원본/전처리 영상, `edges`, `edgelets` 결과 미포함)
+    Homography
     &#34;&#34;&#34;
     # Find Projective Transform
     vanishing_line = np.cross(vp1, vp2)
@@ -532,19 +559,18 @@ class PerspectiveCorrection:
 
     # Image is translated so that the image is not missed.
     T, max_x, max_y = self._compute_translate(H=Haffine,
-                                              shape=image.shape,
+                                              shape=image_shape,
                                               clip_factor=self._opt.clip_factor)
 
     Htranslate = np.dot(T, Haffine)
 
-    corrected = CorrectedImage(vp1=VanishingPoint(vp1),
-                               vp2=VanishingPoint(vp2),
-                               Hproject=Hproject,
-                               Haffine=Haffine,
-                               Htranslate=Htranslate,
-                               output_shape=(max_y, max_x))
+    homography = Homography(Hproject=Hproject,
+                            Haffine=Haffine,
+                            Htranslate=Htranslate,
+                            input_shape=image_shape,
+                            output_shape=(max_y, max_x))
 
-    return corrected
+    return homography
 
   def _estimate_vanishing_point(
       self,
@@ -585,12 +611,15 @@ class PerspectiveCorrection:
       if edgelets.count &lt; 10:
         raise NotEnoughEdgelets(&#39;Not enough edgelets&#39;)
 
-      vp = ransac_vanishing_point(edgelets=edgelets,
-                                  num_ransac_iter=self._opt.ransac_iter,
-                                  threshold_inlier=self._opt.threshold)
-      edgelets = remove_inliers(vp=vp,
-                                edgelets=edgelets,
-                                threshold_inlier=(2 * self._opt.threshold))
+      vp = _Rectify.ransac_vanishing_point(
+          edgelets=edgelets,
+          num_ransac_iter=self._opt.ransac_iter,
+          threshold_inlier=self._opt.threshold)
+      edgelets = _Rectify.remove_inliers(
+          vp=vp,
+          edgelets=edgelets,
+          threshold_inlier=(2 * self._opt.threshold),
+      )
 
       vp.compute_position(image_shape=image_shape, margin=self._opt.margin)
 
@@ -671,7 +700,7 @@ class PerspectiveCorrection:
 
   def perspective_correct(self,
                           image: np.ndarray,
-                          mask: Optional[np.ndarray] = None) -&gt; CorrectedImage:
+                          mask: Optional[np.ndarray] = None) -&gt; Correction:
     &#34;&#34;&#34;
     시점 왜곡 보정
 
@@ -679,45 +708,54 @@ class PerspectiveCorrection:
     ----------
     image : np.ndarray
         대상 영상
+    mask : Optional[np.ndarray]
+        대상 영상의 분석 영역 mask
 
     Returns
     -------
-    CorrectedImage
+    Correction
     &#34;&#34;&#34;
-    if self._opt.erode and mask is not None:
-      logger.debug(&#39;Erode mask (iterations: {})&#39;, self._opt.erode)
-      mask = erode(mask.astype(np.uint8),
-                   iterations=self._opt.erode).astype(bool)
+    if mask is None:
+      edge_mask = None
+    else:
+      edge_mask = mask
 
-    preped = self.preprocess(image=image)
+      if self._opt.erode:
+        logger.debug(&#39;Erode mask (iterations: {})&#39;, self._opt.erode)
+        edge_mask = tools.erode(edge_mask.astype(np.uint8),
+                                iterations=self._opt.erode).astype(bool)
 
-    edgelets, edges = compute_edgelets(image=preped,
-                                       mask=mask,
-                                       canny_options=self._canny_options,
-                                       hough_options=self._hough_options)
+    preped = preprocess(image=image)
+
+    edgelets, edges = _Rectify.compute_edgelets(
+        image=preped,
+        mask=edge_mask,
+        canny_options=self._canny_options,
+        hough_options=self._hough_options)
 
     vp1, vp2 = self._estimate_vanishing_points(edgelets=edgelets,
                                                image_shape=image.shape[:2])
 
-    if vp1 is not None and vp2 is not None:
-      # homography 행렬 추정
-      corrected = self.compute_homography(image=image,
-                                          vp1=vp1.array,
-                                          vp2=vp2.array)
-      corrected.image = image
-      corrected.preprocessed = preped
-      corrected.edges = edges
-      corrected.edgelets = edgelets
-    else:
+    crop_range = None
+    if vp1 is None or vp2 is None:
       # vp 추정 실패, 중간 과정만 저장
-      corrected = CorrectedImage(image=image,
-                                 preprocessed=preped,
-                                 edges=edges,
-                                 edgelets=edgelets,
-                                 vp1=vp1,
-                                 vp2=vp2)
+      homography = Homography()
+    else:
+      # Homography 행렬 추정
+      homography = self.compute_homography(image_shape=image.shape[:2],
+                                           vp1=vp1.array,
+                                           vp2=vp2.array)
+      if mask is not None:
+        crop_range = tools.crop_mask(mask=homography.warp(mask))[0]
 
-    return corrected</code></pre>
+    correction = Correction(edges=edges,
+                            edgelets=edgelets,
+                            vp1=vp1,
+                            vp2=vp2,
+                            homography=homography,
+                            crop_range=crop_range)
+
+    return correction</code></pre>
 </details>
 </section>
 <section>
@@ -727,149 +765,21 @@ class PerspectiveCorrection:
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="src.distortion.perspective.compute_edgelets"><code class="name flex">
-<span>def <span class="ident">compute_edgelets</span></span>(<span>image: numpy.ndarray, mask: Union[numpy.ndarray, NoneType] = None, canny_options: Union[<a title="src.distortion.perspective.CannyOptions" href="#src.distortion.perspective.CannyOptions">CannyOptions</a>, NoneType] = None, hough_options: Union[<a title="src.distortion.perspective.HoughOptions" href="#src.distortion.perspective.HoughOptions">HoughOptions</a>, NoneType] = None) ‑> Tuple[<a title="src.distortion.perspective.Edgelets" href="#src.distortion.perspective.Edgelets">Edgelets</a>, numpy.ndarray]</span>
+<dt id="src.distortion.perspective.preprocess"><code class="name flex">
+<span>def <span class="ident">preprocess</span></span>(<span>image: numpy.ndarray) ‑> numpy.ndarray</span>
 </code></dt>
 <dd>
-<div class="desc"><p>영상의 edgelet 추출. <code>canny</code>을 통해 edge 추출 후,
-<code>probabilistic_hough_line</code>을 통해 계산한 선분의 중심 위치, 방향, 강도 (길이) 반환.</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>image</code></strong> :&ensp;<code>np.ndarray</code></dt>
-<dd>대상 영상. 2차원 흑백 영상이어야 함.</dd>
-<dt><strong><code>mask</code></strong> :&ensp;<code>Optional[np.ndarray]</code></dt>
-<dd>edgelet을 인식할 영상 영역. dtype: bool</dd>
-<dt><strong><code>canny_options</code></strong> :&ensp;<code>Optional[<a title="src.distortion.perspective.CannyOptions" href="#src.distortion.perspective.CannyOptions">CannyOptions</a>]</code></dt>
-<dd><code>skimage.feature.canny</code> 옵션</dd>
-<dt><strong><code>hough_options</code></strong> :&ensp;<code>Optional[<a title="src.distortion.perspective.HoughOptions" href="#src.distortion.perspective.HoughOptions">HoughOptions</a>]</code></dt>
-<dd><code>skimage.transform.probabilistic_hough_line</code> 옵션</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>edgelets</code></strong> :&ensp;<code><a title="src.distortion.perspective.Edgelets" href="#src.distortion.perspective.Edgelets">Edgelets</a></code></dt>
-<dd>&nbsp;</dd>
-<dt><strong><code>edges</code></strong> :&ensp;<code>np.ndarray</code></dt>
-<dd><code>canny</code> 알고리즘을 통해 추출한 edge 영상</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><code>ValueError</code></dt>
-<dd>if image.ndim != 2</dd>
-</dl></div>
+<div class="desc"><p>전처리 (회색 변환 및 히스토그램 평활화)</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def compute_edgelets(
-    image: np.ndarray,
-    mask: Optional[np.ndarray] = None,
-    canny_options: Optional[CannyOptions] = None,
-    hough_options: Optional[HoughOptions] = None,
-) -&gt; Tuple[Edgelets, np.ndarray]:
-  &#34;&#34;&#34;
-  영상의 edgelet 추출. `canny`을 통해 edge 추출 후,
-  `probabilistic_hough_line`을 통해 계산한 선분의 중심 위치, 방향, 강도 (길이) 반환.
+<pre><code class="python">def preprocess(image: np.ndarray) -&gt; np.ndarray:
+  &#34;&#34;&#34;전처리 (회색 변환 및 히스토그램 평활화)&#34;&#34;&#34;
+  gray = tools.gray_image(image=image)
+  preprocessed = equalize_hist(image=gray)
 
-  Parameters
-  ----------
-  image : np.ndarray
-      대상 영상. 2차원 흑백 영상이어야 함.
-  mask : Optional[np.ndarray]
-      edgelet을 인식할 영상 영역. dtype: bool
-  canny_options : Optional[CannyOptions]
-      `skimage.feature.canny` 옵션
-  hough_options : Optional[HoughOptions]
-      `skimage.transform.probabilistic_hough_line` 옵션
-
-  Returns
-  -------
-  edgelets : Edgelets
-  edges : np.ndarray
-      `canny` 알고리즘을 통해 추출한 edge 영상
-
-  Raises
-  ------
-  ValueError
-      if image.ndim != 2
-  &#34;&#34;&#34;
-  if image.ndim != 2:
-    raise ValueError(&#39;image.ndim != 2&#39;)
-  if canny_options is None:
-    canny_options = CannyOptions()
-  if hough_options is None:
-    hough_options = HoughOptions()
-
-  edges = canny(image=normalize_image(image),
-                mask=mask,
-                **dc.asdict(canny_options))
-
-  lines = probabilistic_hough_line(edges, **dc.asdict(hough_options))
-  lines = np.array(lines)
-
-  locations = np.average(lines, axis=1)
-  directions = lines[:, 1, :] - lines[:, 0, :]
-  strengths = np.linalg.norm(directions, ord=2, axis=1)
-  directions = np.divide(directions, strengths.reshape([-1, 1]))
-
-  edgelets = Edgelets(locations=locations,
-                      directions=directions,
-                      strengths=strengths)
-
-  return edgelets, edges</code></pre>
-</details>
-</dd>
-<dt id="src.distortion.perspective.compute_votes"><code class="name flex">
-<span>def <span class="ident">compute_votes</span></span>(<span>vp: <a title="src.distortion.perspective.VanishingPoint" href="#src.distortion.perspective.VanishingPoint">VanishingPoint</a>, edgelets: <a title="src.distortion.perspective.Edgelets" href="#src.distortion.perspective.Edgelets">Edgelets</a>, threshold_inlier=10)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def compute_votes(vp: VanishingPoint, edgelets: Edgelets, threshold_inlier=10):
-  return rectification.compute_votes(edgelets=edgelets.as_tuple(),
-                                     model=vp.array,
-                                     threshold_inlier=threshold_inlier)</code></pre>
-</details>
-</dd>
-<dt id="src.distortion.perspective.ransac_vanishing_point"><code class="name flex">
-<span>def <span class="ident">ransac_vanishing_point</span></span>(<span>edgelets: <a title="src.distortion.perspective.Edgelets" href="#src.distortion.perspective.Edgelets">Edgelets</a>, num_ransac_iter=2000, threshold_inlier=5)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def ransac_vanishing_point(edgelets: Edgelets,
-                           num_ransac_iter=2000,
-                           threshold_inlier=5):
-  vp_array = rectification.ransac_vanishing_point(
-      edgelets=edgelets.as_tuple(),
-      num_ransac_iter=num_ransac_iter,
-      threshold_inlier=threshold_inlier)
-  vp = VanishingPoint(array=vp_array)
-
-  return vp</code></pre>
-</details>
-</dd>
-<dt id="src.distortion.perspective.remove_inliers"><code class="name flex">
-<span>def <span class="ident">remove_inliers</span></span>(<span>vp: <a title="src.distortion.perspective.VanishingPoint" href="#src.distortion.perspective.VanishingPoint">VanishingPoint</a>, edgelets: <a title="src.distortion.perspective.Edgelets" href="#src.distortion.perspective.Edgelets">Edgelets</a>, threshold_inlier=10)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def remove_inliers(vp: VanishingPoint, edgelets: Edgelets, threshold_inlier=10):
-  edgelets_tuple = rectification.remove_inliers(
-      model=vp.array,
-      edgelets=edgelets.as_tuple(),
-      threshold_inlier=threshold_inlier)
-
-  return Edgelets(*edgelets_tuple)</code></pre>
+  return preprocessed</code></pre>
 </details>
 </dd>
 </dl>
@@ -914,9 +824,9 @@ class PerspectiveCorrection:
 </dd>
 </dl>
 </dd>
-<dt id="src.distortion.perspective.CorrectedImage"><code class="flex name class">
-<span>class <span class="ident">CorrectedImage</span></span>
-<span>(</span><span>image: Union[numpy.ndarray, NoneType] = None, preprocessed: Union[numpy.ndarray, NoneType] = None, edges: Union[numpy.ndarray, NoneType] = None, edgelets: Union[<a title="src.distortion.perspective.Edgelets" href="#src.distortion.perspective.Edgelets">Edgelets</a>, NoneType] = None, vp1: Union[<a title="src.distortion.perspective.VanishingPoint" href="#src.distortion.perspective.VanishingPoint">VanishingPoint</a>, NoneType] = None, vp2: Union[<a title="src.distortion.perspective.VanishingPoint" href="#src.distortion.perspective.VanishingPoint">VanishingPoint</a>, NoneType] = None, Hproject: Union[numpy.ndarray, NoneType] = None, Haffine: Union[numpy.ndarray, NoneType] = None, Htranslate: Union[numpy.ndarray, NoneType] = None, output_shape: Union[Tuple[int, int], NoneType] = None)</span>
+<dt id="src.distortion.perspective.Correction"><code class="flex name class">
+<span>class <span class="ident">Correction</span></span>
+<span>(</span><span>edges: numpy.ndarray, edgelets: <a title="src.distortion.perspective.Edgelets" href="#src.distortion.perspective.Edgelets">Edgelets</a>, vp1: Union[<a title="src.distortion.perspective.VanishingPoint" href="#src.distortion.perspective.VanishingPoint">VanishingPoint</a>, NoneType], vp2: Union[<a title="src.distortion.perspective.VanishingPoint" href="#src.distortion.perspective.VanishingPoint">VanishingPoint</a>, NoneType], homography: <a title="src.distortion.perspective.Homography" href="#src.distortion.perspective.Homography">Homography</a>, crop_range: Union[misc.tools.CropRange, NoneType])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Perspective correction 결과</p></div>
@@ -924,27 +834,32 @@ class PerspectiveCorrection:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class CorrectedImage:
+<pre><code class="python">class Correction:
   &#34;&#34;&#34;Perspective correction 결과&#34;&#34;&#34;
-  image: Optional[np.ndarray] = None
-  preprocessed: Optional[np.ndarray] = None
+  edges: np.ndarray
+  edgelets: Edgelets
 
-  edges: Optional[np.ndarray] = None
-  edgelets: Optional[Edgelets] = None
+  vp1: Optional[VanishingPoint]
+  vp2: Optional[VanishingPoint]
 
-  vp1: Optional[VanishingPoint] = None
-  vp2: Optional[VanishingPoint] = None
-
-  Hproject: Optional[np.ndarray] = None
-  Haffine: Optional[np.ndarray] = None
-  Htranslate: Optional[np.ndarray] = None
-
-  output_shape: Optional[Tuple[int, int]] = None
+  homography: Homography
+  crop_range: Optional[tools.CropRange]
 
   def success(self) -&gt; bool:
-    return self.Htranslate is not None
+    return self.homography.available()
 
-  def correct(self, image: np.ndarray) -&gt; np.ndarray:
+  def _warp_and_crop(self, image: np.ndarray) -&gt; np.ndarray:
+    img = self.homography.warp(image=image)
+    if self.crop_range is not None:
+      img = self.crop_range.crop(img)
+
+    return img
+
+  def correct(
+      self,
+      image: np.ndarray,
+      mask: Optional[np.ndarray] = None
+  ) -&gt; Tuple[np.ndarray, Optional[np.ndarray]]:
     &#34;&#34;&#34;
     저장된 왜곡 보정 결과를 통해 새 영상 보정
 
@@ -953,43 +868,37 @@ class PerspectiveCorrection:
     image : np.ndarray
         보정 대상 영상.
         보정 계수를 추측한 영상과 크기 (width, height)가 동일해야 함.
+    mask : np.ndarray
+        보정 대상 영상의 분석 대상 영역 mask.
 
     Returns
     -------
     np.ndarray
         Corrected image
+    Optional[np.ndarray]
+        Corrected mask
 
     Raises
     ------
     ValueError
         if image.shape[:2] != self.image.shape[:2]
     &#34;&#34;&#34;
-    assert self.image is not None
-    if image.shape[:2] != self.image.shape[:2]:
-      raise ValueError(&#39;입력한 영상의 해상도가 시점 왜곡을 추정한 영상의 해상도와 다릅니다.&#39;)
+    img = self._warp_and_crop(image)
 
-    return warp(image=image,
-                inverse_map=np.linalg.inv(self.Htranslate),
-                output_shape=self.output_shape,
-                preserve_range=True)
+    if mask is None:
+      msk = None
+    else:
+      msk = self._warp_and_crop(mask)
+      img[np.logical_not(msk)] = np.nanmin(img)
 
-  @cached_property
-  def corrected_image(self) -&gt; np.ndarray:
-    &#34;&#34;&#34;
-    원본 영상 (`image` 변수)를 보정한 결과
-
-    Returns
-    -------
-    np.ndarray
-    &#34;&#34;&#34;
-    return self.correct(self.image)
+    return img, msk
 
   def _visualize_model(self, ax: plt.Axes, vp: VanishingPoint):
     if self.edgelets is None:
       raise ValueError
 
-    inliers = compute_votes(vp=vp, edgelets=self.edgelets,
-                            threshold_inlier=10) &gt; 0
+    inliers = _Rectify.compute_votes(
+        vp=vp, edgelets=self.edgelets, threshold_inlier=10) &gt; 0
 
     locations = self.edgelets.locations[inliers]
     for idx in range(locations.shape[0]):
@@ -998,16 +907,13 @@ class PerspectiveCorrection:
           [locations[idx, 1], vp.xy[1]],  # 소실점 선분 y 좌표
           &#39;b--&#39;)
 
-  def process_plot(self) -&gt; Tuple[plt.Figure, plt.Axes]:
+  def process_plot(self, image: np.ndarray) -&gt; Tuple[plt.Figure, plt.Axes]:
     &#34;&#34;&#34;보정 과정을 확인할 수 있는 matplotlib plot 생성&#34;&#34;&#34;
-    if self.edgelets is None:
-      raise ValueError
-
     fig, axes = plt.subplots(2, 3, figsize=(16, 9))
 
     # preprocessed image
     axes[0, 0].set_title(&#39;Preped Image&#39;)
-    axes[0, 0].imshow(self.preprocessed)
+    axes[0, 0].imshow(preprocess(image))
 
     # edges (canny)
     axes[0, 1].set_title(&#39;Edges&#39;)
@@ -1021,8 +927,11 @@ class PerspectiveCorrection:
     pt1 = self.edgelets.locations - self.edgelets.directions * half_strengths
     pt2 = self.edgelets.locations + self.edgelets.directions * half_strengths
     for idx in range(self.edgelets.count):
-      axes[0, 2].plot([pt1[idx, 0], pt2[idx, 0]], [pt1[idx, 1], pt2[idx, 1]],
-                      &#39;r-&#39;)
+      axes[0, 2].plot(
+          [pt1[idx, 0], pt2[idx, 0]],
+          [pt1[idx, 1], pt2[idx, 1]],
+          &#39;r-&#39;,
+      )
 
     # vanishing points
     axes[1, 0].set_title(&#39;Vanishing point 1&#39;)
@@ -1038,7 +947,7 @@ class PerspectiveCorrection:
     # corrected image
     axes[1, 2].set_title(&#39;Corrected Image&#39;)
     if self.success():
-      axes[1, 2].imshow(self.corrected_image)
+      axes[1, 2].imshow(self.correct(image)[0])
 
     for ax in axes.ravel():
       ax.set_axis_off()
@@ -1049,98 +958,35 @@ class PerspectiveCorrection:
 </details>
 <h3>Class variables</h3>
 <dl>
-<dt id="src.distortion.perspective.CorrectedImage.Haffine"><code class="name">var <span class="ident">Haffine</span> : Union[numpy.ndarray, NoneType]</code></dt>
+<dt id="src.distortion.perspective.Correction.crop_range"><code class="name">var <span class="ident">crop_range</span> : Union[misc.tools.CropRange, NoneType]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.distortion.perspective.CorrectedImage.Hproject"><code class="name">var <span class="ident">Hproject</span> : Union[numpy.ndarray, NoneType]</code></dt>
+<dt id="src.distortion.perspective.Correction.edgelets"><code class="name">var <span class="ident">edgelets</span> : <a title="src.distortion.perspective.Edgelets" href="#src.distortion.perspective.Edgelets">Edgelets</a></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.distortion.perspective.CorrectedImage.Htranslate"><code class="name">var <span class="ident">Htranslate</span> : Union[numpy.ndarray, NoneType]</code></dt>
+<dt id="src.distortion.perspective.Correction.edges"><code class="name">var <span class="ident">edges</span> : numpy.ndarray</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.distortion.perspective.CorrectedImage.edgelets"><code class="name">var <span class="ident">edgelets</span> : Union[<a title="src.distortion.perspective.Edgelets" href="#src.distortion.perspective.Edgelets">Edgelets</a>, NoneType]</code></dt>
+<dt id="src.distortion.perspective.Correction.homography"><code class="name">var <span class="ident">homography</span> : <a title="src.distortion.perspective.Homography" href="#src.distortion.perspective.Homography">Homography</a></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.distortion.perspective.CorrectedImage.edges"><code class="name">var <span class="ident">edges</span> : Union[numpy.ndarray, NoneType]</code></dt>
+<dt id="src.distortion.perspective.Correction.vp1"><code class="name">var <span class="ident">vp1</span> : Union[<a title="src.distortion.perspective.VanishingPoint" href="#src.distortion.perspective.VanishingPoint">VanishingPoint</a>, NoneType]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.distortion.perspective.CorrectedImage.image"><code class="name">var <span class="ident">image</span> : Union[numpy.ndarray, NoneType]</code></dt>
+<dt id="src.distortion.perspective.Correction.vp2"><code class="name">var <span class="ident">vp2</span> : Union[<a title="src.distortion.perspective.VanishingPoint" href="#src.distortion.perspective.VanishingPoint">VanishingPoint</a>, NoneType]</code></dt>
 <dd>
 <div class="desc"></div>
-</dd>
-<dt id="src.distortion.perspective.CorrectedImage.output_shape"><code class="name">var <span class="ident">output_shape</span> : Union[Tuple[int, int], NoneType]</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="src.distortion.perspective.CorrectedImage.preprocessed"><code class="name">var <span class="ident">preprocessed</span> : Union[numpy.ndarray, NoneType]</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="src.distortion.perspective.CorrectedImage.vp1"><code class="name">var <span class="ident">vp1</span> : Union[<a title="src.distortion.perspective.VanishingPoint" href="#src.distortion.perspective.VanishingPoint">VanishingPoint</a>, NoneType]</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="src.distortion.perspective.CorrectedImage.vp2"><code class="name">var <span class="ident">vp2</span> : Union[<a title="src.distortion.perspective.VanishingPoint" href="#src.distortion.perspective.VanishingPoint">VanishingPoint</a>, NoneType]</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
-<h3>Instance variables</h3>
-<dl>
-<dt id="src.distortion.perspective.CorrectedImage.corrected_image"><code class="name">var <span class="ident">corrected_image</span></code></dt>
-<dd>
-<div class="desc"><p>원본 영상 (<code>image</code> 변수)를 보정한 결과</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>np.ndarray</code></dt>
-<dd>&nbsp;</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def __get__(self, instance, owner=None):
-    if instance is None:
-        return self
-    if self.attrname is None:
-        raise TypeError(
-            &#34;Cannot use cached_property instance without calling __set_name__ on it.&#34;)
-    try:
-        cache = instance.__dict__
-    except AttributeError:  # not all objects have __dict__ (e.g. class defines slots)
-        msg = (
-            f&#34;No &#39;__dict__&#39; attribute on {type(instance).__name__!r} &#34;
-            f&#34;instance to cache {self.attrname!r} property.&#34;
-        )
-        raise TypeError(msg) from None
-    val = cache.get(self.attrname, _NOT_FOUND)
-    if val is _NOT_FOUND:
-        with self.lock:
-            # check if another thread filled cache while we awaited lock
-            val = cache.get(self.attrname, _NOT_FOUND)
-            if val is _NOT_FOUND:
-                val = self.func(instance)
-                try:
-                    cache[self.attrname] = val
-                except TypeError:
-                    msg = (
-                        f&#34;The &#39;__dict__&#39; attribute on {type(instance).__name__!r} instance &#34;
-                        f&#34;does not support item assignment for caching {self.attrname!r} property.&#34;
-                    )
-                    raise TypeError(msg) from None
-    return val</code></pre>
-</details>
 </dd>
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="src.distortion.perspective.CorrectedImage.correct"><code class="name flex">
-<span>def <span class="ident">correct</span></span>(<span>self, image: numpy.ndarray) ‑> numpy.ndarray</span>
+<dt id="src.distortion.perspective.Correction.correct"><code class="name flex">
+<span>def <span class="ident">correct</span></span>(<span>self, image: numpy.ndarray, mask: Union[numpy.ndarray, NoneType] = None) ‑> Tuple[numpy.ndarray, Union[numpy.ndarray, NoneType]]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>저장된 왜곡 보정 결과를 통해 새 영상 보정</p>
@@ -1149,11 +995,15 @@ class PerspectiveCorrection:
 <dt><strong><code>image</code></strong> :&ensp;<code>np.ndarray</code></dt>
 <dd>보정 대상 영상.
 보정 계수를 추측한 영상과 크기 (width, height)가 동일해야 함.</dd>
+<dt><strong><code>mask</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>보정 대상 영상의 분석 대상 영역 mask.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><code>np.ndarray</code></dt>
 <dd>Corrected image</dd>
+<dt><code>Optional[np.ndarray]</code></dt>
+<dd>Corrected mask</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
@@ -1164,7 +1014,11 @@ class PerspectiveCorrection:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def correct(self, image: np.ndarray) -&gt; np.ndarray:
+<pre><code class="python">def correct(
+    self,
+    image: np.ndarray,
+    mask: Optional[np.ndarray] = None
+) -&gt; Tuple[np.ndarray, Optional[np.ndarray]]:
   &#34;&#34;&#34;
   저장된 왜곡 보정 결과를 통해 새 영상 보정
 
@@ -1173,29 +1027,34 @@ class PerspectiveCorrection:
   image : np.ndarray
       보정 대상 영상.
       보정 계수를 추측한 영상과 크기 (width, height)가 동일해야 함.
+  mask : np.ndarray
+      보정 대상 영상의 분석 대상 영역 mask.
 
   Returns
   -------
   np.ndarray
       Corrected image
+  Optional[np.ndarray]
+      Corrected mask
 
   Raises
   ------
   ValueError
       if image.shape[:2] != self.image.shape[:2]
   &#34;&#34;&#34;
-  assert self.image is not None
-  if image.shape[:2] != self.image.shape[:2]:
-    raise ValueError(&#39;입력한 영상의 해상도가 시점 왜곡을 추정한 영상의 해상도와 다릅니다.&#39;)
+  img = self._warp_and_crop(image)
 
-  return warp(image=image,
-              inverse_map=np.linalg.inv(self.Htranslate),
-              output_shape=self.output_shape,
-              preserve_range=True)</code></pre>
+  if mask is None:
+    msk = None
+  else:
+    msk = self._warp_and_crop(mask)
+    img[np.logical_not(msk)] = np.nanmin(img)
+
+  return img, msk</code></pre>
 </details>
 </dd>
-<dt id="src.distortion.perspective.CorrectedImage.process_plot"><code class="name flex">
-<span>def <span class="ident">process_plot</span></span>(<span>self) ‑> Tuple[matplotlib.figure.Figure, matplotlib.axes._axes.Axes]</span>
+<dt id="src.distortion.perspective.Correction.process_plot"><code class="name flex">
+<span>def <span class="ident">process_plot</span></span>(<span>self, image: numpy.ndarray) ‑> Tuple[matplotlib.figure.Figure, matplotlib.axes._axes.Axes]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>보정 과정을 확인할 수 있는 matplotlib plot 생성</p></div>
@@ -1203,16 +1062,13 @@ class PerspectiveCorrection:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def process_plot(self) -&gt; Tuple[plt.Figure, plt.Axes]:
+<pre><code class="python">def process_plot(self, image: np.ndarray) -&gt; Tuple[plt.Figure, plt.Axes]:
   &#34;&#34;&#34;보정 과정을 확인할 수 있는 matplotlib plot 생성&#34;&#34;&#34;
-  if self.edgelets is None:
-    raise ValueError
-
   fig, axes = plt.subplots(2, 3, figsize=(16, 9))
 
   # preprocessed image
   axes[0, 0].set_title(&#39;Preped Image&#39;)
-  axes[0, 0].imshow(self.preprocessed)
+  axes[0, 0].imshow(preprocess(image))
 
   # edges (canny)
   axes[0, 1].set_title(&#39;Edges&#39;)
@@ -1226,8 +1082,11 @@ class PerspectiveCorrection:
   pt1 = self.edgelets.locations - self.edgelets.directions * half_strengths
   pt2 = self.edgelets.locations + self.edgelets.directions * half_strengths
   for idx in range(self.edgelets.count):
-    axes[0, 2].plot([pt1[idx, 0], pt2[idx, 0]], [pt1[idx, 1], pt2[idx, 1]],
-                    &#39;r-&#39;)
+    axes[0, 2].plot(
+        [pt1[idx, 0], pt2[idx, 0]],
+        [pt1[idx, 1], pt2[idx, 1]],
+        &#39;r-&#39;,
+    )
 
   # vanishing points
   axes[1, 0].set_title(&#39;Vanishing point 1&#39;)
@@ -1243,7 +1102,7 @@ class PerspectiveCorrection:
   # corrected image
   axes[1, 2].set_title(&#39;Corrected Image&#39;)
   if self.success():
-    axes[1, 2].imshow(self.corrected_image)
+    axes[1, 2].imshow(self.correct(image)[0])
 
   for ax in axes.ravel():
     ax.set_axis_off()
@@ -1253,7 +1112,7 @@ class PerspectiveCorrection:
   return fig, axes</code></pre>
 </details>
 </dd>
-<dt id="src.distortion.perspective.CorrectedImage.success"><code class="name flex">
+<dt id="src.distortion.perspective.Correction.success"><code class="name flex">
 <span>def <span class="ident">success</span></span>(<span>self) ‑> bool</span>
 </code></dt>
 <dd>
@@ -1263,7 +1122,7 @@ class PerspectiveCorrection:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def success(self) -&gt; bool:
-  return self.Htranslate is not None</code></pre>
+  return self.homography.available()</code></pre>
 </details>
 </dd>
 </dl>
@@ -1379,12 +1238,11 @@ class PerspectiveCorrection:
   def __post_init__(self):
     count = self.locations.shape[0]
 
-    if self.locations.shape != (count, 2):
-      raise ValueError(&#39;Invalid locations shape&#39;)
-    if self.directions.shape != (count, 2):
-      raise ValueError(&#39;Invalid directions shape&#39;)
-    if self.strengths.shape != (count,):
-      raise ValueError(&#39;Invalid strength shape&#39;)
+    for var, ndim in zip([&#39;locations&#39;, &#39;directions&#39;, &#39;strengths&#39;], [2, 2, 1]):
+      arr: np.ndarray = getattr(self, var)
+      dim = (count, 2) if ndim == 2 else (count,)
+      if arr.shape != dim:
+        raise ValueError(&#39;Invalid {} shape {}&#39;.format(var, arr.shape))
 
     self.count = count
 
@@ -1423,6 +1281,105 @@ class PerspectiveCorrection:
 </summary>
 <pre><code class="python">def as_tuple(self):
   return (self.locations, self.directions, self.strengths)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="src.distortion.perspective.Homography"><code class="flex name class">
+<span>class <span class="ident">Homography</span></span>
+<span>(</span><span>Hproject: Union[numpy.ndarray, NoneType] = None, Haffine: Union[numpy.ndarray, NoneType] = None, Htranslate: Union[numpy.ndarray, NoneType] = None, input_shape: Union[Tuple[int, int], NoneType] = None, output_shape: Union[Tuple[int, int], NoneType] = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Homography(Hproject: Union[numpy.ndarray, NoneType] = None, Haffine: Union[numpy.ndarray, NoneType] = None, Htranslate: Union[numpy.ndarray, NoneType] = None, input_shape: Union[Tuple[int, int], NoneType] = None, output_shape: Union[Tuple[int, int], NoneType] = None)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Homography:
+  Hproject: Optional[np.ndarray] = None
+  Haffine: Optional[np.ndarray] = None
+  Htranslate: Optional[np.ndarray] = None
+
+  input_shape: Optional[Tuple[int, int]] = None
+  output_shape: Optional[Tuple[int, int]] = None
+
+  def available(self):
+    return self.Htranslate is not None
+
+  def warp(self, image: np.ndarray):
+    if not self.available():
+      raise ValueError(&#39;Homography not set&#39;)
+
+    if image.shape[:2] != self.input_shape:
+      raise ValueError(&#39;입력한 영상의 해상도 {}가 &#39;
+                       &#39;시점 왜곡을 추정한 영상의 해상도 {}와 다릅니다.&#39;.format(
+                           image.shape[:2], self.input_shape))
+
+    return warp(image=image,
+                inverse_map=np.linalg.inv(self.Htranslate),
+                output_shape=self.output_shape,
+                preserve_range=True)</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="src.distortion.perspective.Homography.Haffine"><code class="name">var <span class="ident">Haffine</span> : Union[numpy.ndarray, NoneType]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="src.distortion.perspective.Homography.Hproject"><code class="name">var <span class="ident">Hproject</span> : Union[numpy.ndarray, NoneType]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="src.distortion.perspective.Homography.Htranslate"><code class="name">var <span class="ident">Htranslate</span> : Union[numpy.ndarray, NoneType]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="src.distortion.perspective.Homography.input_shape"><code class="name">var <span class="ident">input_shape</span> : Union[Tuple[int, int], NoneType]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="src.distortion.perspective.Homography.output_shape"><code class="name">var <span class="ident">output_shape</span> : Union[Tuple[int, int], NoneType]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="src.distortion.perspective.Homography.available"><code class="name flex">
+<span>def <span class="ident">available</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def available(self):
+  return self.Htranslate is not None</code></pre>
+</details>
+</dd>
+<dt id="src.distortion.perspective.Homography.warp"><code class="name flex">
+<span>def <span class="ident">warp</span></span>(<span>self, image: numpy.ndarray)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def warp(self, image: np.ndarray):
+  if not self.available():
+    raise ValueError(&#39;Homography not set&#39;)
+
+  if image.shape[:2] != self.input_shape:
+    raise ValueError(&#39;입력한 영상의 해상도 {}가 &#39;
+                     &#39;시점 왜곡을 추정한 영상의 해상도 {}와 다릅니다.&#39;.format(
+                         image.shape[:2], self.input_shape))
+
+  return warp(image=image,
+              inverse_map=np.linalg.inv(self.Htranslate),
+              output_shape=self.output_shape,
+              preserve_range=True)</code></pre>
 </details>
 </dd>
 </dl>
@@ -1540,20 +1497,6 @@ Homography 행렬 추정.</p>
     self._opt = correction_options
 
   @staticmethod
-  def preprocess(image: np.ndarray) -&gt; np.ndarray:
-    &#34;&#34;&#34;전처리 (회색 변환 및 히스토그램 평활화)&#34;&#34;&#34;
-    if image.ndim == 3:
-      gray = rgb2gray(image[:, :, :3])
-    elif image.ndim == 2:
-      gray = image
-    else:
-      raise ValueError(&#39;Dimension error&#39;)
-
-    preprocessed = equalize_hist(image=gray)
-
-    return preprocessed
-
-  @staticmethod
   def _compute_affine(vp1: np.ndarray, vp2: np.ndarray,
                       H: np.ndarray) -&gt; np.ndarray:
     # Find directions corresponding to vanishing points
@@ -1622,17 +1565,17 @@ Homography 행렬 추정.</p>
 
   def compute_homography(
       self,
-      image: np.ndarray,
+      image_shape: Tuple[int, int],
       vp1: np.ndarray,
       vp2: np.ndarray,
-  ) -&gt; CorrectedImage:
+  ) -&gt; Homography:
     &#34;&#34;&#34;
     두 개의 소실점으로부터 시점 보정을 위한 homography 행렬 추정
 
     Parameters
     ----------
-    image : np.ndarray
-        대상 영상
+    image_shape: Tuple[int, int]
+        대상 영상 shape
     vp1 : np.ndarray
         소실점 1
     vp2 : np.ndarray
@@ -1640,8 +1583,7 @@ Homography 행렬 추정.</p>
 
     Returns
     -------
-    CorrectedImage
-        보정 결과. (원본/전처리 영상, `edges`, `edgelets` 결과 미포함)
+    Homography
     &#34;&#34;&#34;
     # Find Projective Transform
     vanishing_line = np.cross(vp1, vp2)
@@ -1656,19 +1598,18 @@ Homography 행렬 추정.</p>
 
     # Image is translated so that the image is not missed.
     T, max_x, max_y = self._compute_translate(H=Haffine,
-                                              shape=image.shape,
+                                              shape=image_shape,
                                               clip_factor=self._opt.clip_factor)
 
     Htranslate = np.dot(T, Haffine)
 
-    corrected = CorrectedImage(vp1=VanishingPoint(vp1),
-                               vp2=VanishingPoint(vp2),
-                               Hproject=Hproject,
-                               Haffine=Haffine,
-                               Htranslate=Htranslate,
-                               output_shape=(max_y, max_x))
+    homography = Homography(Hproject=Hproject,
+                            Haffine=Haffine,
+                            Htranslate=Htranslate,
+                            input_shape=image_shape,
+                            output_shape=(max_y, max_x))
 
-    return corrected
+    return homography
 
   def _estimate_vanishing_point(
       self,
@@ -1709,12 +1650,15 @@ Homography 행렬 추정.</p>
       if edgelets.count &lt; 10:
         raise NotEnoughEdgelets(&#39;Not enough edgelets&#39;)
 
-      vp = ransac_vanishing_point(edgelets=edgelets,
-                                  num_ransac_iter=self._opt.ransac_iter,
-                                  threshold_inlier=self._opt.threshold)
-      edgelets = remove_inliers(vp=vp,
-                                edgelets=edgelets,
-                                threshold_inlier=(2 * self._opt.threshold))
+      vp = _Rectify.ransac_vanishing_point(
+          edgelets=edgelets,
+          num_ransac_iter=self._opt.ransac_iter,
+          threshold_inlier=self._opt.threshold)
+      edgelets = _Rectify.remove_inliers(
+          vp=vp,
+          edgelets=edgelets,
+          threshold_inlier=(2 * self._opt.threshold),
+      )
 
       vp.compute_position(image_shape=image_shape, margin=self._opt.margin)
 
@@ -1795,7 +1739,7 @@ Homography 행렬 추정.</p>
 
   def perspective_correct(self,
                           image: np.ndarray,
-                          mask: Optional[np.ndarray] = None) -&gt; CorrectedImage:
+                          mask: Optional[np.ndarray] = None) -&gt; Correction:
     &#34;&#34;&#34;
     시점 왜곡 보정
 
@@ -1803,84 +1747,66 @@ Homography 행렬 추정.</p>
     ----------
     image : np.ndarray
         대상 영상
+    mask : Optional[np.ndarray]
+        대상 영상의 분석 영역 mask
 
     Returns
     -------
-    CorrectedImage
+    Correction
     &#34;&#34;&#34;
-    if self._opt.erode and mask is not None:
-      logger.debug(&#39;Erode mask (iterations: {})&#39;, self._opt.erode)
-      mask = erode(mask.astype(np.uint8),
-                   iterations=self._opt.erode).astype(bool)
+    if mask is None:
+      edge_mask = None
+    else:
+      edge_mask = mask
 
-    preped = self.preprocess(image=image)
+      if self._opt.erode:
+        logger.debug(&#39;Erode mask (iterations: {})&#39;, self._opt.erode)
+        edge_mask = tools.erode(edge_mask.astype(np.uint8),
+                                iterations=self._opt.erode).astype(bool)
 
-    edgelets, edges = compute_edgelets(image=preped,
-                                       mask=mask,
-                                       canny_options=self._canny_options,
-                                       hough_options=self._hough_options)
+    preped = preprocess(image=image)
+
+    edgelets, edges = _Rectify.compute_edgelets(
+        image=preped,
+        mask=edge_mask,
+        canny_options=self._canny_options,
+        hough_options=self._hough_options)
 
     vp1, vp2 = self._estimate_vanishing_points(edgelets=edgelets,
                                                image_shape=image.shape[:2])
 
-    if vp1 is not None and vp2 is not None:
-      # homography 행렬 추정
-      corrected = self.compute_homography(image=image,
-                                          vp1=vp1.array,
-                                          vp2=vp2.array)
-      corrected.image = image
-      corrected.preprocessed = preped
-      corrected.edges = edges
-      corrected.edgelets = edgelets
-    else:
+    crop_range = None
+    if vp1 is None or vp2 is None:
       # vp 추정 실패, 중간 과정만 저장
-      corrected = CorrectedImage(image=image,
-                                 preprocessed=preped,
-                                 edges=edges,
-                                 edgelets=edgelets,
-                                 vp1=vp1,
-                                 vp2=vp2)
+      homography = Homography()
+    else:
+      # Homography 행렬 추정
+      homography = self.compute_homography(image_shape=image.shape[:2],
+                                           vp1=vp1.array,
+                                           vp2=vp2.array)
+      if mask is not None:
+        crop_range = tools.crop_mask(mask=homography.warp(mask))[0]
 
-    return corrected</code></pre>
+    correction = Correction(edges=edges,
+                            edgelets=edgelets,
+                            vp1=vp1,
+                            vp2=vp2,
+                            homography=homography,
+                            crop_range=crop_range)
+
+    return correction</code></pre>
 </details>
-<h3>Static methods</h3>
-<dl>
-<dt id="src.distortion.perspective.PerspectiveCorrection.preprocess"><code class="name flex">
-<span>def <span class="ident">preprocess</span></span>(<span>image: numpy.ndarray) ‑> numpy.ndarray</span>
-</code></dt>
-<dd>
-<div class="desc"><p>전처리 (회색 변환 및 히스토그램 평활화)</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@staticmethod
-def preprocess(image: np.ndarray) -&gt; np.ndarray:
-  &#34;&#34;&#34;전처리 (회색 변환 및 히스토그램 평활화)&#34;&#34;&#34;
-  if image.ndim == 3:
-    gray = rgb2gray(image[:, :, :3])
-  elif image.ndim == 2:
-    gray = image
-  else:
-    raise ValueError(&#39;Dimension error&#39;)
-
-  preprocessed = equalize_hist(image=gray)
-
-  return preprocessed</code></pre>
-</details>
-</dd>
-</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="src.distortion.perspective.PerspectiveCorrection.compute_homography"><code class="name flex">
-<span>def <span class="ident">compute_homography</span></span>(<span>self, image: numpy.ndarray, vp1: numpy.ndarray, vp2: numpy.ndarray) ‑> <a title="src.distortion.perspective.CorrectedImage" href="#src.distortion.perspective.CorrectedImage">CorrectedImage</a></span>
+<span>def <span class="ident">compute_homography</span></span>(<span>self, image_shape: Tuple[int, int], vp1: numpy.ndarray, vp2: numpy.ndarray) ‑> <a title="src.distortion.perspective.Homography" href="#src.distortion.perspective.Homography">Homography</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>두 개의 소실점으로부터 시점 보정을 위한 homography 행렬 추정</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>image</code></strong> :&ensp;<code>np.ndarray</code></dt>
-<dd>대상 영상</dd>
+<dt><strong><code>image_shape</code></strong> :&ensp;<code>Tuple[int, int]</code></dt>
+<dd>대상 영상 shape</dd>
 <dt><strong><code>vp1</code></strong> :&ensp;<code>np.ndarray</code></dt>
 <dd>소실점 1</dd>
 <dt><strong><code>vp2</code></strong> :&ensp;<code>np.ndarray</code></dt>
@@ -1888,8 +1814,8 @@ def preprocess(image: np.ndarray) -&gt; np.ndarray:
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code><a title="src.distortion.perspective.CorrectedImage" href="#src.distortion.perspective.CorrectedImage">CorrectedImage</a></code></dt>
-<dd>보정 결과. (원본/전처리 영상, <code>edges</code>, <code>edgelets</code> 결과 미포함)</dd>
+<dt><code><a title="src.distortion.perspective.Homography" href="#src.distortion.perspective.Homography">Homography</a></code></dt>
+<dd>&nbsp;</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -1897,17 +1823,17 @@ def preprocess(image: np.ndarray) -&gt; np.ndarray:
 </summary>
 <pre><code class="python">def compute_homography(
     self,
-    image: np.ndarray,
+    image_shape: Tuple[int, int],
     vp1: np.ndarray,
     vp2: np.ndarray,
-) -&gt; CorrectedImage:
+) -&gt; Homography:
   &#34;&#34;&#34;
   두 개의 소실점으로부터 시점 보정을 위한 homography 행렬 추정
 
   Parameters
   ----------
-  image : np.ndarray
-      대상 영상
+  image_shape: Tuple[int, int]
+      대상 영상 shape
   vp1 : np.ndarray
       소실점 1
   vp2 : np.ndarray
@@ -1915,8 +1841,7 @@ def preprocess(image: np.ndarray) -&gt; np.ndarray:
 
   Returns
   -------
-  CorrectedImage
-      보정 결과. (원본/전처리 영상, `edges`, `edgelets` 결과 미포함)
+  Homography
   &#34;&#34;&#34;
   # Find Projective Transform
   vanishing_line = np.cross(vp1, vp2)
@@ -1931,23 +1856,22 @@ def preprocess(image: np.ndarray) -&gt; np.ndarray:
 
   # Image is translated so that the image is not missed.
   T, max_x, max_y = self._compute_translate(H=Haffine,
-                                            shape=image.shape,
+                                            shape=image_shape,
                                             clip_factor=self._opt.clip_factor)
 
   Htranslate = np.dot(T, Haffine)
 
-  corrected = CorrectedImage(vp1=VanishingPoint(vp1),
-                             vp2=VanishingPoint(vp2),
-                             Hproject=Hproject,
-                             Haffine=Haffine,
-                             Htranslate=Htranslate,
-                             output_shape=(max_y, max_x))
+  homography = Homography(Hproject=Hproject,
+                          Haffine=Haffine,
+                          Htranslate=Htranslate,
+                          input_shape=image_shape,
+                          output_shape=(max_y, max_x))
 
-  return corrected</code></pre>
+  return homography</code></pre>
 </details>
 </dd>
 <dt id="src.distortion.perspective.PerspectiveCorrection.perspective_correct"><code class="name flex">
-<span>def <span class="ident">perspective_correct</span></span>(<span>self, image: numpy.ndarray, mask: Union[numpy.ndarray, NoneType] = None) ‑> <a title="src.distortion.perspective.CorrectedImage" href="#src.distortion.perspective.CorrectedImage">CorrectedImage</a></span>
+<span>def <span class="ident">perspective_correct</span></span>(<span>self, image: numpy.ndarray, mask: Union[numpy.ndarray, NoneType] = None) ‑> <a title="src.distortion.perspective.Correction" href="#src.distortion.perspective.Correction">Correction</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>시점 왜곡 보정</p>
@@ -1955,10 +1879,12 @@ def preprocess(image: np.ndarray) -&gt; np.ndarray:
 <dl>
 <dt><strong><code>image</code></strong> :&ensp;<code>np.ndarray</code></dt>
 <dd>대상 영상</dd>
+<dt><strong><code>mask</code></strong> :&ensp;<code>Optional[np.ndarray]</code></dt>
+<dd>대상 영상의 분석 영역 mask</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code><a title="src.distortion.perspective.CorrectedImage" href="#src.distortion.perspective.CorrectedImage">CorrectedImage</a></code></dt>
+<dt><code><a title="src.distortion.perspective.Correction" href="#src.distortion.perspective.Correction">Correction</a></code></dt>
 <dd>&nbsp;</dd>
 </dl></div>
 <details class="source">
@@ -1967,7 +1893,7 @@ def preprocess(image: np.ndarray) -&gt; np.ndarray:
 </summary>
 <pre><code class="python">def perspective_correct(self,
                         image: np.ndarray,
-                        mask: Optional[np.ndarray] = None) -&gt; CorrectedImage:
+                        mask: Optional[np.ndarray] = None) -&gt; Correction:
   &#34;&#34;&#34;
   시점 왜곡 보정
 
@@ -1975,45 +1901,54 @@ def preprocess(image: np.ndarray) -&gt; np.ndarray:
   ----------
   image : np.ndarray
       대상 영상
+  mask : Optional[np.ndarray]
+      대상 영상의 분석 영역 mask
 
   Returns
   -------
-  CorrectedImage
+  Correction
   &#34;&#34;&#34;
-  if self._opt.erode and mask is not None:
-    logger.debug(&#39;Erode mask (iterations: {})&#39;, self._opt.erode)
-    mask = erode(mask.astype(np.uint8),
-                 iterations=self._opt.erode).astype(bool)
+  if mask is None:
+    edge_mask = None
+  else:
+    edge_mask = mask
 
-  preped = self.preprocess(image=image)
+    if self._opt.erode:
+      logger.debug(&#39;Erode mask (iterations: {})&#39;, self._opt.erode)
+      edge_mask = tools.erode(edge_mask.astype(np.uint8),
+                              iterations=self._opt.erode).astype(bool)
 
-  edgelets, edges = compute_edgelets(image=preped,
-                                     mask=mask,
-                                     canny_options=self._canny_options,
-                                     hough_options=self._hough_options)
+  preped = preprocess(image=image)
+
+  edgelets, edges = _Rectify.compute_edgelets(
+      image=preped,
+      mask=edge_mask,
+      canny_options=self._canny_options,
+      hough_options=self._hough_options)
 
   vp1, vp2 = self._estimate_vanishing_points(edgelets=edgelets,
                                              image_shape=image.shape[:2])
 
-  if vp1 is not None and vp2 is not None:
-    # homography 행렬 추정
-    corrected = self.compute_homography(image=image,
-                                        vp1=vp1.array,
-                                        vp2=vp2.array)
-    corrected.image = image
-    corrected.preprocessed = preped
-    corrected.edges = edges
-    corrected.edgelets = edgelets
-  else:
+  crop_range = None
+  if vp1 is None or vp2 is None:
     # vp 추정 실패, 중간 과정만 저장
-    corrected = CorrectedImage(image=image,
-                               preprocessed=preped,
-                               edges=edges,
-                               edgelets=edgelets,
-                               vp1=vp1,
-                               vp2=vp2)
+    homography = Homography()
+  else:
+    # Homography 행렬 추정
+    homography = self.compute_homography(image_shape=image.shape[:2],
+                                         vp1=vp1.array,
+                                         vp2=vp2.array)
+    if mask is not None:
+      crop_range = tools.crop_mask(mask=homography.warp(mask))[0]
 
-  return corrected</code></pre>
+  correction = Correction(edges=edges,
+                          edgelets=edgelets,
+                          vp1=vp1,
+                          vp2=vp2,
+                          homography=homography,
+                          crop_range=crop_range)
+
+  return correction</code></pre>
 </details>
 </dd>
 </dl>
@@ -2046,7 +1981,7 @@ def preprocess(image: np.ndarray) -&gt; np.ndarray:
 
   def __init__(self, array: np.ndarray) -&gt; None:
     if array.shape != (3,):
-      raise ValueError(&#39;Invalid vanishing point shape&#39;)
+      raise ValueError(&#39;Invalid vanishing point shape {}&#39;.format(array.shape))
 
     self._array = array
     self._xy = np.divide(self.array[:2], self._array[2])
@@ -2180,10 +2115,7 @@ def xy(self) -&gt; np.ndarray:
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="src.distortion.perspective.compute_edgelets" href="#src.distortion.perspective.compute_edgelets">compute_edgelets</a></code></li>
-<li><code><a title="src.distortion.perspective.compute_votes" href="#src.distortion.perspective.compute_votes">compute_votes</a></code></li>
-<li><code><a title="src.distortion.perspective.ransac_vanishing_point" href="#src.distortion.perspective.ransac_vanishing_point">ransac_vanishing_point</a></code></li>
-<li><code><a title="src.distortion.perspective.remove_inliers" href="#src.distortion.perspective.remove_inliers">remove_inliers</a></code></li>
+<li><code><a title="src.distortion.perspective.preprocess" href="#src.distortion.perspective.preprocess">preprocess</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
@@ -2198,22 +2130,17 @@ def xy(self) -&gt; np.ndarray:
 </ul>
 </li>
 <li>
-<h4><code><a title="src.distortion.perspective.CorrectedImage" href="#src.distortion.perspective.CorrectedImage">CorrectedImage</a></code></h4>
+<h4><code><a title="src.distortion.perspective.Correction" href="#src.distortion.perspective.Correction">Correction</a></code></h4>
 <ul class="two-column">
-<li><code><a title="src.distortion.perspective.CorrectedImage.Haffine" href="#src.distortion.perspective.CorrectedImage.Haffine">Haffine</a></code></li>
-<li><code><a title="src.distortion.perspective.CorrectedImage.Hproject" href="#src.distortion.perspective.CorrectedImage.Hproject">Hproject</a></code></li>
-<li><code><a title="src.distortion.perspective.CorrectedImage.Htranslate" href="#src.distortion.perspective.CorrectedImage.Htranslate">Htranslate</a></code></li>
-<li><code><a title="src.distortion.perspective.CorrectedImage.correct" href="#src.distortion.perspective.CorrectedImage.correct">correct</a></code></li>
-<li><code><a title="src.distortion.perspective.CorrectedImage.corrected_image" href="#src.distortion.perspective.CorrectedImage.corrected_image">corrected_image</a></code></li>
-<li><code><a title="src.distortion.perspective.CorrectedImage.edgelets" href="#src.distortion.perspective.CorrectedImage.edgelets">edgelets</a></code></li>
-<li><code><a title="src.distortion.perspective.CorrectedImage.edges" href="#src.distortion.perspective.CorrectedImage.edges">edges</a></code></li>
-<li><code><a title="src.distortion.perspective.CorrectedImage.image" href="#src.distortion.perspective.CorrectedImage.image">image</a></code></li>
-<li><code><a title="src.distortion.perspective.CorrectedImage.output_shape" href="#src.distortion.perspective.CorrectedImage.output_shape">output_shape</a></code></li>
-<li><code><a title="src.distortion.perspective.CorrectedImage.preprocessed" href="#src.distortion.perspective.CorrectedImage.preprocessed">preprocessed</a></code></li>
-<li><code><a title="src.distortion.perspective.CorrectedImage.process_plot" href="#src.distortion.perspective.CorrectedImage.process_plot">process_plot</a></code></li>
-<li><code><a title="src.distortion.perspective.CorrectedImage.success" href="#src.distortion.perspective.CorrectedImage.success">success</a></code></li>
-<li><code><a title="src.distortion.perspective.CorrectedImage.vp1" href="#src.distortion.perspective.CorrectedImage.vp1">vp1</a></code></li>
-<li><code><a title="src.distortion.perspective.CorrectedImage.vp2" href="#src.distortion.perspective.CorrectedImage.vp2">vp2</a></code></li>
+<li><code><a title="src.distortion.perspective.Correction.correct" href="#src.distortion.perspective.Correction.correct">correct</a></code></li>
+<li><code><a title="src.distortion.perspective.Correction.crop_range" href="#src.distortion.perspective.Correction.crop_range">crop_range</a></code></li>
+<li><code><a title="src.distortion.perspective.Correction.edgelets" href="#src.distortion.perspective.Correction.edgelets">edgelets</a></code></li>
+<li><code><a title="src.distortion.perspective.Correction.edges" href="#src.distortion.perspective.Correction.edges">edges</a></code></li>
+<li><code><a title="src.distortion.perspective.Correction.homography" href="#src.distortion.perspective.Correction.homography">homography</a></code></li>
+<li><code><a title="src.distortion.perspective.Correction.process_plot" href="#src.distortion.perspective.Correction.process_plot">process_plot</a></code></li>
+<li><code><a title="src.distortion.perspective.Correction.success" href="#src.distortion.perspective.Correction.success">success</a></code></li>
+<li><code><a title="src.distortion.perspective.Correction.vp1" href="#src.distortion.perspective.Correction.vp1">vp1</a></code></li>
+<li><code><a title="src.distortion.perspective.Correction.vp2" href="#src.distortion.perspective.Correction.vp2">vp2</a></code></li>
 </ul>
 </li>
 <li>
@@ -2239,6 +2166,18 @@ def xy(self) -&gt; np.ndarray:
 </ul>
 </li>
 <li>
+<h4><code><a title="src.distortion.perspective.Homography" href="#src.distortion.perspective.Homography">Homography</a></code></h4>
+<ul class="two-column">
+<li><code><a title="src.distortion.perspective.Homography.Haffine" href="#src.distortion.perspective.Homography.Haffine">Haffine</a></code></li>
+<li><code><a title="src.distortion.perspective.Homography.Hproject" href="#src.distortion.perspective.Homography.Hproject">Hproject</a></code></li>
+<li><code><a title="src.distortion.perspective.Homography.Htranslate" href="#src.distortion.perspective.Homography.Htranslate">Htranslate</a></code></li>
+<li><code><a title="src.distortion.perspective.Homography.available" href="#src.distortion.perspective.Homography.available">available</a></code></li>
+<li><code><a title="src.distortion.perspective.Homography.input_shape" href="#src.distortion.perspective.Homography.input_shape">input_shape</a></code></li>
+<li><code><a title="src.distortion.perspective.Homography.output_shape" href="#src.distortion.perspective.Homography.output_shape">output_shape</a></code></li>
+<li><code><a title="src.distortion.perspective.Homography.warp" href="#src.distortion.perspective.Homography.warp">warp</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="src.distortion.perspective.HoughOptions" href="#src.distortion.perspective.HoughOptions">HoughOptions</a></code></h4>
 <ul class="">
 <li><code><a title="src.distortion.perspective.HoughOptions.line_gap" href="#src.distortion.perspective.HoughOptions.line_gap">line_gap</a></code></li>
@@ -2256,7 +2195,6 @@ def xy(self) -&gt; np.ndarray:
 <ul class="">
 <li><code><a title="src.distortion.perspective.PerspectiveCorrection.compute_homography" href="#src.distortion.perspective.PerspectiveCorrection.compute_homography">compute_homography</a></code></li>
 <li><code><a title="src.distortion.perspective.PerspectiveCorrection.perspective_correct" href="#src.distortion.perspective.PerspectiveCorrection.perspective_correct">perspective_correct</a></code></li>
-<li><code><a title="src.distortion.perspective.PerspectiveCorrection.preprocess" href="#src.distortion.perspective.PerspectiveCorrection.preprocess">preprocess</a></code></li>
 </ul>
 </li>
 <li>

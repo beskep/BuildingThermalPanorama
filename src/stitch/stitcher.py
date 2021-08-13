@@ -8,7 +8,7 @@ import numpy as np
 from loguru import logger
 from skimage.exposure import rescale_intensity
 
-from misc.tools import mask_bbox
+from misc.tools import CropRange, crop_mask
 
 _AVAILABLE_WARPER = (
     'affine',
@@ -42,7 +42,7 @@ class Panorama:
   graph: str
   indices: list
   cameras: list
-  crop_range: Optional[Tuple[int, int, int, int]]
+  crop_range: Optional[CropRange]
   image_names: List[str]
 
   def included(self):
@@ -497,18 +497,14 @@ class Stitcher:
       names = ['Image {}'.format(x + 1) for x in range(images.count)]
 
     prep_images, prep_masks = images.preprocess()
-
-    if masks is None:
-      masks = prep_masks
-    else:
-      masks = [np.logical_and(m, p) for m, p in zip(masks, prep_masks)]
+    masks = self._merge_mask(prep_masks, masks)
 
     # camera matrix 계산
     cameras, indices, matches_graph = self.calculate_camera_matrix(
         images=prep_images, image_names=names)
 
     if len(indices) != len(prep_images):
-      images.select_images(indices=[int(x) for x in indices])
+      images.select_images(indices=indices)
       logger.info('Stitching에 필요 없는 이미지 제거 (indices: {})',
                   set(range(len(prep_images))) - set(indices))
 
@@ -525,14 +521,14 @@ class Stitcher:
     # 파노라마 영상 중 데이터 없는 부분에 최소값 대입
     panorama[np.logical_not(panorama_mask)] = np.min(panorama)
 
-    if not crop:
-      crop_range = None
-    else:
+    crop_range = None
+    if crop:
       # 데이터가 존재하는 부분의 bounding box만 crop
       logger.debug('Crop panorama')
-      panorama, panorama_mask, crop_range = self.crop(image=panorama,
-                                                      mask=panorama_mask,
-                                                      crop_range=None)
+      crop_range, panorama_mask = crop_mask(mask=panorama_mask,
+                                            morphology_open=True)
+      if crop_range.cropped:
+        panorama = crop_range.crop(panorama)
 
     pano = Panorama(panorama=panorama,
                     mask=panorama_mask,
@@ -543,6 +539,15 @@ class Stitcher:
                     image_names=names)
 
     return pano
+
+  @staticmethod
+  def _merge_mask(masks1, masks2=None):
+    if masks2 is None:
+      return masks1
+
+    masks = [np.logical_and(x, y) for x, y in zip(masks1, masks2)]
+
+    return masks
 
   def calculate_camera_matrix(
       self,
@@ -854,46 +859,3 @@ class Stitcher:
     panorama = images.unscale(image=scaled_panorama)
 
     return panorama, panorama_mask, indices
-
-  @staticmethod
-  def crop(
-      image: np.ndarray,
-      mask: Optional[np.ndarray] = None,
-      crop_range: Optional[Tuple[int, int, int, int]] = None
-  ) -> Tuple[np.ndarray, np.ndarray, Tuple[int, int, int, int]]:
-    """
-    image와 mask를 일부 영역으로 crop
-
-    Parameters
-    ----------
-    image : np.ndarray
-        대상 영상
-    mask : Optional[np.ndarray]
-        대상 마스크
-    crop_range : Optional[list]
-        Crop 영역.
-        [x1, x2, y1, y2].
-        `None`인 경우, `mask` 중 `True`인 영역의 bounding box로 설정.
-
-    Returns
-    -------
-    np.ndarray
-        Cropped image
-    Optional[np.ndarray]
-        Cropped mask
-    Optional[list]
-        crop_range
-    """
-    if crop_range is not None:
-      x1, x2, y1, y2 = crop_range
-    else:
-      if mask is None:
-        raise ValueError('`mask`나 `crop_range` 중 하나를 설정해야 함.')
-
-      x1, x2, y1, y2 = mask_bbox(mask=mask, morphology_open=True)
-      crop_range = (x1, x2, y1, y2)
-
-    cropped_image = image[y1:y2, x1:x2]
-    cropped_mask = None if mask is None else mask[y1:y2, x1:x2]
-
-    return cropped_image, cropped_mask, crop_range

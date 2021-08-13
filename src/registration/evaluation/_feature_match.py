@@ -3,7 +3,7 @@ from typing import Callable
 from matplotlib import pyplot as plt
 from skimage.color import rgb2gray
 
-from misc import tools
+from misc.imageio import ImageIO
 
 from ..registrator import feature_match as fm
 from ..registrator.registrator import RegisteringImage
@@ -29,8 +29,8 @@ class FeatureEvaluation(BaseEvaluation):
     return self._registrator
 
   def execute_once(self, case, ff, mf, df, output_dir, **kwargs):
-    fixed_image = tools.ImageIO.read(ff)
-    moving_image = tools.ImageIO.read(mf)
+    fixed_image = ImageIO.read(ff)
+    moving_image = ImageIO.read(mf)
     if fixed_image.ndim == 3:
       fixed_image = rgb2gray(fixed_image)
     if moving_image.ndim == 3:

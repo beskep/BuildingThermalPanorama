@@ -68,7 +68,6 @@ class RegistrationPreprocess:
       image = unsharp_mask(image, radius=10)
 
     if self._edge[0]:
-      # image = normalize_image(scharr(image))
       image = sobel(image)
 
     return image
@@ -86,7 +85,6 @@ class RegistrationPreprocess:
       image = unsharp_mask(image, radius=10)
 
     if self._edge[1]:
-      # image = normalize_image(scharr(image))
       image = sobel(image)
 
     return image
@@ -137,7 +135,7 @@ class RegisteringImage:
     self._resized_image = None
     self._prep_image = None
 
-  def resized_image(self, gray: bool) -> np.ndarray:
+  def resized_image(self, gray=True) -> np.ndarray:
     """
     지정한 shape으로 영상의 크기 조정.
 

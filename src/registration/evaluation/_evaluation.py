@@ -10,6 +10,7 @@ from skimage.color import rgb2gray
 from skimage.exposure import equalize_hist
 
 from misc import tools
+from misc.imageio import ImageIO
 
 from ..registrator import BaseRegistrator, RegisteringImage
 from .metrics import calculate_all_metrics
@@ -59,7 +60,7 @@ class BaseEvaluation:
       register = None
       matrix = None
 
-    mi.registered_prep_image = rgst_image
+    # mi.registered_prep_image = rgst_image
     mi.set_registration(matrix, register)
 
     fi_eh = equalize_hist(fi.resized_image())
@@ -114,8 +115,8 @@ class BaseEvaluation:
     return fig, axes, compare_reg_cb
 
   def execute_once(self, case, ff, mf, df, output_dir, **kwargs):
-    fixed_image = tools.ImageIO.read(ff)
-    moving_image = tools.ImageIO.read(mf)
+    fixed_image = ImageIO.read(ff)
+    moving_image = ImageIO.read(mf)
     if fixed_image.ndim == 3:
       fixed_image = rgb2gray(fixed_image)
     if moving_image.ndim == 3:
