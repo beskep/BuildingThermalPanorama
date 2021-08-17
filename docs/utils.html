@@ -88,7 +88,11 @@ def set_logger(level: Union[int, str] = 20):
   if getattr(logger, &#39;lvl&#39;, -1) != level:
     logger.remove()
 
-    logger.add(_handler, level=level, format=&#39;{message}&#39;, enqueue=True)
+    logger.add(_handler,
+               level=level,
+               format=&#39;{message}&#39;,
+               backtrace=False,
+               enqueue=True)
     logger.add(&#39;pano.log&#39;,
                level=&#39;DEBUG&#39;,
                rotation=&#39;1 week&#39;,
@@ -140,7 +144,11 @@ def set_logger(level: Union[int, str] = 20):
   if getattr(logger, &#39;lvl&#39;, -1) != level:
     logger.remove()
 
-    logger.add(_handler, level=level, format=&#39;{message}&#39;, enqueue=True)
+    logger.add(_handler,
+               level=level,
+               format=&#39;{message}&#39;,
+               backtrace=False,
+               enqueue=True)
     logger.add(&#39;pano.log&#39;,
                level=&#39;DEBUG&#39;,
                rotation=&#39;1 week&#39;,

@@ -59,7 +59,11 @@ def set_logger(level: Union[int, str] = 20):
   if getattr(logger, 'lvl', -1) != level:
     logger.remove()
 
-    logger.add(_handler, level=level, format='{message}', enqueue=True)
+    logger.add(_handler,
+               level=level,
+               format='{message}',
+               backtrace=False,
+               enqueue=True)
     logger.add('pano.log',
                level='DEBUG',
                rotation='1 week',

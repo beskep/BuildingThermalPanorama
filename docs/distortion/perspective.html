@@ -169,6 +169,10 @@ class VanishingPoint:
 
     self._pos = self._POS_DICT[(hv[0], hv[1])]
 
+  def __str__(self) -&gt; str:
+    return &#39;coor=[{:.2f}, {:.2f}, {:.2f}] | xy=[{:.2f}, {:.2f}]&#39;.format(
+        *self.array, *self.xy)
+
 
 def preprocess(image: np.ndarray) -&gt; np.ndarray:
   &#34;&#34;&#34;전처리 (회색 변환 및 히스토그램 평활화)&#34;&#34;&#34;
@@ -665,10 +669,9 @@ class PerspectiveCorrection:
     vp1, vp2 = None, None
     vp1, edgelets2 = self._estimate_vanishing_point(edgelets=edgelets,
                                                     image_shape=image_shape)
+    logger.debug(&#39;VP1: {}&#39;, vp1)
     if vp1 is None:
       return None, None
-
-    logger.debug(&#39;VP1: ({:.2f}, {:.2f})&#39;, *vp1.xy)
 
     target = None
     if self._opt.strict:
@@ -693,8 +696,7 @@ class PerspectiveCorrection:
         logger.warning(&#39;두 vanishing point가 유사함 (각도차: {:.2e} degree)&#39;, delta)
         vp2 = None
 
-    if vp2 is not None:
-      logger.debug(&#39;VP2: ({:.2f}, {:.2f})&#39;, *vp2.xy)
+    logger.debug(&#39;VP2: {}&#39;, vp2)
 
     return vp1, vp2
 
@@ -1704,10 +1706,9 @@ Homography 행렬 추정.</p>
     vp1, vp2 = None, None
     vp1, edgelets2 = self._estimate_vanishing_point(edgelets=edgelets,
                                                     image_shape=image_shape)
+    logger.debug(&#39;VP1: {}&#39;, vp1)
     if vp1 is None:
       return None, None
-
-    logger.debug(&#39;VP1: ({:.2f}, {:.2f})&#39;, *vp1.xy)
 
     target = None
     if self._opt.strict:
@@ -1732,8 +1733,7 @@ Homography 행렬 추정.</p>
         logger.warning(&#39;두 vanishing point가 유사함 (각도차: {:.2e} degree)&#39;, delta)
         vp2 = None
 
-    if vp2 is not None:
-      logger.debug(&#39;VP2: ({:.2f}, {:.2f})&#39;, *vp2.xy)
+    logger.debug(&#39;VP2: {}&#39;, vp2)
 
     return vp1, vp2
 
@@ -2007,7 +2007,11 @@ Homography 행렬 추정.</p>
     rxy = (self.xy - shape / 2.0) / shape
     hv = np.abs(rxy) &gt; 0.5 + margin
 
-    self._pos = self._POS_DICT[(hv[0], hv[1])]</code></pre>
+    self._pos = self._POS_DICT[(hv[0], hv[1])]
+
+  def __str__(self) -&gt; str:
+    return &#39;coor=[{:.2f}, {:.2f}, {:.2f}] | xy=[{:.2f}, {:.2f}]&#39;.format(
+        *self.array, *self.xy)</code></pre>
 </details>
 <h3>Class variables</h3>
 <dl>

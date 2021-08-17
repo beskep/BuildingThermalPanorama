@@ -418,7 +418,7 @@ class SITKRegistrator(BaseRegistrator):
     )
     logger.debug(&#39;Optimizer stopping condition: {}&#39;,
                  self.method.GetOptimizerStopConditionDescription())
-    logger.debug(&#39;Final param: {}&#39;, final_trsf.GetParameters())
+    logger.debug(&#39;Final param: {}&#39;, np.round(final_trsf.GetParameters(), 3))
 
     return self._registration_results(fixed_simg=fixed,
                                       moving_simg=moving,
@@ -899,7 +899,7 @@ string으로 설정하는 경우 <code>numpy.histogram_bin_edges</code>의 설�
     )
     logger.debug(&#39;Optimizer stopping condition: {}&#39;,
                  self.method.GetOptimizerStopConditionDescription())
-    logger.debug(&#39;Final param: {}&#39;, final_trsf.GetParameters())
+    logger.debug(&#39;Final param: {}&#39;, np.round(final_trsf.GetParameters(), 3))
 
     return self._registration_results(fixed_simg=fixed,
                                       moving_simg=moving,
@@ -1126,7 +1126,7 @@ def transformation(self):
   )
   logger.debug(&#39;Optimizer stopping condition: {}&#39;,
                self.method.GetOptimizerStopConditionDescription())
-  logger.debug(&#39;Final param: {}&#39;, final_trsf.GetParameters())
+  logger.debug(&#39;Final param: {}&#39;, np.round(final_trsf.GetParameters(), 3))
 
   return self._registration_results(fixed_simg=fixed,
                                     moving_simg=moving,

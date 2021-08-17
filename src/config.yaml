@@ -4,17 +4,16 @@ camera:
         IR_AOV: null # 열화상 시야각 [degree]
         VIS_AOV: null # 실화상 시야각 [degree]
         translation: null
-    preset:
-        FLIR E95:
-            scale: null
-            IR_AOV: 32
-            VIS_AOV: 42
-            translation: null
-        FLIR T540:
-            scale: 0.75
-            IR_AOV: null
-            VIS_AOV: null
-            translation: [5, -14]
+    FLIR E95:
+        scale: null
+        IR_AOV: 32
+        VIS_AOV: 42
+        translation: null
+    FLIR T540:
+        scale: 0.75
+        IR_AOV: null
+        VIS_AOV: null
+        translation: [5, -14]
 color:
     colormap: iron # optional, {"iron", "inferno", "rainbow", ...}
     extract_color_image: true

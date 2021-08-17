@@ -140,6 +140,10 @@ class VanishingPoint:
 
     self._pos = self._POS_DICT[(hv[0], hv[1])]
 
+  def __str__(self) -> str:
+    return 'coor=[{:.2f}, {:.2f}, {:.2f}] | xy=[{:.2f}, {:.2f}]'.format(
+        *self.array, *self.xy)
+
 
 def preprocess(image: np.ndarray) -> np.ndarray:
   """전처리 (회색 변환 및 히스토그램 평활화)"""
@@ -636,10 +640,9 @@ class PerspectiveCorrection:
     vp1, vp2 = None, None
     vp1, edgelets2 = self._estimate_vanishing_point(edgelets=edgelets,
                                                     image_shape=image_shape)
+    logger.debug('VP1: {}', vp1)
     if vp1 is None:
       return None, None
-
-    logger.debug('VP1: ({:.2f}, {:.2f})', *vp1.xy)
 
     target = None
     if self._opt.strict:
@@ -664,8 +667,7 @@ class PerspectiveCorrection:
         logger.warning('두 vanishing point가 유사함 (각도차: {:.2e} degree)', delta)
         vp2 = None
 
-    if vp2 is not None:
-      logger.debug('VP2: ({:.2f}, {:.2f})', *vp2.xy)
+    logger.debug('VP2: {}', vp2)
 
     return vp1, vp2
 

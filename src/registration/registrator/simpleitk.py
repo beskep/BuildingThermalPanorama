@@ -389,7 +389,7 @@ class SITKRegistrator(BaseRegistrator):
     )
     logger.debug('Optimizer stopping condition: {}',
                  self.method.GetOptimizerStopConditionDescription())
-    logger.debug('Final param: {}', final_trsf.GetParameters())
+    logger.debug('Final param: {}', np.round(final_trsf.GetParameters(), 3))
 
     return self._registration_results(fixed_simg=fixed,
                                       moving_simg=moving,
