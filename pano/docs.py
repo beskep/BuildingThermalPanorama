@@ -10,7 +10,6 @@ from loguru import logger
 from pano import utils
 
 OUTPUT_DIR = utils.DIR.ROOT.joinpath('docs')
-utils.set_logger(level='DEBUG')
 
 
 def module_path(m: pdoc.Module, ext: str) -> Path:

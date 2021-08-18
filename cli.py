@@ -1,7 +1,6 @@
 """파노라마 영상처리 CLI"""
 
 import os
-import sys
 
 import click
 import skimage.io
@@ -47,11 +46,11 @@ def cli(directory: str, command: str, default: bool, debug: bool,
     logger.error('Command는 {} 중 하나여야 합니다.', commands)
     return
 
-  # pylint: disable=import-outside-toplevel
-  from pano.interface.pano import ThermalPanorama
-
   if command == 'init':
     default = True
+
+  # pylint: disable=import-outside-toplevel
+  from pano.interface.pano import ThermalPanorama
 
   try:
     tp = ThermalPanorama(directory=directory, default_config=default)

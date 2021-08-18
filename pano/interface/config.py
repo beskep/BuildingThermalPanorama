@@ -7,10 +7,10 @@ from loguru import logger
 from omegaconf import DictConfig, OmegaConf
 from yaml.error import YAMLError
 
-from pano import utils
+from pano.utils import DIR
 
 CONFIG_FNAME = 'config.yaml'
-DEFAULT_CONFIG_PATH = utils.DIR.SRC.joinpath(CONFIG_FNAME)
+DEFAULT_CONFIG_PATH = DIR.RESOURCE.joinpath(CONFIG_FNAME)
 
 
 def read_config(wd: Path, read_only=True, default=False) -> DictConfig:

@@ -5,11 +5,15 @@ from pathlib import Path
 import cx_Freeze
 from cx_Freeze import Executable, setup
 
-include_files = [
-    'src',
-    ('data/DeepLabV3', 'data/DeepLabV3'),
-    ('data/iron_colormap_rgb.txt', 'data/iron_colormap_rgb.txt'),
+from pano.utils import DIR
+
+resources = [
+    x.relative_to(DIR.ROOT).as_posix()
+    for x in DIR.RESOURCE.iterdir()
+    if not x.name.lower().startswith('test')
 ]
+include_files = [(x, x) for x in resources]
+
 includes = [
     'click',
     'cv2',
@@ -29,12 +33,12 @@ includes = [
     'skimage.io._plugins.pil_plugin',
     'skimage',
     'tensorflow',
-    # 'PyQt5',
+    'PySide2',
 ]
-excludes = ['tkinter', 'locket', 'PySide2', 'PyQt5']
+excludes = ['tkinter', 'locket', 'PyQt5']
 zip_include_packages = []
-bins = ['ITK']
 
+bins = ['ITK']
 lib_bin = Path(cx_Freeze.__path__[0]).parents[2].joinpath('Library/bin')
 for b in bins:
   files = list(lib_bin.glob(f'*{b}*'))
@@ -52,7 +56,8 @@ options = {
 }
 
 executables = [
-    Executable(script='cli_click.py', target_name='CLI'),
+    Executable(script='cli.py', target_name='CLI'),
+    Executable(script='gui.py', target_name='GUI'),
 ]
 
 setup(name='app',

@@ -124,7 +124,10 @@ cython_debug/
 # Project
 .vscode
 .idea
-resource/
+resource/DeepLabV3
+resource/TestImage
 *.exe
 *.bat
 .*.py
+*.pyproject*
+TODO.md

@@ -13,8 +13,12 @@ from rich.theme import Theme
 
 
 class DIR:
-  SRC = Path(__file__).parent.resolve()
-  ROOT = SRC.parent
+  if getattr(sys, 'frozen', False):
+    ROOT = Path(sys.executable).parent.resolve()
+  else:
+    ROOT = Path(__file__).parents[1].resolve()
+
+  SRC = ROOT.joinpath('pano')
   RESOURCE = ROOT.joinpath('resource')
 
 
@@ -49,7 +53,7 @@ def set_logger(level: Union[int, str] = 20):
         'CRITICAL': 50
     }
     try:
-      level = levels[level]
+      level = levels[level.upper()]
     except KeyError as e:
       raise KeyError('`{}` not in {}'.format(level, set(levels.keys()))) from e
 
