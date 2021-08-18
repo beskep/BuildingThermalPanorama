@@ -272,6 +272,45 @@ class ThermalPanorama:
 
     logger.success('열화상-실화상 정합 완료')
 
+  def segment(self):
+    # pylint: disable=import-outside-toplevel
+    from segmentation import deeplab
+
+    try:
+      files = self._fm.files(DIR.RGST)
+    except FileNotFoundError as e:
+      logger.exception(e)
+      logger.error('"{}" 파일을 찾을 수 없습니다. '
+                   '열화상-실화상 정합을 먼저 시행해주세요.',
+                   Path(e.args[0]).relative_to(self._wd))
+      return
+
+    # 모델 로드
+    try:
+      model_path = self._fm.segment_model_path()
+    except FileNotFoundError as e:
+      logger.exception(e)
+      logger.error('부위 인식 모델 파일을 불러올 수 없습니다.')
+
+    deeplab.tf_gpu_memory_config()
+    model = deeplab.DeepLabModel(model_path.as_posix())
+
+    self._fm.subdir(DIR.SEG, mkdir=True)
+    for file in track(sequence=files,
+                      description='Segmenting...',
+                      console=utils.console):
+      image = IIO.read(file)
+      seg_map, _, fig = model.predict_and_visualize(image)
+
+      path = self._fm.change_dir(DIR.SEG, file)
+      IIO.save(path=path, array=tools.SegMask.index_to_vis(seg_map))
+
+      fig_path = path.with_name(f'{path.stem}{FN.SEG_FIG}{FN.LS}')
+      fig.savefig(fig_path)
+      plt.close(fig)
+
+    logger.success('외피 부위 인식 완료')
+
   def _init_stitcher(self) -> stitch.Stitcher:
     sopt: DictConfig = self._config['panorama']['stitch']
 
@@ -524,3 +563,19 @@ class ThermalPanorama:
     self._correct_others(correction=crct, spectrum=SP.SEG)
 
     logger.success('파노라마 왜곡 보정 완료')
+
+  def run(self):
+    logger.info('Start registering')
+    self.register()
+    logger.log('BLANK', '')
+
+    logger.info('Start segmenting')
+    self.segment()
+    logger.log('BLANK', '')
+
+    logger.info('Start panorama stitching')
+    self.panorama()
+    logger.log('BLANK', '')
+
+    logger.info('Start distortion correction')
+    self.correct()
