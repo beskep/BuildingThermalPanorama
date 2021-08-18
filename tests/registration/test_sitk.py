@@ -1,5 +1,3 @@
-from context import ROOT_DIR
-
 import numpy as np
 import pytest
 import SimpleITK as sitk
@@ -8,7 +6,8 @@ from skimage.exposure import rescale_intensity
 from skimage.io import imread
 from skimage.transform import resize, warp
 
-import registration.registrator.simpleitk as rsitk
+import pano.registration.registrator.simpleitk as rsitk
+from pano.utils import DIR
 
 
 class TestSITK:
@@ -21,8 +20,8 @@ class TestSITK:
   moving_image: np.ndarray = None
 
   def read_images(self):
-    fixed_path = ROOT_DIR.joinpath('data/SITK/SimpleITK_fixed_0.25.png')
-    moving_path = ROOT_DIR.joinpath('data/SITK/SimpleITK_moving_0.25.png')
+    fixed_path = DIR.RESOURCE.joinpath('TestImage/SimpleITK_fixed_0.25.png')
+    moving_path = DIR.RESOURCE.joinpath('TestImage/SimpleITK_moving_0.25.png')
 
     fixed_image = imread(fixed_path.as_posix())
     moving_image = imread(moving_path.as_posix())

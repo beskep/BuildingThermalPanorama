@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.9.2" />
-<title>src.registration.registrator.simpleitk API documentation</title>
+<title>pano.registration.registrator.simpleitk API documentation</title>
 <meta name="description" content="SimpleITK 라이브러리와 수치적 최적화를 통해 영상 정합" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
@@ -19,7 +19,7 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>src.registration.registrator.simpleitk</code></h1>
+<h1 class="title">Module <code>pano.registration.registrator.simpleitk</code></h1>
 </header>
 <section id="section-intro">
 <p>SimpleITK 라이브러리와 수치적 최적화를 통해 영상 정합</p>
@@ -38,7 +38,7 @@ from loguru import logger
 from numpy.linalg import inv
 from skimage.transform import estimate_transform
 
-from misc.tools import bin_size
+from pano.misc.tools import bin_size
 
 from .registrator import (BaseRegistrator, RegisteringImage,
                           RegistrationPreprocess)
@@ -443,7 +443,7 @@ class SITKRegistrator(BaseRegistrator):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="src.registration.registrator.simpleitk.to_sitk_image"><code class="name flex">
+<dt id="pano.registration.registrator.simpleitk.to_sitk_image"><code class="name flex">
 <span>def <span class="ident">to_sitk_image</span></span>(<span>image: numpy.ndarray, set_origin=False) ‑> SimpleITK.SimpleITK.Image</span>
 </code></dt>
 <dd>
@@ -492,7 +492,7 @@ class SITKRegistrator(BaseRegistrator):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="src.registration.registrator.simpleitk.Metric"><code class="flex name class">
+<dt id="pano.registration.registrator.simpleitk.Metric"><code class="flex name class">
 <span>class <span class="ident">Metric</span></span>
 <span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
 </code></dt>
@@ -516,29 +516,29 @@ class SITKRegistrator(BaseRegistrator):
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="src.registration.registrator.simpleitk.Metric.ANTSNCorr"><code class="name">var <span class="ident">ANTSNCorr</span></code></dt>
+<dt id="pano.registration.registrator.simpleitk.Metric.ANTSNCorr"><code class="name">var <span class="ident">ANTSNCorr</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.registration.registrator.simpleitk.Metric.Corr"><code class="name">var <span class="ident">Corr</span></code></dt>
+<dt id="pano.registration.registrator.simpleitk.Metric.Corr"><code class="name">var <span class="ident">Corr</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.registration.registrator.simpleitk.Metric.JointHistMI"><code class="name">var <span class="ident">JointHistMI</span></code></dt>
+<dt id="pano.registration.registrator.simpleitk.Metric.JointHistMI"><code class="name">var <span class="ident">JointHistMI</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.registration.registrator.simpleitk.Metric.MattesMI"><code class="name">var <span class="ident">MattesMI</span></code></dt>
+<dt id="pano.registration.registrator.simpleitk.Metric.MattesMI"><code class="name">var <span class="ident">MattesMI</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.registration.registrator.simpleitk.Metric.MeanSquare"><code class="name">var <span class="ident">MeanSquare</span></code></dt>
+<dt id="pano.registration.registrator.simpleitk.Metric.MeanSquare"><code class="name">var <span class="ident">MeanSquare</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
 </dl>
 </dd>
-<dt id="src.registration.registrator.simpleitk.SITKRegistrator"><code class="flex name class">
+<dt id="pano.registration.registrator.simpleitk.SITKRegistrator"><code class="flex name class">
 <span>class <span class="ident">SITKRegistrator</span></span>
 <span>(</span><span>transformation=Transformation.Similarity, metric=Metric.JointHistMI, optimizer='powell', bins: Union[str, int] = 'auto')</span>
 </code></dt>
@@ -548,9 +548,9 @@ inheritance.</p>
 <p>SimpleITK 라이브러리와 수치적 최적화를 통해 영상 정합</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>transformation</code></strong> :&ensp;<code><a title="src.registration.registrator.simpleitk.Transformation" href="#src.registration.registrator.simpleitk.Transformation">Transformation</a></code>, optional</dt>
+<dt><strong><code>transformation</code></strong> :&ensp;<code><a title="pano.registration.registrator.simpleitk.Transformation" href="#pano.registration.registrator.simpleitk.Transformation">Transformation</a></code>, optional</dt>
 <dd>정합하기 위한 moving_image의 변환 방법</dd>
-<dt><strong><code>metric</code></strong> :&ensp;<code><a title="src.registration.registrator.simpleitk.Metric" href="#src.registration.registrator.simpleitk.Metric">Metric</a></code>, optional</dt>
+<dt><strong><code>metric</code></strong> :&ensp;<code><a title="pano.registration.registrator.simpleitk.Metric" href="#pano.registration.registrator.simpleitk.Metric">Metric</a></code>, optional</dt>
 <dd>최적화 대상 metric</dd>
 <dt><strong><code>optimizer</code></strong> :&ensp;<code>str</code>, optional</dt>
 <dd>최적화 방법. {'powell', 'gradient_descent'}</dd>
@@ -918,12 +918,12 @@ string으로 설정하는 경우 <code>numpy.histogram_bin_edges</code>의 설�
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="src.registration.registrator.registrator.BaseRegistrator" href="registrator.html#src.registration.registrator.registrator.BaseRegistrator">BaseRegistrator</a></li>
+<li><a title="pano.registration.registrator.registrator.BaseRegistrator" href="registrator.html#pano.registration.registrator.registrator.BaseRegistrator">BaseRegistrator</a></li>
 <li>abc.ABC</li>
 </ul>
 <h3>Static methods</h3>
 <dl>
-<dt id="src.registration.registrator.simpleitk.SITKRegistrator.get_transform_matrix"><code class="name flex">
+<dt id="pano.registration.registrator.simpleitk.SITKRegistrator.get_transform_matrix"><code class="name flex">
 <span>def <span class="ident">get_transform_matrix</span></span>(<span>transform: SimpleITK.SimpleITK.Transform) ‑> numpy.ndarray</span>
 </code></dt>
 <dd>
@@ -974,7 +974,7 @@ def get_transform_matrix(transform: sitk.Transform) -&gt; np.ndarray:
 </dl>
 <h3>Instance variables</h3>
 <dl>
-<dt id="src.registration.registrator.simpleitk.SITKRegistrator.method"><code class="name">var <span class="ident">method</span> : SimpleITK.SimpleITK.ImageRegistrationMethod</code></dt>
+<dt id="pano.registration.registrator.simpleitk.SITKRegistrator.method"><code class="name">var <span class="ident">method</span> : SimpleITK.SimpleITK.ImageRegistrationMethod</code></dt>
 <dd>
 <div class="desc"><p>simpleitk 라이브러리의 영상 정합을 위한 클래스</p>
 <h2 id="returns">Returns</h2>
@@ -998,12 +998,12 @@ def method(self) -&gt; sitk.ImageRegistrationMethod:
   return self._method</code></pre>
 </details>
 </dd>
-<dt id="src.registration.registrator.simpleitk.SITKRegistrator.metric"><code class="name">var <span class="ident">metric</span> : <a title="src.registration.registrator.simpleitk.Metric" href="#src.registration.registrator.simpleitk.Metric">Metric</a></code></dt>
+<dt id="pano.registration.registrator.simpleitk.SITKRegistrator.metric"><code class="name">var <span class="ident">metric</span> : <a title="pano.registration.registrator.simpleitk.Metric" href="#pano.registration.registrator.simpleitk.Metric">Metric</a></code></dt>
 <dd>
 <div class="desc"><p>정합 결과 판단 지표의 종류</p>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code><a title="src.registration.registrator.simpleitk.Metric" href="#src.registration.registrator.simpleitk.Metric">Metric</a></code></dt>
+<dt><code><a title="pano.registration.registrator.simpleitk.Metric" href="#pano.registration.registrator.simpleitk.Metric">Metric</a></code></dt>
 <dd>&nbsp;</dd>
 </dl></div>
 <details class="source">
@@ -1022,7 +1022,7 @@ def metric(self) -&gt; Metric:
   return self._metric</code></pre>
 </details>
 </dd>
-<dt id="src.registration.registrator.simpleitk.SITKRegistrator.transformation"><code class="name">var <span class="ident">transformation</span></code></dt>
+<dt id="pano.registration.registrator.simpleitk.SITKRegistrator.transformation"><code class="name">var <span class="ident">transformation</span></code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
@@ -1037,7 +1037,7 @@ def transformation(self):
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="src.registration.registrator.simpleitk.SITKRegistrator.register"><code class="name flex">
+<dt id="pano.registration.registrator.simpleitk.SITKRegistrator.register"><code class="name flex">
 <span>def <span class="ident">register</span></span>(<span>self, fixed_image: numpy.ndarray, moving_image: numpy.ndarray, **kwargs) ‑> Tuple[numpy.ndarray, Union[Callable, NoneType], Union[numpy.ndarray, NoneType]]</span>
 </code></dt>
 <dd>
@@ -1134,7 +1134,7 @@ def transformation(self):
                                     set_origin=set_origin)</code></pre>
 </details>
 </dd>
-<dt id="src.registration.registrator.simpleitk.SITKRegistrator.set_initial_params"><code class="name flex">
+<dt id="pano.registration.registrator.simpleitk.SITKRegistrator.set_initial_params"><code class="name flex">
 <span>def <span class="ident">set_initial_params</span></span>(<span>self, scale: Union[float, NoneType] = None, fixed_alpha: Union[float, NoneType] = None, moving_alpha: Union[float, NoneType] = None, translation: Union[list, NoneType] = None)</span>
 </code></dt>
 <dd>
@@ -1198,8 +1198,8 @@ e.g. FLIR T540의 경우 (5, -14).</p>
                self._trnsl0)</code></pre>
 </details>
 </dd>
-<dt id="src.registration.registrator.simpleitk.SITKRegistrator.set_metric"><code class="name flex">
-<span>def <span class="ident">set_metric</span></span>(<span>self, metric: <a title="src.registration.registrator.simpleitk.Metric" href="#src.registration.registrator.simpleitk.Metric">Metric</a>, bins: Union[int, str] = 'auto', pdf_var=1.5, ants_radius=2)</span>
+<dt id="pano.registration.registrator.simpleitk.SITKRegistrator.set_metric"><code class="name flex">
+<span>def <span class="ident">set_metric</span></span>(<span>self, metric: <a title="pano.registration.registrator.simpleitk.Metric" href="#pano.registration.registrator.simpleitk.Metric">Metric</a>, bins: Union[int, str] = 'auto', pdf_var=1.5, ants_radius=2)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -1223,7 +1223,7 @@ e.g. FLIR T540의 경우 (5, -14).</p>
                             ants_radius=ants_radius)</code></pre>
 </details>
 </dd>
-<dt id="src.registration.registrator.simpleitk.SITKRegistrator.set_multi_resolution"><code class="name flex">
+<dt id="pano.registration.registrator.simpleitk.SITKRegistrator.set_multi_resolution"><code class="name flex">
 <span>def <span class="ident">set_multi_resolution</span></span>(<span>self, shrink_factors=(4, 2, 1), smoothing_sigmas=(2, 1, 0))</span>
 </code></dt>
 <dd>
@@ -1242,7 +1242,7 @@ e.g. FLIR T540의 경우 (5, -14).</p>
 </dd>
 </dl>
 </dd>
-<dt id="src.registration.registrator.simpleitk.Transformation"><code class="flex name class">
+<dt id="pano.registration.registrator.simpleitk.Transformation"><code class="flex name class">
 <span>class <span class="ident">Transformation</span></span>
 <span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
 </code></dt>
@@ -1263,11 +1263,11 @@ e.g. FLIR T540의 경우 (5, -14).</p>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="src.registration.registrator.simpleitk.Transformation.Affine"><code class="name">var <span class="ident">Affine</span></code></dt>
+<dt id="pano.registration.registrator.simpleitk.Transformation.Affine"><code class="name">var <span class="ident">Affine</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.registration.registrator.simpleitk.Transformation.Similarity"><code class="name">var <span class="ident">Similarity</span></code></dt>
+<dt id="pano.registration.registrator.simpleitk.Transformation.Similarity"><code class="name">var <span class="ident">Similarity</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1284,44 +1284,44 @@ e.g. FLIR T540의 경우 (5, -14).</p>
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="src.registration.registrator" href="index.html">src.registration.registrator</a></code></li>
+<li><code><a title="pano.registration.registrator" href="index.html">pano.registration.registrator</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="src.registration.registrator.simpleitk.to_sitk_image" href="#src.registration.registrator.simpleitk.to_sitk_image">to_sitk_image</a></code></li>
+<li><code><a title="pano.registration.registrator.simpleitk.to_sitk_image" href="#pano.registration.registrator.simpleitk.to_sitk_image">to_sitk_image</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="src.registration.registrator.simpleitk.Metric" href="#src.registration.registrator.simpleitk.Metric">Metric</a></code></h4>
+<h4><code><a title="pano.registration.registrator.simpleitk.Metric" href="#pano.registration.registrator.simpleitk.Metric">Metric</a></code></h4>
 <ul class="">
-<li><code><a title="src.registration.registrator.simpleitk.Metric.ANTSNCorr" href="#src.registration.registrator.simpleitk.Metric.ANTSNCorr">ANTSNCorr</a></code></li>
-<li><code><a title="src.registration.registrator.simpleitk.Metric.Corr" href="#src.registration.registrator.simpleitk.Metric.Corr">Corr</a></code></li>
-<li><code><a title="src.registration.registrator.simpleitk.Metric.JointHistMI" href="#src.registration.registrator.simpleitk.Metric.JointHistMI">JointHistMI</a></code></li>
-<li><code><a title="src.registration.registrator.simpleitk.Metric.MattesMI" href="#src.registration.registrator.simpleitk.Metric.MattesMI">MattesMI</a></code></li>
-<li><code><a title="src.registration.registrator.simpleitk.Metric.MeanSquare" href="#src.registration.registrator.simpleitk.Metric.MeanSquare">MeanSquare</a></code></li>
+<li><code><a title="pano.registration.registrator.simpleitk.Metric.ANTSNCorr" href="#pano.registration.registrator.simpleitk.Metric.ANTSNCorr">ANTSNCorr</a></code></li>
+<li><code><a title="pano.registration.registrator.simpleitk.Metric.Corr" href="#pano.registration.registrator.simpleitk.Metric.Corr">Corr</a></code></li>
+<li><code><a title="pano.registration.registrator.simpleitk.Metric.JointHistMI" href="#pano.registration.registrator.simpleitk.Metric.JointHistMI">JointHistMI</a></code></li>
+<li><code><a title="pano.registration.registrator.simpleitk.Metric.MattesMI" href="#pano.registration.registrator.simpleitk.Metric.MattesMI">MattesMI</a></code></li>
+<li><code><a title="pano.registration.registrator.simpleitk.Metric.MeanSquare" href="#pano.registration.registrator.simpleitk.Metric.MeanSquare">MeanSquare</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="src.registration.registrator.simpleitk.SITKRegistrator" href="#src.registration.registrator.simpleitk.SITKRegistrator">SITKRegistrator</a></code></h4>
+<h4><code><a title="pano.registration.registrator.simpleitk.SITKRegistrator" href="#pano.registration.registrator.simpleitk.SITKRegistrator">SITKRegistrator</a></code></h4>
 <ul class="">
-<li><code><a title="src.registration.registrator.simpleitk.SITKRegistrator.get_transform_matrix" href="#src.registration.registrator.simpleitk.SITKRegistrator.get_transform_matrix">get_transform_matrix</a></code></li>
-<li><code><a title="src.registration.registrator.simpleitk.SITKRegistrator.method" href="#src.registration.registrator.simpleitk.SITKRegistrator.method">method</a></code></li>
-<li><code><a title="src.registration.registrator.simpleitk.SITKRegistrator.metric" href="#src.registration.registrator.simpleitk.SITKRegistrator.metric">metric</a></code></li>
-<li><code><a title="src.registration.registrator.simpleitk.SITKRegistrator.register" href="#src.registration.registrator.simpleitk.SITKRegistrator.register">register</a></code></li>
-<li><code><a title="src.registration.registrator.simpleitk.SITKRegistrator.set_initial_params" href="#src.registration.registrator.simpleitk.SITKRegistrator.set_initial_params">set_initial_params</a></code></li>
-<li><code><a title="src.registration.registrator.simpleitk.SITKRegistrator.set_metric" href="#src.registration.registrator.simpleitk.SITKRegistrator.set_metric">set_metric</a></code></li>
-<li><code><a title="src.registration.registrator.simpleitk.SITKRegistrator.set_multi_resolution" href="#src.registration.registrator.simpleitk.SITKRegistrator.set_multi_resolution">set_multi_resolution</a></code></li>
-<li><code><a title="src.registration.registrator.simpleitk.SITKRegistrator.transformation" href="#src.registration.registrator.simpleitk.SITKRegistrator.transformation">transformation</a></code></li>
+<li><code><a title="pano.registration.registrator.simpleitk.SITKRegistrator.get_transform_matrix" href="#pano.registration.registrator.simpleitk.SITKRegistrator.get_transform_matrix">get_transform_matrix</a></code></li>
+<li><code><a title="pano.registration.registrator.simpleitk.SITKRegistrator.method" href="#pano.registration.registrator.simpleitk.SITKRegistrator.method">method</a></code></li>
+<li><code><a title="pano.registration.registrator.simpleitk.SITKRegistrator.metric" href="#pano.registration.registrator.simpleitk.SITKRegistrator.metric">metric</a></code></li>
+<li><code><a title="pano.registration.registrator.simpleitk.SITKRegistrator.register" href="#pano.registration.registrator.simpleitk.SITKRegistrator.register">register</a></code></li>
+<li><code><a title="pano.registration.registrator.simpleitk.SITKRegistrator.set_initial_params" href="#pano.registration.registrator.simpleitk.SITKRegistrator.set_initial_params">set_initial_params</a></code></li>
+<li><code><a title="pano.registration.registrator.simpleitk.SITKRegistrator.set_metric" href="#pano.registration.registrator.simpleitk.SITKRegistrator.set_metric">set_metric</a></code></li>
+<li><code><a title="pano.registration.registrator.simpleitk.SITKRegistrator.set_multi_resolution" href="#pano.registration.registrator.simpleitk.SITKRegistrator.set_multi_resolution">set_multi_resolution</a></code></li>
+<li><code><a title="pano.registration.registrator.simpleitk.SITKRegistrator.transformation" href="#pano.registration.registrator.simpleitk.SITKRegistrator.transformation">transformation</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="src.registration.registrator.simpleitk.Transformation" href="#src.registration.registrator.simpleitk.Transformation">Transformation</a></code></h4>
+<h4><code><a title="pano.registration.registrator.simpleitk.Transformation" href="#pano.registration.registrator.simpleitk.Transformation">Transformation</a></code></h4>
 <ul class="">
-<li><code><a title="src.registration.registrator.simpleitk.Transformation.Affine" href="#src.registration.registrator.simpleitk.Transformation.Affine">Affine</a></code></li>
-<li><code><a title="src.registration.registrator.simpleitk.Transformation.Similarity" href="#src.registration.registrator.simpleitk.Transformation.Similarity">Similarity</a></code></li>
+<li><code><a title="pano.registration.registrator.simpleitk.Transformation.Affine" href="#pano.registration.registrator.simpleitk.Transformation.Affine">Affine</a></code></li>
+<li><code><a title="pano.registration.registrator.simpleitk.Transformation.Similarity" href="#pano.registration.registrator.simpleitk.Transformation.Similarity">Similarity</a></code></li>
 </ul>
 </li>
 </ul>

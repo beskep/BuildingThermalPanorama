@@ -15,11 +15,8 @@ from rich.theme import Theme
 class DIR:
   SRC = Path(__file__).parent.resolve()
   ROOT = SRC.parent
+  RESOURCE = ROOT.joinpath('resource')
 
-
-_SRC_DIR = DIR.SRC.as_posix()
-if _SRC_DIR not in sys.path:
-  sys.path.insert(0, _SRC_DIR)
 
 StrPath = Union[str, PathLike]
 

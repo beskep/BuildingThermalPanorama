@@ -124,6 +124,7 @@ cython_debug/
 # Project
 .vscode
 .idea
+resource/
 *.exe
-data/
+*.bat
 .*.py

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.9.2" />
-<title>src.distortion.perspective API documentation</title>
+<title>pano.distortion.perspective API documentation</title>
 <meta name="description" content="시점 왜곡 보정" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
@@ -19,7 +19,7 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>src.distortion.perspective</code></h1>
+<h1 class="title">Module <code>pano.distortion.perspective</code></h1>
 </header>
 <section id="section-intro">
 <p>시점 왜곡 보정</p>
@@ -39,7 +39,7 @@ from skimage.exposure.exposure import equalize_hist
 from skimage.feature import canny
 from skimage.transform import probabilistic_hough_line, warp
 
-from misc import tools
+from pano.misc import tools
 
 from . import rectification
 
@@ -767,7 +767,7 @@ class PerspectiveCorrection:
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="src.distortion.perspective.preprocess"><code class="name flex">
+<dt id="pano.distortion.perspective.preprocess"><code class="name flex">
 <span>def <span class="ident">preprocess</span></span>(<span>image: numpy.ndarray) ‑> numpy.ndarray</span>
 </code></dt>
 <dd>
@@ -789,7 +789,7 @@ class PerspectiveCorrection:
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="src.distortion.perspective.CannyOptions"><code class="flex name class">
+<dt id="pano.distortion.perspective.CannyOptions"><code class="flex name class">
 <span>class <span class="ident">CannyOptions</span></span>
 <span>(</span><span>sigma: float = 1.0, low_threshold: Union[float, NoneType] = None, high_threshold: Union[float, NoneType] = None, use_quantiles: bool = False)</span>
 </code></dt>
@@ -808,27 +808,27 @@ class PerspectiveCorrection:
 </details>
 <h3>Class variables</h3>
 <dl>
-<dt id="src.distortion.perspective.CannyOptions.high_threshold"><code class="name">var <span class="ident">high_threshold</span> : Union[float, NoneType]</code></dt>
+<dt id="pano.distortion.perspective.CannyOptions.high_threshold"><code class="name">var <span class="ident">high_threshold</span> : Union[float, NoneType]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.distortion.perspective.CannyOptions.low_threshold"><code class="name">var <span class="ident">low_threshold</span> : Union[float, NoneType]</code></dt>
+<dt id="pano.distortion.perspective.CannyOptions.low_threshold"><code class="name">var <span class="ident">low_threshold</span> : Union[float, NoneType]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.distortion.perspective.CannyOptions.sigma"><code class="name">var <span class="ident">sigma</span> : float</code></dt>
+<dt id="pano.distortion.perspective.CannyOptions.sigma"><code class="name">var <span class="ident">sigma</span> : float</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.distortion.perspective.CannyOptions.use_quantiles"><code class="name">var <span class="ident">use_quantiles</span> : bool</code></dt>
+<dt id="pano.distortion.perspective.CannyOptions.use_quantiles"><code class="name">var <span class="ident">use_quantiles</span> : bool</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
 </dl>
 </dd>
-<dt id="src.distortion.perspective.Correction"><code class="flex name class">
+<dt id="pano.distortion.perspective.Correction"><code class="flex name class">
 <span>class <span class="ident">Correction</span></span>
-<span>(</span><span>edges: numpy.ndarray, edgelets: <a title="src.distortion.perspective.Edgelets" href="#src.distortion.perspective.Edgelets">Edgelets</a>, vp1: Union[<a title="src.distortion.perspective.VanishingPoint" href="#src.distortion.perspective.VanishingPoint">VanishingPoint</a>, NoneType], vp2: Union[<a title="src.distortion.perspective.VanishingPoint" href="#src.distortion.perspective.VanishingPoint">VanishingPoint</a>, NoneType], homography: <a title="src.distortion.perspective.Homography" href="#src.distortion.perspective.Homography">Homography</a>, crop_range: Union[misc.tools.CropRange, NoneType])</span>
+<span>(</span><span>edges: numpy.ndarray, edgelets: <a title="pano.distortion.perspective.Edgelets" href="#pano.distortion.perspective.Edgelets">Edgelets</a>, vp1: Union[<a title="pano.distortion.perspective.VanishingPoint" href="#pano.distortion.perspective.VanishingPoint">VanishingPoint</a>, NoneType], vp2: Union[<a title="pano.distortion.perspective.VanishingPoint" href="#pano.distortion.perspective.VanishingPoint">VanishingPoint</a>, NoneType], homography: <a title="pano.distortion.perspective.Homography" href="#pano.distortion.perspective.Homography">Homography</a>, crop_range: Union[<a title="pano.misc.tools.CropRange" href="../misc/tools.html#pano.misc.tools.CropRange">CropRange</a>, NoneType])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Perspective correction 결과</p></div>
@@ -960,34 +960,34 @@ class PerspectiveCorrection:
 </details>
 <h3>Class variables</h3>
 <dl>
-<dt id="src.distortion.perspective.Correction.crop_range"><code class="name">var <span class="ident">crop_range</span> : Union[misc.tools.CropRange, NoneType]</code></dt>
+<dt id="pano.distortion.perspective.Correction.crop_range"><code class="name">var <span class="ident">crop_range</span> : Union[<a title="pano.misc.tools.CropRange" href="../misc/tools.html#pano.misc.tools.CropRange">CropRange</a>, NoneType]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.distortion.perspective.Correction.edgelets"><code class="name">var <span class="ident">edgelets</span> : <a title="src.distortion.perspective.Edgelets" href="#src.distortion.perspective.Edgelets">Edgelets</a></code></dt>
+<dt id="pano.distortion.perspective.Correction.edgelets"><code class="name">var <span class="ident">edgelets</span> : <a title="pano.distortion.perspective.Edgelets" href="#pano.distortion.perspective.Edgelets">Edgelets</a></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.distortion.perspective.Correction.edges"><code class="name">var <span class="ident">edges</span> : numpy.ndarray</code></dt>
+<dt id="pano.distortion.perspective.Correction.edges"><code class="name">var <span class="ident">edges</span> : numpy.ndarray</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.distortion.perspective.Correction.homography"><code class="name">var <span class="ident">homography</span> : <a title="src.distortion.perspective.Homography" href="#src.distortion.perspective.Homography">Homography</a></code></dt>
+<dt id="pano.distortion.perspective.Correction.homography"><code class="name">var <span class="ident">homography</span> : <a title="pano.distortion.perspective.Homography" href="#pano.distortion.perspective.Homography">Homography</a></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.distortion.perspective.Correction.vp1"><code class="name">var <span class="ident">vp1</span> : Union[<a title="src.distortion.perspective.VanishingPoint" href="#src.distortion.perspective.VanishingPoint">VanishingPoint</a>, NoneType]</code></dt>
+<dt id="pano.distortion.perspective.Correction.vp1"><code class="name">var <span class="ident">vp1</span> : Union[<a title="pano.distortion.perspective.VanishingPoint" href="#pano.distortion.perspective.VanishingPoint">VanishingPoint</a>, NoneType]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.distortion.perspective.Correction.vp2"><code class="name">var <span class="ident">vp2</span> : Union[<a title="src.distortion.perspective.VanishingPoint" href="#src.distortion.perspective.VanishingPoint">VanishingPoint</a>, NoneType]</code></dt>
+<dt id="pano.distortion.perspective.Correction.vp2"><code class="name">var <span class="ident">vp2</span> : Union[<a title="pano.distortion.perspective.VanishingPoint" href="#pano.distortion.perspective.VanishingPoint">VanishingPoint</a>, NoneType]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="src.distortion.perspective.Correction.correct"><code class="name flex">
+<dt id="pano.distortion.perspective.Correction.correct"><code class="name flex">
 <span>def <span class="ident">correct</span></span>(<span>self, image: numpy.ndarray, mask: Union[numpy.ndarray, NoneType] = None) ‑> Tuple[numpy.ndarray, Union[numpy.ndarray, NoneType]]</span>
 </code></dt>
 <dd>
@@ -1055,7 +1055,7 @@ class PerspectiveCorrection:
   return img, msk</code></pre>
 </details>
 </dd>
-<dt id="src.distortion.perspective.Correction.process_plot"><code class="name flex">
+<dt id="pano.distortion.perspective.Correction.process_plot"><code class="name flex">
 <span>def <span class="ident">process_plot</span></span>(<span>self, image: numpy.ndarray) ‑> Tuple[matplotlib.figure.Figure, matplotlib.axes._axes.Axes]</span>
 </code></dt>
 <dd>
@@ -1114,7 +1114,7 @@ class PerspectiveCorrection:
   return fig, axes</code></pre>
 </details>
 </dd>
-<dt id="src.distortion.perspective.Correction.success"><code class="name flex">
+<dt id="pano.distortion.perspective.Correction.success"><code class="name flex">
 <span>def <span class="ident">success</span></span>(<span>self) ‑> bool</span>
 </code></dt>
 <dd>
@@ -1129,7 +1129,7 @@ class PerspectiveCorrection:
 </dd>
 </dl>
 </dd>
-<dt id="src.distortion.perspective.CorrectionOptions"><code class="flex name class">
+<dt id="pano.distortion.perspective.CorrectionOptions"><code class="flex name class">
 <span>class <span class="ident">CorrectionOptions</span></span>
 <span>(</span><span>threshold: float = 5.0, ransac_iter: int = 1000, clip_factor: float = 0.0, vp_iter: int = 5, erode: int = 50, strict: bool = False, margin: float = 0.1)</span>
 </code></dt>
@@ -1172,37 +1172,37 @@ class PerspectiveCorrection:
 </details>
 <h3>Class variables</h3>
 <dl>
-<dt id="src.distortion.perspective.CorrectionOptions.clip_factor"><code class="name">var <span class="ident">clip_factor</span> : float</code></dt>
+<dt id="pano.distortion.perspective.CorrectionOptions.clip_factor"><code class="name">var <span class="ident">clip_factor</span> : float</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.distortion.perspective.CorrectionOptions.erode"><code class="name">var <span class="ident">erode</span> : int</code></dt>
+<dt id="pano.distortion.perspective.CorrectionOptions.erode"><code class="name">var <span class="ident">erode</span> : int</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.distortion.perspective.CorrectionOptions.margin"><code class="name">var <span class="ident">margin</span> : float</code></dt>
+<dt id="pano.distortion.perspective.CorrectionOptions.margin"><code class="name">var <span class="ident">margin</span> : float</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.distortion.perspective.CorrectionOptions.ransac_iter"><code class="name">var <span class="ident">ransac_iter</span> : int</code></dt>
+<dt id="pano.distortion.perspective.CorrectionOptions.ransac_iter"><code class="name">var <span class="ident">ransac_iter</span> : int</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.distortion.perspective.CorrectionOptions.strict"><code class="name">var <span class="ident">strict</span> : bool</code></dt>
+<dt id="pano.distortion.perspective.CorrectionOptions.strict"><code class="name">var <span class="ident">strict</span> : bool</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.distortion.perspective.CorrectionOptions.threshold"><code class="name">var <span class="ident">threshold</span> : float</code></dt>
+<dt id="pano.distortion.perspective.CorrectionOptions.threshold"><code class="name">var <span class="ident">threshold</span> : float</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.distortion.perspective.CorrectionOptions.vp_iter"><code class="name">var <span class="ident">vp_iter</span> : int</code></dt>
+<dt id="pano.distortion.perspective.CorrectionOptions.vp_iter"><code class="name">var <span class="ident">vp_iter</span> : int</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
 </dl>
 </dd>
-<dt id="src.distortion.perspective.Edgelets"><code class="flex name class">
+<dt id="pano.distortion.perspective.Edgelets"><code class="flex name class">
 <span>class <span class="ident">Edgelets</span></span>
 <span>(</span><span>locations: numpy.ndarray, directions: numpy.ndarray, strengths: numpy.ndarray)</span>
 </code></dt>
@@ -1253,26 +1253,26 @@ class PerspectiveCorrection:
 </details>
 <h3>Class variables</h3>
 <dl>
-<dt id="src.distortion.perspective.Edgelets.count"><code class="name">var <span class="ident">count</span> : int</code></dt>
+<dt id="pano.distortion.perspective.Edgelets.count"><code class="name">var <span class="ident">count</span> : int</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.distortion.perspective.Edgelets.directions"><code class="name">var <span class="ident">directions</span> : numpy.ndarray</code></dt>
+<dt id="pano.distortion.perspective.Edgelets.directions"><code class="name">var <span class="ident">directions</span> : numpy.ndarray</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.distortion.perspective.Edgelets.locations"><code class="name">var <span class="ident">locations</span> : numpy.ndarray</code></dt>
+<dt id="pano.distortion.perspective.Edgelets.locations"><code class="name">var <span class="ident">locations</span> : numpy.ndarray</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.distortion.perspective.Edgelets.strengths"><code class="name">var <span class="ident">strengths</span> : numpy.ndarray</code></dt>
+<dt id="pano.distortion.perspective.Edgelets.strengths"><code class="name">var <span class="ident">strengths</span> : numpy.ndarray</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="src.distortion.perspective.Edgelets.as_tuple"><code class="name flex">
+<dt id="pano.distortion.perspective.Edgelets.as_tuple"><code class="name flex">
 <span>def <span class="ident">as_tuple</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -1287,7 +1287,7 @@ class PerspectiveCorrection:
 </dd>
 </dl>
 </dd>
-<dt id="src.distortion.perspective.Homography"><code class="flex name class">
+<dt id="pano.distortion.perspective.Homography"><code class="flex name class">
 <span>class <span class="ident">Homography</span></span>
 <span>(</span><span>Hproject: Union[numpy.ndarray, NoneType] = None, Haffine: Union[numpy.ndarray, NoneType] = None, Htranslate: Union[numpy.ndarray, NoneType] = None, input_shape: Union[Tuple[int, int], NoneType] = None, output_shape: Union[Tuple[int, int], NoneType] = None)</span>
 </code></dt>
@@ -1324,30 +1324,30 @@ class PerspectiveCorrection:
 </details>
 <h3>Class variables</h3>
 <dl>
-<dt id="src.distortion.perspective.Homography.Haffine"><code class="name">var <span class="ident">Haffine</span> : Union[numpy.ndarray, NoneType]</code></dt>
+<dt id="pano.distortion.perspective.Homography.Haffine"><code class="name">var <span class="ident">Haffine</span> : Union[numpy.ndarray, NoneType]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.distortion.perspective.Homography.Hproject"><code class="name">var <span class="ident">Hproject</span> : Union[numpy.ndarray, NoneType]</code></dt>
+<dt id="pano.distortion.perspective.Homography.Hproject"><code class="name">var <span class="ident">Hproject</span> : Union[numpy.ndarray, NoneType]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.distortion.perspective.Homography.Htranslate"><code class="name">var <span class="ident">Htranslate</span> : Union[numpy.ndarray, NoneType]</code></dt>
+<dt id="pano.distortion.perspective.Homography.Htranslate"><code class="name">var <span class="ident">Htranslate</span> : Union[numpy.ndarray, NoneType]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.distortion.perspective.Homography.input_shape"><code class="name">var <span class="ident">input_shape</span> : Union[Tuple[int, int], NoneType]</code></dt>
+<dt id="pano.distortion.perspective.Homography.input_shape"><code class="name">var <span class="ident">input_shape</span> : Union[Tuple[int, int], NoneType]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.distortion.perspective.Homography.output_shape"><code class="name">var <span class="ident">output_shape</span> : Union[Tuple[int, int], NoneType]</code></dt>
+<dt id="pano.distortion.perspective.Homography.output_shape"><code class="name">var <span class="ident">output_shape</span> : Union[Tuple[int, int], NoneType]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="src.distortion.perspective.Homography.available"><code class="name flex">
+<dt id="pano.distortion.perspective.Homography.available"><code class="name flex">
 <span>def <span class="ident">available</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -1360,7 +1360,7 @@ class PerspectiveCorrection:
   return self.Htranslate is not None</code></pre>
 </details>
 </dd>
-<dt id="src.distortion.perspective.Homography.warp"><code class="name flex">
+<dt id="pano.distortion.perspective.Homography.warp"><code class="name flex">
 <span>def <span class="ident">warp</span></span>(<span>self, image: numpy.ndarray)</span>
 </code></dt>
 <dd>
@@ -1386,7 +1386,7 @@ class PerspectiveCorrection:
 </dd>
 </dl>
 </dd>
-<dt id="src.distortion.perspective.HoughOptions"><code class="flex name class">
+<dt id="pano.distortion.perspective.HoughOptions"><code class="flex name class">
 <span>class <span class="ident">HoughOptions</span></span>
 <span>(</span><span>threshold: int = 10, line_length: int = 50, line_gap: int = 10, theta: Union[numpy.ndarray, NoneType] = None, seed: Union[int, NoneType] = None)</span>
 </code></dt>
@@ -1406,29 +1406,29 @@ class PerspectiveCorrection:
 </details>
 <h3>Class variables</h3>
 <dl>
-<dt id="src.distortion.perspective.HoughOptions.line_gap"><code class="name">var <span class="ident">line_gap</span> : int</code></dt>
+<dt id="pano.distortion.perspective.HoughOptions.line_gap"><code class="name">var <span class="ident">line_gap</span> : int</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.distortion.perspective.HoughOptions.line_length"><code class="name">var <span class="ident">line_length</span> : int</code></dt>
+<dt id="pano.distortion.perspective.HoughOptions.line_length"><code class="name">var <span class="ident">line_length</span> : int</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.distortion.perspective.HoughOptions.seed"><code class="name">var <span class="ident">seed</span> : Union[int, NoneType]</code></dt>
+<dt id="pano.distortion.perspective.HoughOptions.seed"><code class="name">var <span class="ident">seed</span> : Union[int, NoneType]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.distortion.perspective.HoughOptions.theta"><code class="name">var <span class="ident">theta</span> : Union[numpy.ndarray, NoneType]</code></dt>
+<dt id="pano.distortion.perspective.HoughOptions.theta"><code class="name">var <span class="ident">theta</span> : Union[numpy.ndarray, NoneType]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.distortion.perspective.HoughOptions.threshold"><code class="name">var <span class="ident">threshold</span> : int</code></dt>
+<dt id="pano.distortion.perspective.HoughOptions.threshold"><code class="name">var <span class="ident">threshold</span> : int</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
 </dl>
 </dd>
-<dt id="src.distortion.perspective.NotEnoughEdgelets"><code class="flex name class">
+<dt id="pano.distortion.perspective.NotEnoughEdgelets"><code class="flex name class">
 <span>class <span class="ident">NotEnoughEdgelets</span></span>
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
@@ -1448,20 +1448,20 @@ class PerspectiveCorrection:
 <li>builtins.BaseException</li>
 </ul>
 </dd>
-<dt id="src.distortion.perspective.PerspectiveCorrection"><code class="flex name class">
+<dt id="pano.distortion.perspective.PerspectiveCorrection"><code class="flex name class">
 <span>class <span class="ident">PerspectiveCorrection</span></span>
-<span>(</span><span>canny_options: Union[<a title="src.distortion.perspective.CannyOptions" href="#src.distortion.perspective.CannyOptions">CannyOptions</a>, NoneType] = None, hough_options: Union[<a title="src.distortion.perspective.HoughOptions" href="#src.distortion.perspective.HoughOptions">HoughOptions</a>, NoneType] = None, correction_options: Union[<a title="src.distortion.perspective.CorrectionOptions" href="#src.distortion.perspective.CorrectionOptions">CorrectionOptions</a>, NoneType] = None)</span>
+<span>(</span><span>canny_options: Union[<a title="pano.distortion.perspective.CannyOptions" href="#pano.distortion.perspective.CannyOptions">CannyOptions</a>, NoneType] = None, hough_options: Union[<a title="pano.distortion.perspective.HoughOptions" href="#pano.distortion.perspective.HoughOptions">HoughOptions</a>, NoneType] = None, correction_options: Union[<a title="pano.distortion.perspective.CorrectionOptions" href="#pano.distortion.perspective.CorrectionOptions">CorrectionOptions</a>, NoneType] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>영상의 소실점으로부터 시점 왜곡 (perspective distortion)을 보정하는
 Homography 행렬 추정.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>canny_options</code></strong> :&ensp;<code>Optional[<a title="src.distortion.perspective.CannyOptions" href="#src.distortion.perspective.CannyOptions">CannyOptions</a>]</code>, optional</dt>
+<dt><strong><code>canny_options</code></strong> :&ensp;<code>Optional[<a title="pano.distortion.perspective.CannyOptions" href="#pano.distortion.perspective.CannyOptions">CannyOptions</a>]</code>, optional</dt>
 <dd><code>skimage.feature.canny</code> 옵션</dd>
-<dt><strong><code>hough_options</code></strong> :&ensp;<code>Optional[<a title="src.distortion.perspective.HoughOptions" href="#src.distortion.perspective.HoughOptions">HoughOptions</a>]</code>, optional</dt>
+<dt><strong><code>hough_options</code></strong> :&ensp;<code>Optional[<a title="pano.distortion.perspective.HoughOptions" href="#pano.distortion.perspective.HoughOptions">HoughOptions</a>]</code>, optional</dt>
 <dd><code>skimage.transform.probabilistic_hough_line</code> 옵션</dd>
-<dt><strong><code>correction_options</code></strong> :&ensp;<code>Optional[<a title="src.distortion.perspective.CorrectionOptions" href="#src.distortion.perspective.CorrectionOptions">CorrectionOptions</a>]</code>, optional</dt>
+<dt><strong><code>correction_options</code></strong> :&ensp;<code>Optional[<a title="pano.distortion.perspective.CorrectionOptions" href="#pano.distortion.perspective.CorrectionOptions">CorrectionOptions</a>]</code>, optional</dt>
 <dd>소실점, 시점 보정 행렬의 수치적 추정을 위한 옵션</dd>
 </dl></div>
 <details class="source">
@@ -1798,8 +1798,8 @@ Homography 행렬 추정.</p>
 </details>
 <h3>Methods</h3>
 <dl>
-<dt id="src.distortion.perspective.PerspectiveCorrection.compute_homography"><code class="name flex">
-<span>def <span class="ident">compute_homography</span></span>(<span>self, image_shape: Tuple[int, int], vp1: numpy.ndarray, vp2: numpy.ndarray) ‑> <a title="src.distortion.perspective.Homography" href="#src.distortion.perspective.Homography">Homography</a></span>
+<dt id="pano.distortion.perspective.PerspectiveCorrection.compute_homography"><code class="name flex">
+<span>def <span class="ident">compute_homography</span></span>(<span>self, image_shape: Tuple[int, int], vp1: numpy.ndarray, vp2: numpy.ndarray) ‑> <a title="pano.distortion.perspective.Homography" href="#pano.distortion.perspective.Homography">Homography</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>두 개의 소실점으로부터 시점 보정을 위한 homography 행렬 추정</p>
@@ -1814,7 +1814,7 @@ Homography 행렬 추정.</p>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code><a title="src.distortion.perspective.Homography" href="#src.distortion.perspective.Homography">Homography</a></code></dt>
+<dt><code><a title="pano.distortion.perspective.Homography" href="#pano.distortion.perspective.Homography">Homography</a></code></dt>
 <dd>&nbsp;</dd>
 </dl></div>
 <details class="source">
@@ -1870,8 +1870,8 @@ Homography 행렬 추정.</p>
   return homography</code></pre>
 </details>
 </dd>
-<dt id="src.distortion.perspective.PerspectiveCorrection.perspective_correct"><code class="name flex">
-<span>def <span class="ident">perspective_correct</span></span>(<span>self, image: numpy.ndarray, mask: Union[numpy.ndarray, NoneType] = None) ‑> <a title="src.distortion.perspective.Correction" href="#src.distortion.perspective.Correction">Correction</a></span>
+<dt id="pano.distortion.perspective.PerspectiveCorrection.perspective_correct"><code class="name flex">
+<span>def <span class="ident">perspective_correct</span></span>(<span>self, image: numpy.ndarray, mask: Union[numpy.ndarray, NoneType] = None) ‑> <a title="pano.distortion.perspective.Correction" href="#pano.distortion.perspective.Correction">Correction</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>시점 왜곡 보정</p>
@@ -1884,7 +1884,7 @@ Homography 행렬 추정.</p>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code><a title="src.distortion.perspective.Correction" href="#src.distortion.perspective.Correction">Correction</a></code></dt>
+<dt><code><a title="pano.distortion.perspective.Correction" href="#pano.distortion.perspective.Correction">Correction</a></code></dt>
 <dd>&nbsp;</dd>
 </dl></div>
 <details class="source">
@@ -1953,7 +1953,7 @@ Homography 행렬 추정.</p>
 </dd>
 </dl>
 </dd>
-<dt id="src.distortion.perspective.VanishingPoint"><code class="flex name class">
+<dt id="pano.distortion.perspective.VanishingPoint"><code class="flex name class">
 <span>class <span class="ident">VanishingPoint</span></span>
 <span>(</span><span>array: numpy.ndarray)</span>
 </code></dt>
@@ -2015,34 +2015,34 @@ Homography 행렬 추정.</p>
 </details>
 <h3>Class variables</h3>
 <dl>
-<dt id="src.distortion.perspective.VanishingPoint.DIAG"><code class="name">var <span class="ident">DIAG</span></code></dt>
+<dt id="pano.distortion.perspective.VanishingPoint.DIAG"><code class="name">var <span class="ident">DIAG</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.distortion.perspective.VanishingPoint.HORIZ"><code class="name">var <span class="ident">HORIZ</span></code></dt>
+<dt id="pano.distortion.perspective.VanishingPoint.HORIZ"><code class="name">var <span class="ident">HORIZ</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.distortion.perspective.VanishingPoint.INSIDE"><code class="name">var <span class="ident">INSIDE</span></code></dt>
+<dt id="pano.distortion.perspective.VanishingPoint.INSIDE"><code class="name">var <span class="ident">INSIDE</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.distortion.perspective.VanishingPoint.SOFT"><code class="name">var <span class="ident">SOFT</span></code></dt>
+<dt id="pano.distortion.perspective.VanishingPoint.SOFT"><code class="name">var <span class="ident">SOFT</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.distortion.perspective.VanishingPoint.STRICT"><code class="name">var <span class="ident">STRICT</span></code></dt>
+<dt id="pano.distortion.perspective.VanishingPoint.STRICT"><code class="name">var <span class="ident">STRICT</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.distortion.perspective.VanishingPoint.VERT"><code class="name">var <span class="ident">VERT</span></code></dt>
+<dt id="pano.distortion.perspective.VanishingPoint.VERT"><code class="name">var <span class="ident">VERT</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
 </dl>
 <h3>Instance variables</h3>
 <dl>
-<dt id="src.distortion.perspective.VanishingPoint.array"><code class="name">var <span class="ident">array</span> : numpy.ndarray</code></dt>
+<dt id="pano.distortion.perspective.VanishingPoint.array"><code class="name">var <span class="ident">array</span> : numpy.ndarray</code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
@@ -2054,7 +2054,7 @@ def array(self) -&gt; np.ndarray:
   return self._array</code></pre>
 </details>
 </dd>
-<dt id="src.distortion.perspective.VanishingPoint.pos"><code class="name">var <span class="ident">pos</span> : int</code></dt>
+<dt id="pano.distortion.perspective.VanishingPoint.pos"><code class="name">var <span class="ident">pos</span> : int</code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
@@ -2069,7 +2069,7 @@ def pos(self) -&gt; int:
   return self._pos</code></pre>
 </details>
 </dd>
-<dt id="src.distortion.perspective.VanishingPoint.xy"><code class="name">var <span class="ident">xy</span> : numpy.ndarray</code></dt>
+<dt id="pano.distortion.perspective.VanishingPoint.xy"><code class="name">var <span class="ident">xy</span> : numpy.ndarray</code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
@@ -2084,7 +2084,7 @@ def xy(self) -&gt; np.ndarray:
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="src.distortion.perspective.VanishingPoint.compute_position"><code class="name flex">
+<dt id="pano.distortion.perspective.VanishingPoint.compute_position"><code class="name flex">
 <span>def <span class="ident">compute_position</span></span>(<span>self, image_shape: tuple, margin=0.1)</span>
 </code></dt>
 <dd>
@@ -2114,106 +2114,106 @@ def xy(self) -&gt; np.ndarray:
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="src.distortion" href="index.html">src.distortion</a></code></li>
+<li><code><a title="pano.distortion" href="index.html">pano.distortion</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="src.distortion.perspective.preprocess" href="#src.distortion.perspective.preprocess">preprocess</a></code></li>
+<li><code><a title="pano.distortion.perspective.preprocess" href="#pano.distortion.perspective.preprocess">preprocess</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="src.distortion.perspective.CannyOptions" href="#src.distortion.perspective.CannyOptions">CannyOptions</a></code></h4>
+<h4><code><a title="pano.distortion.perspective.CannyOptions" href="#pano.distortion.perspective.CannyOptions">CannyOptions</a></code></h4>
 <ul class="">
-<li><code><a title="src.distortion.perspective.CannyOptions.high_threshold" href="#src.distortion.perspective.CannyOptions.high_threshold">high_threshold</a></code></li>
-<li><code><a title="src.distortion.perspective.CannyOptions.low_threshold" href="#src.distortion.perspective.CannyOptions.low_threshold">low_threshold</a></code></li>
-<li><code><a title="src.distortion.perspective.CannyOptions.sigma" href="#src.distortion.perspective.CannyOptions.sigma">sigma</a></code></li>
-<li><code><a title="src.distortion.perspective.CannyOptions.use_quantiles" href="#src.distortion.perspective.CannyOptions.use_quantiles">use_quantiles</a></code></li>
+<li><code><a title="pano.distortion.perspective.CannyOptions.high_threshold" href="#pano.distortion.perspective.CannyOptions.high_threshold">high_threshold</a></code></li>
+<li><code><a title="pano.distortion.perspective.CannyOptions.low_threshold" href="#pano.distortion.perspective.CannyOptions.low_threshold">low_threshold</a></code></li>
+<li><code><a title="pano.distortion.perspective.CannyOptions.sigma" href="#pano.distortion.perspective.CannyOptions.sigma">sigma</a></code></li>
+<li><code><a title="pano.distortion.perspective.CannyOptions.use_quantiles" href="#pano.distortion.perspective.CannyOptions.use_quantiles">use_quantiles</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="src.distortion.perspective.Correction" href="#src.distortion.perspective.Correction">Correction</a></code></h4>
+<h4><code><a title="pano.distortion.perspective.Correction" href="#pano.distortion.perspective.Correction">Correction</a></code></h4>
 <ul class="two-column">
-<li><code><a title="src.distortion.perspective.Correction.correct" href="#src.distortion.perspective.Correction.correct">correct</a></code></li>
-<li><code><a title="src.distortion.perspective.Correction.crop_range" href="#src.distortion.perspective.Correction.crop_range">crop_range</a></code></li>
-<li><code><a title="src.distortion.perspective.Correction.edgelets" href="#src.distortion.perspective.Correction.edgelets">edgelets</a></code></li>
-<li><code><a title="src.distortion.perspective.Correction.edges" href="#src.distortion.perspective.Correction.edges">edges</a></code></li>
-<li><code><a title="src.distortion.perspective.Correction.homography" href="#src.distortion.perspective.Correction.homography">homography</a></code></li>
-<li><code><a title="src.distortion.perspective.Correction.process_plot" href="#src.distortion.perspective.Correction.process_plot">process_plot</a></code></li>
-<li><code><a title="src.distortion.perspective.Correction.success" href="#src.distortion.perspective.Correction.success">success</a></code></li>
-<li><code><a title="src.distortion.perspective.Correction.vp1" href="#src.distortion.perspective.Correction.vp1">vp1</a></code></li>
-<li><code><a title="src.distortion.perspective.Correction.vp2" href="#src.distortion.perspective.Correction.vp2">vp2</a></code></li>
+<li><code><a title="pano.distortion.perspective.Correction.correct" href="#pano.distortion.perspective.Correction.correct">correct</a></code></li>
+<li><code><a title="pano.distortion.perspective.Correction.crop_range" href="#pano.distortion.perspective.Correction.crop_range">crop_range</a></code></li>
+<li><code><a title="pano.distortion.perspective.Correction.edgelets" href="#pano.distortion.perspective.Correction.edgelets">edgelets</a></code></li>
+<li><code><a title="pano.distortion.perspective.Correction.edges" href="#pano.distortion.perspective.Correction.edges">edges</a></code></li>
+<li><code><a title="pano.distortion.perspective.Correction.homography" href="#pano.distortion.perspective.Correction.homography">homography</a></code></li>
+<li><code><a title="pano.distortion.perspective.Correction.process_plot" href="#pano.distortion.perspective.Correction.process_plot">process_plot</a></code></li>
+<li><code><a title="pano.distortion.perspective.Correction.success" href="#pano.distortion.perspective.Correction.success">success</a></code></li>
+<li><code><a title="pano.distortion.perspective.Correction.vp1" href="#pano.distortion.perspective.Correction.vp1">vp1</a></code></li>
+<li><code><a title="pano.distortion.perspective.Correction.vp2" href="#pano.distortion.perspective.Correction.vp2">vp2</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="src.distortion.perspective.CorrectionOptions" href="#src.distortion.perspective.CorrectionOptions">CorrectionOptions</a></code></h4>
+<h4><code><a title="pano.distortion.perspective.CorrectionOptions" href="#pano.distortion.perspective.CorrectionOptions">CorrectionOptions</a></code></h4>
 <ul class="two-column">
-<li><code><a title="src.distortion.perspective.CorrectionOptions.clip_factor" href="#src.distortion.perspective.CorrectionOptions.clip_factor">clip_factor</a></code></li>
-<li><code><a title="src.distortion.perspective.CorrectionOptions.erode" href="#src.distortion.perspective.CorrectionOptions.erode">erode</a></code></li>
-<li><code><a title="src.distortion.perspective.CorrectionOptions.margin" href="#src.distortion.perspective.CorrectionOptions.margin">margin</a></code></li>
-<li><code><a title="src.distortion.perspective.CorrectionOptions.ransac_iter" href="#src.distortion.perspective.CorrectionOptions.ransac_iter">ransac_iter</a></code></li>
-<li><code><a title="src.distortion.perspective.CorrectionOptions.strict" href="#src.distortion.perspective.CorrectionOptions.strict">strict</a></code></li>
-<li><code><a title="src.distortion.perspective.CorrectionOptions.threshold" href="#src.distortion.perspective.CorrectionOptions.threshold">threshold</a></code></li>
-<li><code><a title="src.distortion.perspective.CorrectionOptions.vp_iter" href="#src.distortion.perspective.CorrectionOptions.vp_iter">vp_iter</a></code></li>
+<li><code><a title="pano.distortion.perspective.CorrectionOptions.clip_factor" href="#pano.distortion.perspective.CorrectionOptions.clip_factor">clip_factor</a></code></li>
+<li><code><a title="pano.distortion.perspective.CorrectionOptions.erode" href="#pano.distortion.perspective.CorrectionOptions.erode">erode</a></code></li>
+<li><code><a title="pano.distortion.perspective.CorrectionOptions.margin" href="#pano.distortion.perspective.CorrectionOptions.margin">margin</a></code></li>
+<li><code><a title="pano.distortion.perspective.CorrectionOptions.ransac_iter" href="#pano.distortion.perspective.CorrectionOptions.ransac_iter">ransac_iter</a></code></li>
+<li><code><a title="pano.distortion.perspective.CorrectionOptions.strict" href="#pano.distortion.perspective.CorrectionOptions.strict">strict</a></code></li>
+<li><code><a title="pano.distortion.perspective.CorrectionOptions.threshold" href="#pano.distortion.perspective.CorrectionOptions.threshold">threshold</a></code></li>
+<li><code><a title="pano.distortion.perspective.CorrectionOptions.vp_iter" href="#pano.distortion.perspective.CorrectionOptions.vp_iter">vp_iter</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="src.distortion.perspective.Edgelets" href="#src.distortion.perspective.Edgelets">Edgelets</a></code></h4>
+<h4><code><a title="pano.distortion.perspective.Edgelets" href="#pano.distortion.perspective.Edgelets">Edgelets</a></code></h4>
 <ul class="">
-<li><code><a title="src.distortion.perspective.Edgelets.as_tuple" href="#src.distortion.perspective.Edgelets.as_tuple">as_tuple</a></code></li>
-<li><code><a title="src.distortion.perspective.Edgelets.count" href="#src.distortion.perspective.Edgelets.count">count</a></code></li>
-<li><code><a title="src.distortion.perspective.Edgelets.directions" href="#src.distortion.perspective.Edgelets.directions">directions</a></code></li>
-<li><code><a title="src.distortion.perspective.Edgelets.locations" href="#src.distortion.perspective.Edgelets.locations">locations</a></code></li>
-<li><code><a title="src.distortion.perspective.Edgelets.strengths" href="#src.distortion.perspective.Edgelets.strengths">strengths</a></code></li>
+<li><code><a title="pano.distortion.perspective.Edgelets.as_tuple" href="#pano.distortion.perspective.Edgelets.as_tuple">as_tuple</a></code></li>
+<li><code><a title="pano.distortion.perspective.Edgelets.count" href="#pano.distortion.perspective.Edgelets.count">count</a></code></li>
+<li><code><a title="pano.distortion.perspective.Edgelets.directions" href="#pano.distortion.perspective.Edgelets.directions">directions</a></code></li>
+<li><code><a title="pano.distortion.perspective.Edgelets.locations" href="#pano.distortion.perspective.Edgelets.locations">locations</a></code></li>
+<li><code><a title="pano.distortion.perspective.Edgelets.strengths" href="#pano.distortion.perspective.Edgelets.strengths">strengths</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="src.distortion.perspective.Homography" href="#src.distortion.perspective.Homography">Homography</a></code></h4>
+<h4><code><a title="pano.distortion.perspective.Homography" href="#pano.distortion.perspective.Homography">Homography</a></code></h4>
 <ul class="two-column">
-<li><code><a title="src.distortion.perspective.Homography.Haffine" href="#src.distortion.perspective.Homography.Haffine">Haffine</a></code></li>
-<li><code><a title="src.distortion.perspective.Homography.Hproject" href="#src.distortion.perspective.Homography.Hproject">Hproject</a></code></li>
-<li><code><a title="src.distortion.perspective.Homography.Htranslate" href="#src.distortion.perspective.Homography.Htranslate">Htranslate</a></code></li>
-<li><code><a title="src.distortion.perspective.Homography.available" href="#src.distortion.perspective.Homography.available">available</a></code></li>
-<li><code><a title="src.distortion.perspective.Homography.input_shape" href="#src.distortion.perspective.Homography.input_shape">input_shape</a></code></li>
-<li><code><a title="src.distortion.perspective.Homography.output_shape" href="#src.distortion.perspective.Homography.output_shape">output_shape</a></code></li>
-<li><code><a title="src.distortion.perspective.Homography.warp" href="#src.distortion.perspective.Homography.warp">warp</a></code></li>
+<li><code><a title="pano.distortion.perspective.Homography.Haffine" href="#pano.distortion.perspective.Homography.Haffine">Haffine</a></code></li>
+<li><code><a title="pano.distortion.perspective.Homography.Hproject" href="#pano.distortion.perspective.Homography.Hproject">Hproject</a></code></li>
+<li><code><a title="pano.distortion.perspective.Homography.Htranslate" href="#pano.distortion.perspective.Homography.Htranslate">Htranslate</a></code></li>
+<li><code><a title="pano.distortion.perspective.Homography.available" href="#pano.distortion.perspective.Homography.available">available</a></code></li>
+<li><code><a title="pano.distortion.perspective.Homography.input_shape" href="#pano.distortion.perspective.Homography.input_shape">input_shape</a></code></li>
+<li><code><a title="pano.distortion.perspective.Homography.output_shape" href="#pano.distortion.perspective.Homography.output_shape">output_shape</a></code></li>
+<li><code><a title="pano.distortion.perspective.Homography.warp" href="#pano.distortion.perspective.Homography.warp">warp</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="src.distortion.perspective.HoughOptions" href="#src.distortion.perspective.HoughOptions">HoughOptions</a></code></h4>
+<h4><code><a title="pano.distortion.perspective.HoughOptions" href="#pano.distortion.perspective.HoughOptions">HoughOptions</a></code></h4>
 <ul class="">
-<li><code><a title="src.distortion.perspective.HoughOptions.line_gap" href="#src.distortion.perspective.HoughOptions.line_gap">line_gap</a></code></li>
-<li><code><a title="src.distortion.perspective.HoughOptions.line_length" href="#src.distortion.perspective.HoughOptions.line_length">line_length</a></code></li>
-<li><code><a title="src.distortion.perspective.HoughOptions.seed" href="#src.distortion.perspective.HoughOptions.seed">seed</a></code></li>
-<li><code><a title="src.distortion.perspective.HoughOptions.theta" href="#src.distortion.perspective.HoughOptions.theta">theta</a></code></li>
-<li><code><a title="src.distortion.perspective.HoughOptions.threshold" href="#src.distortion.perspective.HoughOptions.threshold">threshold</a></code></li>
+<li><code><a title="pano.distortion.perspective.HoughOptions.line_gap" href="#pano.distortion.perspective.HoughOptions.line_gap">line_gap</a></code></li>
+<li><code><a title="pano.distortion.perspective.HoughOptions.line_length" href="#pano.distortion.perspective.HoughOptions.line_length">line_length</a></code></li>
+<li><code><a title="pano.distortion.perspective.HoughOptions.seed" href="#pano.distortion.perspective.HoughOptions.seed">seed</a></code></li>
+<li><code><a title="pano.distortion.perspective.HoughOptions.theta" href="#pano.distortion.perspective.HoughOptions.theta">theta</a></code></li>
+<li><code><a title="pano.distortion.perspective.HoughOptions.threshold" href="#pano.distortion.perspective.HoughOptions.threshold">threshold</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="src.distortion.perspective.NotEnoughEdgelets" href="#src.distortion.perspective.NotEnoughEdgelets">NotEnoughEdgelets</a></code></h4>
+<h4><code><a title="pano.distortion.perspective.NotEnoughEdgelets" href="#pano.distortion.perspective.NotEnoughEdgelets">NotEnoughEdgelets</a></code></h4>
 </li>
 <li>
-<h4><code><a title="src.distortion.perspective.PerspectiveCorrection" href="#src.distortion.perspective.PerspectiveCorrection">PerspectiveCorrection</a></code></h4>
+<h4><code><a title="pano.distortion.perspective.PerspectiveCorrection" href="#pano.distortion.perspective.PerspectiveCorrection">PerspectiveCorrection</a></code></h4>
 <ul class="">
-<li><code><a title="src.distortion.perspective.PerspectiveCorrection.compute_homography" href="#src.distortion.perspective.PerspectiveCorrection.compute_homography">compute_homography</a></code></li>
-<li><code><a title="src.distortion.perspective.PerspectiveCorrection.perspective_correct" href="#src.distortion.perspective.PerspectiveCorrection.perspective_correct">perspective_correct</a></code></li>
+<li><code><a title="pano.distortion.perspective.PerspectiveCorrection.compute_homography" href="#pano.distortion.perspective.PerspectiveCorrection.compute_homography">compute_homography</a></code></li>
+<li><code><a title="pano.distortion.perspective.PerspectiveCorrection.perspective_correct" href="#pano.distortion.perspective.PerspectiveCorrection.perspective_correct">perspective_correct</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="src.distortion.perspective.VanishingPoint" href="#src.distortion.perspective.VanishingPoint">VanishingPoint</a></code></h4>
+<h4><code><a title="pano.distortion.perspective.VanishingPoint" href="#pano.distortion.perspective.VanishingPoint">VanishingPoint</a></code></h4>
 <ul class="two-column">
-<li><code><a title="src.distortion.perspective.VanishingPoint.DIAG" href="#src.distortion.perspective.VanishingPoint.DIAG">DIAG</a></code></li>
-<li><code><a title="src.distortion.perspective.VanishingPoint.HORIZ" href="#src.distortion.perspective.VanishingPoint.HORIZ">HORIZ</a></code></li>
-<li><code><a title="src.distortion.perspective.VanishingPoint.INSIDE" href="#src.distortion.perspective.VanishingPoint.INSIDE">INSIDE</a></code></li>
-<li><code><a title="src.distortion.perspective.VanishingPoint.SOFT" href="#src.distortion.perspective.VanishingPoint.SOFT">SOFT</a></code></li>
-<li><code><a title="src.distortion.perspective.VanishingPoint.STRICT" href="#src.distortion.perspective.VanishingPoint.STRICT">STRICT</a></code></li>
-<li><code><a title="src.distortion.perspective.VanishingPoint.VERT" href="#src.distortion.perspective.VanishingPoint.VERT">VERT</a></code></li>
-<li><code><a title="src.distortion.perspective.VanishingPoint.array" href="#src.distortion.perspective.VanishingPoint.array">array</a></code></li>
-<li><code><a title="src.distortion.perspective.VanishingPoint.compute_position" href="#src.distortion.perspective.VanishingPoint.compute_position">compute_position</a></code></li>
-<li><code><a title="src.distortion.perspective.VanishingPoint.pos" href="#src.distortion.perspective.VanishingPoint.pos">pos</a></code></li>
-<li><code><a title="src.distortion.perspective.VanishingPoint.xy" href="#src.distortion.perspective.VanishingPoint.xy">xy</a></code></li>
+<li><code><a title="pano.distortion.perspective.VanishingPoint.DIAG" href="#pano.distortion.perspective.VanishingPoint.DIAG">DIAG</a></code></li>
+<li><code><a title="pano.distortion.perspective.VanishingPoint.HORIZ" href="#pano.distortion.perspective.VanishingPoint.HORIZ">HORIZ</a></code></li>
+<li><code><a title="pano.distortion.perspective.VanishingPoint.INSIDE" href="#pano.distortion.perspective.VanishingPoint.INSIDE">INSIDE</a></code></li>
+<li><code><a title="pano.distortion.perspective.VanishingPoint.SOFT" href="#pano.distortion.perspective.VanishingPoint.SOFT">SOFT</a></code></li>
+<li><code><a title="pano.distortion.perspective.VanishingPoint.STRICT" href="#pano.distortion.perspective.VanishingPoint.STRICT">STRICT</a></code></li>
+<li><code><a title="pano.distortion.perspective.VanishingPoint.VERT" href="#pano.distortion.perspective.VanishingPoint.VERT">VERT</a></code></li>
+<li><code><a title="pano.distortion.perspective.VanishingPoint.array" href="#pano.distortion.perspective.VanishingPoint.array">array</a></code></li>
+<li><code><a title="pano.distortion.perspective.VanishingPoint.compute_position" href="#pano.distortion.perspective.VanishingPoint.compute_position">compute_position</a></code></li>
+<li><code><a title="pano.distortion.perspective.VanishingPoint.pos" href="#pano.distortion.perspective.VanishingPoint.pos">pos</a></code></li>
+<li><code><a title="pano.distortion.perspective.VanishingPoint.xy" href="#pano.distortion.perspective.VanishingPoint.xy">xy</a></code></li>
 </ul>
 </li>
 </ul>

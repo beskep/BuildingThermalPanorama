@@ -1,9 +1,7 @@
-import context
-
 import numpy as np
 import pytest
 
-import registration
+from pano import registration
 
 metrics = registration.evaluation.metrics
 

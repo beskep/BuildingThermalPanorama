@@ -4,10 +4,10 @@ import re
 from pathlib import Path
 from warnings import catch_warnings
 
-import utils
-
 import pdoc
 from loguru import logger
+
+from pano import utils
 
 OUTPUT_DIR = utils.DIR.ROOT.joinpath('docs')
 utils.set_logger(level='DEBUG')
@@ -15,7 +15,7 @@ utils.set_logger(level='DEBUG')
 
 def module_path(m: pdoc.Module, ext: str) -> Path:
   parts = re.sub(r'\.html$', ext, m.url()).split('/')
-  parts.remove('src')
+  parts.remove('pano')
   path = OUTPUT_DIR.joinpath(*parts)
 
   return path
@@ -29,7 +29,7 @@ def recursive_htmls(mod: pdoc.Module):
 
 
 if __name__ == '__main__':
-  module_names = ['src']
+  module_names = ['pano']
   context = pdoc.Context()
 
   modules = []

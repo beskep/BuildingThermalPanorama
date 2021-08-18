@@ -1,9 +1,8 @@
 from typing import Callable
 
 from matplotlib import pyplot as plt
-from skimage.color import rgb2gray
-
 from misc.imageio import ImageIO
+from skimage.color import rgb2gray
 
 from ..registrator import feature_match as fm
 from ..registrator.registrator import RegisteringImage

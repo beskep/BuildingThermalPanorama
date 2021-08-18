@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.9.2" />
-<title>src.registration.evaluation.metrics API documentation</title>
+<title>pano.registration.evaluation.metrics API documentation</title>
 <meta name="description" content="두 영상의 유사도/정합 정확도 평가" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
@@ -19,7 +19,7 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>src.registration.evaluation.metrics</code></h1>
+<h1 class="title">Module <code>pano.registration.evaluation.metrics</code></h1>
 </header>
 <section id="section-intro">
 <p>두 영상의 유사도/정합 정확도 평가</p>
@@ -36,7 +36,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import entropy as calculate_entropy
 
-from misc.tools import bin_size, normalize_image
+from pano.misc.tools import bin_size, normalize_image
 
 
 def _check_shape(image1: np.ndarray, image2: np.ndarray):
@@ -348,7 +348,7 @@ def calculate_all_metrics(image1: np.ndarray,
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="src.registration.evaluation.metrics.calculate_all_metrics"><code class="name flex">
+<dt id="pano.registration.evaluation.metrics.calculate_all_metrics"><code class="name flex">
 <span>def <span class="ident">calculate_all_metrics</span></span>(<span>image1: numpy.ndarray, image2: numpy.ndarray, bins: Union[int, str] = 'auto', base=2) ‑> dict</span>
 </code></dt>
 <dd>
@@ -360,9 +360,9 @@ def calculate_all_metrics(image1: np.ndarray,
 <dt><strong><code>image2</code></strong> :&ensp;<code>np.ndarray</code></dt>
 <dd>Target image 2</dd>
 <dt><strong><code>bins</code></strong> :&ensp;<code>Union[int, str]</code>, optional</dt>
-<dd>bins 개수 설정 (<code><a title="src.registration.evaluation.metrics.MutualInformation" href="#src.registration.evaluation.metrics.MutualInformation">MutualInformation</a></code> 설정 참조)</dd>
+<dd>bins 개수 설정 (<code><a title="pano.registration.evaluation.metrics.MutualInformation" href="#pano.registration.evaluation.metrics.MutualInformation">MutualInformation</a></code> 설정 참조)</dd>
 <dt><strong><code>base</code></strong> :&ensp;<code>int</code>, optional</dt>
-<dd>log 함수의 밑 (<code><a title="src.registration.evaluation.metrics.MutualInformation" href="#src.registration.evaluation.metrics.MutualInformation">MutualInformation</a></code> 설정 참조)</dd>
+<dd>log 함수의 밑 (<code><a title="pano.registration.evaluation.metrics.MutualInformation" href="#pano.registration.evaluation.metrics.MutualInformation">MutualInformation</a></code> 설정 참조)</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -413,7 +413,7 @@ metric list: ['RMSE', 'NCC', 'Entropy', 'MI']</dd>
   return metrics</code></pre>
 </details>
 </dd>
-<dt id="src.registration.evaluation.metrics.compute_ncc"><code class="name flex">
+<dt id="pano.registration.evaluation.metrics.compute_ncc"><code class="name flex">
 <span>def <span class="ident">compute_ncc</span></span>(<span>image1: numpy.ndarray, image2: numpy.ndarray)</span>
 </code></dt>
 <dd>
@@ -472,7 +472,7 @@ Infrared Facial Images in Fever Screening. Sensors, 18(2), 125.
   return ncc</code></pre>
 </details>
 </dd>
-<dt id="src.registration.evaluation.metrics.compute_rmse"><code class="name flex">
+<dt id="pano.registration.evaluation.metrics.compute_rmse"><code class="name flex">
 <span>def <span class="ident">compute_rmse</span></span>(<span>image1: numpy.ndarray, image2: numpy.ndarray, norm=True)</span>
 </code></dt>
 <dd>
@@ -519,7 +519,7 @@ Infrared Facial Images in Fever Screening. Sensors, 18(2), 125.
   return rmse</code></pre>
 </details>
 </dd>
-<dt id="src.registration.evaluation.metrics.compute_sse"><code class="name flex">
+<dt id="pano.registration.evaluation.metrics.compute_sse"><code class="name flex">
 <span>def <span class="ident">compute_sse</span></span>(<span>image1: numpy.ndarray, image2: numpy.ndarray, norm=True)</span>
 </code></dt>
 <dd>
@@ -571,7 +571,7 @@ Infrared Facial Images in Fever Screening. Sensors, 18(2), 125.
   return sse</code></pre>
 </details>
 </dd>
-<dt id="src.registration.evaluation.metrics.image_entropy"><code class="name flex">
+<dt id="pano.registration.evaluation.metrics.image_entropy"><code class="name flex">
 <span>def <span class="ident">image_entropy</span></span>(<span>image: numpy.ndarray, bins: int, base=2) ‑> float</span>
 </code></dt>
 <dd>
@@ -592,7 +592,7 @@ Infrared Facial Images in Fever Screening. Sensors, 18(2), 125.
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="src.registration.evaluation.metrics.MutualInformation"><code class="flex name class">
+<dt id="pano.registration.evaluation.metrics.MutualInformation"><code class="flex name class">
 <span>class <span class="ident">MutualInformation</span></span>
 <span>(</span><span>image1: numpy.ndarray, image2: numpy.ndarray, bins: Union[int, str] = 'auto', base=2)</span>
 </code></dt>
@@ -789,7 +789,7 @@ with Deep Learning (pp. 527-543). PMLR.</p></div>
 </details>
 <h3>Instance variables</h3>
 <dl>
-<dt id="src.registration.evaluation.metrics.MutualInformation.base"><code class="name">var <span class="ident">base</span></code></dt>
+<dt id="pano.registration.evaluation.metrics.MutualInformation.base"><code class="name">var <span class="ident">base</span></code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
@@ -801,7 +801,7 @@ def base(self):
   return self._base</code></pre>
 </details>
 </dd>
-<dt id="src.registration.evaluation.metrics.MutualInformation.bins"><code class="name">var <span class="ident">bins</span></code></dt>
+<dt id="pano.registration.evaluation.metrics.MutualInformation.bins"><code class="name">var <span class="ident">bins</span></code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
@@ -813,7 +813,7 @@ def bins(self):
   return self._bins</code></pre>
 </details>
 </dd>
-<dt id="src.registration.evaluation.metrics.MutualInformation.image1"><code class="name">var <span class="ident">image1</span></code></dt>
+<dt id="pano.registration.evaluation.metrics.MutualInformation.image1"><code class="name">var <span class="ident">image1</span></code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
@@ -825,7 +825,7 @@ def image1(self):
   return self._image1</code></pre>
 </details>
 </dd>
-<dt id="src.registration.evaluation.metrics.MutualInformation.image1_entropy"><code class="name">var <span class="ident">image1_entropy</span></code></dt>
+<dt id="pano.registration.evaluation.metrics.MutualInformation.image1_entropy"><code class="name">var <span class="ident">image1_entropy</span></code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
@@ -864,7 +864,7 @@ def image1(self):
     return val</code></pre>
 </details>
 </dd>
-<dt id="src.registration.evaluation.metrics.MutualInformation.image2"><code class="name">var <span class="ident">image2</span></code></dt>
+<dt id="pano.registration.evaluation.metrics.MutualInformation.image2"><code class="name">var <span class="ident">image2</span></code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
@@ -876,7 +876,7 @@ def image2(self):
   return self._image2</code></pre>
 </details>
 </dd>
-<dt id="src.registration.evaluation.metrics.MutualInformation.image2_entropy"><code class="name">var <span class="ident">image2_entropy</span></code></dt>
+<dt id="pano.registration.evaluation.metrics.MutualInformation.image2_entropy"><code class="name">var <span class="ident">image2_entropy</span></code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
@@ -915,7 +915,7 @@ def image2(self):
     return val</code></pre>
 </details>
 </dd>
-<dt id="src.registration.evaluation.metrics.MutualInformation.joint_entropy"><code class="name">var <span class="ident">joint_entropy</span></code></dt>
+<dt id="pano.registration.evaluation.metrics.MutualInformation.joint_entropy"><code class="name">var <span class="ident">joint_entropy</span></code></dt>
 <dd>
 <div class="desc"><p>Image 1, 2의 joint entropy. Histogram의 bin 개수, log의 밑은 초기
 설정값을 따름.</p>
@@ -960,7 +960,7 @@ def image2(self):
     return val</code></pre>
 </details>
 </dd>
-<dt id="src.registration.evaluation.metrics.MutualInformation.joint_hist"><code class="name">var <span class="ident">joint_hist</span></code></dt>
+<dt id="pano.registration.evaluation.metrics.MutualInformation.joint_hist"><code class="name">var <span class="ident">joint_hist</span></code></dt>
 <dd>
 <div class="desc"><p>Image 1, 2의 joint Histogram. Bin 개수는 초기 설정값을 따름.</p>
 <h2 id="returns">Returns</h2>
@@ -1004,7 +1004,7 @@ def image2(self):
     return val</code></pre>
 </details>
 </dd>
-<dt id="src.registration.evaluation.metrics.MutualInformation.mattes_mutual_information"><code class="name">var <span class="ident">mattes_mutual_information</span></code></dt>
+<dt id="pano.registration.evaluation.metrics.MutualInformation.mattes_mutual_information"><code class="name">var <span class="ident">mattes_mutual_information</span></code></dt>
 <dd>
 <div class="desc"><p>Mattes Mutual Information 계산.
 mutual_information()과 결과 동일함.</p>
@@ -1054,7 +1054,7 @@ with Deep Learning (pp. 527-543). PMLR.</p></div>
     return val</code></pre>
 </details>
 </dd>
-<dt id="src.registration.evaluation.metrics.MutualInformation.mutual_information"><code class="name">var <span class="ident">mutual_information</span></code></dt>
+<dt id="pano.registration.evaluation.metrics.MutualInformation.mutual_information"><code class="name">var <span class="ident">mutual_information</span></code></dt>
 <dd>
 <div class="desc"><p>Image 1, 2의 mutual information</p>
 <h2 id="returns">Returns</h2>
@@ -1106,7 +1106,7 @@ Infrared Facial Images in Fever Screening. Sensors, 18(2), 125.
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="src.registration.evaluation.metrics.MutualInformation.mi_plot"><code class="name flex">
+<dt id="pano.registration.evaluation.metrics.MutualInformation.mi_plot"><code class="name flex">
 <span>def <span class="ident">mi_plot</span></span>(<span>self) ‑> Tuple[matplotlib.figure.Figure, numpy.ndarray]</span>
 </code></dt>
 <dd>
@@ -1155,34 +1155,34 @@ Infrared Facial Images in Fever Screening. Sensors, 18(2), 125.
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="src.registration.evaluation" href="index.html">src.registration.evaluation</a></code></li>
+<li><code><a title="pano.registration.evaluation" href="index.html">pano.registration.evaluation</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="src.registration.evaluation.metrics.calculate_all_metrics" href="#src.registration.evaluation.metrics.calculate_all_metrics">calculate_all_metrics</a></code></li>
-<li><code><a title="src.registration.evaluation.metrics.compute_ncc" href="#src.registration.evaluation.metrics.compute_ncc">compute_ncc</a></code></li>
-<li><code><a title="src.registration.evaluation.metrics.compute_rmse" href="#src.registration.evaluation.metrics.compute_rmse">compute_rmse</a></code></li>
-<li><code><a title="src.registration.evaluation.metrics.compute_sse" href="#src.registration.evaluation.metrics.compute_sse">compute_sse</a></code></li>
-<li><code><a title="src.registration.evaluation.metrics.image_entropy" href="#src.registration.evaluation.metrics.image_entropy">image_entropy</a></code></li>
+<li><code><a title="pano.registration.evaluation.metrics.calculate_all_metrics" href="#pano.registration.evaluation.metrics.calculate_all_metrics">calculate_all_metrics</a></code></li>
+<li><code><a title="pano.registration.evaluation.metrics.compute_ncc" href="#pano.registration.evaluation.metrics.compute_ncc">compute_ncc</a></code></li>
+<li><code><a title="pano.registration.evaluation.metrics.compute_rmse" href="#pano.registration.evaluation.metrics.compute_rmse">compute_rmse</a></code></li>
+<li><code><a title="pano.registration.evaluation.metrics.compute_sse" href="#pano.registration.evaluation.metrics.compute_sse">compute_sse</a></code></li>
+<li><code><a title="pano.registration.evaluation.metrics.image_entropy" href="#pano.registration.evaluation.metrics.image_entropy">image_entropy</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="src.registration.evaluation.metrics.MutualInformation" href="#src.registration.evaluation.metrics.MutualInformation">MutualInformation</a></code></h4>
+<h4><code><a title="pano.registration.evaluation.metrics.MutualInformation" href="#pano.registration.evaluation.metrics.MutualInformation">MutualInformation</a></code></h4>
 <ul class="">
-<li><code><a title="src.registration.evaluation.metrics.MutualInformation.base" href="#src.registration.evaluation.metrics.MutualInformation.base">base</a></code></li>
-<li><code><a title="src.registration.evaluation.metrics.MutualInformation.bins" href="#src.registration.evaluation.metrics.MutualInformation.bins">bins</a></code></li>
-<li><code><a title="src.registration.evaluation.metrics.MutualInformation.image1" href="#src.registration.evaluation.metrics.MutualInformation.image1">image1</a></code></li>
-<li><code><a title="src.registration.evaluation.metrics.MutualInformation.image1_entropy" href="#src.registration.evaluation.metrics.MutualInformation.image1_entropy">image1_entropy</a></code></li>
-<li><code><a title="src.registration.evaluation.metrics.MutualInformation.image2" href="#src.registration.evaluation.metrics.MutualInformation.image2">image2</a></code></li>
-<li><code><a title="src.registration.evaluation.metrics.MutualInformation.image2_entropy" href="#src.registration.evaluation.metrics.MutualInformation.image2_entropy">image2_entropy</a></code></li>
-<li><code><a title="src.registration.evaluation.metrics.MutualInformation.joint_entropy" href="#src.registration.evaluation.metrics.MutualInformation.joint_entropy">joint_entropy</a></code></li>
-<li><code><a title="src.registration.evaluation.metrics.MutualInformation.joint_hist" href="#src.registration.evaluation.metrics.MutualInformation.joint_hist">joint_hist</a></code></li>
-<li><code><a title="src.registration.evaluation.metrics.MutualInformation.mattes_mutual_information" href="#src.registration.evaluation.metrics.MutualInformation.mattes_mutual_information">mattes_mutual_information</a></code></li>
-<li><code><a title="src.registration.evaluation.metrics.MutualInformation.mi_plot" href="#src.registration.evaluation.metrics.MutualInformation.mi_plot">mi_plot</a></code></li>
-<li><code><a title="src.registration.evaluation.metrics.MutualInformation.mutual_information" href="#src.registration.evaluation.metrics.MutualInformation.mutual_information">mutual_information</a></code></li>
+<li><code><a title="pano.registration.evaluation.metrics.MutualInformation.base" href="#pano.registration.evaluation.metrics.MutualInformation.base">base</a></code></li>
+<li><code><a title="pano.registration.evaluation.metrics.MutualInformation.bins" href="#pano.registration.evaluation.metrics.MutualInformation.bins">bins</a></code></li>
+<li><code><a title="pano.registration.evaluation.metrics.MutualInformation.image1" href="#pano.registration.evaluation.metrics.MutualInformation.image1">image1</a></code></li>
+<li><code><a title="pano.registration.evaluation.metrics.MutualInformation.image1_entropy" href="#pano.registration.evaluation.metrics.MutualInformation.image1_entropy">image1_entropy</a></code></li>
+<li><code><a title="pano.registration.evaluation.metrics.MutualInformation.image2" href="#pano.registration.evaluation.metrics.MutualInformation.image2">image2</a></code></li>
+<li><code><a title="pano.registration.evaluation.metrics.MutualInformation.image2_entropy" href="#pano.registration.evaluation.metrics.MutualInformation.image2_entropy">image2_entropy</a></code></li>
+<li><code><a title="pano.registration.evaluation.metrics.MutualInformation.joint_entropy" href="#pano.registration.evaluation.metrics.MutualInformation.joint_entropy">joint_entropy</a></code></li>
+<li><code><a title="pano.registration.evaluation.metrics.MutualInformation.joint_hist" href="#pano.registration.evaluation.metrics.MutualInformation.joint_hist">joint_hist</a></code></li>
+<li><code><a title="pano.registration.evaluation.metrics.MutualInformation.mattes_mutual_information" href="#pano.registration.evaluation.metrics.MutualInformation.mattes_mutual_information">mattes_mutual_information</a></code></li>
+<li><code><a title="pano.registration.evaluation.metrics.MutualInformation.mi_plot" href="#pano.registration.evaluation.metrics.MutualInformation.mi_plot">mi_plot</a></code></li>
+<li><code><a title="pano.registration.evaluation.metrics.MutualInformation.mutual_information" href="#pano.registration.evaluation.metrics.MutualInformation.mutual_information">mutual_information</a></code></li>
 </ul>
 </li>
 </ul>

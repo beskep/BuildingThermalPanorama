@@ -7,7 +7,7 @@ import numpy as np
 from loguru import logger
 from skimage.exposure import equalize_hist, rescale_intensity
 
-from misc.tools import normalize_rgb_image_hist
+from pano.misc.tools import normalize_rgb_image_hist
 
 
 class PanoramaPreprocess:

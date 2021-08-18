@@ -9,8 +9,8 @@ from rich.progress import track
 from skimage.color import rgb2gray
 from skimage.exposure import equalize_hist
 
-from misc import tools
-from misc.imageio import ImageIO
+from pano.misc import tools
+from pano.misc.imageio import ImageIO
 
 from ..registrator import BaseRegistrator, RegisteringImage
 from .metrics import calculate_all_metrics

@@ -8,7 +8,7 @@ import numpy as np
 from loguru import logger
 from skimage.exposure import rescale_intensity
 
-from misc.tools import CropRange, crop_mask
+from pano.misc.tools import CropRange, crop_mask
 
 _AVAILABLE_WARPER = (
     'affine',

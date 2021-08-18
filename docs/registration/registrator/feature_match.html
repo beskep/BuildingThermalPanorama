@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.9.2" />
-<title>src.registration.registrator.feature_match API documentation</title>
+<title>pano.registration.registrator.feature_match API documentation</title>
 <meta name="description" content="두 영상의 특징점 추출/매칭을 통해 정합하는 코드.
 SimpleITK를 이용한 최적화 방법이 정확도가 더 높음." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -20,7 +20,7 @@ SimpleITK를 이용한 최적화 방법이 정확도가 더 높음." />
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>src.registration.registrator.feature_match</code></h1>
+<h1 class="title">Module <code>pano.registration.registrator.feature_match</code></h1>
 </header>
 <section id="section-intro">
 <p>두 영상의 특징점 추출/매칭을 통해 정합하는 코드.
@@ -322,7 +322,7 @@ class FeatureBasedRegistrator(BaseRegistrator):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="src.registration.registrator.feature_match.BRIEFDetector"><code class="flex name class">
+<dt id="pano.registration.registrator.feature_match.BRIEFDetector"><code class="flex name class">
 <span>class <span class="ident">BRIEFDetector</span></span>
 <span>(</span><span>descriptor_size=256, patch_size=49, mode='normal', sigma=1, sample_seed=1)</span>
 </code></dt>
@@ -369,13 +369,13 @@ class FeatureBasedRegistrator(BaseRegistrator):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="src.registration.registrator.feature_match.BaseDetector" href="#src.registration.registrator.feature_match.BaseDetector">BaseDetector</a></li>
+<li><a title="pano.registration.registrator.feature_match.BaseDetector" href="#pano.registration.registrator.feature_match.BaseDetector">BaseDetector</a></li>
 <li>skimage.feature.util.DescriptorExtractor</li>
 <li>skimage.feature.util.FeatureDetector</li>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="src.registration.registrator.feature_match.BRIEFDetector.detect_and_extract"><code class="name flex">
+<dt id="pano.registration.registrator.feature_match.BRIEFDetector.detect_and_extract"><code class="name flex">
 <span>def <span class="ident">detect_and_extract</span></span>(<span>self, image, *args, **kwargs)</span>
 </code></dt>
 <dd>
@@ -392,15 +392,15 @@ class FeatureBasedRegistrator(BaseRegistrator):
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="src.registration.registrator.feature_match.BaseDetector" href="#src.registration.registrator.feature_match.BaseDetector">BaseDetector</a></b></code>:
+<li><code><b><a title="pano.registration.registrator.feature_match.BaseDetector" href="#pano.registration.registrator.feature_match.BaseDetector">BaseDetector</a></b></code>:
 <ul class="hlist">
-<li><code><a title="src.registration.registrator.feature_match.BaseDetector.detect" href="#src.registration.registrator.feature_match.BaseDetector.detect">detect</a></code></li>
-<li><code><a title="src.registration.registrator.feature_match.BaseDetector.extract" href="#src.registration.registrator.feature_match.BaseDetector.extract">extract</a></code></li>
+<li><code><a title="pano.registration.registrator.feature_match.BaseDetector.detect" href="#pano.registration.registrator.feature_match.BaseDetector.detect">detect</a></code></li>
+<li><code><a title="pano.registration.registrator.feature_match.BaseDetector.extract" href="#pano.registration.registrator.feature_match.BaseDetector.extract">extract</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
-<dt id="src.registration.registrator.feature_match.BaseDetector"><code class="flex name class">
+<dt id="pano.registration.registrator.feature_match.BaseDetector"><code class="flex name class">
 <span>class <span class="ident">BaseDetector</span></span>
 </code></dt>
 <dd>
@@ -443,12 +443,12 @@ class FeatureBasedRegistrator(BaseRegistrator):
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="src.registration.registrator.feature_match.BRIEFDetector" href="#src.registration.registrator.feature_match.BRIEFDetector">BRIEFDetector</a></li>
-<li><a title="src.registration.registrator.feature_match.HoughLineFeatureDetector" href="#src.registration.registrator.feature_match.HoughLineFeatureDetector">HoughLineFeatureDetector</a></li>
+<li><a title="pano.registration.registrator.feature_match.BRIEFDetector" href="#pano.registration.registrator.feature_match.BRIEFDetector">BRIEFDetector</a></li>
+<li><a title="pano.registration.registrator.feature_match.HoughLineFeatureDetector" href="#pano.registration.registrator.feature_match.HoughLineFeatureDetector">HoughLineFeatureDetector</a></li>
 </ul>
 <h3>Instance variables</h3>
 <dl>
-<dt id="src.registration.registrator.feature_match.BaseDetector.descriptors"><code class="name">var <span class="ident">descriptors</span></code></dt>
+<dt id="pano.registration.registrator.feature_match.BaseDetector.descriptors"><code class="name">var <span class="ident">descriptors</span></code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
@@ -460,7 +460,7 @@ def descriptors(self):
   return self.descriptors_</code></pre>
 </details>
 </dd>
-<dt id="src.registration.registrator.feature_match.BaseDetector.keypoints"><code class="name">var <span class="ident">keypoints</span></code></dt>
+<dt id="pano.registration.registrator.feature_match.BaseDetector.keypoints"><code class="name">var <span class="ident">keypoints</span></code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
@@ -475,7 +475,7 @@ def keypoints(self):
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="src.registration.registrator.feature_match.BaseDetector.detect"><code class="name flex">
+<dt id="pano.registration.registrator.feature_match.BaseDetector.detect"><code class="name flex">
 <span>def <span class="ident">detect</span></span>(<span>self, image)</span>
 </code></dt>
 <dd>
@@ -493,7 +493,7 @@ def keypoints(self):
   raise NotImplementedError()</code></pre>
 </details>
 </dd>
-<dt id="src.registration.registrator.feature_match.BaseDetector.detect_and_extract"><code class="name flex">
+<dt id="pano.registration.registrator.feature_match.BaseDetector.detect_and_extract"><code class="name flex">
 <span>def <span class="ident">detect_and_extract</span></span>(<span>self, image, *args, **kwargs)</span>
 </code></dt>
 <dd>
@@ -506,7 +506,7 @@ def keypoints(self):
   raise NotImplementedError()</code></pre>
 </details>
 </dd>
-<dt id="src.registration.registrator.feature_match.BaseDetector.extract"><code class="name flex">
+<dt id="pano.registration.registrator.feature_match.BaseDetector.extract"><code class="name flex">
 <span>def <span class="ident">extract</span></span>(<span>self, image, keypoints)</span>
 </code></dt>
 <dd>
@@ -528,9 +528,9 @@ def keypoints(self):
 </dd>
 </dl>
 </dd>
-<dt id="src.registration.registrator.feature_match.FeatureBasedRegistrator"><code class="flex name class">
+<dt id="pano.registration.registrator.feature_match.FeatureBasedRegistrator"><code class="flex name class">
 <span>class <span class="ident">FeatureBasedRegistrator</span></span>
-<span>(</span><span>detector: <a title="src.registration.registrator.feature_match.BaseDetector" href="#src.registration.registrator.feature_match.BaseDetector">BaseDetector</a> = None, hough_transform=False, fixed_kwargs=None, moving_kwargs=None)</span>
+<span>(</span><span>detector: <a title="pano.registration.registrator.feature_match.BaseDetector" href="#pano.registration.registrator.feature_match.BaseDetector">BaseDetector</a> = None, hough_transform=False, fixed_kwargs=None, moving_kwargs=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>지정한 detector를 통해 특징점을 추출, RANSAC 알고리즘을 통해 매칭하고
@@ -660,12 +660,12 @@ def keypoints(self):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="src.registration.registrator.registrator.BaseRegistrator" href="registrator.html#src.registration.registrator.registrator.BaseRegistrator">BaseRegistrator</a></li>
+<li><a title="pano.registration.registrator.registrator.BaseRegistrator" href="registrator.html#pano.registration.registrator.registrator.BaseRegistrator">BaseRegistrator</a></li>
 <li>abc.ABC</li>
 </ul>
 <h3>Static methods</h3>
 <dl>
-<dt id="src.registration.registrator.feature_match.FeatureBasedRegistrator.match_features"><code class="name flex">
+<dt id="pano.registration.registrator.feature_match.FeatureBasedRegistrator.match_features"><code class="name flex">
 <span>def <span class="ident">match_features</span></span>(<span>fixed_keypoints, fixed_descriptors, moving_keypoints, moving_descriptors)</span>
 </code></dt>
 <dd>
@@ -699,7 +699,7 @@ def match_features(
 </dl>
 <h3>Instance variables</h3>
 <dl>
-<dt id="src.registration.registrator.feature_match.FeatureBasedRegistrator.detector"><code class="name">var <span class="ident">detector</span> : <a title="src.registration.registrator.feature_match.BaseDetector" href="#src.registration.registrator.feature_match.BaseDetector">BaseDetector</a></code></dt>
+<dt id="pano.registration.registrator.feature_match.FeatureBasedRegistrator.detector"><code class="name">var <span class="ident">detector</span> : <a title="pano.registration.registrator.feature_match.BaseDetector" href="#pano.registration.registrator.feature_match.BaseDetector">BaseDetector</a></code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
@@ -711,7 +711,7 @@ def detector(self) -&gt; BaseDetector:
   return self._detector</code></pre>
 </details>
 </dd>
-<dt id="src.registration.registrator.feature_match.FeatureBasedRegistrator.detector_name"><code class="name">var <span class="ident">detector_name</span></code></dt>
+<dt id="pano.registration.registrator.feature_match.FeatureBasedRegistrator.detector_name"><code class="name">var <span class="ident">detector_name</span></code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
@@ -726,7 +726,7 @@ def detector_name(self):
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="src.registration.registrator.feature_match.FeatureBasedRegistrator.detect"><code class="name flex">
+<dt id="pano.registration.registrator.feature_match.FeatureBasedRegistrator.detect"><code class="name flex">
 <span>def <span class="ident">detect</span></span>(<span>self, image, **kwargs)</span>
 </code></dt>
 <dd>
@@ -751,14 +751,14 @@ def detector_name(self):
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="src.registration.registrator.registrator.BaseRegistrator" href="registrator.html#src.registration.registrator.registrator.BaseRegistrator">BaseRegistrator</a></b></code>:
+<li><code><b><a title="pano.registration.registrator.registrator.BaseRegistrator" href="registrator.html#pano.registration.registrator.registrator.BaseRegistrator">BaseRegistrator</a></b></code>:
 <ul class="hlist">
-<li><code><a title="src.registration.registrator.registrator.BaseRegistrator.register" href="registrator.html#src.registration.registrator.registrator.BaseRegistrator.register">register</a></code></li>
+<li><code><a title="pano.registration.registrator.registrator.BaseRegistrator.register" href="registrator.html#pano.registration.registrator.registrator.BaseRegistrator.register">register</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
-<dt id="src.registration.registrator.feature_match.HoughLineFeatureDetector"><code class="flex name class">
+<dt id="pano.registration.registrator.feature_match.HoughLineFeatureDetector"><code class="flex name class">
 <span>class <span class="ident">HoughLineFeatureDetector</span></span>
 <span>(</span><span>hough=True, length=True, normalize=True)</span>
 </code></dt>
@@ -850,13 +850,13 @@ def detector_name(self):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="src.registration.registrator.feature_match.BaseDetector" href="#src.registration.registrator.feature_match.BaseDetector">BaseDetector</a></li>
+<li><a title="pano.registration.registrator.feature_match.BaseDetector" href="#pano.registration.registrator.feature_match.BaseDetector">BaseDetector</a></li>
 <li>skimage.feature.util.DescriptorExtractor</li>
 <li>skimage.feature.util.FeatureDetector</li>
 </ul>
 <h3>Instance variables</h3>
 <dl>
-<dt id="src.registration.registrator.feature_match.HoughLineFeatureDetector.descriptors"><code class="name">var <span class="ident">descriptors</span></code></dt>
+<dt id="pano.registration.registrator.feature_match.HoughLineFeatureDetector.descriptors"><code class="name">var <span class="ident">descriptors</span></code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
@@ -868,7 +868,7 @@ def descriptors(self):
   return self.descriptors_</code></pre>
 </details>
 </dd>
-<dt id="src.registration.registrator.feature_match.HoughLineFeatureDetector.keypoints"><code class="name">var <span class="ident">keypoints</span></code></dt>
+<dt id="pano.registration.registrator.feature_match.HoughLineFeatureDetector.keypoints"><code class="name">var <span class="ident">keypoints</span></code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
@@ -880,7 +880,7 @@ def keypoints(self):
   return self.keypoints_[:, ::-1]</code></pre>
 </details>
 </dd>
-<dt id="src.registration.registrator.feature_match.HoughLineFeatureDetector.params"><code class="name">var <span class="ident">params</span></code></dt>
+<dt id="pano.registration.registrator.feature_match.HoughLineFeatureDetector.params"><code class="name">var <span class="ident">params</span></code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
@@ -899,7 +899,7 @@ def params(self):
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="src.registration.registrator.feature_match.HoughLineFeatureDetector.detect_and_extract"><code class="name flex">
+<dt id="pano.registration.registrator.feature_match.HoughLineFeatureDetector.detect_and_extract"><code class="name flex">
 <span>def <span class="ident">detect_and_extract</span></span>(<span>self, image, canny_kwargs=None, hough_kwargs=None)</span>
 </code></dt>
 <dd>
@@ -917,15 +917,15 @@ def params(self):
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="src.registration.registrator.feature_match.BaseDetector" href="#src.registration.registrator.feature_match.BaseDetector">BaseDetector</a></b></code>:
+<li><code><b><a title="pano.registration.registrator.feature_match.BaseDetector" href="#pano.registration.registrator.feature_match.BaseDetector">BaseDetector</a></b></code>:
 <ul class="hlist">
-<li><code><a title="src.registration.registrator.feature_match.BaseDetector.detect" href="#src.registration.registrator.feature_match.BaseDetector.detect">detect</a></code></li>
-<li><code><a title="src.registration.registrator.feature_match.BaseDetector.extract" href="#src.registration.registrator.feature_match.BaseDetector.extract">extract</a></code></li>
+<li><code><a title="pano.registration.registrator.feature_match.BaseDetector.detect" href="#pano.registration.registrator.feature_match.BaseDetector.detect">detect</a></code></li>
+<li><code><a title="pano.registration.registrator.feature_match.BaseDetector.extract" href="#pano.registration.registrator.feature_match.BaseDetector.extract">extract</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
-<dt id="src.registration.registrator.feature_match.ORBDetector"><code class="flex name class">
+<dt id="pano.registration.registrator.feature_match.ORBDetector"><code class="flex name class">
 <span>class <span class="ident">ORBDetector</span></span>
 <span>(</span><span>downscale=1.2, n_scales=8, n_keypoints=500, fast_n=9, fast_threshold=0.08, harris_k=0.04)</span>
 </code></dt>
@@ -960,47 +960,47 @@ def params(self):
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="src.registration.registrator" href="index.html">src.registration.registrator</a></code></li>
+<li><code><a title="pano.registration.registrator" href="index.html">pano.registration.registrator</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="src.registration.registrator.feature_match.BRIEFDetector" href="#src.registration.registrator.feature_match.BRIEFDetector">BRIEFDetector</a></code></h4>
+<h4><code><a title="pano.registration.registrator.feature_match.BRIEFDetector" href="#pano.registration.registrator.feature_match.BRIEFDetector">BRIEFDetector</a></code></h4>
 <ul class="">
-<li><code><a title="src.registration.registrator.feature_match.BRIEFDetector.detect_and_extract" href="#src.registration.registrator.feature_match.BRIEFDetector.detect_and_extract">detect_and_extract</a></code></li>
+<li><code><a title="pano.registration.registrator.feature_match.BRIEFDetector.detect_and_extract" href="#pano.registration.registrator.feature_match.BRIEFDetector.detect_and_extract">detect_and_extract</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="src.registration.registrator.feature_match.BaseDetector" href="#src.registration.registrator.feature_match.BaseDetector">BaseDetector</a></code></h4>
+<h4><code><a title="pano.registration.registrator.feature_match.BaseDetector" href="#pano.registration.registrator.feature_match.BaseDetector">BaseDetector</a></code></h4>
 <ul class="">
-<li><code><a title="src.registration.registrator.feature_match.BaseDetector.descriptors" href="#src.registration.registrator.feature_match.BaseDetector.descriptors">descriptors</a></code></li>
-<li><code><a title="src.registration.registrator.feature_match.BaseDetector.detect" href="#src.registration.registrator.feature_match.BaseDetector.detect">detect</a></code></li>
-<li><code><a title="src.registration.registrator.feature_match.BaseDetector.detect_and_extract" href="#src.registration.registrator.feature_match.BaseDetector.detect_and_extract">detect_and_extract</a></code></li>
-<li><code><a title="src.registration.registrator.feature_match.BaseDetector.extract" href="#src.registration.registrator.feature_match.BaseDetector.extract">extract</a></code></li>
-<li><code><a title="src.registration.registrator.feature_match.BaseDetector.keypoints" href="#src.registration.registrator.feature_match.BaseDetector.keypoints">keypoints</a></code></li>
+<li><code><a title="pano.registration.registrator.feature_match.BaseDetector.descriptors" href="#pano.registration.registrator.feature_match.BaseDetector.descriptors">descriptors</a></code></li>
+<li><code><a title="pano.registration.registrator.feature_match.BaseDetector.detect" href="#pano.registration.registrator.feature_match.BaseDetector.detect">detect</a></code></li>
+<li><code><a title="pano.registration.registrator.feature_match.BaseDetector.detect_and_extract" href="#pano.registration.registrator.feature_match.BaseDetector.detect_and_extract">detect_and_extract</a></code></li>
+<li><code><a title="pano.registration.registrator.feature_match.BaseDetector.extract" href="#pano.registration.registrator.feature_match.BaseDetector.extract">extract</a></code></li>
+<li><code><a title="pano.registration.registrator.feature_match.BaseDetector.keypoints" href="#pano.registration.registrator.feature_match.BaseDetector.keypoints">keypoints</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="src.registration.registrator.feature_match.FeatureBasedRegistrator" href="#src.registration.registrator.feature_match.FeatureBasedRegistrator">FeatureBasedRegistrator</a></code></h4>
+<h4><code><a title="pano.registration.registrator.feature_match.FeatureBasedRegistrator" href="#pano.registration.registrator.feature_match.FeatureBasedRegistrator">FeatureBasedRegistrator</a></code></h4>
 <ul class="">
-<li><code><a title="src.registration.registrator.feature_match.FeatureBasedRegistrator.detect" href="#src.registration.registrator.feature_match.FeatureBasedRegistrator.detect">detect</a></code></li>
-<li><code><a title="src.registration.registrator.feature_match.FeatureBasedRegistrator.detector" href="#src.registration.registrator.feature_match.FeatureBasedRegistrator.detector">detector</a></code></li>
-<li><code><a title="src.registration.registrator.feature_match.FeatureBasedRegistrator.detector_name" href="#src.registration.registrator.feature_match.FeatureBasedRegistrator.detector_name">detector_name</a></code></li>
-<li><code><a title="src.registration.registrator.feature_match.FeatureBasedRegistrator.match_features" href="#src.registration.registrator.feature_match.FeatureBasedRegistrator.match_features">match_features</a></code></li>
+<li><code><a title="pano.registration.registrator.feature_match.FeatureBasedRegistrator.detect" href="#pano.registration.registrator.feature_match.FeatureBasedRegistrator.detect">detect</a></code></li>
+<li><code><a title="pano.registration.registrator.feature_match.FeatureBasedRegistrator.detector" href="#pano.registration.registrator.feature_match.FeatureBasedRegistrator.detector">detector</a></code></li>
+<li><code><a title="pano.registration.registrator.feature_match.FeatureBasedRegistrator.detector_name" href="#pano.registration.registrator.feature_match.FeatureBasedRegistrator.detector_name">detector_name</a></code></li>
+<li><code><a title="pano.registration.registrator.feature_match.FeatureBasedRegistrator.match_features" href="#pano.registration.registrator.feature_match.FeatureBasedRegistrator.match_features">match_features</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="src.registration.registrator.feature_match.HoughLineFeatureDetector" href="#src.registration.registrator.feature_match.HoughLineFeatureDetector">HoughLineFeatureDetector</a></code></h4>
+<h4><code><a title="pano.registration.registrator.feature_match.HoughLineFeatureDetector" href="#pano.registration.registrator.feature_match.HoughLineFeatureDetector">HoughLineFeatureDetector</a></code></h4>
 <ul class="">
-<li><code><a title="src.registration.registrator.feature_match.HoughLineFeatureDetector.descriptors" href="#src.registration.registrator.feature_match.HoughLineFeatureDetector.descriptors">descriptors</a></code></li>
-<li><code><a title="src.registration.registrator.feature_match.HoughLineFeatureDetector.detect_and_extract" href="#src.registration.registrator.feature_match.HoughLineFeatureDetector.detect_and_extract">detect_and_extract</a></code></li>
-<li><code><a title="src.registration.registrator.feature_match.HoughLineFeatureDetector.keypoints" href="#src.registration.registrator.feature_match.HoughLineFeatureDetector.keypoints">keypoints</a></code></li>
-<li><code><a title="src.registration.registrator.feature_match.HoughLineFeatureDetector.params" href="#src.registration.registrator.feature_match.HoughLineFeatureDetector.params">params</a></code></li>
+<li><code><a title="pano.registration.registrator.feature_match.HoughLineFeatureDetector.descriptors" href="#pano.registration.registrator.feature_match.HoughLineFeatureDetector.descriptors">descriptors</a></code></li>
+<li><code><a title="pano.registration.registrator.feature_match.HoughLineFeatureDetector.detect_and_extract" href="#pano.registration.registrator.feature_match.HoughLineFeatureDetector.detect_and_extract">detect_and_extract</a></code></li>
+<li><code><a title="pano.registration.registrator.feature_match.HoughLineFeatureDetector.keypoints" href="#pano.registration.registrator.feature_match.HoughLineFeatureDetector.keypoints">keypoints</a></code></li>
+<li><code><a title="pano.registration.registrator.feature_match.HoughLineFeatureDetector.params" href="#pano.registration.registrator.feature_match.HoughLineFeatureDetector.params">params</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="src.registration.registrator.feature_match.ORBDetector" href="#src.registration.registrator.feature_match.ORBDetector">ORBDetector</a></code></h4>
+<h4><code><a title="pano.registration.registrator.feature_match.ORBDetector" href="#pano.registration.registrator.feature_match.ORBDetector">ORBDetector</a></code></h4>
 </li>
 </ul>
 </li>

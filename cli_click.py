@@ -9,10 +9,9 @@ from loguru import logger
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 skimage.io.use_plugin('pil')
-sys.path.insert(0, os.path.normpath('./src'))
 
 # pylint: disable=wrong-import-position
-import utils
+from pano import utils
 
 commands = {'init', 'register', 'segment', 'panorama', 'correct', 'run'}
 
@@ -49,7 +48,7 @@ def cli(directory: str, command: str, default: bool, debug: bool,
     return
 
   # pylint: disable=import-outside-toplevel
-  from interface.pano import ThermalPanorama
+  from pano.interface.pano import ThermalPanorama
 
   if command == 'init':
     default = True

@@ -3,19 +3,16 @@
 from pathlib import Path
 from typing import List, Optional, Union
 
-import utils
-
 import matplotlib.pyplot as plt
 import numpy as np
 from loguru import logger
 from rich.progress import track
 
-import flir
-import registration.registrator.simpleitk as rsitk
-import stitch
-from distortion import perspective as persp
-from misc import exif, tools
-from misc.imageio import ImageIO as IIO
+import pano.registration.registrator.simpleitk as rsitk
+from pano import flir, stitch, utils
+from pano.distortion import perspective as persp
+from pano.misc import exif, tools
+from pano.misc.imageio import ImageIO as IIO
 
 from .cmap import apply_colormap, get_thermal_colormap
 from .config import DictConfig, read_config
@@ -274,7 +271,7 @@ class ThermalPanorama:
 
   def segment(self):
     # pylint: disable=import-outside-toplevel
-    from segmentation import deeplab
+    from pano.segmentation import deeplab
 
     try:
       files = self._fm.files(DIR.RGST)

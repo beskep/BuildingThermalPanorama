@@ -3,11 +3,11 @@
 from pathlib import Path
 from shutil import copy2
 
-import utils
-
 from loguru import logger
 from omegaconf import DictConfig, OmegaConf
 from yaml.error import YAMLError
+
+from pano import utils
 
 CONFIG_FNAME = 'config.yaml'
 DEFAULT_CONFIG_PATH = utils.DIR.SRC.joinpath(CONFIG_FNAME)

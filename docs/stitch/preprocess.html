@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.9.2" />
-<title>src.stitch.preprocess API documentation</title>
+<title>pano.stitch.preprocess API documentation</title>
 <meta name="description" content="Stitcher용 전처리 함수, 클래스" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
@@ -19,7 +19,7 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>src.stitch.preprocess</code></h1>
+<h1 class="title">Module <code>pano.stitch.preprocess</code></h1>
 </header>
 <section id="section-intro">
 <p>Stitcher용 전처리 함수, 클래스</p>
@@ -36,7 +36,7 @@ import numpy as np
 from loguru import logger
 from skimage.exposure import equalize_hist, rescale_intensity
 
-from misc.tools import normalize_rgb_image_hist
+from pano.misc.tools import normalize_rgb_image_hist
 
 
 class PanoramaPreprocess:
@@ -252,7 +252,7 @@ class PanoramaPreprocess:
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="src.stitch.preprocess.PanoramaPreprocess"><code class="flex name class">
+<dt id="pano.stitch.preprocess.PanoramaPreprocess"><code class="flex name class">
 <span>class <span class="ident">PanoramaPreprocess</span></span>
 <span>(</span><span>is_numeric: bool, mask_threshold: Union[float, NoneType] = -30.0, contrast: Union[str, NoneType] = 'equalization', denoise: Union[str, NoneType] = 'bilateral')</span>
 </code></dt>
@@ -495,7 +495,7 @@ RGB 형식의 실화상에만 적용.</p>
 </details>
 <h3>Instance variables</h3>
 <dl>
-<dt id="src.stitch.preprocess.PanoramaPreprocess.bilateral_args"><code class="name">var <span class="ident">bilateral_args</span></code></dt>
+<dt id="pano.stitch.preprocess.PanoramaPreprocess.bilateral_args"><code class="name">var <span class="ident">bilateral_args</span></code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
@@ -507,7 +507,7 @@ def bilateral_args(self):
   return self._bilateral_args</code></pre>
 </details>
 </dd>
-<dt id="src.stitch.preprocess.PanoramaPreprocess.gaussian_args"><code class="name">var <span class="ident">gaussian_args</span></code></dt>
+<dt id="pano.stitch.preprocess.PanoramaPreprocess.gaussian_args"><code class="name">var <span class="ident">gaussian_args</span></code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
@@ -519,7 +519,7 @@ def gaussian_args(self):
   return self._gaussian_args</code></pre>
 </details>
 </dd>
-<dt id="src.stitch.preprocess.PanoramaPreprocess.mask_threshold"><code class="name">var <span class="ident">mask_threshold</span></code></dt>
+<dt id="pano.stitch.preprocess.PanoramaPreprocess.mask_threshold"><code class="name">var <span class="ident">mask_threshold</span></code></dt>
 <dd>
 <div class="desc"><p>영상의 마스킹을 위한 기준 픽셀값.
 <code>mask_threshold</code> 미만의 영역은 파노라마 생성 영역에서 제외됨.</p></div>
@@ -539,7 +539,7 @@ def mask_threshold(self):
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="src.stitch.preprocess.PanoramaPreprocess.adjust_contrast"><code class="name flex">
+<dt id="pano.stitch.preprocess.PanoramaPreprocess.adjust_contrast"><code class="name flex">
 <span>def <span class="ident">adjust_contrast</span></span>(<span>self, image: numpy.ndarray) ‑> numpy.ndarray</span>
 </code></dt>
 <dd>
@@ -596,7 +596,7 @@ Histogram normalization을 적용하지 않고 경고 메세지. 실화상의 �
   return res</code></pre>
 </details>
 </dd>
-<dt id="src.stitch.preprocess.PanoramaPreprocess.denoise"><code class="name flex">
+<dt id="pano.stitch.preprocess.PanoramaPreprocess.denoise"><code class="name flex">
 <span>def <span class="ident">denoise</span></span>(<span>self, image: numpy.ndarray) ‑> numpy.ndarray</span>
 </code></dt>
 <dd>
@@ -638,7 +638,7 @@ Histogram normalization을 적용하지 않고 경고 메세지. 실화상의 �
   return res</code></pre>
 </details>
 </dd>
-<dt id="src.stitch.preprocess.PanoramaPreprocess.masking"><code class="name flex">
+<dt id="pano.stitch.preprocess.PanoramaPreprocess.masking"><code class="name flex">
 <span>def <span class="ident">masking</span></span>(<span>self, image: numpy.ndarray) ‑> Union[numpy.ndarray, NoneType]</span>
 </code></dt>
 <dd>
@@ -681,7 +681,7 @@ Histogram normalization을 적용하지 않고 경고 메세지. 실화상의 �
   return mask</code></pre>
 </details>
 </dd>
-<dt id="src.stitch.preprocess.PanoramaPreprocess.set_bilateral_args"><code class="name flex">
+<dt id="pano.stitch.preprocess.PanoramaPreprocess.set_bilateral_args"><code class="name flex">
 <span>def <span class="ident">set_bilateral_args</span></span>(<span>self, d=-1, sigmaColor=20, sigmaSpace=10)</span>
 </code></dt>
 <dd>
@@ -703,7 +703,7 @@ Histogram normalization을 적용하지 않고 경고 메세지. 실화상의 �
   }</code></pre>
 </details>
 </dd>
-<dt id="src.stitch.preprocess.PanoramaPreprocess.set_gaussian_args"><code class="name flex">
+<dt id="pano.stitch.preprocess.PanoramaPreprocess.set_gaussian_args"><code class="name flex">
 <span>def <span class="ident">set_gaussian_args</span></span>(<span>self, ksize=(5, 5), sigmaX=0)</span>
 </code></dt>
 <dd>
@@ -734,22 +734,22 @@ Histogram normalization을 적용하지 않고 경고 메세지. 실화상의 �
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="src.stitch" href="index.html">src.stitch</a></code></li>
+<li><code><a title="pano.stitch" href="index.html">pano.stitch</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="src.stitch.preprocess.PanoramaPreprocess" href="#src.stitch.preprocess.PanoramaPreprocess">PanoramaPreprocess</a></code></h4>
+<h4><code><a title="pano.stitch.preprocess.PanoramaPreprocess" href="#pano.stitch.preprocess.PanoramaPreprocess">PanoramaPreprocess</a></code></h4>
 <ul class="two-column">
-<li><code><a title="src.stitch.preprocess.PanoramaPreprocess.adjust_contrast" href="#src.stitch.preprocess.PanoramaPreprocess.adjust_contrast">adjust_contrast</a></code></li>
-<li><code><a title="src.stitch.preprocess.PanoramaPreprocess.bilateral_args" href="#src.stitch.preprocess.PanoramaPreprocess.bilateral_args">bilateral_args</a></code></li>
-<li><code><a title="src.stitch.preprocess.PanoramaPreprocess.denoise" href="#src.stitch.preprocess.PanoramaPreprocess.denoise">denoise</a></code></li>
-<li><code><a title="src.stitch.preprocess.PanoramaPreprocess.gaussian_args" href="#src.stitch.preprocess.PanoramaPreprocess.gaussian_args">gaussian_args</a></code></li>
-<li><code><a title="src.stitch.preprocess.PanoramaPreprocess.mask_threshold" href="#src.stitch.preprocess.PanoramaPreprocess.mask_threshold">mask_threshold</a></code></li>
-<li><code><a title="src.stitch.preprocess.PanoramaPreprocess.masking" href="#src.stitch.preprocess.PanoramaPreprocess.masking">masking</a></code></li>
-<li><code><a title="src.stitch.preprocess.PanoramaPreprocess.set_bilateral_args" href="#src.stitch.preprocess.PanoramaPreprocess.set_bilateral_args">set_bilateral_args</a></code></li>
-<li><code><a title="src.stitch.preprocess.PanoramaPreprocess.set_gaussian_args" href="#src.stitch.preprocess.PanoramaPreprocess.set_gaussian_args">set_gaussian_args</a></code></li>
+<li><code><a title="pano.stitch.preprocess.PanoramaPreprocess.adjust_contrast" href="#pano.stitch.preprocess.PanoramaPreprocess.adjust_contrast">adjust_contrast</a></code></li>
+<li><code><a title="pano.stitch.preprocess.PanoramaPreprocess.bilateral_args" href="#pano.stitch.preprocess.PanoramaPreprocess.bilateral_args">bilateral_args</a></code></li>
+<li><code><a title="pano.stitch.preprocess.PanoramaPreprocess.denoise" href="#pano.stitch.preprocess.PanoramaPreprocess.denoise">denoise</a></code></li>
+<li><code><a title="pano.stitch.preprocess.PanoramaPreprocess.gaussian_args" href="#pano.stitch.preprocess.PanoramaPreprocess.gaussian_args">gaussian_args</a></code></li>
+<li><code><a title="pano.stitch.preprocess.PanoramaPreprocess.mask_threshold" href="#pano.stitch.preprocess.PanoramaPreprocess.mask_threshold">mask_threshold</a></code></li>
+<li><code><a title="pano.stitch.preprocess.PanoramaPreprocess.masking" href="#pano.stitch.preprocess.PanoramaPreprocess.masking">masking</a></code></li>
+<li><code><a title="pano.stitch.preprocess.PanoramaPreprocess.set_bilateral_args" href="#pano.stitch.preprocess.PanoramaPreprocess.set_bilateral_args">set_bilateral_args</a></code></li>
+<li><code><a title="pano.stitch.preprocess.PanoramaPreprocess.set_gaussian_args" href="#pano.stitch.preprocess.PanoramaPreprocess.set_gaussian_args">set_gaussian_args</a></code></li>
 </ul>
 </li>
 </ul>

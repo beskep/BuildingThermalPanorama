@@ -1,17 +1,16 @@
-from context import DATA_DIR
-
 import cv2 as cv
 import numpy as np
 import pytest
 import skimage.exposure
 
-import stitch
-from misc.imageio import ImageIO
+from pano import stitch
+from pano.misc.imageio import ImageIO
+from pano.utils import DIR
 
 
 @pytest.mark.skip('')
 def test_stitcher():
-  img_dir = DATA_DIR.joinpath('MainBldgBackLoc1PanTiltTripod/IR')
+  img_dir = DIR.RESOURCE.joinpath('MainBldgBackLoc1PanTiltTripod/IR')
   files = img_dir.glob('*.npy')
   arrays = [ImageIO.read(x) for x in files]
 

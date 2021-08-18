@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.9.2" />
-<title>src.utils API documentation</title>
+<title>pano.utils API documentation</title>
 <meta name="description" content="경로 및 로거 설정" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
@@ -19,7 +19,7 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>src.utils</code></h1>
+<h1 class="title">Module <code>pano.utils</code></h1>
 </header>
 <section id="section-intro">
 <p>경로 및 로거 설정</p>
@@ -44,11 +44,8 @@ from rich.theme import Theme
 class DIR:
   SRC = Path(__file__).parent.resolve()
   ROOT = SRC.parent
+  RESOURCE = ROOT.joinpath(&#39;resource&#39;)
 
-
-_SRC_DIR = DIR.SRC.as_posix()
-if _SRC_DIR not in sys.path:
-  sys.path.insert(0, _SRC_DIR)
 
 StrPath = Union[str, PathLike]
 
@@ -116,7 +113,7 @@ def set_logger(level: Union[int, str] = 20):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="src.utils.set_logger"><code class="name flex">
+<dt id="pano.utils.set_logger"><code class="name flex">
 <span>def <span class="ident">set_logger</span></span>(<span>level: Union[int, str] = 20)</span>
 </code></dt>
 <dd>
@@ -170,7 +167,7 @@ def set_logger(level: Union[int, str] = 20):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="src.utils.DIR"><code class="flex name class">
+<dt id="pano.utils.DIR"><code class="flex name class">
 <span>class <span class="ident">DIR</span></span>
 </code></dt>
 <dd>
@@ -181,15 +178,20 @@ def set_logger(level: Union[int, str] = 20):
 </summary>
 <pre><code class="python">class DIR:
   SRC = Path(__file__).parent.resolve()
-  ROOT = SRC.parent</code></pre>
+  ROOT = SRC.parent
+  RESOURCE = ROOT.joinpath(&#39;resource&#39;)</code></pre>
 </details>
 <h3>Class variables</h3>
 <dl>
-<dt id="src.utils.DIR.ROOT"><code class="name">var <span class="ident">ROOT</span></code></dt>
+<dt id="pano.utils.DIR.RESOURCE"><code class="name">var <span class="ident">RESOURCE</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="src.utils.DIR.SRC"><code class="name">var <span class="ident">SRC</span></code></dt>
+<dt id="pano.utils.DIR.ROOT"><code class="name">var <span class="ident">ROOT</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pano.utils.DIR.SRC"><code class="name">var <span class="ident">SRC</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -206,21 +208,22 @@ def set_logger(level: Union[int, str] = 20):
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="src" href="index.html">src</a></code></li>
+<li><code><a title="pano" href="index.html">pano</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="src.utils.set_logger" href="#src.utils.set_logger">set_logger</a></code></li>
+<li><code><a title="pano.utils.set_logger" href="#pano.utils.set_logger">set_logger</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="src.utils.DIR" href="#src.utils.DIR">DIR</a></code></h4>
+<h4><code><a title="pano.utils.DIR" href="#pano.utils.DIR">DIR</a></code></h4>
 <ul class="">
-<li><code><a title="src.utils.DIR.ROOT" href="#src.utils.DIR.ROOT">ROOT</a></code></li>
-<li><code><a title="src.utils.DIR.SRC" href="#src.utils.DIR.SRC">SRC</a></code></li>
+<li><code><a title="pano.utils.DIR.RESOURCE" href="#pano.utils.DIR.RESOURCE">RESOURCE</a></code></li>
+<li><code><a title="pano.utils.DIR.ROOT" href="#pano.utils.DIR.ROOT">ROOT</a></code></li>
+<li><code><a title="pano.utils.DIR.SRC" href="#pano.utils.DIR.SRC">SRC</a></code></li>
 </ul>
 </li>
 </ul>

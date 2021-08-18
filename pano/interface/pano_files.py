@@ -45,7 +45,9 @@ from enum import Enum
 from pathlib import Path
 from typing import List, Optional, Union
 
-import utils
+from pano import utils
+
+MODEL_PATH = utils.DIR.RESOURCE.joinpath('DeepLabV3/frozen_inference_graph.pb')
 
 
 class DIR(Enum):
@@ -198,11 +200,10 @@ class ThermalPanoramaFileManager:
 
   @staticmethod
   def segment_model_path():
-    path = utils.DIR.ROOT.joinpath('data/DeepLabV3/frozen_inference_graph.pb')
-    if not path.exists():
-      raise FileNotFoundError(path)
+    if not MODEL_PATH.exists():
+      raise FileNotFoundError(MODEL_PATH)
 
-    return path
+    return MODEL_PATH
 
   def panorama_path(self, d: DIR, sp: SP, error=False):
     subdir = self.subdir(d)

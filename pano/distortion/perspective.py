@@ -10,7 +10,7 @@ from skimage.exposure.exposure import equalize_hist
 from skimage.feature import canny
 from skimage.transform import probabilistic_hough_line, warp
 
-from misc import tools
+from pano.misc import tools
 
 from . import rectification
 

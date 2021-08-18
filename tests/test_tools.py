@@ -1,9 +1,6 @@
-import context
-import utils
-
 import numpy as np
 
-from misc import tools
+from pano.misc import tools
 
 
 def test_crop_by_mask():

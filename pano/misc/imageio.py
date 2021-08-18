@@ -2,14 +2,14 @@ from pathlib import Path
 from typing import Optional, Tuple
 from warnings import warn
 
-from utils import StrPath
-
 import numpy as np
 import pandas as pd
 import PIL.Image
 import yaml
 from skimage.exposure import rescale_intensity
 from skimage.io import imread, imsave
+
+from pano.utils import StrPath
 
 from .tools import uint8_image, uint16_image
 

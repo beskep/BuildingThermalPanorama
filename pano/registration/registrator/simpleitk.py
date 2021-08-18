@@ -9,7 +9,7 @@ from loguru import logger
 from numpy.linalg import inv
 from skimage.transform import estimate_transform
 
-from misc.tools import bin_size
+from pano.misc.tools import bin_size
 
 from .registrator import (BaseRegistrator, RegisteringImage,
                           RegistrationPreprocess)

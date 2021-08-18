@@ -3,11 +3,11 @@
 from subprocess import DEVNULL, check_output
 from typing import List, Optional, Union
 
-import utils
-
 import yaml
 
-EXIFTOOL_PATH = utils.DIR.SRC.joinpath('exiftool.exe')
+from pano import utils
+
+EXIFTOOL_PATH = utils.DIR.RESOURCE.joinpath('exiftool.exe')
 if not EXIFTOOL_PATH.exists():
   raise FileNotFoundError(EXIFTOOL_PATH)
 

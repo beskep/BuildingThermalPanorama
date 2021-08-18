@@ -1,12 +1,11 @@
-from context import ROOT_DIR
-
 import numpy as np
 import pytest
 
-import flir
+from pano import flir
+from pano.utils import DIR
 
 extractor = flir.FlirExtractor()
-image_dir = ROOT_DIR.joinpath('data')
+image_dir = DIR.RESOURCE.joinpath('TestImage')
 images = ['FLIR0239.jpg']
 
 
@@ -29,7 +28,7 @@ def test_extract_data(image):
 
 
 def test_extract_ir_non_flir_file():
-  path = ROOT_DIR.joinpath('data/lena.jpg')
+  path = image_dir.joinpath('lena.jpg')
 
   with pytest.raises(flir.FlirExifNotFoundError):
     extractor.extract_ir(path)

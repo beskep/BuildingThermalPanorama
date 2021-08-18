@@ -1,12 +1,10 @@
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-import context
-
 import numpy as np
 import pytest
 
-from misc.imageio import ImageIO
+from pano.misc.imageio import ImageIO
 
 
 class TestImageIO:

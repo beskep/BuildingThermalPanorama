@@ -3,8 +3,8 @@ from typing import Tuple
 
 import numpy as np
 
-from misc.exif import EXIFTOOL_PATH
-from misc.imageio import ImageIO
+from pano.misc.exif import EXIFTOOL_PATH
+from pano.misc.imageio import ImageIO
 
 from ._flir_image_extractor import FlirImageExtractor
 

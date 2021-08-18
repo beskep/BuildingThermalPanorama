@@ -1,14 +1,14 @@
 """추출해둔 FLIR 컬러맵, 또는 `matplotlib` 컬러맵 설정"""
 
-import utils
-
 from loguru import logger
 from matplotlib.cm import get_cmap
 from matplotlib.colors import Colormap, ListedColormap
 
-from misc.cmap import FLIRColormap, apply_colormap
+from pano.misc.cmap import FLIRColormap, apply_colormap
+from pano.utils import DIR
 
 DEFAULT_COLORMAP = 'inferno'
+COLORMAP_PATH = DIR.RESOURCE.joinpath('iron_colormap_rgb.txt')
 
 
 def get_iron_colormap() -> ListedColormap:
@@ -26,11 +26,10 @@ def get_iron_colormap() -> ListedColormap:
   FileNotFoundError
       파일이 존재하지 않는 경우
   """
-  path = utils.DIR.ROOT.joinpath('data/iron_colormap_rgb.txt')
-  if not path.exists():
-    raise FileNotFoundError(f'컬러맵 파일이 존재하지 않습니다. ({path})')
+  if not COLORMAP_PATH.exists():
+    raise FileNotFoundError(f'컬러맵 파일이 존재하지 않습니다. ({COLORMAP_PATH})')
 
-  cmap = FLIRColormap.from_uint8_text_file(path=path)
+  cmap = FLIRColormap.from_uint8_text_file(path=COLORMAP_PATH)
 
   return cmap
 

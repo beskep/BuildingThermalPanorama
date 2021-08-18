@@ -1,9 +1,7 @@
-import context
-
 import numpy as np
 import pytest
 
-from distortion import radial
+from pano.distortion import radial
 
 
 class TestRadialDistortionModel:

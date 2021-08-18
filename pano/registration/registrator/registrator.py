@@ -10,7 +10,7 @@ from skimage.exposure import equalize_hist
 from skimage.filters import sobel, unsharp_mask
 from skimage.transform import resize, warp
 
-from misc.tools import normalize_image
+from pano.misc.tools import normalize_image
 
 
 class RegistrationPreprocess:

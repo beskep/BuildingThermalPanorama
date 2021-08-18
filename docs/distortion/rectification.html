@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.9.2" />
-<title>src.distortion.rectification API documentation</title>
+<title>pano.distortion.rectification API documentation</title>
 <meta name="description" content="Automated Rectification of Image …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
@@ -19,7 +19,7 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>src.distortion.rectification</code></h1>
+<h1 class="title">Module <code>pano.distortion.rectification</code></h1>
 </header>
 <section id="section-intro">
 <p>Automated Rectification of Image.</p>
@@ -595,7 +595,7 @@ def rectify_image(image: np.ndarray,
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="src.distortion.rectification.compute_edgelets"><code class="name flex">
+<dt id="pano.distortion.rectification.compute_edgelets"><code class="name flex">
 <span>def <span class="ident">compute_edgelets</span></span>(<span>image, sigma=3)</span>
 </code></dt>
 <dd>
@@ -656,7 +656,7 @@ hough transform as edgelets.</p>
   return (locations, directions, strengths)</code></pre>
 </details>
 </dd>
-<dt id="src.distortion.rectification.compute_homography_and_warp"><code class="name flex">
+<dt id="pano.distortion.rectification.compute_homography_and_warp"><code class="name flex">
 <span>def <span class="ident">compute_homography_and_warp</span></span>(<span>image, vp1, vp2, clip=True, clip_factor=3)</span>
 </code></dt>
 <dd>
@@ -796,7 +796,7 @@ out of bounds after homography.</dd>
   return warped_img</code></pre>
 </details>
 </dd>
-<dt id="src.distortion.rectification.compute_votes"><code class="name flex">
+<dt id="pano.distortion.rectification.compute_votes"><code class="name flex">
 <span>def <span class="ident">compute_votes</span></span>(<span>edgelets, model, threshold_inlier=5)</span>
 </code></dt>
 <dd>
@@ -806,7 +806,7 @@ otherwise zero.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>edgelets</code></strong> :&ensp;<code>tuple</code> of <code>ndarrays</code></dt>
-<dd>(locations, directions, strengths) as computed by <code><a title="src.distortion.rectification.compute_edgelets" href="#src.distortion.rectification.compute_edgelets">compute_edgelets()</a></code>.</dd>
+<dd>(locations, directions, strengths) as computed by <code><a title="pano.distortion.rectification.compute_edgelets" href="#pano.distortion.rectification.compute_edgelets">compute_edgelets()</a></code>.</dd>
 <dt><strong><code>model</code></strong> :&ensp;<code>ndarray</code> of <code>shape (3,)</code></dt>
 <dd>Vanishing point model in homogenous cordinate system.</dd>
 <dt><strong><code>threshold_inlier</code></strong> :&ensp;<code>float</code></dt>
@@ -865,7 +865,7 @@ edgelet location is used to threshold.</dd>
   return (theta &lt; theta_thresh) * strengths</code></pre>
 </details>
 </dd>
-<dt id="src.distortion.rectification.edgelet_lines"><code class="name flex">
+<dt id="pano.distortion.rectification.edgelet_lines"><code class="name flex">
 <span>def <span class="ident">edgelet_lines</span></span>(<span>edgelets)</span>
 </code></dt>
 <dd>
@@ -873,7 +873,7 @@ edgelet location is used to threshold.</dd>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>edgelets</code></strong> :&ensp;<code>tuple</code> of <code>ndarrays</code></dt>
-<dd>(locations, directions, strengths) as computed by <code><a title="src.distortion.rectification.compute_edgelets" href="#src.distortion.rectification.compute_edgelets">compute_edgelets()</a></code>.</dd>
+<dd>(locations, directions, strengths) as computed by <code><a title="pano.distortion.rectification.compute_edgelets" href="#pano.distortion.rectification.compute_edgelets">compute_edgelets()</a></code>.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -907,7 +907,7 @@ edgelet location is used to threshold.</dd>
   return lines</code></pre>
 </details>
 </dd>
-<dt id="src.distortion.rectification.ransac_3_line"><code class="name flex">
+<dt id="pano.distortion.rectification.ransac_3_line"><code class="name flex">
 <span>def <span class="ident">ransac_3_line</span></span>(<span>edgelets, focal_length, num_ransac_iter=2000, threshold_inlier=5) ‑> Tuple[Union[numpy.ndarray, NoneType], Union[numpy.ndarray, NoneType]]</span>
 </code></dt>
 <dd>
@@ -916,7 +916,7 @@ edgelet location is used to threshold.</dd>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>edgelets</code></strong> :&ensp;<code>tuple</code> of <code>ndarrays</code></dt>
-<dd>(locations, directions, strengths) as computed by <code><a title="src.distortion.rectification.compute_edgelets" href="#src.distortion.rectification.compute_edgelets">compute_edgelets()</a></code>.</dd>
+<dd>(locations, directions, strengths) as computed by <code><a title="pano.distortion.rectification.compute_edgelets" href="#pano.distortion.rectification.compute_edgelets">compute_edgelets()</a></code>.</dd>
 <dt><strong><code>focal_length</code></strong> :&ensp;<code>float</code></dt>
 <dd>Focal length of the camera used.</dd>
 <dt><strong><code>num_ransac_iter</code></strong> :&ensp;<code>int</code></dt>
@@ -1028,7 +1028,7 @@ Intelligent Robots and Systems. IEEE, 2012.</p></div>
   return best_model</code></pre>
 </details>
 </dd>
-<dt id="src.distortion.rectification.ransac_vanishing_point"><code class="name flex">
+<dt id="pano.distortion.rectification.ransac_vanishing_point"><code class="name flex">
 <span>def <span class="ident">ransac_vanishing_point</span></span>(<span>edgelets, num_ransac_iter=2000, threshold_inlier=5)</span>
 </code></dt>
 <dd>
@@ -1036,7 +1036,7 @@ Intelligent Robots and Systems. IEEE, 2012.</p></div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>edgelets</code></strong> :&ensp;<code>tuple</code> of <code>ndarrays</code></dt>
-<dd>(locations, directions, strengths) as computed by <code><a title="src.distortion.rectification.compute_edgelets" href="#src.distortion.rectification.compute_edgelets">compute_edgelets()</a></code>.</dd>
+<dd>(locations, directions, strengths) as computed by <code><a title="pano.distortion.rectification.compute_edgelets" href="#pano.distortion.rectification.compute_edgelets">compute_edgelets()</a></code>.</dd>
 <dt><strong><code>num_ransac_iter</code></strong> :&ensp;<code>int</code></dt>
 <dd>Number of iterations to run ransac.</dd>
 <dt><strong><code>threshold_inlier</code></strong> :&ensp;<code>float</code></dt>
@@ -1116,7 +1116,7 @@ Image Processing (ICIP). IEEE, 2014.</p></div>
   return best_model</code></pre>
 </details>
 </dd>
-<dt id="src.distortion.rectification.rectify_image"><code class="name flex">
+<dt id="pano.distortion.rectification.rectify_image"><code class="name flex">
 <span>def <span class="ident">rectify_image</span></span>(<span>image: numpy.ndarray, clip_factor=6, algorithm='independent', reestimate=False)</span>
 </code></dt>
 <dd>
@@ -1212,7 +1212,7 @@ inliers. Turn this off if getting bad results.</dd>
   return warped_img</code></pre>
 </details>
 </dd>
-<dt id="src.distortion.rectification.reestimate_model"><code class="name flex">
+<dt id="pano.distortion.rectification.reestimate_model"><code class="name flex">
 <span>def <span class="ident">reestimate_model</span></span>(<span>model, edgelets, threshold_reestimate=5)</span>
 </code></dt>
 <dd>
@@ -1224,7 +1224,7 @@ inliers. Turn this off if getting bad results.</dd>
 <dd>Vanishing point model in homogenous coordinates which is to be
 reestimated.</dd>
 <dt><strong><code>edgelets</code></strong> :&ensp;<code>tuple</code> of <code>ndarrays</code></dt>
-<dd>(locations, directions, strengths) as computed by <code><a title="src.distortion.rectification.compute_edgelets" href="#src.distortion.rectification.compute_edgelets">compute_edgelets()</a></code>.
+<dd>(locations, directions, strengths) as computed by <code><a title="pano.distortion.rectification.compute_edgelets" href="#pano.distortion.rectification.compute_edgelets">compute_edgelets()</a></code>.
 All edgelets from which inliers will be computed.</dd>
 <dt><strong><code>threshold_inlier</code></strong> :&ensp;<code>float</code></dt>
 <dd>threshold to be used for finding inlier edgelets.</dd>
@@ -1275,7 +1275,7 @@ All edgelets from which inliers will be computed.</dd>
   return np.concatenate((est_model, [1.]))</code></pre>
 </details>
 </dd>
-<dt id="src.distortion.rectification.remove_inliers"><code class="name flex">
+<dt id="pano.distortion.rectification.remove_inliers"><code class="name flex">
 <span>def <span class="ident">remove_inliers</span></span>(<span>model, edgelets, threshold_inlier=10)</span>
 </code></dt>
 <dd>
@@ -1286,7 +1286,7 @@ All edgelets from which inliers will be computed.</dd>
 <dd>Vanishing point model in homogenous coordinates which is to be
 reestimated.</dd>
 <dt><strong><code>edgelets</code></strong> :&ensp;<code>tuple</code> of <code>ndarrays</code></dt>
-<dd>(locations, directions, strengths) as computed by <code><a title="src.distortion.rectification.compute_edgelets" href="#src.distortion.rectification.compute_edgelets">compute_edgelets()</a></code>.</dd>
+<dd>(locations, directions, strengths) as computed by <code><a title="pano.distortion.rectification.compute_edgelets" href="#pano.distortion.rectification.compute_edgelets">compute_edgelets()</a></code>.</dd>
 <dt><strong><code>threshold_inlier</code></strong> :&ensp;<code>float</code></dt>
 <dd>threshold to be used for finding inlier edgelets.</dd>
 </dl>
@@ -1327,7 +1327,7 @@ reestimated.</dd>
   return edgelets</code></pre>
 </details>
 </dd>
-<dt id="src.distortion.rectification.vis_edgelets"><code class="name flex">
+<dt id="pano.distortion.rectification.vis_edgelets"><code class="name flex">
 <span>def <span class="ident">vis_edgelets</span></span>(<span>image, edgelets, show=True)</span>
 </code></dt>
 <dd>
@@ -1360,7 +1360,7 @@ reestimated.</dd>
     plt.show()</code></pre>
 </details>
 </dd>
-<dt id="src.distortion.rectification.vis_model"><code class="name flex">
+<dt id="pano.distortion.rectification.vis_model"><code class="name flex">
 <span>def <span class="ident">vis_model</span></span>(<span>image, model, show=True)</span>
 </code></dt>
 <dd>
@@ -1407,22 +1407,22 @@ reestimated.</dd>
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="src.distortion" href="index.html">src.distortion</a></code></li>
+<li><code><a title="pano.distortion" href="index.html">pano.distortion</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="src.distortion.rectification.compute_edgelets" href="#src.distortion.rectification.compute_edgelets">compute_edgelets</a></code></li>
-<li><code><a title="src.distortion.rectification.compute_homography_and_warp" href="#src.distortion.rectification.compute_homography_and_warp">compute_homography_and_warp</a></code></li>
-<li><code><a title="src.distortion.rectification.compute_votes" href="#src.distortion.rectification.compute_votes">compute_votes</a></code></li>
-<li><code><a title="src.distortion.rectification.edgelet_lines" href="#src.distortion.rectification.edgelet_lines">edgelet_lines</a></code></li>
-<li><code><a title="src.distortion.rectification.ransac_3_line" href="#src.distortion.rectification.ransac_3_line">ransac_3_line</a></code></li>
-<li><code><a title="src.distortion.rectification.ransac_vanishing_point" href="#src.distortion.rectification.ransac_vanishing_point">ransac_vanishing_point</a></code></li>
-<li><code><a title="src.distortion.rectification.rectify_image" href="#src.distortion.rectification.rectify_image">rectify_image</a></code></li>
-<li><code><a title="src.distortion.rectification.reestimate_model" href="#src.distortion.rectification.reestimate_model">reestimate_model</a></code></li>
-<li><code><a title="src.distortion.rectification.remove_inliers" href="#src.distortion.rectification.remove_inliers">remove_inliers</a></code></li>
-<li><code><a title="src.distortion.rectification.vis_edgelets" href="#src.distortion.rectification.vis_edgelets">vis_edgelets</a></code></li>
-<li><code><a title="src.distortion.rectification.vis_model" href="#src.distortion.rectification.vis_model">vis_model</a></code></li>
+<li><code><a title="pano.distortion.rectification.compute_edgelets" href="#pano.distortion.rectification.compute_edgelets">compute_edgelets</a></code></li>
+<li><code><a title="pano.distortion.rectification.compute_homography_and_warp" href="#pano.distortion.rectification.compute_homography_and_warp">compute_homography_and_warp</a></code></li>
+<li><code><a title="pano.distortion.rectification.compute_votes" href="#pano.distortion.rectification.compute_votes">compute_votes</a></code></li>
+<li><code><a title="pano.distortion.rectification.edgelet_lines" href="#pano.distortion.rectification.edgelet_lines">edgelet_lines</a></code></li>
+<li><code><a title="pano.distortion.rectification.ransac_3_line" href="#pano.distortion.rectification.ransac_3_line">ransac_3_line</a></code></li>
+<li><code><a title="pano.distortion.rectification.ransac_vanishing_point" href="#pano.distortion.rectification.ransac_vanishing_point">ransac_vanishing_point</a></code></li>
+<li><code><a title="pano.distortion.rectification.rectify_image" href="#pano.distortion.rectification.rectify_image">rectify_image</a></code></li>
+<li><code><a title="pano.distortion.rectification.reestimate_model" href="#pano.distortion.rectification.reestimate_model">reestimate_model</a></code></li>
+<li><code><a title="pano.distortion.rectification.remove_inliers" href="#pano.distortion.rectification.remove_inliers">remove_inliers</a></code></li>
+<li><code><a title="pano.distortion.rectification.vis_edgelets" href="#pano.distortion.rectification.vis_edgelets">vis_edgelets</a></code></li>
+<li><code><a title="pano.distortion.rectification.vis_model" href="#pano.distortion.rectification.vis_model">vis_model</a></code></li>
 </ul>
 </li>
 </ul>
