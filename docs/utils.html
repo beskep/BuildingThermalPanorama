@@ -42,8 +42,12 @@ from rich.theme import Theme
 
 
 class DIR:
-  SRC = Path(__file__).parent.resolve()
-  ROOT = SRC.parent
+  if getattr(sys, &#39;frozen&#39;, False):
+    ROOT = Path(sys.executable).parent.resolve()
+  else:
+    ROOT = Path(__file__).parents[1].resolve()
+
+  SRC = ROOT.joinpath(&#39;pano&#39;)
   RESOURCE = ROOT.joinpath(&#39;resource&#39;)
 
 
@@ -78,7 +82,7 @@ def set_logger(level: Union[int, str] = 20):
         &#39;CRITICAL&#39;: 50
     }
     try:
-      level = levels[level]
+      level = levels[level.upper()]
     except KeyError as e:
       raise KeyError(&#39;`{}` not in {}&#39;.format(level, set(levels.keys()))) from e
 
@@ -114,7 +118,7 @@ def set_logger(level: Union[int, str] = 20):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="pano.utils.set_logger"><code class="name flex">
-<span>def <span class="ident">set_logger</span></span>(<span>level: Union[int, str] = 20)</span>
+<span>def <span class="ident">set_logger</span></span>(<span>level: typing.Union[int, str] = 20)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -134,7 +138,7 @@ def set_logger(level: Union[int, str] = 20):
         &#39;CRITICAL&#39;: 50
     }
     try:
-      level = levels[level]
+      level = levels[level.upper()]
     except KeyError as e:
       raise KeyError(&#39;`{}` not in {}&#39;.format(level, set(levels.keys()))) from e
 
@@ -177,8 +181,12 @@ def set_logger(level: Union[int, str] = 20):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class DIR:
-  SRC = Path(__file__).parent.resolve()
-  ROOT = SRC.parent
+  if getattr(sys, &#39;frozen&#39;, False):
+    ROOT = Path(sys.executable).parent.resolve()
+  else:
+    ROOT = Path(__file__).parents[1].resolve()
+
+  SRC = ROOT.joinpath(&#39;pano&#39;)
   RESOURCE = ROOT.joinpath(&#39;resource&#39;)</code></pre>
 </details>
 <h3>Class variables</h3>

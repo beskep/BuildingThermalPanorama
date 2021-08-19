@@ -6,15 +6,6 @@ INDENT_WIDTH = 2
 ignore_patterns = ['build/']
 
 [tool.isort]
-known_util = ['utils', 'context']
-sections = [
-    'FUTURE',
-    'STDLIB',
-    'UTIL',
-    'THIRDPARTY',
-    'FIRSTPARTY',
-    'LOCALFOLDER',
-]
 
 [tool.pylint.messages_control]
 enable = [

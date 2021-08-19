@@ -187,7 +187,7 @@ class VIAProject:
 <dl>
 <dt id="pano.misc.via.VIAProject"><code class="flex name class">
 <span>class <span class="ident">VIAProject</span></span>
-<span>(</span><span>path: Union[str, pathlib.Path], attribute_name: str, attributes_ids: List[str])</span>
+<span>(</span><span>path: typing.Union[str, pathlib.Path], attribute_name: str, attributes_ids: typing.List[str])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>VIA로 annotate한 영상의 영역 정보 해석</p>
@@ -395,7 +395,7 @@ def files(self):
 </details>
 </dd>
 <dt id="pano.misc.via.VIAProject.write_masks"><code class="name flex">
-<span>def <span class="ident">write_masks</span></span>(<span>self, fname: Union[str, pathlib.Path], save_dir: Union[str, pathlib.Path], shape: Tuple[int, int])</span>
+<span>def <span class="ident">write_masks</span></span>(<span>self, fname: typing.Union[str, pathlib.Path], save_dir: typing.Union[str, pathlib.Path], shape: typing.Tuple[int, int])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>VIA로 지정한 영역 정보를 png 파일 형태 mask로 저장</p>

@@ -467,7 +467,7 @@ class ThermalPanoramaFileManager:
 </dd>
 <dt id="pano.interface.pano_files.ThermalPanoramaFileManager"><code class="flex name class">
 <span>class <span class="ident">ThermalPanoramaFileManager</span></span>
-<span>(</span><span>directory, raw_pattern: Union[str, NoneType] = None)</span>
+<span>(</span><span>directory, raw_pattern: typing.Union[str, NoneType] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -643,7 +643,7 @@ def segment_model_path():
 <h3>Methods</h3>
 <dl>
 <dt id="pano.interface.pano_files.ThermalPanoramaFileManager.change_dir"><code class="name flex">
-<span>def <span class="ident">change_dir</span></span>(<span>self, d: Union[str, <a title="pano.interface.pano_files.DIR" href="#pano.interface.pano_files.DIR">DIR</a>], file: Union[str, pathlib.Path]) ‑> pathlib.Path</span>
+<span>def <span class="ident">change_dir</span></span>(<span>self, d: typing.Union[str, <a title="pano.interface.pano_files.DIR" href="#pano.interface.pano_files.DIR">DIR</a>], file: typing.Union[str, pathlib.Path]) ‑> pathlib.Path</span>
 </code></dt>
 <dd>
 <div class="desc"><p>다른 directory의 대응되는 파일 경로 반환.
@@ -718,7 +718,7 @@ def segment_model_path():
 </details>
 </dd>
 <dt id="pano.interface.pano_files.ThermalPanoramaFileManager.files"><code class="name flex">
-<span>def <span class="ident">files</span></span>(<span>self, d: Union[str, <a title="pano.interface.pano_files.DIR" href="#pano.interface.pano_files.DIR">DIR</a>]) ‑> List[pathlib.Path]</span>
+<span>def <span class="ident">files</span></span>(<span>self, d: typing.Union[str, <a title="pano.interface.pano_files.DIR" href="#pano.interface.pano_files.DIR">DIR</a>]) ‑> typing.List[pathlib.Path]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>프로젝트 경로 내 각 경로 중 수치 정보를 담고 있는 파일 목록.
@@ -791,7 +791,7 @@ Raw 파일 목록과 대응하는 파일이 하나라도 존재하지 않으면 
 </details>
 </dd>
 <dt id="pano.interface.pano_files.ThermalPanoramaFileManager.glob"><code class="name flex">
-<span>def <span class="ident">glob</span></span>(<span>self, d: Union[str, <a title="pano.interface.pano_files.DIR" href="#pano.interface.pano_files.DIR">DIR</a>], pattern: str)</span>
+<span>def <span class="ident">glob</span></span>(<span>self, d: typing.Union[str, <a title="pano.interface.pano_files.DIR" href="#pano.interface.pano_files.DIR">DIR</a>], pattern: str)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -824,7 +824,7 @@ Raw 파일 목록과 대응하는 파일이 하나라도 존재하지 않으면 
 </details>
 </dd>
 <dt id="pano.interface.pano_files.ThermalPanoramaFileManager.raw_files"><code class="name flex">
-<span>def <span class="ident">raw_files</span></span>(<span>self) ‑> List[pathlib.Path]</span>
+<span>def <span class="ident">raw_files</span></span>(<span>self) ‑> typing.List[pathlib.Path]</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -866,7 +866,7 @@ Raw 파일 목록과 대응하는 파일이 하나라도 존재하지 않으면 
 </details>
 </dd>
 <dt id="pano.interface.pano_files.ThermalPanoramaFileManager.subdir"><code class="name flex">
-<span>def <span class="ident">subdir</span></span>(<span>self, d: Union[str, <a title="pano.interface.pano_files.DIR" href="#pano.interface.pano_files.DIR">DIR</a>], mkdir=False)</span>
+<span>def <span class="ident">subdir</span></span>(<span>self, d: typing.Union[str, <a title="pano.interface.pano_files.DIR" href="#pano.interface.pano_files.DIR">DIR</a>], mkdir=False)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
