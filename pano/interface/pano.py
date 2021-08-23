@@ -542,7 +542,10 @@ class ThermalPanorama:
     cpano, cmask = crct.correct(pano, mask)
     cpano = self.limit_size(cpano)
     path = self._fm.panorama_path(DIR.COR, SP.IR)
-    IIO.save_with_meta(path=path, array=cpano.astype(np.float16), exts=[FN.NPY])
+    IIO.save_with_meta(path=path,
+                       array=cpano.astype(np.float16),
+                       exts=[FN.NPY, FN.LL],
+                       dtype='uint16')
 
     # colormap 적용 버전 저장
     IIO.save(path=self._fm.color_path(path),

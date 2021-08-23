@@ -126,6 +126,7 @@ cython_debug/
 .idea
 resource/DeepLabV3
 resource/TestImage
+resource/font
 *.exe
 *.bat
 .*.py

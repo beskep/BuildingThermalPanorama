@@ -8,19 +8,11 @@ dependencies:
     - pip
     # UI
     - pip:
-          - pyside2>=5.15
-          - pyqt5>=5.15
-    # dev
-    - pytest
-    - cx_freeze
-    - rich
-    - loguru
-    - omegaconf
-    - pdoc3
-    - fire
-    - click
+          - PySide2>=5.15
+          - PyQt5>=5.15
     # data analysis
     - numpy
+    - nomkl
     - matplotlib
     - seaborn
     - pandas
@@ -30,3 +22,14 @@ dependencies:
     - scikit-image
     - tensorflow
     - simpleitk
+    # dev
+    - loguru
+    - rich
+    - omegaconf
+    - pdoc3
+    - click
+    - pytest
+    - pylint
+    - yapf
+    - mypy
+    - cx_freeze
