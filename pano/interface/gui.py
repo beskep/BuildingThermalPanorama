@@ -1,25 +1,20 @@
 """파노라마 영상처리 GUI"""
-# pylint: disable=wrong-import-position
+# pylint: disable=wrong-import-position, ungrouped-imports
 
 import os
-from pathlib import Path
 import sys
 
+from pano.interface.init import init_project
+
+init_project(qt=True)
+
 from loguru import logger
-import matplotlib.pyplot
-import PySide2
 from PySide2 import QtCore
 from PySide2 import QtGui
 from PySide2 import QtQml
-import skimage.io
 
 from pano import utils
 from pano.interface.controller import Controller
-
-plugins_path = Path(PySide2.__file__).parent.joinpath('plugins')
-os.environ['QT_PLUGIN_PATH'] = plugins_path.as_posix()
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-skimage.io.use_plugin('pil')
 
 
 def main(log_level=20):

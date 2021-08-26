@@ -1,18 +1,12 @@
-# type: ignore
-
-from functools import wraps
 from pathlib import Path
-from sys import api_version
 from typing import Optional
 
 from loguru import logger
 from PySide2 import QtCore
 from PySide2 import QtGui
 
-from .pano_files import DIR
 from .pano_files import ThermalPanoramaFileManager
 from .pano_project import init_directory
-from .pano_project import ThermalPanorama
 from .tree import tree_string
 
 

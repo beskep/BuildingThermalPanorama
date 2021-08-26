@@ -1,16 +1,12 @@
 """파노라마 영상처리 CLI"""
 
-import os
-
 import click
 from loguru import logger
-import skimage.io
 
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-skimage.io.use_plugin('pil')
-
-# pylint: disable=wrong-import-position
 from pano import utils
+from pano.interface.init import init_project
+
+init_project(qt=False)
 
 commands = {'init', 'register', 'segment', 'panorama', 'correct', 'run'}
 
