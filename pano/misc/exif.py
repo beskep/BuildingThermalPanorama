@@ -1,6 +1,7 @@
 """영상 파일의 Exif 정보 추출"""
 
-from subprocess import DEVNULL, check_output
+from subprocess import check_output
+from subprocess import DEVNULL
 from typing import List, Optional, Union
 
 import yaml

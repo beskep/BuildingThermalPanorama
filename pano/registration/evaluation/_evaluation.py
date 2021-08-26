@@ -2,9 +2,9 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Callable, Tuple
 
+from loguru import logger
 import matplotlib.pyplot as plt
 import pandas as pd
-from loguru import logger
 from rich.progress import track
 from skimage.color import rgb2gray
 from skimage.exposure import equalize_hist
@@ -12,7 +12,8 @@ from skimage.exposure import equalize_hist
 from pano.misc import tools
 from pano.misc.imageio import ImageIO
 
-from ..registrator import BaseRegistrator, RegisteringImage
+from ..registrator import BaseRegistrator
+from ..registrator import RegisteringImage
 from .metrics import calculate_all_metrics
 
 

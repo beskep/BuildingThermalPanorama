@@ -4,8 +4,9 @@ SimpleITK를 이용한 최적화 방법이 정확도가 더 높음.
 """
 
 import numpy as np
+from skimage import feature
+from skimage import transform
 import skimage.feature.util as _fu
-from skimage import feature, transform
 from skimage.measure import ransac
 
 from .registrator import BaseRegistrator

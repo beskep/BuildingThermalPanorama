@@ -1,9 +1,9 @@
 """경로 및 로거 설정"""
 
-import sys
 from logging import LogRecord
 from os import PathLike
 from pathlib import Path
+import sys
 from typing import Union
 
 from loguru import logger

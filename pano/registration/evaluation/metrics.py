@@ -7,7 +7,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import entropy as calculate_entropy
 
-from pano.misc.tools import bin_size, normalize_image
+from pano.misc.tools import bin_size
+from pano.misc.tools import normalize_image
 
 
 def _check_shape(image1: np.ndarray, image2: np.ndarray):

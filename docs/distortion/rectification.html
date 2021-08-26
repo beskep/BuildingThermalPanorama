@@ -53,10 +53,11 @@ References
 
 from typing import Optional, Tuple
 
-import numpy as np
 from loguru import logger
+import numpy as np
 from skimage.feature import canny
-from skimage.transform import probabilistic_hough_line, warp
+from skimage.transform import probabilistic_hough_line
+from skimage.transform import warp
 
 
 def compute_edgelets(image, sigma=3):

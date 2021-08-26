@@ -1,3 +1,5 @@
-from . import feature_match, simpleitk
-from .registrator import (BaseRegistrator, RegisteringImage,
-                          RegistrationPreprocess)
+from . import feature_match
+from . import simpleitk
+from .registrator import BaseRegistrator
+from .registrator import RegisteringImage
+from .registrator import RegistrationPreprocess

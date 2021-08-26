@@ -3,11 +3,13 @@
 from pathlib import Path
 
 import cx_Freeze
-from cx_Freeze import Executable, setup
+from cx_Freeze import Executable
+from cx_Freeze import setup
 
 from pano.utils import DIR
 
-if __name__ == '__main__':
+
+def build():
   resources = [
       x.relative_to(DIR.ROOT).as_posix()
       for x in DIR.RESOURCE.iterdir()
@@ -57,8 +59,8 @@ if __name__ == '__main__':
   }
 
   executables = [
-      Executable(script=r'pano\cli.py', target_name='CLI'),
-      Executable(script=r'pano\gui.py', target_name='GUI'),
+      Executable(script=r'pano\interface\cli.py', target_name='CLI'),
+      Executable(script=r'pano\interface\gui.py', target_name='GUI'),
   ]
 
   setup(name='app',
@@ -66,3 +68,7 @@ if __name__ == '__main__':
         description='ThermalPanorama',
         options=options,
         executables=executables)
+
+
+if __name__ == '__main__':
+  build()

@@ -32,16 +32,17 @@
 import enum
 from typing import Callable, Optional, Tuple, Union
 
-import numpy as np
-import SimpleITK as sitk
 from loguru import logger
+import numpy as np
 from numpy.linalg import inv
+import SimpleITK as sitk
 from skimage.transform import estimate_transform
 
 from pano.misc.tools import bin_size
 
-from .registrator import (BaseRegistrator, RegisteringImage,
-                          RegistrationPreprocess)
+from .registrator import BaseRegistrator
+from .registrator import RegisteringImage
+from .registrator import RegistrationPreprocess
 
 
 class Metric(enum.Enum):

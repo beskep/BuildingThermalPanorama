@@ -3,20 +3,28 @@
 from pathlib import Path
 from typing import List, Optional, Union
 
+from loguru import logger
 import matplotlib.pyplot as plt
 import numpy as np
-from loguru import logger
 from rich.progress import track
 
-import pano.registration.registrator.simpleitk as rsitk
-from pano import flir, stitch, utils
+from pano import flir
+from pano import stitch
+from pano import utils
 from pano.distortion import perspective as persp
-from pano.misc import exif, tools
+from pano.misc import exif
+from pano.misc import tools
 from pano.misc.imageio import ImageIO as IIO
+import pano.registration.registrator.simpleitk as rsitk
 
-from .cmap import apply_colormap, get_thermal_colormap
-from .config import DictConfig, set_config
-from .pano_files import DIR, FN, SP, ThermalPanoramaFileManager
+from .cmap import apply_colormap
+from .cmap import get_thermal_colormap
+from .config import DictConfig
+from .config import set_config
+from .pano_files import DIR
+from .pano_files import FN
+from .pano_files import SP
+from .pano_files import ThermalPanoramaFileManager
 
 
 class ThermalPanorama:
@@ -187,6 +195,7 @@ class ThermalPanorama:
       files = self._fm.raw_files()
       for file in track(sequence=files,
                         description='Extracting images...',
+                        transient=True,
                         console=utils.console):
         self._extract_raw_file(file=file)
 
@@ -239,6 +248,7 @@ class ThermalPanorama:
     registrator, prep, mtx = None, None, {}
     for file in track(sequence=files,
                       description='Registering...',
+                      transient=True,
                       console=utils.console):
       ir = IIO.read(self._fm.change_dir(DIR.IR, file))
       vis = IIO.read(self._fm.change_dir(DIR.VIS, file))
@@ -295,6 +305,7 @@ class ThermalPanorama:
     self._fm.subdir(DIR.SEG, mkdir=True)
     for file in track(sequence=files,
                       description='Segmenting...',
+                      transient=True,
                       console=utils.console):
       image = IIO.read(file)
       seg_map, _, fig = model.predict_and_visualize(image)

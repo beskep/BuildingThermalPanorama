@@ -33,13 +33,15 @@ from warnings import warn
 import numpy as np
 import pandas as pd
 import PIL.Image
-import yaml
 from skimage.exposure import rescale_intensity
-from skimage.io import imread, imsave
+from skimage.io import imread
+from skimage.io import imsave
+import yaml
 
 from pano.utils import StrPath
 
-from .tools import uint8_image, uint16_image
+from .tools import uint8_image
+from .tools import uint16_image
 
 
 class ImageIO:

@@ -3,9 +3,10 @@
 from typing import Optional, Tuple
 
 import cv2 as cv
-import numpy as np
 from loguru import logger
-from skimage.exposure import equalize_hist, rescale_intensity
+import numpy as np
+from skimage.exposure import equalize_hist
+from skimage.exposure import rescale_intensity
 
 from pano.misc.tools import normalize_rgb_image_hist
 

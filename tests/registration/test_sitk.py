@@ -1,10 +1,11 @@
 import numpy as np
+from numpy.linalg import inv
 import pytest
 import SimpleITK as sitk
-from numpy.linalg import inv
 from skimage.exposure import rescale_intensity
 from skimage.io import imread
-from skimage.transform import resize, warp
+from skimage.transform import resize
+from skimage.transform import warp
 
 import pano.registration.registrator.simpleitk as rsitk
 from pano.utils import DIR

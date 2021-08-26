@@ -3,15 +3,15 @@
 from pathlib import Path
 from typing import List, Optional, Tuple, Union
 
-import numpy as np
-import PIL.Image
-import tensorflow.compat.v1 as tf
 from loguru import logger
 from matplotlib import gridspec
 from matplotlib import pyplot as plt
+import numpy as np
+import PIL.Image
 from PIL.Image import Image as PILImage
 from rich.progress import track
 from skimage.transform import resize as _resize
+import tensorflow.compat.v1 as tf
 
 
 def tf_gpu_memory_config():

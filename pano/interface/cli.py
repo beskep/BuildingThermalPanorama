@@ -3,8 +3,8 @@
 import os
 
 import click
-import skimage.io
 from loguru import logger
+import skimage.io
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 skimage.io.use_plugin('pil')
@@ -50,7 +50,7 @@ def cli(directory: str, command: str, default: bool, debug: bool,
     default = True
 
   # pylint: disable=import-outside-toplevel
-  from pano.interface.pano import ThermalPanorama
+  from pano.interface.pano_project import ThermalPanorama
 
   try:
     tp = ThermalPanorama(directory=directory, default_config=default)

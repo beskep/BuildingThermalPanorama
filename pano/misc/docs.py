@@ -1,11 +1,11 @@
 """Document 생성"""
 
-import re
 from pathlib import Path
+import re
 from warnings import catch_warnings
 
-import pdoc
 from loguru import logger
+import pdoc
 
 from pano import utils
 
@@ -27,7 +27,7 @@ def recursive_htmls(mod: pdoc.Module):
     yield from recursive_htmls(submod)
 
 
-if __name__ == '__main__':
+def main():
   module_names = ['pano']
   context = pdoc.Context()
 
@@ -53,3 +53,7 @@ if __name__ == '__main__':
 
       with path.open('w', encoding='utf-8') as f:
         f.write(html)
+
+
+if __name__ == '__main__':
+  main()

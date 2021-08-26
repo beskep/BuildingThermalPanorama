@@ -4,7 +4,8 @@ from pathlib import Path
 from shutil import copy2
 
 from loguru import logger
-from omegaconf import DictConfig, OmegaConf
+from omegaconf import DictConfig
+from omegaconf import OmegaConf
 from yaml.error import YAMLError
 
 from pano.utils import DIR

@@ -32,12 +32,13 @@
 import dataclasses as dc
 from typing import Optional, Tuple
 
+from loguru import logger
 import matplotlib.pyplot as plt
 import numpy as np
-from loguru import logger
 from skimage.exposure.exposure import equalize_hist
 from skimage.feature import canny
-from skimage.transform import probabilistic_hough_line, warp
+from skimage.transform import probabilistic_hough_line
+from skimage.transform import warp
 
 from pano.misc import tools
 

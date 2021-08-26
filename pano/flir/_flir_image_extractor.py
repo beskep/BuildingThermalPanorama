@@ -8,9 +8,10 @@ import os
 import re
 import subprocess
 
-import numpy as np
 from matplotlib import cm
-from PIL import Image, UnidentifiedImageError
+import numpy as np
+from PIL import Image
+from PIL import UnidentifiedImageError
 
 
 class FlirExifNotFoundError(ValueError):

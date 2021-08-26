@@ -33,11 +33,12 @@ from dataclasses import dataclass
 from typing import Callable, Iterable, List, Optional, Tuple, Union
 
 import cv2 as cv
-import numpy as np
 from loguru import logger
+import numpy as np
 from skimage.exposure import rescale_intensity
 
-from pano.misc.tools import CropRange, crop_mask
+from pano.misc.tools import crop_mask
+from pano.misc.tools import CropRange
 
 _AVAILABLE_WARPER = (
     &#39;affine&#39;,

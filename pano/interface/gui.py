@@ -2,18 +2,20 @@
 # pylint: disable=wrong-import-position
 
 import os
-import sys
 from pathlib import Path
+import sys
+
+from loguru import logger
+import matplotlib.pyplot
+import PySide2
+from PySide2 import QtCore
+from PySide2 import QtGui
+from PySide2 import QtQml
+import skimage.io
 
 from pano import utils
 from pano.interface.controller import Controller
 
-import PySide2
-import skimage.io
-from loguru import logger
-from PySide2 import QtCore, QtGui, QtQml
-
-# sys.path.insert(0, utils.DIR.SRC.as_posix())
 plugins_path = Path(PySide2.__file__).parent.joinpath('plugins')
 os.environ['QT_PLUGIN_PATH'] = plugins_path.as_posix()
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'

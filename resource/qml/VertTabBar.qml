@@ -7,6 +7,7 @@ import QtQuick.Window 2.15
 
 import QtQuick.Templates 2.12 as T
 
+
 T.TabBar {
     id : control
 

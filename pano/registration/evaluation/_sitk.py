@@ -3,8 +3,8 @@ from itertools import product
 from pathlib import Path
 from typing import Callable, List
 
-import pandas as pd
 from loguru import logger
+import pandas as pd
 from rich.progress import Progress
 from skimage.exposure import rescale_intensity
 from skimage.io import imsave

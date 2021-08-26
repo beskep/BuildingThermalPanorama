@@ -33,10 +33,12 @@ from pathlib import Path
 from typing import Union
 
 import cv2 as cv
+from matplotlib.colors import Colormap
+from matplotlib.colors import ListedColormap
 import numpy as np
-from matplotlib.colors import Colormap, ListedColormap
 
-from . import exif, tools
+from . import exif
+from . import tools
 
 
 def extract_flir_colormap(image_path: str,
