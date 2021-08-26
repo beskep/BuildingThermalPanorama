@@ -9,10 +9,19 @@ import QtQuick.Window 2.15
 ApplicationWindow {
     id : root
 
+    property alias project_panel : project_panel
+
     width : 1600
     height : 900
     visible : true
     title : qsTr('건물 에너지 검진을 위한 열화상 파노라마 영상처리 프로그램')
+
+    FontLoader {
+        source : '../font/FiraCode-Regular.ttf'
+    }
+    FontLoader {
+        source : '../font/NotoSansCJKkr-DemiLight.otf'
+    }
 
     RowLayout {
         anchors.fill : parent
@@ -55,11 +64,10 @@ ApplicationWindow {
                 currentIndex : tab_bar.currentIndex
                 anchors.fill : parent
 
-                Page {
-                    Label {
-                        text : '프로젝트 설정'
-                    }
+                ProjectPanel {
+                    id : project_panel
                 }
+
                 Page {
                     Label {
                         text : '열·실화상 정합'
@@ -85,4 +93,12 @@ ApplicationWindow {
     }
 
     footer : StatusBar {}
+
+    function update_project_tree(text) {
+        project_panel.update_project_tree(text);
+    }
+
+    function update_image_view(paths) {
+        project_panel.update_image_view(paths)
+    }
 }

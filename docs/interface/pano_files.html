@@ -136,7 +136,7 @@ ProjectDir
 
 from enum import Enum
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import List, Union
 
 from pano import utils
 
@@ -182,12 +182,17 @@ def _dir(d: Union[str, DIR]) -&gt; DIR:
 
 class ThermalPanoramaFileManager:
 
-  def __init__(self, directory, raw_pattern: Optional[str] = None) -&gt; None:
+  def __init__(self, directory, raw_pattern=&#39;*.jpg&#39;) -&gt; None:
     self._wd = Path(directory)
     self._raw_pattern = raw_pattern
 
-  def set_raw_pattern(self, pattern: str):
-    self._raw_pattern = pattern
+  @property
+  def raw_pattern(self):
+    return self._raw_pattern
+
+  @raw_pattern.setter
+  def raw_pattern(self, value: str):
+    self._raw_pattern = value
 
   def subdir(self, d: Union[str, DIR], mkdir=False):
     d = _dir(d)
@@ -467,7 +472,7 @@ class ThermalPanoramaFileManager:
 </dd>
 <dt id="pano.interface.pano_files.ThermalPanoramaFileManager"><code class="flex name class">
 <span>class <span class="ident">ThermalPanoramaFileManager</span></span>
-<span>(</span><span>directory, raw_pattern: typing.Union[str, NoneType] = None)</span>
+<span>(</span><span>directory, raw_pattern='*.jpg')</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -477,12 +482,17 @@ class ThermalPanoramaFileManager:
 </summary>
 <pre><code class="python">class ThermalPanoramaFileManager:
 
-  def __init__(self, directory, raw_pattern: Optional[str] = None) -&gt; None:
+  def __init__(self, directory, raw_pattern=&#39;*.jpg&#39;) -&gt; None:
     self._wd = Path(directory)
     self._raw_pattern = raw_pattern
 
-  def set_raw_pattern(self, pattern: str):
-    self._raw_pattern = pattern
+  @property
+  def raw_pattern(self):
+    return self._raw_pattern
+
+  @raw_pattern.setter
+  def raw_pattern(self, value: str):
+    self._raw_pattern = value
 
   def subdir(self, d: Union[str, DIR], mkdir=False):
     d = _dir(d)
@@ -637,6 +647,21 @@ def segment_model_path():
     raise FileNotFoundError(MODEL_PATH)
 
   return MODEL_PATH</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="pano.interface.pano_files.ThermalPanoramaFileManager.raw_pattern"><code class="name">var <span class="ident">raw_pattern</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def raw_pattern(self):
+  return self._raw_pattern</code></pre>
 </details>
 </dd>
 </dl>
@@ -852,19 +877,6 @@ Raw 파일 목록과 대응하는 파일이 하나라도 존재하지 않으면 
   return self.subdir(DIR.RGST).joinpath(&#39;transformation_matrix&#39;)</code></pre>
 </details>
 </dd>
-<dt id="pano.interface.pano_files.ThermalPanoramaFileManager.set_raw_pattern"><code class="name flex">
-<span>def <span class="ident">set_raw_pattern</span></span>(<span>self, pattern: str)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def set_raw_pattern(self, pattern: str):
-  self._raw_pattern = pattern</code></pre>
-</details>
-</dd>
 <dt id="pano.interface.pano_files.ThermalPanoramaFileManager.subdir"><code class="name flex">
 <span>def <span class="ident">subdir</span></span>(<span>self, d: typing.Union[str, <a title="pano.interface.pano_files.DIR" href="#pano.interface.pano_files.DIR">DIR</a>], mkdir=False)</span>
 </code></dt>
@@ -944,9 +956,9 @@ Raw 파일 목록과 대응하는 파일이 하나라도 존재하지 않으면 
 <li><code><a title="pano.interface.pano_files.ThermalPanoramaFileManager.glob" href="#pano.interface.pano_files.ThermalPanoramaFileManager.glob">glob</a></code></li>
 <li><code><a title="pano.interface.pano_files.ThermalPanoramaFileManager.panorama_path" href="#pano.interface.pano_files.ThermalPanoramaFileManager.panorama_path">panorama_path</a></code></li>
 <li><code><a title="pano.interface.pano_files.ThermalPanoramaFileManager.raw_files" href="#pano.interface.pano_files.ThermalPanoramaFileManager.raw_files">raw_files</a></code></li>
+<li><code><a title="pano.interface.pano_files.ThermalPanoramaFileManager.raw_pattern" href="#pano.interface.pano_files.ThermalPanoramaFileManager.raw_pattern">raw_pattern</a></code></li>
 <li><code><a title="pano.interface.pano_files.ThermalPanoramaFileManager.rgst_matrix_path" href="#pano.interface.pano_files.ThermalPanoramaFileManager.rgst_matrix_path">rgst_matrix_path</a></code></li>
 <li><code><a title="pano.interface.pano_files.ThermalPanoramaFileManager.segment_model_path" href="#pano.interface.pano_files.ThermalPanoramaFileManager.segment_model_path">segment_model_path</a></code></li>
-<li><code><a title="pano.interface.pano_files.ThermalPanoramaFileManager.set_raw_pattern" href="#pano.interface.pano_files.ThermalPanoramaFileManager.set_raw_pattern">set_raw_pattern</a></code></li>
 <li><code><a title="pano.interface.pano_files.ThermalPanoramaFileManager.subdir" href="#pano.interface.pano_files.ThermalPanoramaFileManager.subdir">subdir</a></code></li>
 </ul>
 </li>

@@ -205,7 +205,7 @@ class StitchingImages:
                             out_range=self._in_range)
     return res
 
-  def preprocess(self) -&gt; Tuple[List[np.ndarray], List[np.ndarray]]:
+  def preprocess(self) -&gt; Tuple[List[np.ndarray], List[Optional[np.ndarray]]]:
     &#34;&#34;&#34;
     전처리 함수를 적용한 영상과 대상 영역 마스크 반환
 
@@ -213,7 +213,7 @@ class StitchingImages:
     -------
     images : List[np.ndarray]
         전처리를 적용한 영상 리스트
-    masks : List[np.ndarray]
+    masks : Optional[np.ndarray]
         마스크 리스트
     &#34;&#34;&#34;
     if self._preprocess is None:
@@ -761,9 +761,9 @@ class Stitcher:
 
     Returns
     -------
-    warped_images : np.ndarray
+    warped_images : List[np.ndarray]
         변형된 영상 목록
-    warped_masks : np.ndarray
+    warped_masks : List[np.ndarray]
         마스크 목록
     rois : np.ndarray
         Region of interest 목록
@@ -795,9 +795,7 @@ class Stitcher:
         rois.append(roi)
         indices.append(idx)
 
-    rois = np.array(rois)
-
-    return warped_images, warped_masks, rois, indices
+    return warped_images, warped_masks, np.array(rois), indices
 
   def _blend(
       self,
@@ -839,7 +837,7 @@ class Stitcher:
                                                 try_gpu=self._try_cuda)
     elif blend_type == &#39;multiband&#39;:
       blender = cv.detail_MultiBandBlender()
-      bands_count = (np.log2(blend_width) - 1.0).astype(np.int)
+      bands_count = (np.log2(blend_width) - 1.0).astype(int)
       blender.setNumBands(bands_count)
     elif blend_type == &#39;feather&#39;:
       blender = cv.detail_FeatherBlender()
@@ -1598,9 +1596,9 @@ class Stitcher:
 
     Returns
     -------
-    warped_images : np.ndarray
+    warped_images : List[np.ndarray]
         변형된 영상 목록
-    warped_masks : np.ndarray
+    warped_masks : List[np.ndarray]
         마스크 목록
     rois : np.ndarray
         Region of interest 목록
@@ -1632,9 +1630,7 @@ class Stitcher:
         rois.append(roi)
         indices.append(idx)
 
-    rois = np.array(rois)
-
-    return warped_images, warped_masks, rois, indices
+    return warped_images, warped_masks, np.array(rois), indices
 
   def _blend(
       self,
@@ -1676,7 +1672,7 @@ class Stitcher:
                                                 try_gpu=self._try_cuda)
     elif blend_type == &#39;multiband&#39;:
       blender = cv.detail_MultiBandBlender()
-      bands_count = (np.log2(blend_width) - 1.0).astype(np.int)
+      bands_count = (np.log2(blend_width) - 1.0).astype(int)
       blender.setNumBands(bands_count)
     elif blend_type == &#39;feather&#39;:
       blender = cv.detail_FeatherBlender()
@@ -2453,7 +2449,7 @@ The default is 0.3 for ORB and 0.65 for other feature types.</dd>
                             out_range=self._in_range)
     return res
 
-  def preprocess(self) -&gt; Tuple[List[np.ndarray], List[np.ndarray]]:
+  def preprocess(self) -&gt; Tuple[List[np.ndarray], List[Optional[np.ndarray]]]:
     &#34;&#34;&#34;
     전처리 함수를 적용한 영상과 대상 영역 마스크 반환
 
@@ -2461,7 +2457,7 @@ The default is 0.3 for ORB and 0.65 for other feature types.</dd>
     -------
     images : List[np.ndarray]
         전처리를 적용한 영상 리스트
-    masks : List[np.ndarray]
+    masks : Optional[np.ndarray]
         마스크 리스트
     &#34;&#34;&#34;
     if self._preprocess is None:
@@ -2522,7 +2518,7 @@ def ndim(self) -&gt; int:
 <h3>Methods</h3>
 <dl>
 <dt id="pano.stitch.stitcher.StitchingImages.preprocess"><code class="name flex">
-<span>def <span class="ident">preprocess</span></span>(<span>self) ‑> typing.Tuple[typing.List[numpy.ndarray], typing.List[numpy.ndarray]]</span>
+<span>def <span class="ident">preprocess</span></span>(<span>self) ‑> typing.Tuple[typing.List[numpy.ndarray], typing.List[typing.Union[numpy.ndarray, NoneType]]]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>전처리 함수를 적용한 영상과 대상 영역 마스크 반환</p>
@@ -2530,14 +2526,14 @@ def ndim(self) -&gt; int:
 <dl>
 <dt><strong><code>images</code></strong> :&ensp;<code>List[np.ndarray]</code></dt>
 <dd>전처리를 적용한 영상 리스트</dd>
-<dt><strong><code>masks</code></strong> :&ensp;<code>List[np.ndarray]</code></dt>
+<dt><strong><code>masks</code></strong> :&ensp;<code>Optional[np.ndarray]</code></dt>
 <dd>마스크 리스트</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def preprocess(self) -&gt; Tuple[List[np.ndarray], List[np.ndarray]]:
+<pre><code class="python">def preprocess(self) -&gt; Tuple[List[np.ndarray], List[Optional[np.ndarray]]]:
   &#34;&#34;&#34;
   전처리 함수를 적용한 영상과 대상 영역 마스크 반환
 
@@ -2545,7 +2541,7 @@ def ndim(self) -&gt; int:
   -------
   images : List[np.ndarray]
       전처리를 적용한 영상 리스트
-  masks : List[np.ndarray]
+  masks : Optional[np.ndarray]
       마스크 리스트
   &#34;&#34;&#34;
   if self._preprocess is None:

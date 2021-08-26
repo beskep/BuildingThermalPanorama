@@ -13,26 +13,25 @@ CONFIG_FNAME = 'config.yaml'
 DEFAULT_CONFIG_PATH = DIR.RESOURCE.joinpath(CONFIG_FNAME)
 
 
-def read_config(wd: Path, read_only=True, default=False) -> DictConfig:
+def set_config(directory: Path, read_only=True, default=False) -> DictConfig:
   """
-  config 파일 로드
+  config 파일 로드하고 유효한 config 설정 파일 저장.
 
   Parameters
   ----------
-  wd : Path
+  directory : Path
       프로그램을 실행하는 working directory
   read_only : bool
       설정의 read only 여부
   default : bool
-      `True`이면 `wd`의 설정을 무시함
+      `True`이면 `directory`에 저장된 설정을 무시함
 
   Returns
   -------
   DictConfig
-      설정
   """
   config = OmegaConf.load(DEFAULT_CONFIG_PATH)
-  config_path = wd.joinpath(CONFIG_FNAME)
+  config_path = directory.joinpath(CONFIG_FNAME)
 
   if not default and config_path.exists():
     try:

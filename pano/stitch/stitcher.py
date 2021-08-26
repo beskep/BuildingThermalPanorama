@@ -176,7 +176,7 @@ class StitchingImages:
                             out_range=self._in_range)
     return res
 
-  def preprocess(self) -> Tuple[List[np.ndarray], List[np.ndarray]]:
+  def preprocess(self) -> Tuple[List[np.ndarray], List[Optional[np.ndarray]]]:
     """
     전처리 함수를 적용한 영상과 대상 영역 마스크 반환
 
@@ -184,7 +184,7 @@ class StitchingImages:
     -------
     images : List[np.ndarray]
         전처리를 적용한 영상 리스트
-    masks : List[np.ndarray]
+    masks : Optional[np.ndarray]
         마스크 리스트
     """
     if self._preprocess is None:
@@ -732,9 +732,9 @@ class Stitcher:
 
     Returns
     -------
-    warped_images : np.ndarray
+    warped_images : List[np.ndarray]
         변형된 영상 목록
-    warped_masks : np.ndarray
+    warped_masks : List[np.ndarray]
         마스크 목록
     rois : np.ndarray
         Region of interest 목록
@@ -766,9 +766,7 @@ class Stitcher:
         rois.append(roi)
         indices.append(idx)
 
-    rois = np.array(rois)
-
-    return warped_images, warped_masks, rois, indices
+    return warped_images, warped_masks, np.array(rois), indices
 
   def _blend(
       self,
@@ -810,7 +808,7 @@ class Stitcher:
                                                 try_gpu=self._try_cuda)
     elif blend_type == 'multiband':
       blender = cv.detail_MultiBandBlender()
-      bands_count = (np.log2(blend_width) - 1.0).astype(np.int)
+      bands_count = (np.log2(blend_width) - 1.0).astype(int)
       blender.setNumBands(bands_count)
     elif blend_type == 'feather':
       blender = cv.detail_FeatherBlender()

@@ -15,7 +15,7 @@ from pano.misc import exif, tools
 from pano.misc.imageio import ImageIO as IIO
 
 from .cmap import apply_colormap, get_thermal_colormap
-from .config import DictConfig, read_config
+from .config import DictConfig, set_config
 from .pano_files import DIR, FN, SP, ThermalPanoramaFileManager
 
 
@@ -38,12 +38,12 @@ class ThermalPanorama:
       raise FileNotFoundError(wd)
 
     self._wd = wd
-    self._config = read_config(wd=wd, default=default_config)
+    self._config = set_config(directory=wd, default=default_config)
     self._fm = ThermalPanoramaFileManager(directory=wd)
 
     # 제조사, Raw 파일 패턴
     self._manufacturer = self._check_manufacturer()
-    self._fm.set_raw_pattern(self._config['file'][self._manufacturer]['IR'])
+    self._fm.raw_pattern = self._config['file'][self._manufacturer]['IR']
     if self._manufacturer != 'FLIR':
       self._flir_ext = None
     else:
@@ -579,3 +579,22 @@ class ThermalPanorama:
 
     logger.info('Start distortion correction')
     self.correct()
+
+
+def init_directory(directory: Path):
+  """
+  Working directory 초기화.
+
+  대상 directory에 RAW 폴더가 존재하지 않는 경우,
+  RAW 폴더를 생성하고 영상/엑셀 파일을 옮김.
+  default config 파일 저장.
+  """
+  raw_dir = directory.joinpath(DIR.RAW.value)
+  if not raw_dir.exists():
+    raw_dir.mkdir()
+
+    for file in directory.iterdir():
+      if file.suffix in ('.jpg', '.xlsx', '.png'):
+        file.replace(raw_dir.joinpath(file.name))
+
+  set_config(directory=directory, default=True)

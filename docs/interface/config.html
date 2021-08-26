@@ -42,26 +42,25 @@ CONFIG_FNAME = &#39;config.yaml&#39;
 DEFAULT_CONFIG_PATH = DIR.RESOURCE.joinpath(CONFIG_FNAME)
 
 
-def read_config(wd: Path, read_only=True, default=False) -&gt; DictConfig:
+def set_config(directory: Path, read_only=True, default=False) -&gt; DictConfig:
   &#34;&#34;&#34;
-  config 파일 로드
+  config 파일 로드하고 유효한 config 설정 파일 저장.
 
   Parameters
   ----------
-  wd : Path
+  directory : Path
       프로그램을 실행하는 working directory
   read_only : bool
       설정의 read only 여부
   default : bool
-      `True`이면 `wd`의 설정을 무시함
+      `True`이면 `directory`에 저장된 설정을 무시함
 
   Returns
   -------
   DictConfig
-      설정
   &#34;&#34;&#34;
   config = OmegaConf.load(DEFAULT_CONFIG_PATH)
-  config_path = wd.joinpath(CONFIG_FNAME)
+  config_path = directory.joinpath(CONFIG_FNAME)
 
   if not default and config_path.exists():
     try:
@@ -91,49 +90,48 @@ def read_config(wd: Path, read_only=True, default=False) -&gt; DictConfig:
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="pano.interface.config.read_config"><code class="name flex">
-<span>def <span class="ident">read_config</span></span>(<span>wd: pathlib.Path, read_only=True, default=False) ‑> omegaconf.dictconfig.DictConfig</span>
+<dt id="pano.interface.config.set_config"><code class="name flex">
+<span>def <span class="ident">set_config</span></span>(<span>directory: pathlib.Path, read_only=True, default=False) ‑> omegaconf.dictconfig.DictConfig</span>
 </code></dt>
 <dd>
-<div class="desc"><p>config 파일 로드</p>
+<div class="desc"><p>config 파일 로드하고 유효한 config 설정 파일 저장.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>wd</code></strong> :&ensp;<code>Path</code></dt>
+<dt><strong><code>directory</code></strong> :&ensp;<code>Path</code></dt>
 <dd>프로그램을 실행하는 working directory</dd>
 <dt><strong><code>read_only</code></strong> :&ensp;<code>bool</code></dt>
 <dd>설정의 read only 여부</dd>
 <dt><strong><code>default</code></strong> :&ensp;<code>bool</code></dt>
-<dd><code>True</code>이면 <code>wd</code>의 설정을 무시함</dd>
+<dd><code>True</code>이면 <code>directory</code>에 저장된 설정을 무시함</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><code>DictConfig</code></dt>
-<dd>설정</dd>
+<dd>&nbsp;</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_config(wd: Path, read_only=True, default=False) -&gt; DictConfig:
+<pre><code class="python">def set_config(directory: Path, read_only=True, default=False) -&gt; DictConfig:
   &#34;&#34;&#34;
-  config 파일 로드
+  config 파일 로드하고 유효한 config 설정 파일 저장.
 
   Parameters
   ----------
-  wd : Path
+  directory : Path
       프로그램을 실행하는 working directory
   read_only : bool
       설정의 read only 여부
   default : bool
-      `True`이면 `wd`의 설정을 무시함
+      `True`이면 `directory`에 저장된 설정을 무시함
 
   Returns
   -------
   DictConfig
-      설정
   &#34;&#34;&#34;
   config = OmegaConf.load(DEFAULT_CONFIG_PATH)
-  config_path = wd.joinpath(CONFIG_FNAME)
+  config_path = directory.joinpath(CONFIG_FNAME)
 
   if not default and config_path.exists():
     try:
@@ -174,7 +172,7 @@ def read_config(wd: Path, read_only=True, default=False) -&gt; DictConfig:
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="pano.interface.config.read_config" href="#pano.interface.config.read_config">read_config</a></code></li>
+<li><code><a title="pano.interface.config.set_config" href="#pano.interface.config.set_config">set_config</a></code></li>
 </ul>
 </li>
 </ul>

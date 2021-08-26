@@ -43,7 +43,7 @@ ProjectDir
 
 from enum import Enum
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import List, Union
 
 from pano import utils
 
@@ -89,12 +89,17 @@ def _dir(d: Union[str, DIR]) -> DIR:
 
 class ThermalPanoramaFileManager:
 
-  def __init__(self, directory, raw_pattern: Optional[str] = None) -> None:
+  def __init__(self, directory, raw_pattern='*.jpg') -> None:
     self._wd = Path(directory)
     self._raw_pattern = raw_pattern
 
-  def set_raw_pattern(self, pattern: str):
-    self._raw_pattern = pattern
+  @property
+  def raw_pattern(self):
+    return self._raw_pattern
+
+  @raw_pattern.setter
+  def raw_pattern(self, value: str):
+    self._raw_pattern = value
 
   def subdir(self, d: Union[str, DIR], mkdir=False):
     d = _dir(d)

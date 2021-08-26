@@ -36,23 +36,3 @@ T.TabBar {
 
     background : Rectangle {}
 }
-
-// TabBar {
-//    id : control
-
-//    contentItem : ListView {
-//        model : control.contentModel
-//        currentIndex : control.currentIndex
-
-//        spacing : control.spacing
-//        orientation : ListView.Vertical
-//        boundsBehavior : Flickable.StopAtBounds
-//        flickableDirection : Flickable.AutoFlickIfNeeded
-//        snapMode : ListView.SnapToItem
-
-//        highlightMoveDuration : 0
-//        highlightRangeMode : ListView.ApplyRange
-//        preferredHighlightBegin : 40
-//        preferredHighlightEnd : height - 40
-//    }
-// }
