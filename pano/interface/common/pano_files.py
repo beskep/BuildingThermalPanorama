@@ -47,6 +47,8 @@ from typing import List, Union
 
 from pano import utils
 
+from .config import set_config
+
 MODEL_PATH = utils.DIR.RESOURCE.joinpath('DeepLabV3/frozen_inference_graph.pb')
 
 
@@ -222,3 +224,22 @@ class ThermalPanoramaFileManager:
 
   def correction_plot_path(self):
     return self.subdir(DIR.COR).joinpath(f'CorrectionProcess{FN.LS}')
+
+
+def init_directory(directory: Path):
+  """
+  Working directory 초기화.
+
+  대상 directory에 RAW 폴더가 존재하지 않는 경우,
+  RAW 폴더를 생성하고 영상/엑셀 파일을 옮김.
+  default config 파일 저장.
+  """
+  raw_dir = directory.joinpath(DIR.RAW.value)
+  if not raw_dir.exists():
+    raw_dir.mkdir()
+
+    for file in directory.iterdir():
+      if file.suffix in ('.jpg', '.xlsx', '.png'):
+        file.replace(raw_dir.joinpath(file.name))
+
+  set_config(directory=directory, default=True)

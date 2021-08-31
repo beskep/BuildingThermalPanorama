@@ -4,7 +4,7 @@ import click
 from loguru import logger
 
 from pano import utils
-from pano.interface.init import init_project
+from pano.interface.common.init import init_project
 
 init_project(qt=False)
 

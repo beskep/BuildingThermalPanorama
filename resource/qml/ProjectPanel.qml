@@ -71,6 +71,7 @@ Pane {
                     clip : true
                     cellWidth : 220
                     cellHeight : 190
+                    // TODO cellWidth Pane width에 따라 설정
 
                     ScrollBar.vertical : ScrollBar {
                         policy : ScrollBar.AsNeeded

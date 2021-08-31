@@ -4,7 +4,7 @@
 import os
 import sys
 
-from pano.interface.init import init_project
+from pano.interface.common.init import init_project
 
 init_project(qt=True)
 
@@ -15,6 +15,23 @@ from PySide2 import QtQml
 
 from pano import utils
 from pano.interface.controller import Controller
+from pano.interface.controller import PlotController
+from pano.interface.controller import RegistrationPlotController
+from pano.interface.mpl_qtquick import FigureCanvas
+
+_qt_message = {
+    QtCore.QtMsgType.QtDebugMsg: 'DEBUG',
+    QtCore.QtMsgType.QtInfoMsg: 'INFO',
+    QtCore.QtMsgType.QtWarningMsg: 'WARNING',
+    QtCore.QtMsgType.QtCriticalMsg: 'ERROR',
+    QtCore.QtMsgType.QtSystemMsg: 'ERROR',
+    QtCore.QtMsgType.QtFatalMsg: 'CRITICAL',
+}
+
+
+def _qt_message_handler(mode, context, message):
+  level = _qt_message.get(mode, 'INFO')
+  logger.log(level, message)
 
 
 def main(log_level=20):
@@ -27,24 +44,29 @@ def main(log_level=20):
     if not p.exists():
       raise FileNotFoundError(p)
 
+  QtCore.qInstallMessageHandler(_qt_message_handler)
   QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
+  QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
   os.environ['QT_QUICK_CONTROLS_CONF'] = conf_path.as_posix()
 
+  QtQml.qmlRegisterType(FigureCanvas, 'Backend', 1, 0, 'RegistrationCanvas')
+
   app = QtGui.QGuiApplication(sys.argv)
-  engine = QtQml.QQmlApplicationEngine()
-  context = engine.rootContext()
+  engine = QtQml.QQmlApplicationEngine(qml_path.as_posix())
 
-  controller = Controller()
-  context.setContextProperty('con', controller)
-
-  engine.load(qml_path.as_posix())
   root_objects = engine.rootObjects()
   if not root_objects:
-    logger.error('Failed to load QML ({})', qml_path.as_posix())
-    sys.exit()
+    raise RuntimeError(f'Failed to load QML {qml_path}')
 
   win: QtGui.QWindow = root_objects[0]
-  controller.set_window(win)
+
+  controller = Controller(win)
+  context = engine.rootContext()
+  context.setContextProperty('con', controller)
+
+  canvas = win.findChild(FigureCanvas, 'registration_plot')
+  rpc = RegistrationPlotController()
+  rpc.init(canvas)
 
   sys.exit(app.exec_())
 

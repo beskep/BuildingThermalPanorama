@@ -17,14 +17,14 @@ from pano.misc import tools
 from pano.misc.imageio import ImageIO as IIO
 import pano.registration.registrator.simpleitk as rsitk
 
-from .cmap import apply_colormap
-from .cmap import get_thermal_colormap
-from .config import DictConfig
-from .config import set_config
-from .pano_files import DIR
-from .pano_files import FN
-from .pano_files import SP
-from .pano_files import ThermalPanoramaFileManager
+from .common.cmap import apply_colormap
+from .common.cmap import get_thermal_colormap
+from .common.config import DictConfig
+from .common.config import set_config
+from .common.pano_files import DIR
+from .common.pano_files import FN
+from .common.pano_files import SP
+from .common.pano_files import ThermalPanoramaFileManager
 
 
 class ThermalPanorama:
@@ -592,20 +592,20 @@ class ThermalPanorama:
     self.correct()
 
 
-def init_directory(directory: Path):
-  """
-  Working directory 초기화.
+# def init_directory(directory: Path):
+#   """
+#   Working directory 초기화.
 
-  대상 directory에 RAW 폴더가 존재하지 않는 경우,
-  RAW 폴더를 생성하고 영상/엑셀 파일을 옮김.
-  default config 파일 저장.
-  """
-  raw_dir = directory.joinpath(DIR.RAW.value)
-  if not raw_dir.exists():
-    raw_dir.mkdir()
+#   대상 directory에 RAW 폴더가 존재하지 않는 경우,
+#   RAW 폴더를 생성하고 영상/엑셀 파일을 옮김.
+#   default config 파일 저장.
+#   """
+#   raw_dir = directory.joinpath(DIR.RAW.value)
+#   if not raw_dir.exists():
+#     raw_dir.mkdir()
 
-    for file in directory.iterdir():
-      if file.suffix in ('.jpg', '.xlsx', '.png'):
-        file.replace(raw_dir.joinpath(file.name))
+#     for file in directory.iterdir():
+#       if file.suffix in ('.jpg', '.xlsx', '.png'):
+#         file.replace(raw_dir.joinpath(file.name))
 
-  set_config(directory=directory, default=True)
+#   set_config(directory=directory, default=True)

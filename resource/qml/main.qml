@@ -9,8 +9,6 @@ import QtQuick.Window 2.15
 ApplicationWindow {
     id : root
 
-    property alias project_panel : project_panel
-
     width : 1600
     height : 900
     visible : true
@@ -67,11 +65,8 @@ ApplicationWindow {
                 ProjectPanel {
                     id : project_panel
                 }
-
-                Page {
-                    Label {
-                        text : '열·실화상 정합'
-                    }
+                RegistrationPanel {
+                    id : registration_panel
                 }
                 Page {
                     Label {
@@ -94,11 +89,13 @@ ApplicationWindow {
 
     footer : StatusBar {}
 
-    function update_project_tree(text) {
-        project_panel.update_project_tree(text);
-    }
+    function get_panel(name) {
+        if (name == 'project') {
+            return project_panel
+        } else if (name == 'registration') {
+            return registration_panel
+        }
 
-    function update_image_view(paths) {
-        project_panel.update_image_view(paths)
+        return null
     }
 }

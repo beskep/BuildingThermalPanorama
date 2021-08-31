@@ -49,3 +49,6 @@ disable = [
 
 [tool.mypy]
 disable_error_code = ['var-annotated', 'import']
+
+[tool.pytest.ini_options]
+addopts = '-v'
