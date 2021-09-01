@@ -5,10 +5,8 @@ channels:
     - simpleitk
 dependencies:
     - python=3.9
-    - pip
     # UI
-    - pip:
-          - PySide2>=5.15
+    - pyside2>=5.13
     # data analysis
     - numpy
     - nomkl

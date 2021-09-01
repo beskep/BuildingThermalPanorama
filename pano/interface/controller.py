@@ -66,7 +66,7 @@ class Controller(QtCore.QObject):
     _log(message=message)
 
   @QtCore.Slot(str)
-  def select_working_dir(self, wd):
+  def prj_select_working_dir(self, wd):
     wd = Path(wd).resolve()
     if not wd.exists():
       raise FileNotFoundError(wd)
@@ -76,6 +76,11 @@ class Controller(QtCore.QObject):
     self.update_image_view()
 
   @QtCore.Slot()
+  def prj_init_directory(self):
+    init_directory(directory=self._wd)
+    self.update_project_tree()
+    self.update_image_view()
+
   def update_project_tree(self):
     tree = tree_string(self._wd)
     self.win.panel_funtion('project', 'update_project_tree', tree)
@@ -86,12 +91,6 @@ class Controller(QtCore.QObject):
     if files:
       self.win.panel_funtion('project', 'update_image_view',
                              ['file:///' + x.as_posix() for x in files])
-
-  @QtCore.Slot()
-  def init_directory(self):
-    init_directory(directory=self._wd)
-    self.update_project_tree()
-    self.update_image_view()
 
 
 class PlotController(QtCore.QObject):
@@ -221,12 +220,12 @@ class RegistrationPlotController(PlotController):
     trsf = transform.ProjectiveTransform()
     trsf.estimate(src=src, dst=dst)
 
-    registered = transform.warp(image=self._moving_image,
+    registered = transform.warp(image=self._images[1],
                                 inverse_map=trsf.inverse,
                                 output_shape=self._fixed_image.shape[:2],
                                 preserve_range=True)
 
-    cb, diff = prep_compare_images(image1=self._fixed_image,
+    cb, diff = prep_compare_images(image1=self._images[0],
                                    image2=registered,
                                    norm=True,
                                    eq_hist=True,

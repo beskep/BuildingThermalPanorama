@@ -1,9 +1,9 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Controls.Material 2.15
+import QtQuick 2.12
+import QtQuick.Controls 2.12
+import QtQuick.Controls.Material 2.12
 import QtQuick.Dialogs 1.3
-import QtQuick.Layouts 1.15
-import QtQuick.Window 2.15
+import QtQuick.Layouts 1.12
+import QtQuick.Window 2.12
 
 
 ApplicationWindow {
@@ -15,10 +15,12 @@ ApplicationWindow {
     title : qsTr('건물 에너지 검진을 위한 열화상 파노라마 영상처리 프로그램')
 
     FontLoader {
+        id: mono
         source : '../font/FiraCode-Regular.ttf'
     }
     FontLoader {
-        source : '../font/NotoSansCJKkr-DemiLight.otf'
+        id: sans
+        source : '../font/SpoqaHanSansNeo-Regular.ttf'
     }
 
     RowLayout {
