@@ -12,8 +12,12 @@ from rich.logging import RichHandler
 from rich.theme import Theme
 
 
+def is_frozen():
+  return getattr(sys, 'frozen', False)
+
+
 class DIR:
-  if getattr(sys, 'frozen', False):
+  if is_frozen():
     ROOT = Path(sys.executable).parent.resolve()
   else:
     ROOT = Path(__file__).parents[1].resolve()

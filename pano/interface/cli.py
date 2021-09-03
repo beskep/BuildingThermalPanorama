@@ -8,7 +8,9 @@ from pano.interface.common.init import init_project
 
 init_project(qt=False)
 
-commands = {'init', 'register', 'segment', 'panorama', 'correct', 'run'}
+commands = {
+    'init', 'extract', 'register', 'segment', 'panorama', 'correct', 'run'
+}
 
 
 @click.command(context_settings=dict(help_option_names=['-h', '--help']))
@@ -26,6 +28,7 @@ def cli(directory: str, command: str, default: bool, debug: bool,
   \b
   COMMAND:
     init      대상 폴더에 설정 파일을 복사
+    extract   원본 파일로부터 열·실화상 추출
     register  열화상-실화상 정합
     segment   외피 부위 인식
     panorama  파노라마 생성

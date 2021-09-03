@@ -203,7 +203,7 @@ class ThermalPanoramaFileManager:
     return path.with_name(f'{path.stem}{FN.COLOR}{FN.LL}')
 
   def rgst_matrix_path(self):
-    return self.subdir(DIR.RGST).joinpath('transformation_matrix')
+    return self.subdir(DIR.RGST).joinpath('transformation_matrix.npz')
 
   @staticmethod
   def segment_model_path():

@@ -1,8 +1,10 @@
 import os
+from pathlib import Path
 
 import skimage.io
 
 from pano.utils import DIR
+from pano.utils import is_frozen
 
 
 def init_project(qt: bool):
@@ -12,6 +14,16 @@ def init_project(qt: bool):
   skimage.io.use_plugin('pil')
 
   if qt:
+    if not is_frozen():
+      import PySide2
+
+      pyside_dir = Path(PySide2.__file__).parent
+      plugins_dir = pyside_dir.joinpath('plugins')
+      qml_dir = pyside_dir.joinpath('qml')
+
+      os.environ['QT_PLUGIN_PATH'] = plugins_dir.as_posix()
+      os.environ['QML2_IMPORT_PATH'] = qml_dir.as_posix()
+
     # Matplotlib backend, style 설정
     import matplotlib as mpl
     mpl.use('Qt5Agg')

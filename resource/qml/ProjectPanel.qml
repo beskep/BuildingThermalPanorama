@@ -1,9 +1,9 @@
-import QtQuick 2.12
-import QtQuick.Controls 2.12
-import QtQuick.Controls.Material 2.12
+import QtQuick 2.15
+import QtQuick.Controls 2.15
+import QtQuick.Controls.Material 2.15
 import QtQuick.Dialogs 1.3
-import QtQuick.Layouts 1.12
-import QtQuick.Window 2.12
+import QtQuick.Layouts 1.15
+import QtQuick.Window 2.15
 import Qt.labs.platform 1.1
 
 
@@ -20,15 +20,15 @@ Pane {
 
             Button {
                 text : qsTr('경로 선택')
-
                 onReleased : folder_dialog.open()
             }
             Button {
                 text : qsTr('프로젝트 초기화')
-
-                onReleased : {
-                    con.prj_init_directory();
-                }
+                onReleased : con.prj_init_directory()
+            }
+            Button {
+                text : qsTr('열화상 추출')
+                onReleased : con.prj_extract_images()
             }
         }
 
@@ -65,7 +65,7 @@ Pane {
                 padding : 10
 
                 GridView {
-                    id : image_grid
+                    id : image_view
 
                     anchors.fill : parent
                     clip : true
@@ -83,7 +83,7 @@ Pane {
 
                     delegate : Pane {
                         Material.elevation : 0
-                        width : image_grid.cellWidth - 20
+                        width : image_view.cellWidth - 20
 
                         Column {
                             anchors.fill : parent

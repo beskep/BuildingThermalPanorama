@@ -9,15 +9,15 @@ from pano.interface.common.init import init_project
 init_project(qt=True)
 
 from loguru import logger
+from matplotlib_backend_qtquick.backend_qtquickagg import FigureCanvas
 from PySide2 import QtCore
 from PySide2 import QtGui
 from PySide2 import QtQml
+from PySide2 import QtSvg  # for matplotlib-backend-qtquick
 
 from pano import utils
 from pano.interface.controller import Controller
-from pano.interface.controller import PlotController
 from pano.interface.controller import RegistrationPlotController
-from pano.interface.mpl_qtquick import FigureCanvas
 
 _qt_message = {
     QtCore.QtMsgType.QtDebugMsg: 'DEBUG',
@@ -56,7 +56,8 @@ def main(log_level=20):
 
   root_objects = engine.rootObjects()
   if not root_objects:
-    raise RuntimeError(f'Failed to load QML {qml_path}')
+    logger.critical('Failed to load QML {}', qml_path)
+    return
 
   win: QtGui.QWindow = root_objects[0]
 
@@ -66,10 +67,11 @@ def main(log_level=20):
 
   canvas = win.findChild(FigureCanvas, 'registration_plot')
   rpc = RegistrationPlotController()
-  rpc.init(canvas)
+  rpc.init(app, canvas)
+  controller.rpc = rpc
 
   sys.exit(app.exec_())
 
 
 if __name__ == '__main__':
-  main()
+  main(log_level=10)

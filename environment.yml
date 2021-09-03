@@ -6,7 +6,10 @@ channels:
 dependencies:
     - python=3.9
     # UI
-    - pyside2>=5.13
+    - pip
+    - pip:
+        - PySide2>=5.15
+        - matplotlib-backend-qtquick
     # data analysis
     - numpy
     - nomkl
@@ -19,14 +22,15 @@ dependencies:
     - scikit-image
     - tensorflow
     - simpleitk
-    # dev
+    # misc
     - loguru
     - rich
-    - omegaconf
-    - pdoc3
     - click
+    - omegaconf
+    - cx_freeze
+    - pdoc3
+    # dev
     - pytest
     - pylint
     - yapf
     - mypy
-    - cx_freeze

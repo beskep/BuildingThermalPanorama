@@ -1,4 +1,5 @@
 from collections import defaultdict
+import multiprocessing as mp
 from pathlib import Path
 from typing import Optional
 
@@ -6,16 +7,20 @@ from loguru import logger
 from matplotlib.axes import Axes
 from matplotlib.backend_bases import MouseEvent
 from matplotlib.figure import Figure
+from matplotlib_backend_qtquick.backend_qtquickagg import FigureCanvas
 import numpy as np
 from PySide2 import QtCore
 from PySide2 import QtGui
 from skimage import transform
 
+from pano.misc.imageio import ImageIO
 from pano.misc.tools import prep_compare_images
+from pano.utils import set_logger
 
+from .common.pano_files import DIR
+from .common.pano_files import FN
 from .common.pano_files import init_directory
 from .common.pano_files import ThermalPanoramaFileManager
-from .mpl_qtquick.backend_qtquickagg import FigureCanvas
 from .tree import tree_string
 
 
@@ -28,6 +33,50 @@ def _log(message: str):
     message = message[(find + 1):]
 
   logger.log(level, message)
+
+
+def _path2url(path):
+  return 'file:///' + Path(path).as_posix()
+
+
+def _url2path(url: str):
+  return Path(url.replace('file:///', ''))
+
+
+def _producer(directory, command):
+  set_logger()
+
+  # pylint: disable=import-outside-toplevel
+  from .pano_project import ThermalPanorama
+
+  tp = ThermalPanorama(directory=directory)
+  getattr(tp, command)()
+
+
+class _Consumer(QtCore.QThread):
+  done = QtCore.Signal()
+
+  def __init__(self) -> None:
+    super().__init__()
+
+    self._queue: Optional[mp.Queue] = None
+
+  @property
+  def queue(self):
+    return self._queue
+
+  @queue.setter
+  def queue(self, value):
+    self._queue = value
+
+  def run(self):
+    if self.queue is None:
+      raise ValueError('queue not set')
+
+    while True:
+      if not self.queue.empty():
+        self.done.emit()
+        break
 
 
 class _Window:
@@ -52,6 +101,8 @@ class Controller(QtCore.QObject):
 
     self._win = _Window(win)
     self._wd: Optional[Path] = None
+    self._fm: Optional[ThermalPanoramaFileManager] = None
+    self._rpc: Optional[RegistrationPlotController] = None
 
   @property
   def win(self) -> _Window:
@@ -60,6 +111,14 @@ class Controller(QtCore.QObject):
   @win.setter
   def win(self, win: QtGui.QWindow):
     self._win = _Window(win)
+
+  @property
+  def rpc(self):
+    return self._rpc
+
+  @rpc.setter
+  def rpc(self, value):
+    self._rpc = value
 
   @QtCore.Slot(str)
   def log(self, message: str):
@@ -72,25 +131,62 @@ class Controller(QtCore.QObject):
       raise FileNotFoundError(wd)
 
     self._wd = wd
-    self.update_project_tree()
-    self.update_image_view()
+    self._fm = ThermalPanoramaFileManager(wd)
+    self.prj_update_project_tree()
+    self.update_image_view(panel='project')
+    self.update_image_view(panel='registration')
 
   @QtCore.Slot()
   def prj_init_directory(self):
     init_directory(directory=self._wd)
-    self.update_project_tree()
-    self.update_image_view()
+    self.prj_update_project_tree()
+    self.update_image_view(panel='project')
+    self.update_image_view(panel='registration')
 
-  def update_project_tree(self):
+  def prj_update_project_tree(self):
     tree = tree_string(self._wd)
     self.win.panel_funtion('project', 'update_project_tree', tree)
 
-  def update_image_view(self):
-    fm = ThermalPanoramaFileManager(self._wd)
-    files = fm.raw_files()
-    if files:
-      self.win.panel_funtion('project', 'update_image_view',
-                             ['file:///' + x.as_posix() for x in files])
+  @QtCore.Slot()
+  def prj_extract_images(self):
+    if self._wd is None:
+      logger.warning('Directory not set')
+      return
+
+    process = mp.Process(name='extract',
+                         target=_producer,
+                         args=(self._wd, 'extract'),
+                         daemon=True)
+    process.start()
+
+  def update_image_view(self, panel: str):
+    if self._fm is None:
+      logger.warning('Directory not set')
+      return
+
+    files = self._fm.raw_files()
+    if not files:
+      logger.warning('No raw files')
+      return
+
+    self.win.panel_funtion(panel, 'update_image_view',
+                           [_path2url(x) for x in files])
+
+  @QtCore.Slot()
+  def rgst_auto_register(self):
+    logger.info('auto rgst')
+
+  @QtCore.Slot(str)
+  def rgst_plot(self, url):
+    path = _url2path(url)
+    logger.debug('Register plot `{}`', path)
+
+    irf = self._wd.joinpath(DIR.IR.value, path.stem).with_suffix(FN.NPY)
+    visf = self._wd.joinpath(DIR.VIS.value, path.stem).with_suffix(FN.LL)
+    ir = ImageIO.read(irf)
+    vis = ImageIO.read(visf)
+
+    self.rpc.set_images(fixed_image=ir, moving_image=vis)
 
 
 class PlotController(QtCore.QObject):
@@ -98,9 +194,17 @@ class PlotController(QtCore.QObject):
   def __init__(self, parent=None) -> None:
     super().__init__(parent=parent)
 
+    self._app: Optional[QtGui.QGuiApplication] = None
     self._canvas: Optional[FigureCanvas] = None
     self._fig: Optional[Figure] = None
     self._axes: Optional[Axes] = None
+
+  @property
+  def app(self) -> QtGui.QGuiApplication:
+    if self._app is None:
+      raise ValueError('app not set')
+
+    return self._app
 
   @property
   def canvas(self) -> FigureCanvas:
@@ -123,12 +227,18 @@ class PlotController(QtCore.QObject):
 
     return self._axes
 
-  def init(self, canvas: FigureCanvas):
+  def init(self, app: QtGui.QGuiApplication, canvas: FigureCanvas):
+    self._app = app
     self._canvas = canvas
+
     self._fig = canvas.figure
     self._axes = self._fig.add_subplot(111)
 
+    self.draw()
+
+  def draw(self):
     self.canvas.draw()
+    self.app.processEvents()
 
 
 class RegistrationPlotController(PlotController):
@@ -147,32 +257,51 @@ class RegistrationPlotController(PlotController):
   def axes(self) -> np.ndarray:
     return super().axes
 
-  def init(self, canvas: FigureCanvas):
+  def init(self, app: QtGui.QGuiApplication, canvas: FigureCanvas):
+    self._app = app
     self._canvas = canvas
+
     self._fig = canvas.figure
     self._axes = self.fig.subplots(2, 2)
-    # self._set_style()
+    self._set_style()
+    self._fig.tight_layout(pad=2)
 
     self.canvas.mpl_connect('button_press_event', self._on_click)
-    self.canvas.draw()
+    self.draw()
 
   def _set_style(self):
     for ax, title in zip(self.axes.ravel(), self._TITLES):
       if ax.has_data():
         ax.set_title(title)
-
       ax.set_axis_off()
 
     ar = self.axes[0, 0].get_aspect()
     self.axes[0, 1].set_aspect(ar)
 
+  def reset(self):
+    for ax in self.axes.ravel():
+      ax.clear()
+
+    self._pnts.clear()
+    self._pnts_coord.clear()
+    self._registered = False
+
+    self._set_style()
+
   def set_images(self, fixed_image: np.ndarray, moving_image: np.ndarray):
+    self.reset()
+
     self._images = (fixed_image, moving_image)
     self.axes[0, 0].imshow(fixed_image)
     self.axes[0, 1].imshow(moving_image)
 
+    self._set_style()
+    self.draw()
+
   def _on_click(self, event: MouseEvent):
     logger.trace(event)
+    if self._images is None:
+      return
 
     ax: Axes = event.inaxes
     if ax is None:
@@ -222,7 +351,7 @@ class RegistrationPlotController(PlotController):
 
     registered = transform.warp(image=self._images[1],
                                 inverse_map=trsf.inverse,
-                                output_shape=self._fixed_image.shape[:2],
+                                output_shape=self._images[0].shape[:2],
                                 preserve_range=True)
 
     cb, diff = prep_compare_images(image1=self._images[0],
@@ -238,9 +367,3 @@ class RegistrationPlotController(PlotController):
     self.canvas.draw()
 
     self._registered = True
-
-  def reset(self):
-    self._axes[1, 0].clear()
-    self._axes[1, 1].clear()
-    self._registered = False
-    self._set_style()

@@ -1,8 +1,8 @@
 """cx_Freeze를 통해 실행 파일 생성을 위한 코드"""
 
 from pathlib import Path
+import sys
 
-import cx_Freeze
 from cx_Freeze import Executable
 from cx_Freeze import setup
 
@@ -38,11 +38,11 @@ def build():
       'tensorflow',
       'PySide2',
   ]
-  excludes = ['tkinter', 'locket', 'PyQt5']
+  excludes = ['tkinter', 'locket']
   zip_include_packages = []
 
   bins = ['ITK']
-  lib_bin = Path(cx_Freeze.__path__[0]).parents[2].joinpath('Library/bin')
+  lib_bin = Path(sys.base_prefix).joinpath('Library/bin')
   for b in bins:
     files = list(lib_bin.glob(f'*{b}*'))
     for file in files:

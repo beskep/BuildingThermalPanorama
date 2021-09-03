@@ -199,6 +199,9 @@ class ThermalPanorama:
                         console=utils.console):
         self._extract_raw_file(file=file)
 
+  def extract(self):
+    self._extract_raw_files()
+
   @property
   def _size_limit(self):
     return self._config['file']['size_limit']

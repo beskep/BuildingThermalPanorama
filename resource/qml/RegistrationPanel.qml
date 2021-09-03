@@ -1,9 +1,9 @@
-import QtQuick 2.12
-import QtQuick.Controls 2.12
-import QtQuick.Controls.Material 2.12
+import QtQuick 2.15
+import QtQuick.Controls 2.15
+import QtQuick.Controls.Material 2.15
 import QtQuick.Dialogs 1.3
-import QtQuick.Layouts 1.12
-import QtQuick.Window 2.12
+import QtQuick.Layouts 1.15
+import QtQuick.Window 2.15
 
 import Backend 1.0
 
@@ -20,6 +20,7 @@ Pane {
         RowLayout {
             Button {
                 text : qsTr('전체 자동 정합')
+                onReleased : con.rgst_auto_register()
             }
             Button {
                 text : qsTr('자동 정합')
@@ -44,8 +45,43 @@ Pane {
             Pane {
                 Material.elevation : 2
                 Layout.fillHeight : true
-                Layout.preferredWidth : 200
+                Layout.preferredWidth : 300
+
+                ListView {
+                    id : image_view
+
+                    anchors.fill : parent
+                    clip : true
+
+                    ScrollBar.vertical : ScrollBar {
+                        policy : ScrollBar.AsNeeded
+                    }
+
+                    model : ListModel {
+                        id : image_model
+                    }
+
+                    delegate : Pane {
+                        Material.elevation : 0
+                        width : image_view.width - 20
+                        height : width * 3 / 4 + 10
+
+                        Image {
+                            source : path
+                            width : parent.width
+                            fillMode : Image.PreserveAspectFit
+                        }
+
+                        MouseArea {
+                            anchors.fill : parent
+                            hoverEnabled : true
+
+                            onReleased : con.rgst_plot(path)
+                        }
+                    }
+                }
             }
+
             Pane {
                 Material.elevation : 2
                 Layout.fillHeight : true
@@ -64,5 +100,10 @@ Pane {
                 }
             }
         }
+    }
+
+    function update_image_view(paths) {
+        image_model.clear()
+        paths.forEach(path => image_model.append({'path': path}))
     }
 }
