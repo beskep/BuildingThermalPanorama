@@ -9,9 +9,11 @@ from matplotlib.backend_bases import MouseEvent
 from matplotlib.figure import Figure
 import numpy as np
 from skimage import transform
+from skimage.exposure import equalize_hist
 
 from pano.misc.imageio import ImageIO
 from pano.misc.tools import prep_compare_images
+from pano.misc.tools import uint8_image
 from pano.utils import set_logger
 
 from .common.pano_files import DIR
@@ -50,8 +52,15 @@ def _producer(queue: mp.Queue, directory, command: str, loglevel: int):
   from .pano_project import ThermalPanorama
 
   tp = ThermalPanorama(directory=directory)
-  for r in getattr(tp, command)():
-    queue.put(r)
+
+  try:
+    fn = getattr(tp, f'{command}_generator')
+  except AttributeError:
+    getattr(tp, command)()
+    queue.put(1.0)
+  else:
+    for r in fn():
+      queue.put(r)
 
 
 class _Consumer(QtCore.QThread):
@@ -149,6 +158,8 @@ class Controller(QtCore.QObject):
 
     self._wd = wd
     self._fm = ThermalPanoramaFileManager(wd)
+    self.rpc.fm = self._fm
+
     self.prj_update_project_tree()
     self.update_image_view(panel='project')
     self.update_image_view(panel='registration')
@@ -196,15 +207,16 @@ class Controller(QtCore.QObject):
 
   @QtCore.Slot(str)
   def rgst_plot(self, url):
+    assert self._wd is not None
+
     path = _url2path(url)
     logger.debug('Register plot "{}"', path)
 
-    irf = self._wd.joinpath(DIR.IR.value, path.stem).with_suffix(FN.NPY)
-    visf = self._wd.joinpath(DIR.VIS.value, path.stem).with_suffix(FN.LL)
-    ir = ImageIO.read(irf)
-    vis = ImageIO.read(visf)
+    self.rpc.plot(path)
 
-    self.rpc.set_images(fixed_image=ir, moving_image=vis)
+  @QtCore.Slot()
+  def rgst_save(self):
+    self.rpc.save()
 
 
 class PlotController(QtCore.QObject):
@@ -268,8 +280,41 @@ class RegistrationPlotController(PlotController):
 
     self._pnts = defaultdict(list)  # 선택된 점들의 mpl 오브젝트
     self._pnts_coord = defaultdict(list)  # 선택된 점들의 좌표
-    self._registered = False  # TODO pnts 개수로 판단?
     self._images: Optional[tuple] = None
+    self._fm: Optional[ThermalPanoramaFileManager] = None
+    self._matrices: Optional[dict] = None
+
+    self._file: Optional[Path] = None
+    self._matrix: Optional[np.ndarray] = None  # 선택된 영상의 수동 정합 matrix
+    self._registered_image: Optional[np.ndarray] = None
+
+  @property
+  def fm(self) -> ThermalPanoramaFileManager:
+    assert self._fm is not None
+    return self._fm
+
+  @fm.setter
+  def fm(self, value: ThermalPanoramaFileManager):
+    self._fm = value
+
+  @property
+  def matrices(self) -> dict:
+    if self._matrices is None:
+      path = self.fm.rgst_matrix_path()
+      if path.exists():
+        npz = np.load(path)
+        self._matrices = {f: npz[f] for f in npz.files}
+      else:
+        self._matrices = dict()
+
+    return self._matrices
+
+  def reset_matrices(self):
+    self._matrices = None
+
+  def update_matrices(self, stem: str, matrix: np.ndarray):
+    self.matrices[stem] = matrix
+    np.savez(self.fm.rgst_matrix_path(), **self.matrices)
 
   @property
   def axes(self) -> np.ndarray:
@@ -296,24 +341,46 @@ class RegistrationPlotController(PlotController):
     ar = self.axes[0, 0].get_aspect()
     self.axes[0, 1].set_aspect(ar)
 
+  def draw(self):
+    self._set_style()
+    return super().draw()
+
   def reset(self):
     for ax in self.axes.ravel():
       ax.clear()
 
     self._pnts.clear()
     self._pnts_coord.clear()
-    self._registered = False
-
-    self._set_style()
+    self._registered_image = None
+    self._matrix = None
 
   def set_images(self, fixed_image: np.ndarray, moving_image: np.ndarray):
     self.reset()
 
+    if fixed_image.shape[:2] != moving_image.shape[:2]:
+      moving_image = transform.resize(moving_image,
+                                      output_shape=fixed_image.shape[:2],
+                                      anti_aliasing=True)
+
     self._images = (fixed_image, moving_image)
-    self.axes[0, 0].imshow(fixed_image)
+    # self.axes[0, 0].imshow(fixed_image)
+    self.axes[0, 0].imshow(equalize_hist(fixed_image))
     self.axes[0, 1].imshow(moving_image)
 
-    self._set_style()
+  def plot(self, file: Path):
+    self._file = file
+
+    irf = self.fm.change_dir(DIR.IR, file).with_suffix(FN.NPY)
+    visf = self.fm.change_dir(DIR.VIS, file).with_suffix(FN.LL)
+    ir = ImageIO.read(irf)
+    vis = ImageIO.read(visf)
+
+    self.set_images(ir, vis)
+
+    matrix = self.matrices[file.stem]
+    if matrix is not None:
+      self._plot_registered(np.linalg.inv(matrix))
+
     self.draw()
 
   def _on_click(self, event: MouseEvent):
@@ -336,10 +403,10 @@ class RegistrationPlotController(PlotController):
     else:
       return
 
-    self.canvas.draw()
+    if self._registered_image is not None and self.all_points_selected():
+      self._manual_register()
 
-    if not self._registered and self.all_points_selected():
-      self._register()
+    self.draw()
 
   def _add_point(self, ax: int, event: MouseEvent):
     if len(self._pnts_coord[ax]) < self._REQUIRED:
@@ -355,20 +422,13 @@ class RegistrationPlotController(PlotController):
       p.remove()
 
     self._pnts.pop(ax)
-    self.reset()
 
   def all_points_selected(self):
     return all(len(self._pnts_coord[x]) == self._REQUIRED for x in range(2))
 
-  def _register(self):
-    src = np.array(self._pnts_coord[1])
-    dst = np.array(self._pnts_coord[0])
-
-    trsf = transform.ProjectiveTransform()
-    trsf.estimate(src=src, dst=dst)
-
+  def _plot_registered(self, matrix):
     registered = transform.warp(image=self._images[1],
-                                inverse_map=trsf.inverse,
+                                inverse_map=matrix,
                                 output_shape=self._images[0].shape[:2],
                                 preserve_range=True)
 
@@ -381,7 +441,32 @@ class RegistrationPlotController(PlotController):
     self._axes[1, 0].imshow(cb)
     self._axes[1, 1].imshow(diff)
 
-    self._set_style()
-    self.canvas.draw()
+    self._registered_image = registered
 
-    self._registered = True
+  def _manual_register(self):
+    src = np.array(self._pnts_coord[1])
+    dst = np.array(self._pnts_coord[0])
+
+    trsf = transform.ProjectiveTransform()
+    trsf.estimate(src=src, dst=dst)
+
+    self._matrix = trsf.params
+    self._plot_registered(matrix=trsf.inverse)
+
+  def save(self):
+    if self._registered_image is None:
+      logger.warning('저장할 정합 결과가 없습니다.')
+      return
+
+    if self._matrix is None:
+      logger.warning('자동 정합 결과가 이미 저장되었습니다.')
+      return
+
+    assert self._file is not None
+    path = self.fm.change_dir(DIR.RGST, self._file)
+    ImageIO.save(path=path, array=uint8_image(self._registered_image))
+
+    compare_path = path.with_name(f'{path.stem}{FN.RGST_MANUAL}{path.suffix}')
+    self.fig.savefig(compare_path, dpi=300)
+
+    self.update_matrices(path.stem, self._matrix)

@@ -19,6 +19,8 @@ from .qt_compat import QtGui
 from .qt_compat import QtQuick
 from .qt_compat import QtWidgets
 
+# pylint: disable-all
+
 
 class FigureCanvasQtQuick(QtQuick.QQuickPaintedItem, FigureCanvasBase):
   """ This class creates a QtQuick Item encapsulating a Matplotlib

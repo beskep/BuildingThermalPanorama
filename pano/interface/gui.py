@@ -1,5 +1,4 @@
 """파노라마 영상처리 GUI"""
-# pylint: disable=wrong-import-position, ungrouped-imports
 
 from multiprocessing import freeze_support
 import os
@@ -53,6 +52,7 @@ def main(debug=False, loglevel=20):
     if not p.exists():
       raise FileNotFoundError(p)
 
+  # TODO check options
   QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
   QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
   os.environ['QT_QUICK_CONTROLS_CONF'] = conf_path.as_posix()

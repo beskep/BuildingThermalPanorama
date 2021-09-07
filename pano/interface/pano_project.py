@@ -183,8 +183,19 @@ class ThermalPanorama:
     assert ir is not None
     self._save_extracted_image(fname=file.stem, ir=ir, vis=vis, meta=meta)
 
-  def _extract_raw_files(self):
-    """기존에 raw 파일로부터 추출한 실화상/열화상이 없는 경우 추출"""
+  def extract(self):
+    try:
+      self._fm.files(DIR.IR)
+      self._fm.files(DIR.VIS)
+    except FileNotFoundError:
+      self._fm.subdir(DIR.IR, mkdir=True)
+      self._fm.subdir(DIR.VIS, mkdir=True)
+
+      files = self._fm.raw_files()
+      for file in utils.track(files, description='Extracting images...'):
+        self._extract_raw_file(file=file)
+
+  def extract_generator(self):
     try:
       self._fm.files(DIR.IR)
       self._fm.files(DIR.VIS)
@@ -196,11 +207,6 @@ class ThermalPanorama:
       for r, file in utils.ptrack(files, description='Extracting images...'):
         self._extract_raw_file(file=file)
         yield r
-
-      yield 1.0
-
-  def extract(self):
-    return self._extract_raw_files()
 
   @property
   def _size_limit(self):
@@ -243,43 +249,71 @@ class ThermalPanorama:
 
     return registrator, prep
 
+  def _register(self, file, registrator: rsitk.SITKRegistrator,
+                prep: rsitk.RegistrationPreprocess):
+    ir = IIO.read(self._fm.change_dir(DIR.IR, file))
+    vis = IIO.read(self._fm.change_dir(DIR.VIS, file))
+
+    if registrator is None:
+      registrator, prep = self._init_registrator(shape=ir.shape)
+
+    logger.debug('Registering "{}"', file.stem)
+    fri, mri = registrator.prep_and_register(fixed_image=ir,
+                                             moving_image=vis,
+                                             preprocess=prep)
+    rgst_color_img = mri.registered_orig_image()
+
+    # 정합한 실화상
+    path = self._fm.change_dir(DIR.RGST, file)
+    IIO.save(path=path, array=tools.uint8_image(rgst_color_img))
+
+    # 비교 영상
+    compare_path = path.with_name(f'{path.stem}{FN.RGST_AUTO}{path.suffix}')
+    compare_fig, _ = tools.prep_compare_fig(
+        images=(fri.prep_image(), mri.registered_prep_image()),
+        titles=('열화상', '실화상', '비교 (Checkerboard)', '비교 (Difference)'))
+    compare_fig.savefig(compare_path.joinpath(), dpi=300)
+    plt.close(compare_fig)
+
+    return mri.matrix
+
   def register(self):
-    self._extract_raw_files()
+    self.extract()
     self._fm.subdir(DIR.RGST, mkdir=True)
 
     files = self._fm.raw_files()
-    registrator, prep, mtx = None, None, {}
-    for r, file in utils.ptrack(sequence=files, description='Registering...'):
-      ir = IIO.read(self._fm.change_dir(DIR.IR, file))
-      vis = IIO.read(self._fm.change_dir(DIR.VIS, file))
-
+    registrator, prep, matrices = None, None, {}
+    for file in utils.track(sequence=files, description='Registering...'):
       if registrator is None:
+        ir = IIO.read(self._fm.change_dir(DIR.IR, file))
         registrator, prep = self._init_registrator(shape=ir.shape)
 
-      logger.debug('Registering "{}"', file.stem)
-      fri, mri = registrator.prep_and_register(fixed_image=ir,
-                                               moving_image=vis,
-                                               preprocess=prep)
-      rgst_color_img = mri.registered_orig_image()
-      mtx[file.stem] = mri.matrix
+      matrix = self._register(file=file, registrator=registrator, prep=prep)
+      matrices[file.stem] = matrix
 
-      # 정합한 실화상
-      path = self._fm.change_dir(DIR.RGST, file)
-      IIO.save(path=path, array=tools.uint8_image(rgst_color_img))
+    np.savez(self._fm.rgst_matrix_path(), **matrices)
+    logger.success('열화상-실화상 정합 완료')
 
-      # 비교 영상
-      compare_path = path.with_name(f'{path.stem}{FN.RGST_CMPR}{path.suffix}')
-      compare_fig, _ = tools.prep_compare_fig(
-          images=(fri.prep_image(), mri.registered_prep_image()),
-          titles=('Thermal image (prep)', 'Visible image (prep)'))
-      compare_fig.savefig(compare_path.joinpath())
-      plt.close(compare_fig)
+  def register_generator(self):
+    self.extract()  # TODO 삭제? 마찬지로 yield?
+    self._fm.subdir(DIR.RGST, mkdir=True)
+
+    files = self._fm.raw_files()
+    registrator, prep, matrices = None, None, {}
+    for r, file in utils.ptrack(sequence=files, description='Registering...'):
+      if registrator is None:
+        ir = IIO.read(self._fm.change_dir(DIR.IR, file))
+        registrator, prep = self._init_registrator(shape=ir.shape)
+
+      matrix = self._register(file=file, registrator=registrator, prep=prep)
+      matrices[file.stem] = matrix
 
       yield r
 
-    np.savez(self._fm.rgst_matrix_path(), **mtx)
-
+    np.savez(self._fm.rgst_matrix_path(), **matrices)
     logger.success('열화상-실화상 정합 완료')
+
+    yield 1.0
 
   def segment(self):
     # pylint: disable=import-outside-toplevel
@@ -459,7 +493,7 @@ class ThermalPanorama:
     stitcher = self._init_stitcher()
 
     # Raw 파일 추출
-    self._extract_raw_files()
+    self.extract()
 
     # 지정한 spectrum 파노라마
     files = self._fm.files(self._SP_DIR[spectrum])
@@ -578,36 +612,17 @@ class ThermalPanorama:
     logger.success('파노라마 왜곡 보정 완료')
 
   def run(self):
+    logger.info('Start extracting')
+    self.extract()
+
     logger.info('Start registering')
     self.register()
-    logger.log('BLANK', '')
 
     logger.info('Start segmenting')
     self.segment()
-    logger.log('BLANK', '')
 
     logger.info('Start panorama stitching')
     self.panorama()
-    logger.log('BLANK', '')
 
     logger.info('Start distortion correction')
     self.correct()
-
-
-# def init_directory(directory: Path):
-#   """
-#   Working directory 초기화.
-
-#   대상 directory에 RAW 폴더가 존재하지 않는 경우,
-#   RAW 폴더를 생성하고 영상/엑셀 파일을 옮김.
-#   default config 파일 저장.
-#   """
-#   raw_dir = directory.joinpath(DIR.RAW.value)
-#   if not raw_dir.exists():
-#     raw_dir.mkdir()
-
-#     for file in directory.iterdir():
-#       if file.suffix in ('.jpg', '.xlsx', '.png'):
-#         file.replace(raw_dir.joinpath(file.name))
-
-#   set_config(directory=directory, default=True)

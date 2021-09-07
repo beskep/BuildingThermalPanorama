@@ -24,13 +24,8 @@ Pane {
                 // TODO 개별 자동 정합 기능 추가?
             }
             Button {
-                text : qsTr('수동 정합')
-            }
-            Rectangle {
-                width : 10
-            }
-            Button {
                 text : qsTr('저장')
+                onReleased: con.rgst_save()
                 // TODO 작업 진행 현황 따라 색 변환
             }
             Button {

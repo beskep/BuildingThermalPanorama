@@ -95,7 +95,7 @@ class RegistrationPreprocess:
 class RegisteringImage:
 
   def __init__(self,
-               image: Optional[np.ndarray] = None,
+               image: np.ndarray,
                shape: Optional[tuple] = None,
                preprocess: Optional[Callable] = None) -> None:
     """
@@ -114,10 +114,7 @@ class RegisteringImage:
     self._shape = shape
     self._prep = preprocess
 
-    self._prep_image = None
-
-    self._rgst_orig_image = None
-    self._rgst_prep_image = None
+    self._prep_image: Optional[np.ndarray] = None
 
     self._trsf_mtx: Optional[np.ndarray] = None
     self._trsf_fn: Optional[Callable] = None

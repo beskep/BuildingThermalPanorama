@@ -14,6 +14,7 @@ Support for PyQt4 is deprecated.
 
 (Copied and updated from matplotlib)
 """
+# pylint: disable-all
 
 from distutils.version import LooseVersion
 import os

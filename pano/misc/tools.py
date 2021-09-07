@@ -294,10 +294,12 @@ def prep_compare_images(
 
 
 def prep_compare_fig(images: Tuple[np.ndarray, np.ndarray],
-                     titles=('Image 1', 'Image 2'),
+                     titles=('Image 1', 'Image 2', 'Compare (checkerboard)',
+                             'Compare (difference)'),
                      norm=False,
                      eq_hist=True,
-                     n_tiles=(8, 8)):
+                     n_tiles=(8, 8),
+                     cmap=None):
   """
   두 영상의 전처리 및 비교 영상 생성.
   두 영상 모두 2차원 (gray image)이며 해상도 (ndarray.shape)이 동일해야 함.
@@ -314,6 +316,8 @@ def prep_compare_fig(images: Tuple[np.ndarray, np.ndarray],
       명암 개선을 위해 Histogram Equalization 적용 여부
   n_tiles : tuple, optional
       Checkerboard 타일 개수
+  cmap : Optional[str, Colormap]
+      Colormap
 
   Returns
   -------
@@ -333,25 +337,19 @@ def prep_compare_fig(images: Tuple[np.ndarray, np.ndarray],
                                eq_hist=eq_hist)
 
   fig, axes = plt.subplots(2, 2, figsize=(16, 9))
-  cmap = 'gray'
 
   axes[0, 0].imshow(images[0], cmap=cmap)
-  axes[0, 0].set_title(titles[0])
-
   axes[0, 1].imshow(images[1], cmap=cmap)
-  axes[0, 1].set_title(titles[1])
 
   cb = compare_images(img1, img2, method='checkerboard', n_tiles=n_tiles)
+  diff = compare_images(img1, img2, method='diff')
 
   axes[1, 0].imshow(cb, cmap=cmap)
-  axes[1, 0].set_title('Compare (checkerboard)')
-
-  diff = compare_images(img1, img2, method='diff')
   axes[1, 1].imshow(diff, cmap=cmap)
-  axes[1, 1].set_title('Compare (difference)')
 
-  for ax in axes.ravel():
+  for ax, title in zip(axes.ravel(), titles):
     ax.set_axis_off()
+    ax.set_title(title)
 
   fig.tight_layout()
 

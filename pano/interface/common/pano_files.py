@@ -71,6 +71,8 @@ class FN:
   COLOR = '_color'
 
   RGST_CMPR = '_compare'
+  RGST_AUTO = '_automatic'
+  RGST_MANUAL = '_manual'
   SEG_FIG = '_fig'
 
 
@@ -203,6 +205,10 @@ class ThermalPanoramaFileManager:
     return path.with_name(f'{path.stem}{FN.COLOR}{FN.LL}')
 
   def rgst_matrix_path(self):
+    """
+    자동 열/실화상 정합 결과인 transform matrix 저장 경로.
+    실화상을 열화상 크기에 맞게 resize 후 matrix를 적용 필요.
+    """
     return self.subdir(DIR.RGST).joinpath('transformation_matrix.npz')
 
   @staticmethod
