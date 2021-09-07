@@ -10,11 +10,12 @@ from loguru import logger
 from pano import utils
 from pano.interface.common.init import init_project
 from pano.interface.controller import Controller
-from pano.interface.controller import RegistrationPlotController
 from pano.interface.mbq import FigureCanvas
 from pano.interface.mbq import QtCore
 from pano.interface.mbq import QtGui
 from pano.interface.mbq import QtQml
+from pano.interface.plot_controller import RegistrationPlotController
+from pano.interface.plot_controller import SegmentationPlotController
 
 init_project(qt=True)
 
@@ -57,7 +58,7 @@ def main(debug=False, loglevel=20):
   QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
   os.environ['QT_QUICK_CONTROLS_CONF'] = conf_path.as_posix()
 
-  QtQml.qmlRegisterType(FigureCanvas, 'Backend', 1, 0, 'RegistrationCanvas')
+  QtQml.qmlRegisterType(FigureCanvas, 'Backend', 1, 0, 'FigureCanvas')
 
   app = QtGui.QGuiApplication(sys.argv)
   engine = QtQml.QQmlApplicationEngine(qml_path.as_posix())
@@ -73,10 +74,15 @@ def main(debug=False, loglevel=20):
   context = engine.rootContext()
   context.setContextProperty('con', controller)
 
-  canvas = win.findChild(FigureCanvas, 'registration_plot')
+  rgst_canvas = win.findChild(FigureCanvas, 'registration_plot')
   rpc = RegistrationPlotController()
-  rpc.init(app, canvas)
-  controller.rpc = rpc
+  rpc.init(app, rgst_canvas)
+
+  seg_canvas = win.findChild(FigureCanvas, 'segmentation_plot')
+  spc = SegmentationPlotController()
+  spc.init(app, seg_canvas)
+
+  controller.set_plot_controllers(rpc, spc)
 
   return app.exec_()
 

@@ -25,7 +25,7 @@ Pane {
             }
             Button {
                 text : qsTr('저장')
-                onReleased: con.rgst_save()
+                onReleased : con.rgst_save()
                 // TODO 작업 진행 현황 따라 색 변환
             }
             Button {
@@ -84,7 +84,7 @@ Pane {
                 ColumnLayout {
                     anchors.fill : parent
 
-                    RegistrationCanvas {
+                    FigureCanvas {
                         id : plot
                         objectName : 'registration_plot'
                         Layout.fillHeight : true

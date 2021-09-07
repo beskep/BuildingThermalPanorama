@@ -74,10 +74,8 @@ ApplicationWindow {
                     RegistrationPanel {
                         id : registration_panel
                     }
-                    Page {
-                        Label {
-                            text : '외피 부위 인식'
-                        }
+                    SegmentationPanel {
+                        id : segmentation_panel
                     }
                     Page {
                         Label {
@@ -112,6 +110,8 @@ ApplicationWindow {
             return project_panel
         } else if (name === 'registration') {
             return registration_panel
+        } else if (name === 'segmentation') {
+            return segmentation_panel
         }
         return null
     }
