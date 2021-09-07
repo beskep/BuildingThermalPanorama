@@ -15,89 +15,104 @@ ApplicationWindow {
     title : qsTr('건물 에너지 검진을 위한 열화상 파노라마 영상처리 프로그램')
 
     FontLoader {
-        id: mono
+        id : mono
         source : '../font/FiraCode-Regular.ttf'
     }
     FontLoader {
-        id: sans
+        id : sans
         source : '../font/SpoqaHanSansNeo-Regular.ttf'
     }
 
-    RowLayout {
+    ColumnLayout {
         anchors.fill : parent
 
-        VertTabBar {
-            id : tab_bar
-
-            Layout.preferredWidth : 200
+        RowLayout {
+            Layout.fillWidth : true
             Layout.fillHeight : true
 
-            background : Rectangle {}
+            VertTabBar {
+                id : tab_bar
 
-            TabButton {
-                text : '프로젝트 설정'
-                width : parent.width
+                Layout.preferredWidth : 200
+                Layout.fillHeight : true
+
+                background : Rectangle {}
+
+                TabButton {
+                    text : '프로젝트 설정'
+                    width : parent.width
+                }
+                TabButton {
+                    text : '열·실화상 정합'
+                    width : parent.width
+                }
+                TabButton {
+                    text : '외피 부위 인식'
+                    width : parent.width
+                }
+                TabButton {
+                    text : '파노라마 생성'
+                    width : parent.width
+                }
+                TabButton {
+                    text : '왜곡 보정'
+                    width : parent.width
+                }
             }
-            TabButton {
-                text : '열·실화상 정합'
-                width : parent.width
-            }
-            TabButton {
-                text : '외피 부위 인식'
-                width : parent.width
-            }
-            TabButton {
-                text : '파노라마 생성'
-                width : parent.width
-            }
-            TabButton {
-                text : '왜곡 보정'
-                width : parent.width
+
+            Page {
+                Layout.fillHeight : true
+                Layout.fillWidth : true
+
+                StackLayout {
+                    anchors.fill : parent
+                    currentIndex : tab_bar.currentIndex
+
+                    ProjectPanel {
+                        id : project_panel
+                    }
+                    RegistrationPanel {
+                        id : registration_panel
+                    }
+                    Page {
+                        Label {
+                            text : '외피 부위 인식'
+                        }
+                    }
+                    Page {
+                        Label {
+                            text : '파노라마 생성'
+                        }
+                    }
+                    Page {
+                        Label {
+                            text : '왜곡 보정'
+                        }
+                    }
+                }
             }
         }
 
-        Page {
-            Layout.fillHeight : true
+        ProgressBar {
+            id : progress_bar
             Layout.fillWidth : true
-
-            StackLayout {
-                currentIndex : tab_bar.currentIndex
-                anchors.fill : parent
-
-                ProjectPanel {
-                    id : project_panel
-                }
-                RegistrationPanel {
-                    id : registration_panel
-                }
-                Page {
-                    Label {
-                        text : '외피 부위 인식'
-                    }
-                }
-                Page {
-                    Label {
-                        text : '파노라마 생성'
-                    }
-                }
-                Page {
-                    Label {
-                        text : '왜곡 보정'
-                    }
-                }
-            }
+            indeterminate : false
+            value : 1.0
         }
     }
 
     footer : StatusBar {}
 
+    function pbar(value) {
+        progress_bar.value = value
+    }
+
     function get_panel(name) {
-        if (name == 'project') {
+        if (name === 'project') {
             return project_panel
-        } else if (name == 'registration') {
+        } else if (name === 'registration') {
             return registration_panel
         }
-
         return null
     }
 }

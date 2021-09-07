@@ -33,16 +33,21 @@ from logging import LogRecord
 from os import PathLike
 from pathlib import Path
 import sys
-from typing import Union
+from typing import Callable, Optional, Union
 
 from loguru import logger
 from rich.console import Console
 from rich.logging import RichHandler
+from rich.progress import track as _track
 from rich.theme import Theme
 
 
+def is_frozen():
+  return getattr(sys, &#39;frozen&#39;, False)
+
+
 class DIR:
-  if getattr(sys, &#39;frozen&#39;, False):
+  if is_frozen():
     ROOT = Path(sys.executable).parent.resolve()
   else:
     ROOT = Path(__file__).parents[1].resolve()
@@ -107,7 +112,42 @@ def set_logger(level: Union[int, str] = 20):
     logger.level(&#39;BLANK&#39;)
   except ValueError:
     # 빈 칸 표시하는 &#39;BLANK&#39; level 새로 등록
-    logger.level(name=&#39;BLANK&#39;, no=_BLANK_NO)</code></pre>
+    logger.level(name=&#39;BLANK&#39;, no=_BLANK_NO)
+
+
+def track(sequence,
+          description=&#39;Working...&#39;,
+          total: Optional[float] = None,
+          transient=True,
+          **kwargs):
+  &#34;&#34;&#34;Track progress on console by iterating over a sequence.&#34;&#34;&#34;
+  return _track(sequence=sequence,
+                description=description,
+                total=total,
+                console=console,
+                transient=transient,
+                **kwargs)
+
+
+def ptrack(sequence,
+           description=&#39;Working...&#39;,
+           total: Optional[float] = None,
+           transient=True,
+           **kwargs):
+  &#34;&#34;&#34;
+  Track progress on console by iterating over a sequence.
+  Yield progress ratio and value.
+  &#34;&#34;&#34;
+  if total is None:
+    total = len(sequence)
+
+  for idx, value in _track(sequence=enumerate(sequence),
+                           description=description,
+                           total=total,
+                           console=console,
+                           transient=transient,
+                           **kwargs):
+    yield (idx + 1) / total, value</code></pre>
 </details>
 </section>
 <section>
@@ -117,8 +157,52 @@ def set_logger(level: Union[int, str] = 20):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="pano.utils.is_frozen"><code class="name flex">
+<span>def <span class="ident">is_frozen</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_frozen():
+  return getattr(sys, &#39;frozen&#39;, False)</code></pre>
+</details>
+</dd>
+<dt id="pano.utils.ptrack"><code class="name flex">
+<span>def <span class="ident">ptrack</span></span>(<span>sequence, description='Working...', total: Optional[float] = None, transient=True, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Track progress on console by iterating over a sequence.
+Yield progress ratio and value.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ptrack(sequence,
+           description=&#39;Working...&#39;,
+           total: Optional[float] = None,
+           transient=True,
+           **kwargs):
+  &#34;&#34;&#34;
+  Track progress on console by iterating over a sequence.
+  Yield progress ratio and value.
+  &#34;&#34;&#34;
+  if total is None:
+    total = len(sequence)
+
+  for idx, value in _track(sequence=enumerate(sequence),
+                           description=description,
+                           total=total,
+                           console=console,
+                           transient=transient,
+                           **kwargs):
+    yield (idx + 1) / total, value</code></pre>
+</details>
+</dd>
 <dt id="pano.utils.set_logger"><code class="name flex">
-<span>def <span class="ident">set_logger</span></span>(<span>level: typing.Union[int, str] = 20)</span>
+<span>def <span class="ident">set_logger</span></span>(<span>level: Union[int, str] = 20)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -166,6 +250,29 @@ def set_logger(level: Union[int, str] = 20):
     logger.level(name=&#39;BLANK&#39;, no=_BLANK_NO)</code></pre>
 </details>
 </dd>
+<dt id="pano.utils.track"><code class="name flex">
+<span>def <span class="ident">track</span></span>(<span>sequence, description='Working...', total: Optional[float] = None, transient=True, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Track progress on console by iterating over a sequence.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def track(sequence,
+          description=&#39;Working...&#39;,
+          total: Optional[float] = None,
+          transient=True,
+          **kwargs):
+  &#34;&#34;&#34;Track progress on console by iterating over a sequence.&#34;&#34;&#34;
+  return _track(sequence=sequence,
+                description=description,
+                total=total,
+                console=console,
+                transient=transient,
+                **kwargs)</code></pre>
+</details>
+</dd>
 </dl>
 </section>
 <section>
@@ -181,7 +288,7 @@ def set_logger(level: Union[int, str] = 20):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class DIR:
-  if getattr(sys, &#39;frozen&#39;, False):
+  if is_frozen():
     ROOT = Path(sys.executable).parent.resolve()
   else:
     ROOT = Path(__file__).parents[1].resolve()
@@ -221,7 +328,10 @@ def set_logger(level: Union[int, str] = 20):
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="pano.utils.is_frozen" href="#pano.utils.is_frozen">is_frozen</a></code></li>
+<li><code><a title="pano.utils.ptrack" href="#pano.utils.ptrack">ptrack</a></code></li>
 <li><code><a title="pano.utils.set_logger" href="#pano.utils.set_logger">set_logger</a></code></li>
+<li><code><a title="pano.utils.track" href="#pano.utils.track">track</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>

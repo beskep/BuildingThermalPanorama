@@ -255,7 +255,7 @@ class PanoramaPreprocess:
 <dl>
 <dt id="pano.stitch.preprocess.PanoramaPreprocess"><code class="flex name class">
 <span>class <span class="ident">PanoramaPreprocess</span></span>
-<span>(</span><span>is_numeric: bool, mask_threshold: typing.Union[float, NoneType] = -30.0, contrast: typing.Union[str, NoneType] = 'equalization', denoise: typing.Union[str, NoneType] = 'bilateral')</span>
+<span>(</span><span>is_numeric: bool, mask_threshold: Optional[float] = -30.0, contrast: Optional[str] = 'equalization', denoise: Optional[str] = 'bilateral')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>파노라마 생성을 위한 열화상, 실화상의 전처리</p>
@@ -640,7 +640,7 @@ Histogram normalization을 적용하지 않고 경고 메세지. 실화상의 �
 </details>
 </dd>
 <dt id="pano.stitch.preprocess.PanoramaPreprocess.masking"><code class="name flex">
-<span>def <span class="ident">masking</span></span>(<span>self, image: numpy.ndarray) ‑> typing.Union[numpy.ndarray, NoneType]</span>
+<span>def <span class="ident">masking</span></span>(<span>self, image: numpy.ndarray) ‑> Optional[numpy.ndarray]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>영상의 픽셀값에 따라 마스킹. 대상 영상이 열화상이 아닌 경우 (not <code>is_numeric</code>)

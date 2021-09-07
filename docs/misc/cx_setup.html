@@ -30,8 +30,8 @@
 <pre><code class="python">&#34;&#34;&#34;cx_Freeze를 통해 실행 파일 생성을 위한 코드&#34;&#34;&#34;
 
 from pathlib import Path
+import sys
 
-import cx_Freeze
 from cx_Freeze import Executable
 from cx_Freeze import setup
 
@@ -65,13 +65,12 @@ def build():
       &#39;skimage.io._plugins.pil_plugin&#39;,
       &#39;skimage&#39;,
       &#39;tensorflow&#39;,
-      &#39;PySide2&#39;,
   ]
-  excludes = [&#39;tkinter&#39;, &#39;locket&#39;, &#39;PyQt5&#39;]
+  excludes = [&#39;tkinter&#39;, &#39;locket&#39;, &#39;mypy&#39;]
   zip_include_packages = []
 
   bins = [&#39;ITK&#39;]
-  lib_bin = Path(cx_Freeze.__path__[0]).parents[2].joinpath(&#39;Library/bin&#39;)
+  lib_bin = Path(sys.base_prefix).joinpath(&#39;Library/bin&#39;)
   for b in bins:
     files = list(lib_bin.glob(f&#39;*{b}*&#39;))
     for file in files:
@@ -146,13 +145,12 @@ if __name__ == &#39;__main__&#39;:
       &#39;skimage.io._plugins.pil_plugin&#39;,
       &#39;skimage&#39;,
       &#39;tensorflow&#39;,
-      &#39;PySide2&#39;,
   ]
-  excludes = [&#39;tkinter&#39;, &#39;locket&#39;, &#39;PyQt5&#39;]
+  excludes = [&#39;tkinter&#39;, &#39;locket&#39;, &#39;mypy&#39;]
   zip_include_packages = []
 
   bins = [&#39;ITK&#39;]
-  lib_bin = Path(cx_Freeze.__path__[0]).parents[2].joinpath(&#39;Library/bin&#39;)
+  lib_bin = Path(sys.base_prefix).joinpath(&#39;Library/bin&#39;)
   for b in bins:
     files = list(lib_bin.glob(f&#39;*{b}*&#39;))
     for file in files:

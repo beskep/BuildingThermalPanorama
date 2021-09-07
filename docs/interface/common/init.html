@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.9.2" />
-<title>pano.interface.cli API documentation</title>
-<meta name="description" content="파노라마 영상처리 CLI" />
+<title>pano.interface.common.init API documentation</title>
+<meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,88 +19,70 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>pano.interface.cli</code></h1>
+<h1 class="title">Module <code>pano.interface.common.init</code></h1>
 </header>
 <section id="section-intro">
-<p>파노라마 영상처리 CLI</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">&#34;&#34;&#34;파노라마 영상처리 CLI&#34;&#34;&#34;
+<pre><code class="python">import os
+from pathlib import Path
+import sys
 
-import click
-from loguru import logger
+import skimage.io
 
-from pano import utils
-from pano.interface.common.init import init_project
-
-init_project(qt=False)
-
-commands = {
-    &#39;init&#39;, &#39;extract&#39;, &#39;register&#39;, &#39;segment&#39;, &#39;panorama&#39;, &#39;correct&#39;, &#39;run&#39;
-}
+from pano.utils import DIR
+from pano.utils import is_frozen
 
 
-@click.command(context_settings=dict(help_option_names=[&#39;-h&#39;, &#39;--help&#39;]))
-@click.argument(&#39;directory&#39;, required=True)
-@click.argument(&#39;command&#39;, default=&#39;run&#39;)
-@click.option(&#39;--default&#39;, is_flag=True, help=&#39;기본 설정 사용&#39;)
-@click.option(&#39;--debug&#39;, is_flag=True, help=&#39;디버그 메세지 출력&#39;)
-@click.option(&#39;--raise&#39;, &#39;flag_raise&#39;, is_flag=True)
-@click.option(&#39;-l&#39;, &#39;--loglevel&#39;, default=20, help=&#39;로깅 레벨&#39;)
-def cli(directory: str, command: str, default: bool, debug: bool,
-        flag_raise: bool, loglevel: int):
-  &#34;&#34;&#34;
-  DIRECTORY: 대상 폴더
-
-  \b
-  COMMAND:
-    init      대상 폴더에 설정 파일을 복사
-    extract   원본 파일로부터 열·실화상 추출
-    register  열화상-실화상 정합
-    segment   외피 부위 인식
-    panorama  파노라마 생성
-    correct   파노라마 왜곡 보정
-    run       모든 command 순차 실행
-  &#34;&#34;&#34;
-  level = min(loglevel, (10 if debug else 20))
-  utils.set_logger(level=level)
-
-  logger.info(&#39;Execute &#34;{}&#34; on &#34;{}&#34;&#39;, command.upper(), directory)
-  command = command.lower()
-
-  if command not in commands:
-    logger.error(&#39;Command는 {} 중 하나여야 합니다.&#39;, commands)
-    return
-
-  if command == &#39;init&#39;:
-    default = True
-
+def init_project(qt: bool):
   # pylint: disable=import-outside-toplevel
-  from pano.interface.pano_project import ThermalPanorama
 
-  try:
-    tp = ThermalPanorama(directory=directory, default_config=default)
-  except (ValueError, OSError) as e:
-    logger.error(&#39;{}: {}&#39;, type(e).__name__, e)
-    return
+  os.environ[&#39;TF_CPP_MIN_LOG_LEVEL&#39;] = &#39;3&#39;
+  skimage.io.use_plugin(&#39;pil&#39;)
 
-  if command == &#39;init&#39;:
-    return
+  if qt:
+    if not is_frozen() and &#39;PySide2&#39; in sys.modules:
+      import PySide2
 
-  fn = getattr(tp, command)
-  errors = () if flag_raise else (RuntimeError, ValueError, KeyError, OSError)
+      pyside_dir = Path(PySide2.__file__).parent
+      plugins_dir = pyside_dir.joinpath(&#39;plugins&#39;)
+      qml_dir = pyside_dir.joinpath(&#39;qml&#39;)
 
-  try:
-    fn()
-  except errors as e:
-    logger.exception(e)
+      os.environ[&#39;QT_PLUGIN_PATH&#39;] = plugins_dir.as_posix()
+      os.environ[&#39;QML2_IMPORT_PATH&#39;] = qml_dir.as_posix()
 
+    # Matplotlib backend, style 설정
+    import matplotlib as mpl
+    mpl.use(&#39;Qt5Agg&#39;)
 
-if __name__ == &#39;__main__&#39;:
-  # pylint: disable=no-value-for-parameter
-  cli()</code></pre>
+    import matplotlib.font_manager as fm
+
+    font_name = &#39;Spoqa Han Sans Neo&#39;
+    font_path = DIR.RESOURCE.joinpath(&#39;font/SpoqaHanSansNeo-Regular.ttf&#39;)
+    assert font_path.exists(), font_path
+
+    fe = fm.FontEntry(fname=font_path.as_posix(), name=font_name)
+    fm.fontManager.ttflist.insert(0, fe)
+
+    mpl.rcParams[&#39;font.family&#39;] = font_name
+    mpl.rcParams[&#39;axes.unicode_minus&#39;] = False
+
+    import matplotlib.pyplot
+
+    try:
+      import seaborn as sns
+    except ImportError:
+      pass
+    else:
+      sns.set(style=&#39;whitegrid&#39;,
+              font=font_name,
+              rc={
+                  &#39;axes.edgecolor&#39;: &#39;0.2&#39;,
+                  &#39;grid.color&#39;: &#39;0.8&#39;
+              })
+      # sns.set_context(&#39;talk&#39;, font_scale=0.8)</code></pre>
 </details>
 </section>
 <section>
@@ -108,6 +90,67 @@ if __name__ == &#39;__main__&#39;:
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="pano.interface.common.init.init_project"><code class="name flex">
+<span>def <span class="ident">init_project</span></span>(<span>qt: bool)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def init_project(qt: bool):
+  # pylint: disable=import-outside-toplevel
+
+  os.environ[&#39;TF_CPP_MIN_LOG_LEVEL&#39;] = &#39;3&#39;
+  skimage.io.use_plugin(&#39;pil&#39;)
+
+  if qt:
+    if not is_frozen() and &#39;PySide2&#39; in sys.modules:
+      import PySide2
+
+      pyside_dir = Path(PySide2.__file__).parent
+      plugins_dir = pyside_dir.joinpath(&#39;plugins&#39;)
+      qml_dir = pyside_dir.joinpath(&#39;qml&#39;)
+
+      os.environ[&#39;QT_PLUGIN_PATH&#39;] = plugins_dir.as_posix()
+      os.environ[&#39;QML2_IMPORT_PATH&#39;] = qml_dir.as_posix()
+
+    # Matplotlib backend, style 설정
+    import matplotlib as mpl
+    mpl.use(&#39;Qt5Agg&#39;)
+
+    import matplotlib.font_manager as fm
+
+    font_name = &#39;Spoqa Han Sans Neo&#39;
+    font_path = DIR.RESOURCE.joinpath(&#39;font/SpoqaHanSansNeo-Regular.ttf&#39;)
+    assert font_path.exists(), font_path
+
+    fe = fm.FontEntry(fname=font_path.as_posix(), name=font_name)
+    fm.fontManager.ttflist.insert(0, fe)
+
+    mpl.rcParams[&#39;font.family&#39;] = font_name
+    mpl.rcParams[&#39;axes.unicode_minus&#39;] = False
+
+    import matplotlib.pyplot
+
+    try:
+      import seaborn as sns
+    except ImportError:
+      pass
+    else:
+      sns.set(style=&#39;whitegrid&#39;,
+              font=font_name,
+              rc={
+                  &#39;axes.edgecolor&#39;: &#39;0.2&#39;,
+                  &#39;grid.color&#39;: &#39;0.8&#39;
+              })
+      # sns.set_context(&#39;talk&#39;, font_scale=0.8)</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 </section>
@@ -120,7 +163,12 @@ if __name__ == &#39;__main__&#39;:
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="pano.interface" href="index.html">pano.interface</a></code></li>
+<li><code><a title="pano.interface.common" href="index.html">pano.interface.common</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="pano.interface.common.init.init_project" href="#pano.interface.common.init.init_project">init_project</a></code></li>
 </ul>
 </li>
 </ul>

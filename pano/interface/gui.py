@@ -1,23 +1,23 @@
 """파노라마 영상처리 GUI"""
 # pylint: disable=wrong-import-position, ungrouped-imports
 
+from multiprocessing import freeze_support
 import os
 import sys
 
-from pano.interface.common.init import init_project
-
-init_project(qt=True)
-
+import click
 from loguru import logger
-from matplotlib_backend_qtquick.backend_qtquickagg import FigureCanvas
-from PySide2 import QtCore
-from PySide2 import QtGui
-from PySide2 import QtQml
-from PySide2 import QtSvg  # for matplotlib-backend-qtquick
 
 from pano import utils
+from pano.interface.common.init import init_project
 from pano.interface.controller import Controller
 from pano.interface.controller import RegistrationPlotController
+from pano.interface.mbq import FigureCanvas
+from pano.interface.mbq import QtCore
+from pano.interface.mbq import QtGui
+from pano.interface.mbq import QtQml
+
+init_project(qt=True)
 
 _qt_message = {
     QtCore.QtMsgType.QtDebugMsg: 'DEBUG',
@@ -34,8 +34,17 @@ def _qt_message_handler(mode, context, message):
   logger.log(level, message)
 
 
-def main(log_level=20):
-  utils.set_logger(log_level)
+@click.command()
+@click.option('-d', '--debug', is_flag=True)
+@click.option('-l', '--loglevel', default=20)
+def main(debug=False, loglevel=20):
+  freeze_support()
+
+  loglevel = min(loglevel, (10 if debug else 20))
+  utils.set_logger(loglevel)
+
+  if loglevel < 10:
+    os.environ['QT_DEBUG_PLUGINS'] = '1'
 
   conf_path = utils.DIR.RESOURCE.joinpath('qtquickcontrols2.conf')
   qml_path = utils.DIR.RESOURCE.joinpath('qml/main.qml')
@@ -44,7 +53,6 @@ def main(log_level=20):
     if not p.exists():
       raise FileNotFoundError(p)
 
-  QtCore.qInstallMessageHandler(_qt_message_handler)
   QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
   QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
   os.environ['QT_QUICK_CONTROLS_CONF'] = conf_path.as_posix()
@@ -57,11 +65,11 @@ def main(log_level=20):
   root_objects = engine.rootObjects()
   if not root_objects:
     logger.critical('Failed to load QML {}', qml_path)
-    return
+    return -1
 
   win: QtGui.QWindow = root_objects[0]
 
-  controller = Controller(win)
+  controller = Controller(win, loglevel)
   context = engine.rootContext()
   context.setContextProperty('con', controller)
 
@@ -70,8 +78,8 @@ def main(log_level=20):
   rpc.init(app, canvas)
   controller.rpc = rpc
 
-  sys.exit(app.exec_())
+  return app.exec_()
 
 
 if __name__ == '__main__':
-  main(log_level=10)
+  main()

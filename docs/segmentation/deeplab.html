@@ -441,7 +441,7 @@ map maximum entry.</dd>
 </details>
 </dd>
 <dt id="pano.segmentation.deeplab.predict"><code class="name flex">
-<span>def <span class="ident">predict</span></span>(<span>model_path: str, images: typing.List[numpy.ndarray], outpug_dir: pathlib.Path, cmap='Dark2', names: typing.Union[typing.List[str], NoneType] = None)</span>
+<span>def <span class="ident">predict</span></span>(<span>model_path: str, images: List[numpy.ndarray], outpug_dir: pathlib.Path, cmap='Dark2', names: Optional[List[str]] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>입력받은 각 영상을 DeepLabV3+ 모델을 통해 segment하고 결과를 저장.</p>
@@ -527,7 +527,7 @@ map maximum entry.</dd>
 </details>
 </dd>
 <dt id="pano.segmentation.deeplab.vis_segmentation"><code class="name flex">
-<span>def <span class="ident">vis_segmentation</span></span>(<span>image: typing.Union[numpy.ndarray, PIL.Image.Image], seg_map: numpy.ndarray, show=False, cmap='pascal') ‑> typing.Tuple[matplotlib.figure.Figure, numpy.ndarray]</span>
+<span>def <span class="ident">vis_segmentation</span></span>(<span>image: Union[numpy.ndarray, PIL.Image.Image], seg_map: numpy.ndarray, show=False, cmap='pascal') ‑> Tuple[matplotlib.figure.Figure, numpy.ndarray]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Visualizes input image, segmentation map and overlay view.</p>
@@ -761,7 +761,7 @@ map maximum entry.</dd>
 <h3>Methods</h3>
 <dl>
 <dt id="pano.segmentation.deeplab.DeepLabModel.predict_and_visualize"><code class="name flex">
-<span>def <span class="ident">predict_and_visualize</span></span>(<span>self, image: numpy.ndarray, cmap='Dark2', resize=True) ‑> typing.Tuple[numpy.ndarray, numpy.ndarray, matplotlib.figure.Figure]</span>
+<span>def <span class="ident">predict_and_visualize</span></span>(<span>self, image: numpy.ndarray, cmap='Dark2', resize=True) ‑> Tuple[numpy.ndarray, numpy.ndarray, matplotlib.figure.Figure]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>주어진 영상으로 segmentation 예측 및 시각화</p>
@@ -837,7 +837,7 @@ map maximum entry.</dd>
 </details>
 </dd>
 <dt id="pano.segmentation.deeplab.DeepLabModel.run"><code class="name flex">
-<span>def <span class="ident">run</span></span>(<span>self, image: PIL.Image.Image) ‑> typing.Tuple[PIL.Image.Image, numpy.ndarray]</span>
+<span>def <span class="ident">run</span></span>(<span>self, image: PIL.Image.Image) ‑> Tuple[PIL.Image.Image, numpy.ndarray]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Runs inference on a single image.</p>

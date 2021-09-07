@@ -792,7 +792,7 @@ class PerspectiveCorrection:
 <dl>
 <dt id="pano.distortion.perspective.CannyOptions"><code class="flex name class">
 <span>class <span class="ident">CannyOptions</span></span>
-<span>(</span><span>sigma: float = 1.0, low_threshold: typing.Union[float, NoneType] = None, high_threshold: typing.Union[float, NoneType] = None, use_quantiles: bool = False)</span>
+<span>(</span><span>sigma: float = 1.0, low_threshold: Optional[float] = None, high_threshold: Optional[float] = None, use_quantiles: bool = False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p><code>skimage.feature.canny</code> 옵션</p></div>
@@ -800,7 +800,8 @@ class PerspectiveCorrection:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class CannyOptions:
+<pre><code class="python">@dc.dataclass
+class CannyOptions:
   &#34;&#34;&#34;`skimage.feature.canny` 옵션&#34;&#34;&#34;
   sigma: float = 1.0
   low_threshold: Optional[float] = None
@@ -809,11 +810,11 @@ class PerspectiveCorrection:
 </details>
 <h3>Class variables</h3>
 <dl>
-<dt id="pano.distortion.perspective.CannyOptions.high_threshold"><code class="name">var <span class="ident">high_threshold</span> : typing.Union[float, NoneType]</code></dt>
+<dt id="pano.distortion.perspective.CannyOptions.high_threshold"><code class="name">var <span class="ident">high_threshold</span> : Optional[float]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="pano.distortion.perspective.CannyOptions.low_threshold"><code class="name">var <span class="ident">low_threshold</span> : typing.Union[float, NoneType]</code></dt>
+<dt id="pano.distortion.perspective.CannyOptions.low_threshold"><code class="name">var <span class="ident">low_threshold</span> : Optional[float]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -829,7 +830,7 @@ class PerspectiveCorrection:
 </dd>
 <dt id="pano.distortion.perspective.Correction"><code class="flex name class">
 <span>class <span class="ident">Correction</span></span>
-<span>(</span><span>edges: numpy.ndarray, edgelets: <a title="pano.distortion.perspective.Edgelets" href="#pano.distortion.perspective.Edgelets">Edgelets</a>, vp1: typing.Union[<a title="pano.distortion.perspective.VanishingPoint" href="#pano.distortion.perspective.VanishingPoint">VanishingPoint</a>, NoneType], vp2: typing.Union[<a title="pano.distortion.perspective.VanishingPoint" href="#pano.distortion.perspective.VanishingPoint">VanishingPoint</a>, NoneType], homography: <a title="pano.distortion.perspective.Homography" href="#pano.distortion.perspective.Homography">Homography</a>, crop_range: typing.Union[<a title="pano.misc.tools.CropRange" href="../misc/tools.html#pano.misc.tools.CropRange">CropRange</a>, NoneType])</span>
+<span>(</span><span>edges: numpy.ndarray, edgelets: <a title="pano.distortion.perspective.Edgelets" href="#pano.distortion.perspective.Edgelets">Edgelets</a>, vp1: Optional[<a title="pano.distortion.perspective.VanishingPoint" href="#pano.distortion.perspective.VanishingPoint">VanishingPoint</a>], vp2: Optional[<a title="pano.distortion.perspective.VanishingPoint" href="#pano.distortion.perspective.VanishingPoint">VanishingPoint</a>], homography: <a title="pano.distortion.perspective.Homography" href="#pano.distortion.perspective.Homography">Homography</a>, crop_range: Optional[<a title="pano.misc.tools.CropRange" href="../misc/tools.html#pano.misc.tools.CropRange">CropRange</a>])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Perspective correction 결과</p></div>
@@ -837,7 +838,8 @@ class PerspectiveCorrection:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Correction:
+<pre><code class="python">@dc.dataclass
+class Correction:
   &#34;&#34;&#34;Perspective correction 결과&#34;&#34;&#34;
   edges: np.ndarray
   edgelets: Edgelets
@@ -961,7 +963,7 @@ class PerspectiveCorrection:
 </details>
 <h3>Class variables</h3>
 <dl>
-<dt id="pano.distortion.perspective.Correction.crop_range"><code class="name">var <span class="ident">crop_range</span> : typing.Union[<a title="pano.misc.tools.CropRange" href="../misc/tools.html#pano.misc.tools.CropRange">CropRange</a>, NoneType]</code></dt>
+<dt id="pano.distortion.perspective.Correction.crop_range"><code class="name">var <span class="ident">crop_range</span> : Optional[<a title="pano.misc.tools.CropRange" href="../misc/tools.html#pano.misc.tools.CropRange">CropRange</a>]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -977,11 +979,11 @@ class PerspectiveCorrection:
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="pano.distortion.perspective.Correction.vp1"><code class="name">var <span class="ident">vp1</span> : typing.Union[<a title="pano.distortion.perspective.VanishingPoint" href="#pano.distortion.perspective.VanishingPoint">VanishingPoint</a>, NoneType]</code></dt>
+<dt id="pano.distortion.perspective.Correction.vp1"><code class="name">var <span class="ident">vp1</span> : Optional[<a title="pano.distortion.perspective.VanishingPoint" href="#pano.distortion.perspective.VanishingPoint">VanishingPoint</a>]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="pano.distortion.perspective.Correction.vp2"><code class="name">var <span class="ident">vp2</span> : typing.Union[<a title="pano.distortion.perspective.VanishingPoint" href="#pano.distortion.perspective.VanishingPoint">VanishingPoint</a>, NoneType]</code></dt>
+<dt id="pano.distortion.perspective.Correction.vp2"><code class="name">var <span class="ident">vp2</span> : Optional[<a title="pano.distortion.perspective.VanishingPoint" href="#pano.distortion.perspective.VanishingPoint">VanishingPoint</a>]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -989,7 +991,7 @@ class PerspectiveCorrection:
 <h3>Methods</h3>
 <dl>
 <dt id="pano.distortion.perspective.Correction.correct"><code class="name flex">
-<span>def <span class="ident">correct</span></span>(<span>self, image: numpy.ndarray, mask: typing.Union[numpy.ndarray, NoneType] = None) ‑> typing.Tuple[numpy.ndarray, typing.Union[numpy.ndarray, NoneType]]</span>
+<span>def <span class="ident">correct</span></span>(<span>self, image: numpy.ndarray, mask: Optional[numpy.ndarray] = None) ‑> Tuple[numpy.ndarray, Optional[numpy.ndarray]]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>저장된 왜곡 보정 결과를 통해 새 영상 보정</p>
@@ -1057,7 +1059,7 @@ class PerspectiveCorrection:
 </details>
 </dd>
 <dt id="pano.distortion.perspective.Correction.process_plot"><code class="name flex">
-<span>def <span class="ident">process_plot</span></span>(<span>self, image: numpy.ndarray) ‑> typing.Tuple[matplotlib.figure.Figure, matplotlib.axes._axes.Axes]</span>
+<span>def <span class="ident">process_plot</span></span>(<span>self, image: numpy.ndarray) ‑> Tuple[matplotlib.figure.Figure, matplotlib.axes._axes.Axes]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>보정 과정을 확인할 수 있는 matplotlib plot 생성</p></div>
@@ -1150,7 +1152,8 @@ class PerspectiveCorrection:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class CorrectionOptions:
+<pre><code class="python">@dc.dataclass
+class CorrectionOptions:
   &#34;&#34;&#34;
   Parameters
   ----------
@@ -1221,7 +1224,8 @@ class PerspectiveCorrection:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Edgelets:
+<pre><code class="python">@dc.dataclass
+class Edgelets:
   &#34;&#34;&#34;
   Parameters
   ----------
@@ -1290,15 +1294,16 @@ class PerspectiveCorrection:
 </dd>
 <dt id="pano.distortion.perspective.Homography"><code class="flex name class">
 <span>class <span class="ident">Homography</span></span>
-<span>(</span><span>Hproject: typing.Union[numpy.ndarray, NoneType] = None, Haffine: typing.Union[numpy.ndarray, NoneType] = None, Htranslate: typing.Union[numpy.ndarray, NoneType] = None, input_shape: typing.Union[typing.Tuple[int, int], NoneType] = None, output_shape: typing.Union[typing.Tuple[int, int], NoneType] = None)</span>
+<span>(</span><span>Hproject: Optional[numpy.ndarray] = None, Haffine: Optional[numpy.ndarray] = None, Htranslate: Optional[numpy.ndarray] = None, input_shape: Optional[Tuple[int, int]] = None, output_shape: Optional[Tuple[int, int]] = None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Homography(Hproject: Union[numpy.ndarray, NoneType] = None, Haffine: Union[numpy.ndarray, NoneType] = None, Htranslate: Union[numpy.ndarray, NoneType] = None, input_shape: Union[Tuple[int, int], NoneType] = None, output_shape: Union[Tuple[int, int], NoneType] = None)</p></div>
+<div class="desc"><p>Homography(Hproject: Optional[numpy.ndarray] = None, Haffine: Optional[numpy.ndarray] = None, Htranslate: Optional[numpy.ndarray] = None, input_shape: Optional[Tuple[int, int]] = None, output_shape: Optional[Tuple[int, int]] = None)</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Homography:
+<pre><code class="python">@dc.dataclass
+class Homography:
   Hproject: Optional[np.ndarray] = None
   Haffine: Optional[np.ndarray] = None
   Htranslate: Optional[np.ndarray] = None
@@ -1325,23 +1330,23 @@ class PerspectiveCorrection:
 </details>
 <h3>Class variables</h3>
 <dl>
-<dt id="pano.distortion.perspective.Homography.Haffine"><code class="name">var <span class="ident">Haffine</span> : typing.Union[numpy.ndarray, NoneType]</code></dt>
+<dt id="pano.distortion.perspective.Homography.Haffine"><code class="name">var <span class="ident">Haffine</span> : Optional[numpy.ndarray]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="pano.distortion.perspective.Homography.Hproject"><code class="name">var <span class="ident">Hproject</span> : typing.Union[numpy.ndarray, NoneType]</code></dt>
+<dt id="pano.distortion.perspective.Homography.Hproject"><code class="name">var <span class="ident">Hproject</span> : Optional[numpy.ndarray]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="pano.distortion.perspective.Homography.Htranslate"><code class="name">var <span class="ident">Htranslate</span> : typing.Union[numpy.ndarray, NoneType]</code></dt>
+<dt id="pano.distortion.perspective.Homography.Htranslate"><code class="name">var <span class="ident">Htranslate</span> : Optional[numpy.ndarray]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="pano.distortion.perspective.Homography.input_shape"><code class="name">var <span class="ident">input_shape</span> : typing.Union[typing.Tuple[int, int], NoneType]</code></dt>
+<dt id="pano.distortion.perspective.Homography.input_shape"><code class="name">var <span class="ident">input_shape</span> : Optional[Tuple[int, int]]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="pano.distortion.perspective.Homography.output_shape"><code class="name">var <span class="ident">output_shape</span> : typing.Union[typing.Tuple[int, int], NoneType]</code></dt>
+<dt id="pano.distortion.perspective.Homography.output_shape"><code class="name">var <span class="ident">output_shape</span> : Optional[Tuple[int, int]]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1389,7 +1394,7 @@ class PerspectiveCorrection:
 </dd>
 <dt id="pano.distortion.perspective.HoughOptions"><code class="flex name class">
 <span>class <span class="ident">HoughOptions</span></span>
-<span>(</span><span>threshold: int = 10, line_length: int = 50, line_gap: int = 10, theta: typing.Union[numpy.ndarray, NoneType] = None, seed: typing.Union[int, NoneType] = None)</span>
+<span>(</span><span>threshold: int = 10, line_length: int = 50, line_gap: int = 10, theta: Optional[numpy.ndarray] = None, seed: Optional[int] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p><code>skimage.transform.probabilistic_hough_line</code> 옵션</p></div>
@@ -1397,7 +1402,8 @@ class PerspectiveCorrection:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class HoughOptions:
+<pre><code class="python">@dc.dataclass
+class HoughOptions:
   &#34;&#34;&#34;`skimage.transform.probabilistic_hough_line` 옵션&#34;&#34;&#34;
   threshold: int = 10
   line_length: int = 50
@@ -1415,11 +1421,11 @@ class PerspectiveCorrection:
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="pano.distortion.perspective.HoughOptions.seed"><code class="name">var <span class="ident">seed</span> : typing.Union[int, NoneType]</code></dt>
+<dt id="pano.distortion.perspective.HoughOptions.seed"><code class="name">var <span class="ident">seed</span> : Optional[int]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="pano.distortion.perspective.HoughOptions.theta"><code class="name">var <span class="ident">theta</span> : typing.Union[numpy.ndarray, NoneType]</code></dt>
+<dt id="pano.distortion.perspective.HoughOptions.theta"><code class="name">var <span class="ident">theta</span> : Optional[numpy.ndarray]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1451,7 +1457,7 @@ class PerspectiveCorrection:
 </dd>
 <dt id="pano.distortion.perspective.PerspectiveCorrection"><code class="flex name class">
 <span>class <span class="ident">PerspectiveCorrection</span></span>
-<span>(</span><span>canny_options: typing.Union[<a title="pano.distortion.perspective.CannyOptions" href="#pano.distortion.perspective.CannyOptions">CannyOptions</a>, NoneType] = None, hough_options: typing.Union[<a title="pano.distortion.perspective.HoughOptions" href="#pano.distortion.perspective.HoughOptions">HoughOptions</a>, NoneType] = None, correction_options: typing.Union[<a title="pano.distortion.perspective.CorrectionOptions" href="#pano.distortion.perspective.CorrectionOptions">CorrectionOptions</a>, NoneType] = None)</span>
+<span>(</span><span>canny_options: Optional[<a title="pano.distortion.perspective.CannyOptions" href="#pano.distortion.perspective.CannyOptions">CannyOptions</a>] = None, hough_options: Optional[<a title="pano.distortion.perspective.HoughOptions" href="#pano.distortion.perspective.HoughOptions">HoughOptions</a>] = None, correction_options: Optional[<a title="pano.distortion.perspective.CorrectionOptions" href="#pano.distortion.perspective.CorrectionOptions">CorrectionOptions</a>] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>영상의 소실점으로부터 시점 왜곡 (perspective distortion)을 보정하는
@@ -1800,7 +1806,7 @@ Homography 행렬 추정.</p>
 <h3>Methods</h3>
 <dl>
 <dt id="pano.distortion.perspective.PerspectiveCorrection.compute_homography"><code class="name flex">
-<span>def <span class="ident">compute_homography</span></span>(<span>self, image_shape: typing.Tuple[int, int], vp1: numpy.ndarray, vp2: numpy.ndarray) ‑> <a title="pano.distortion.perspective.Homography" href="#pano.distortion.perspective.Homography">Homography</a></span>
+<span>def <span class="ident">compute_homography</span></span>(<span>self, image_shape: Tuple[int, int], vp1: numpy.ndarray, vp2: numpy.ndarray) ‑> <a title="pano.distortion.perspective.Homography" href="#pano.distortion.perspective.Homography">Homography</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>두 개의 소실점으로부터 시점 보정을 위한 homography 행렬 추정</p>
@@ -1872,7 +1878,7 @@ Homography 행렬 추정.</p>
 </details>
 </dd>
 <dt id="pano.distortion.perspective.PerspectiveCorrection.perspective_correct"><code class="name flex">
-<span>def <span class="ident">perspective_correct</span></span>(<span>self, image: numpy.ndarray, mask: typing.Union[numpy.ndarray, NoneType] = None) ‑> <a title="pano.distortion.perspective.Correction" href="#pano.distortion.perspective.Correction">Correction</a></span>
+<span>def <span class="ident">perspective_correct</span></span>(<span>self, image: numpy.ndarray, mask: Optional[numpy.ndarray] = None) ‑> <a title="pano.distortion.perspective.Correction" href="#pano.distortion.perspective.Correction">Correction</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>시점 왜곡 보정</p>

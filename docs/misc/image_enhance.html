@@ -187,7 +187,7 @@ class ImageEnhance:
 <dl>
 <dt id="pano.misc.image_enhance.ImageEnhance"><code class="flex name class">
 <span>class <span class="ident">ImageEnhance</span></span>
-<span>(</span><span>image: numpy.ndarray, scales: typing.Iterable[float] = (1.0,), rotations: typing.Iterable[float] = (0.0,), translations: typing.Iterable[typing.Iterable[float]] = ((0.0, 0.0),))</span>
+<span>(</span><span>image: numpy.ndarray, scales: Iterable[float] = (1.0,), rotations: Iterable[float] = (0.0,), translations: Iterable[Iterable[float]] = ((0.0, 0.0),))</span>
 </code></dt>
 <dd>
 <div class="desc"><p>대상 영상에 similarity transform을 적용한 이미지를 반환</p>
@@ -502,7 +502,7 @@ def original(self):
 </details>
 </dd>
 <dt id="pano.misc.image_enhance.ImageEnhance.transformed_images"><code class="name flex">
-<span>def <span class="ident">transformed_images</span></span>(<span>self) ‑> typing.Iterator[typing.Tuple[numpy.ndarray, float, float, numpy.ndarray]]</span>
+<span>def <span class="ident">transformed_images</span></span>(<span>self) ‑> Iterator[Tuple[numpy.ndarray, float, float, numpy.ndarray]]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>입력한 scale, rotation, translation 조합 (product)을 적용한 영상의 iterator</p>

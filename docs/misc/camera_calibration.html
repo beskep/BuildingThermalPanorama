@@ -240,7 +240,7 @@ class CameraCalibration:
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="pano.misc.camera_calibration.compute_camera_matrix"><code class="name flex">
-<span>def <span class="ident">compute_camera_matrix</span></span>(<span>files: typing.List[typing.Union[str, pathlib.Path]], save_dir: typing.Union[str, pathlib.Path], pattern_size=(3, 3))</span>
+<span>def <span class="ident">compute_camera_matrix</span></span>(<span>files: List[Union[str, pathlib.Path]], save_dir: Union[str, pathlib.Path], pattern_size=(3, 3))</span>
 </code></dt>
 <dd>
 <div class="desc"><p>주어진 영상으로부터 Chessboard 패턴을 검출하고 카메라 보정 패러미터 산정.</p>
@@ -309,7 +309,7 @@ class CameraCalibration:
 <dl>
 <dt id="pano.misc.camera_calibration.CameraCalibration"><code class="flex name class">
 <span>class <span class="ident">CameraCalibration</span></span>
-<span>(</span><span>params_path: typing.Union[str, pathlib.Path])</span>
+<span>(</span><span>params_path: Union[str, pathlib.Path])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>추출한 Camera Calibration 패러미터를 읽고 주어진 영상을 calibrate하는 클래스</p>

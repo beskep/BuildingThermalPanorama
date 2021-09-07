@@ -4,11 +4,12 @@ from logging import LogRecord
 from os import PathLike
 from pathlib import Path
 import sys
-from typing import Union
+from typing import Callable, Optional, Union
 
 from loguru import logger
 from rich.console import Console
 from rich.logging import RichHandler
+from rich.progress import track as _track
 from rich.theme import Theme
 
 
@@ -83,3 +84,38 @@ def set_logger(level: Union[int, str] = 20):
   except ValueError:
     # 빈 칸 표시하는 'BLANK' level 새로 등록
     logger.level(name='BLANK', no=_BLANK_NO)
+
+
+def track(sequence,
+          description='Working...',
+          total: Optional[float] = None,
+          transient=True,
+          **kwargs):
+  """Track progress on console by iterating over a sequence."""
+  return _track(sequence=sequence,
+                description=description,
+                total=total,
+                console=console,
+                transient=transient,
+                **kwargs)
+
+
+def ptrack(sequence,
+           description='Working...',
+           total: Optional[float] = None,
+           transient=True,
+           **kwargs):
+  """
+  Track progress on console by iterating over a sequence.
+  Yield progress ratio and value.
+  """
+  if total is None:
+    total = len(sequence)
+
+  for idx, value in _track(sequence=enumerate(sequence),
+                           description=description,
+                           total=total,
+                           console=console,
+                           transient=transient,
+                           **kwargs):
+    yield (idx + 1) / total, value

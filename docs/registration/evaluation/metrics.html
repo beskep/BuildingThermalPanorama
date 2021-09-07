@@ -350,7 +350,7 @@ def calculate_all_metrics(image1: np.ndarray,
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="pano.registration.evaluation.metrics.calculate_all_metrics"><code class="name flex">
-<span>def <span class="ident">calculate_all_metrics</span></span>(<span>image1: numpy.ndarray, image2: numpy.ndarray, bins: typing.Union[int, str] = 'auto', base=2) ‑> dict</span>
+<span>def <span class="ident">calculate_all_metrics</span></span>(<span>image1: numpy.ndarray, image2: numpy.ndarray, bins: Union[int, str] = 'auto', base=2) ‑> dict</span>
 </code></dt>
 <dd>
 <div class="desc"><p>지원하는 모든 metric을 계산</p>
@@ -595,7 +595,7 @@ Infrared Facial Images in Fever Screening. Sensors, 18(2), 125.
 <dl>
 <dt id="pano.registration.evaluation.metrics.MutualInformation"><code class="flex name class">
 <span>class <span class="ident">MutualInformation</span></span>
-<span>(</span><span>image1: numpy.ndarray, image2: numpy.ndarray, bins: typing.Union[int, str] = 'auto', base=2)</span>
+<span>(</span><span>image1: numpy.ndarray, image2: numpy.ndarray, bins: Union[int, str] = 'auto', base=2)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>두 영상의 entropy, joint entropy, mutual information 계산</p>
@@ -1108,7 +1108,7 @@ Infrared Facial Images in Fever Screening. Sensors, 18(2), 125.
 <h3>Methods</h3>
 <dl>
 <dt id="pano.registration.evaluation.metrics.MutualInformation.mi_plot"><code class="name flex">
-<span>def <span class="ident">mi_plot</span></span>(<span>self) ‑> typing.Tuple[matplotlib.figure.Figure, numpy.ndarray]</span>
+<span>def <span class="ident">mi_plot</span></span>(<span>self) ‑> Tuple[matplotlib.figure.Figure, numpy.ndarray]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>두 영상, joint histogram을 plot</p>

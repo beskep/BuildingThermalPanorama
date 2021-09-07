@@ -515,7 +515,7 @@ def meta_path(cls, path: Path) -&gt; Path:
 </details>
 </dd>
 <dt id="pano.misc.imageio.ImageIO.read"><code class="name flex">
-<span>def <span class="ident">read</span></span>(<span>path: typing.Union[str, os.PathLike]) ‑> numpy.ndarray</span>
+<span>def <span class="ident">read</span></span>(<span>path: Union[str, os.PathLike]) ‑> numpy.ndarray</span>
 </code></dt>
 <dd>
 <div class="desc"><p>주어진 path의 확장자에 따라 영상 파일 해석</p>
@@ -577,7 +577,7 @@ def read(cls, path: StrPath) -&gt; np.ndarray:
 </details>
 </dd>
 <dt id="pano.misc.imageio.ImageIO.read_with_meta"><code class="name flex">
-<span>def <span class="ident">read_with_meta</span></span>(<span>path: typing.Union[str, os.PathLike], scale=False) ‑> typing.Tuple[numpy.ndarray, typing.Union[dict, NoneType]]</span>
+<span>def <span class="ident">read_with_meta</span></span>(<span>path: Union[str, os.PathLike], scale=False) ‑> Tuple[numpy.ndarray, Optional[dict]]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>주어진 path의 확장자에 따라 영상 파일 및 메타 정보 해석.
@@ -651,7 +651,7 @@ def read_with_meta(cls,
 </details>
 </dd>
 <dt id="pano.misc.imageio.ImageIO.save"><code class="name flex">
-<span>def <span class="ident">save</span></span>(<span>path: typing.Union[str, os.PathLike], array: numpy.ndarray, check_contrast=False)</span>
+<span>def <span class="ident">save</span></span>(<span>path: Union[str, os.PathLike], array: numpy.ndarray, check_contrast=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>주어진 path의 확장자에 따라 영상 파일 저장</p>
@@ -694,7 +694,7 @@ def save(cls, path: StrPath, array: np.ndarray, check_contrast=False):
 </details>
 </dd>
 <dt id="pano.misc.imageio.ImageIO.save_with_meta"><code class="name flex">
-<span>def <span class="ident">save_with_meta</span></span>(<span>path: typing.Union[str, os.PathLike], array: numpy.ndarray, exts: list, meta: typing.Union[dict, NoneType] = None, dtype: typing.Union[str, NoneType] = None)</span>
+<span>def <span class="ident">save_with_meta</span></span>(<span>path: Union[str, os.PathLike], array: numpy.ndarray, exts: list, meta: Optional[dict] = None, dtype: Optional[str] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>주어진 path와 각 확장자 (<code>exts</code>)에 따라 영상 파일 저장.

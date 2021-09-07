@@ -1,0 +1,2233 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.2" />
+<title>pano.interface.mbq.backend_qtquick API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>pano.interface.mbq.backend_qtquick</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import os
+import traceback
+
+import matplotlib
+from matplotlib import cbook
+from matplotlib.backend_bases import FigureCanvasBase
+from matplotlib.backend_bases import MouseButton
+from matplotlib.backend_bases import NavigationToolbar2
+from matplotlib.backends.backend_qt5 import cursord
+from matplotlib.backends.backend_qt5 import MODIFIER_KEYS
+from matplotlib.backends.backend_qt5 import SPECIAL_KEYS
+from matplotlib.backends.backend_qt5 import TimerQT
+from matplotlib.figure import Figure
+
+from .qt_compat import QT_API
+from .qt_compat import QT_API_PYSIDE2
+from .qt_compat import QtCore
+from .qt_compat import QtGui
+from .qt_compat import QtQuick
+from .qt_compat import QtWidgets
+
+
+class FigureCanvasQtQuick(QtQuick.QQuickPaintedItem, FigureCanvasBase):
+  &#34;&#34;&#34; This class creates a QtQuick Item encapsulating a Matplotlib
+        Figure and all the functions to interact with the &#39;standard&#39;
+        Matplotlib navigation toolbar.
+    &#34;&#34;&#34;
+
+  dpi_ratio_changed = QtCore.Signal()
+
+  # map Qt button codes to MouseEvent&#39;s ones:
+  buttond = {
+      QtCore.Qt.LeftButton: MouseButton.LEFT,
+      QtCore.Qt.MidButton: MouseButton.MIDDLE,
+      QtCore.Qt.RightButton: MouseButton.RIGHT,
+      QtCore.Qt.XButton1: MouseButton.BACK,
+      QtCore.Qt.XButton2: MouseButton.FORWARD,
+  }
+
+  def __init__(self, figure=None, parent=None):
+    if figure is None:
+      figure = Figure((6.0, 4.0))
+
+    # It seems like Qt doesn&#39;t implement cooperative inheritance
+    QtQuick.QQuickPaintedItem.__init__(self, parent=parent)
+    FigureCanvasBase.__init__(self, figure=figure)
+
+    # The dpi ratio (property without leading _)
+    self._dpi_ratio = 1
+
+    # Activate hover events and mouse press events
+    self.setAcceptHoverEvents(True)
+    self.setAcceptedMouseButtons(QtCore.Qt.AllButtons)
+    self.setAntialiasing(True)
+    # We don&#39;t want to scale up the figure DPI more than once.
+    # Note, we don&#39;t handle a signal for changing DPI yet.
+    figure._original_dpi = figure.dpi
+    self._update_figure_dpi()
+    # In cases with mixed resolution displays, we need to be careful if the
+    # dpi_ratio changes - in this case we need to resize the canvas
+    # accordingly. We could watch for screenChanged events from Qt, but
+    # the issue is that we can&#39;t guarantee this will be emitted *before*
+    # the first paintEvent for the canvas, so instead we keep track of the
+    # dpi_ratio value here and in paintEvent we resize the canvas if
+    # needed.
+
+    self._draw_pending = False
+    self._is_drawing = False
+    self._draw_rect_callback = lambda painter: None
+
+    self.resize(*self.get_width_height())
+
+  def _update_figure_dpi(self):
+    dpi = self.dpi_ratio * self.figure._original_dpi
+    self.figure._set_dpi(dpi, forward=False)
+
+  # property exposed to Qt
+  def get_dpi_ratio(self):
+    return self._dpi_ratio
+
+  def boundingRect(self):
+    return QtCore.QRectF(0, 0, self.width(), self.height())
+
+  def set_dpi_ratio(self, new_ratio):
+    # As described in __init__ above, we need to be careful in cases with
+    # mixed resolution displays if dpi_ratio is changing between painting
+    # events.
+    # Return whether we triggered a resizeEvent (and thus a paintEvent)
+    # from within this function.
+    if new_ratio != self._dpi_ratio:
+      self._dpi_ratio = new_ratio
+      # We need to update the figure DPI.
+      self._update_figure_dpi()
+      # The easiest way to resize the canvas is to emit a resizeEvent
+      # since we implement all the logic for resizing the canvas for
+      # that event.
+      self.geometryChanged(self.boundingRect(), self.boundingRect())
+      # resizeEvent triggers a paintEvent itself, so we exit this one
+      # (after making sure that the event is immediately handled).
+
+  dpi_ratio = QtCore.Property(float,
+                              get_dpi_ratio,
+                              set_dpi_ratio,
+                              notify=dpi_ratio_changed)
+
+  def get_width_height(self):
+    w, h = FigureCanvasBase.get_width_height(self)
+    return int(w / self.dpi_ratio), int(h / self.dpi_ratio)
+
+  def drawRectangle(self, rect):
+    # Draw the zoom rectangle to the QPainter.  _draw_rect_callback needs
+    # to be called at the end of paintEvent.
+    if rect is not None:
+
+      def _draw_rect_callback(painter):
+        pen = QtGui.QPen(QtCore.Qt.black, 1 / self.dpi_ratio, QtCore.Qt.DotLine)
+        painter.setPen(pen)
+        painter.drawRect(*(pt / self.dpi_ratio for pt in rect))
+    else:
+
+      def _draw_rect_callback(painter):
+        return
+
+    self._draw_rect_callback = _draw_rect_callback
+    self.update()
+
+  def draw(self):
+    &#34;&#34;&#34;Render the figure, and queue a request for a Qt draw.
+        &#34;&#34;&#34;
+    # The renderer draw is done here; delaying causes problems with code
+    # that uses the result of the draw() to update plot elements.
+    if self._is_drawing:
+      return
+    with cbook._setattr_cm(self, _is_drawing=True):
+      super().draw()
+    self.update()
+
+  def draw_idle(self):
+    &#34;&#34;&#34;
+        Queue redraw of the Agg buffer and request Qt paintEvent.
+        &#34;&#34;&#34;
+    # The Agg draw needs to be handled by the same thread matplotlib
+    # modifies the scene graph from. Post Agg draw request to the
+    # current event loop in order to ensure thread affinity and to
+    # accumulate multiple draw requests from event handling.
+    # TODO: queued signal connection might be safer than singleShot
+    if not (getattr(self, &#39;_draw_pending&#39;, False) or
+            getattr(self, &#39;_is_drawing&#39;, False)):
+      self._draw_pending = True
+      QtCore.QTimer.singleShot(0, self._draw_idle)
+
+  def _draw_idle(self):
+    with self._idle_draw_cntx():
+      if not self._draw_pending:
+        return
+      self._draw_pending = False
+      if self.height() &lt; 0 or self.width() &lt; 0:
+        return
+      try:
+        self.draw()
+      except Exception:
+        # Uncaught exceptions are fatal for PyQt5, so catch them.
+        traceback.print_exc()
+
+  def geometryChanged(self, new_geometry, old_geometry):
+    w = new_geometry.width() * self.dpi_ratio
+    h = new_geometry.height() * self.dpi_ratio
+
+    if (w &lt;= 0.0) or (h &lt;= 0.0):
+      return
+
+    dpival = self.figure.dpi
+    winch = w / dpival
+    hinch = h / dpival
+    self.figure.set_size_inches(winch, hinch, forward=False)
+    FigureCanvasBase.resize_event(self)
+    self.draw_idle()
+    QtQuick.QQuickPaintedItem.geometryChanged(self, new_geometry, old_geometry)
+
+  def sizeHint(self):
+    w, h = self.get_width_height()
+    return QtCore.QSize(w, h)
+
+  def minumumSizeHint(self):
+    return QtCore.QSize(10, 10)
+
+  def hoverEnterEvent(self, event):
+    try:
+      x, y = self.mouseEventCoords(event.pos())
+    except AttributeError:
+      # the event from PyQt4 does not include the position
+      x = y = None
+    FigureCanvasBase.enter_notify_event(self, guiEvent=event, xy=(x, y))
+
+  def hoverLeaveEvent(self, event):
+    QtWidgets.QApplication.restoreOverrideCursor()
+    FigureCanvasBase.leave_notify_event(self, guiEvent=event)
+
+  def mouseEventCoords(self, pos):
+    &#34;&#34;&#34;Calculate mouse coordinates in physical pixels
+
+        Qt5 use logical pixels, but the figure is scaled to physical
+        pixels for rendering.   Transform to physical pixels so that
+        all of the down-stream transforms work as expected.
+
+        Also, the origin is different and needs to be corrected.
+
+        &#34;&#34;&#34;
+    dpi_ratio = self.dpi_ratio
+    x = pos.x()
+    # flip y so y=0 is bottom of canvas
+    y = self.figure.bbox.height / dpi_ratio - pos.y()
+    return x * dpi_ratio, y * dpi_ratio
+
+  def hoverMoveEvent(self, event):
+    x, y = self.mouseEventCoords(event.pos())
+    FigureCanvasBase.motion_notify_event(self, x, y, guiEvent=event)
+
+  # hoverMoveEvent kicks in when no mouse buttons are pressed
+  # otherwise mouseMoveEvent are emitted
+  def mouseMoveEvent(self, event):
+    x, y = self.mouseEventCoords(event.pos())
+    FigureCanvasBase.motion_notify_event(self, x, y, guiEvent=event)
+
+  def mousePressEvent(self, event):
+    x, y = self.mouseEventCoords(event.pos())
+    button = self.buttond.get(event.button())
+    if button is not None:
+      FigureCanvasBase.button_press_event(self, x, y, button, guiEvent=event)
+
+  def mouseReleaseEvent(self, event):
+    x, y = self.mouseEventCoords(event.pos())
+    button = self.buttond.get(event.button())
+    if button is not None:
+      FigureCanvasBase.button_release_event(self, x, y, button, guiEvent=event)
+
+  def mouseDoubleClickEvent(self, event):
+    x, y = self.mouseEventCoords(event.pos())
+    button = self.buttond.get(event.button())
+    if button is not None:
+      FigureCanvasBase.button_press_event(self,
+                                          x,
+                                          y,
+                                          button,
+                                          dblclick=True,
+                                          guiEvent=event)
+
+  def wheelEvent(self, event):
+    x, y = self.mouseEventCoords(event.pos())
+    # from QWheelEvent::delta doc
+    if event.pixelDelta().x() == 0 and event.pixelDelta().y() == 0:
+      steps = event.angleDelta().y() / 120
+    else:
+      steps = event.pixelDelta().y()
+    if steps:
+      FigureCanvasBase.scroll_event(self, x, y, steps, guiEvent=event)
+
+  def keyPressEvent(self, event):
+    key = self._get_key(event)
+    if key is not None:
+      FigureCanvasBase.key_press_event(self, key, guiEvent=event)
+
+  def keyReleaseEvent(self, event):
+    key = self._get_key(event)
+    if key is not None:
+      FigureCanvasBase.key_release_event(self, key, guiEvent=event)
+
+  def _get_key(self, event):
+    # if event.isAutoRepeat():
+    #     return None
+
+    event_key = event.key()
+    event_mods = int(event.modifiers())  # actually a bitmask
+
+    # get names of the pressed modifier keys
+    # bit twiddling to pick out modifier keys from event_mods bitmask,
+    # if event_key is a MODIFIER, it should not be duplicated in mods
+    mods = [
+        name for name, mod_key, qt_key in MODIFIER_KEYS
+        if event_key != qt_key and (event_mods &amp; mod_key) == mod_key
+    ]
+    try:
+      # for certain keys (enter, left, backspace, etc) use a word for the
+      # key, rather than unicode
+      key = SPECIAL_KEYS[event_key]
+    except KeyError:
+      # unicode defines code points up to 0x0010ffff
+      # QT will use Key_Codes larger than that for keyboard keys that are
+      # are not unicode characters (like multimedia keys)
+      # skip these
+      # if you really want them, you should add them to SPECIAL_KEYS
+      MAX_UNICODE = 0x10ffff
+      if event_key &gt; MAX_UNICODE:
+        return None
+
+      key = chr(event_key)
+      # qt delivers capitalized letters.  fix capitalization
+      # note that capslock is ignored
+      if &#39;shift&#39; in mods:
+        mods.remove(&#39;shift&#39;)
+      else:
+        key = key.lower()
+
+    mods.reverse()
+    return &#39;+&#39;.join(mods + [key])
+
+  def new_timer(self, *args, **kwargs):
+    &#34;&#34;&#34;
+        Creates a new backend-specific subclass of
+        :class:`backend_bases.Timer`.  This is useful for getting
+        periodic events through the backend&#39;s native event
+        loop. Implemented only for backends with GUIs.
+
+        optional arguments:
+
+        *interval*
+            Timer interval in milliseconds
+
+        *callbacks*
+            Sequence of (func, args, kwargs) where func(*args, **kwargs)
+            will be executed by the timer every *interval*.
+        &#34;&#34;&#34;
+    return TimerQT(*args, **kwargs)
+
+  def flush_events(self):
+    global qApp
+    qApp.processEvents()
+
+
+class MatplotlibIconProvider(QtQuick.QQuickImageProvider):
+  &#34;&#34;&#34; This class provide the matplotlib icons for the navigation toolbar.
+    &#34;&#34;&#34;
+
+  def __init__(self, img_type=QtQuick.QQuickImageProvider.Image):
+    self.basedir = os.path.join(matplotlib.rcParams[&#39;datapath&#39;], &#39;images&#39;)
+    QtQuick.QQuickImageProvider.__init__(self, img_type)
+
+  def requestImage(self, ids, size, reqSize):
+    img = QtGui.QImage(os.path.join(self.basedir, ids + &#39;.png&#39;))
+    size.setWidth(img.width())
+    size.setHeight(img.height())
+    return img
+
+
+class NavigationToolbar2QtQuick(QtCore.QObject, NavigationToolbar2):
+  &#34;&#34;&#34; NavigationToolbar2 customized for QtQuick
+    &#34;&#34;&#34;
+
+  messageChanged = QtCore.Signal(str)
+
+  leftChanged = QtCore.Signal()
+  rightChanged = QtCore.Signal()
+  topChanged = QtCore.Signal()
+  bottomChanged = QtCore.Signal()
+  wspaceChanged = QtCore.Signal()
+  hspaceChanged = QtCore.Signal()
+
+  def __init__(self, canvas, parent=None):
+
+    # I think this is needed due to a bug in PySide2
+    if QT_API == QT_API_PYSIDE2:
+      QtCore.QObject.__init__(self, parent)
+      NavigationToolbar2.__init__(self, canvas)
+    else:
+      super().__init__(canvas=canvas, parent=parent)
+
+    self._message = &#34;&#34;
+
+    #
+    # Store margin
+    #
+    self._defaults = {}
+    for attr in (
+        &#39;left&#39;,
+        &#39;bottom&#39;,
+        &#39;right&#39;,
+        &#39;top&#39;,
+        &#39;wspace&#39;,
+        &#39;hspace&#39;,
+    ):
+      val = getattr(self.canvas.figure.subplotpars, attr)
+      self._defaults[attr] = val
+      setattr(self, attr, val)
+
+  def _init_toolbar(self):
+    &#34;&#34;&#34; don&#39;t actually build the widgets here, build them in QML
+        &#34;&#34;&#34;
+    pass
+
+  # Define a few properties.
+  def getMessage(self):
+    return self._message
+
+  def setMessage(self, msg):
+    if msg != self._message:
+      self._message = msg
+      self.messageChanged.emit(msg)
+
+  message = QtCore.Property(str, getMessage, setMessage, notify=messageChanged)
+
+  def getLeft(self):
+    return self.canvas.figure.subplotpars.left
+
+  def setLeft(self, value):
+    if value != self.canvas.figure.subplotpars.left:
+      self.canvas.figure.subplots_adjust(left=value)
+      self.leftChanged.emit()
+
+      self.canvas.draw_idle()
+
+  left = QtCore.Property(float, getLeft, setLeft, notify=leftChanged)
+
+  def getRight(self):
+    return self.canvas.figure.subplotpars.right
+
+  def setRight(self, value):
+    if value != self.canvas.figure.subplotpars.right:
+      self.canvas.figure.subplots_adjust(right=value)
+      self.rightChanged.emit()
+
+      self.canvas.draw_idle()
+
+  right = QtCore.Property(float, getRight, setRight, notify=rightChanged)
+
+  def getTop(self):
+    return self.canvas.figure.subplotpars.top
+
+  def setTop(self, value):
+    if value != self.canvas.figure.subplotpars.top:
+      self.canvas.figure.subplots_adjust(top=value)
+      self.topChanged.emit()
+
+      self.canvas.draw_idle()
+
+  top = QtCore.Property(float, getTop, setTop, notify=topChanged)
+
+  def getBottom(self):
+    return self.canvas.figure.subplotpars.bottom
+
+  def setBottom(self, value):
+    if value != self.canvas.figure.subplotpars.bottom:
+      self.canvas.figure.subplots_adjust(bottom=value)
+      self.bottomChanged.emit()
+
+      self.canvas.draw_idle()
+
+  bottom = QtCore.Property(float, getBottom, setBottom, notify=bottomChanged)
+
+  def getHspace(self):
+    return self.canvas.figure.subplotpars.hspace
+
+  def setHspace(self, value):
+    if value != self.canvas.figure.subplotpars.hspace:
+      self.canvas.figure.subplots_adjust(hspace=value)
+      self.hspaceChanged.emit()
+
+      self.canvas.draw_idle()
+
+  hspace = QtCore.Property(float, getHspace, setHspace, notify=hspaceChanged)
+
+  def getWspace(self):
+    return self.canvas.figure.subplotpars.wspace
+
+  def setWspace(self, value):
+    if value != self.canvas.figure.subplotpars.wspace:
+      self.canvas.figure.subplots_adjust(wspace=value)
+      self.wspaceChanged.emit()
+
+      self.canvas.draw_idle()
+
+  wspace = QtCore.Property(float, getWspace, setWspace, notify=wspaceChanged)
+
+  def set_history_buttons(self):
+    &#34;&#34;&#34;Enable or disable back/forward button&#34;&#34;&#34;
+    pass
+
+  def set_cursor(self, cursor):
+    &#34;&#34;&#34;
+        Set the current cursor to one of the :class:`Cursors`
+        enums values
+        &#34;&#34;&#34;
+    self.canvas.setCursor(cursord[cursor])
+
+  def draw_with_locators_update(self):
+    &#34;&#34;&#34;Redraw the canvases, update the locators&#34;&#34;&#34;
+    for a in self.canvas.figure.get_axes():
+      xaxis = getattr(a, &#39;xaxis&#39;, None)
+      yaxis = getattr(a, &#39;yaxis&#39;, None)
+      locators = []
+      if xaxis is not None:
+        locators.append(xaxis.get_major_locator())
+        locators.append(xaxis.get_minor_locator())
+      if yaxis is not None:
+        locators.append(yaxis.get_major_locator())
+        locators.append(yaxis.get_minor_locator())
+
+      for loc in locators:
+        loc.refresh()
+    self.canvas.draw_idle()
+
+  def draw_rubberband(self, event, x0, y0, x1, y1):
+    &#34;&#34;&#34;Draw a rectangle rubberband to indicate zoom limits&#34;&#34;&#34;
+    height = self.canvas.figure.bbox.height
+    y1 = height - y1
+    y0 = height - y0
+
+    w = abs(x1 - x0)
+    h = abs(y1 - y0)
+
+    rect = [int(val) for val in (min(x0, x1), min(y0, y1), w, h)]
+    self.canvas.drawRectangle(rect)
+
+  def remove_rubberband(self):
+    &#34;&#34;&#34;Remove the rubberband&#34;&#34;&#34;
+    self.canvas.drawRectangle(None)
+
+  def tight_layout(self):
+    self.canvas.figure.tight_layout()
+    # self._setSliderPositions()
+    self.canvas.draw_idle()
+
+  def reset_margin(self):
+    self.canvas.figure.subplots_adjust(**self._defaults)
+    # self._setSliderPositions()
+    self.canvas.draw_idle()
+
+  def print_figure(self, fname, *args, **kwargs):
+    if fname:
+      fname = QtCore.QUrl(fname).toLocalFile()
+      # save dir for next time
+      matplotlib.rcParams[&#39;savefig.directory&#39;] = os.path.dirname(fname)
+    NavigationToolbar2.print_figure(self, fname, *args, **kwargs)
+    self.canvas.draw_idle()
+
+  def save_figure(self, *args):
+    raise NotImplementedError(&#34;save_figure is not yet implemented&#34;)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick"><code class="flex name class">
+<span>class <span class="ident">FigureCanvasQtQuick</span></span>
+<span>(</span><span>figure=None, parent=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>This class creates a QtQuick Item encapsulating a Matplotlib
+Figure and all the functions to interact with the 'standard'
+Matplotlib navigation toolbar.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class FigureCanvasQtQuick(QtQuick.QQuickPaintedItem, FigureCanvasBase):
+  &#34;&#34;&#34; This class creates a QtQuick Item encapsulating a Matplotlib
+        Figure and all the functions to interact with the &#39;standard&#39;
+        Matplotlib navigation toolbar.
+    &#34;&#34;&#34;
+
+  dpi_ratio_changed = QtCore.Signal()
+
+  # map Qt button codes to MouseEvent&#39;s ones:
+  buttond = {
+      QtCore.Qt.LeftButton: MouseButton.LEFT,
+      QtCore.Qt.MidButton: MouseButton.MIDDLE,
+      QtCore.Qt.RightButton: MouseButton.RIGHT,
+      QtCore.Qt.XButton1: MouseButton.BACK,
+      QtCore.Qt.XButton2: MouseButton.FORWARD,
+  }
+
+  def __init__(self, figure=None, parent=None):
+    if figure is None:
+      figure = Figure((6.0, 4.0))
+
+    # It seems like Qt doesn&#39;t implement cooperative inheritance
+    QtQuick.QQuickPaintedItem.__init__(self, parent=parent)
+    FigureCanvasBase.__init__(self, figure=figure)
+
+    # The dpi ratio (property without leading _)
+    self._dpi_ratio = 1
+
+    # Activate hover events and mouse press events
+    self.setAcceptHoverEvents(True)
+    self.setAcceptedMouseButtons(QtCore.Qt.AllButtons)
+    self.setAntialiasing(True)
+    # We don&#39;t want to scale up the figure DPI more than once.
+    # Note, we don&#39;t handle a signal for changing DPI yet.
+    figure._original_dpi = figure.dpi
+    self._update_figure_dpi()
+    # In cases with mixed resolution displays, we need to be careful if the
+    # dpi_ratio changes - in this case we need to resize the canvas
+    # accordingly. We could watch for screenChanged events from Qt, but
+    # the issue is that we can&#39;t guarantee this will be emitted *before*
+    # the first paintEvent for the canvas, so instead we keep track of the
+    # dpi_ratio value here and in paintEvent we resize the canvas if
+    # needed.
+
+    self._draw_pending = False
+    self._is_drawing = False
+    self._draw_rect_callback = lambda painter: None
+
+    self.resize(*self.get_width_height())
+
+  def _update_figure_dpi(self):
+    dpi = self.dpi_ratio * self.figure._original_dpi
+    self.figure._set_dpi(dpi, forward=False)
+
+  # property exposed to Qt
+  def get_dpi_ratio(self):
+    return self._dpi_ratio
+
+  def boundingRect(self):
+    return QtCore.QRectF(0, 0, self.width(), self.height())
+
+  def set_dpi_ratio(self, new_ratio):
+    # As described in __init__ above, we need to be careful in cases with
+    # mixed resolution displays if dpi_ratio is changing between painting
+    # events.
+    # Return whether we triggered a resizeEvent (and thus a paintEvent)
+    # from within this function.
+    if new_ratio != self._dpi_ratio:
+      self._dpi_ratio = new_ratio
+      # We need to update the figure DPI.
+      self._update_figure_dpi()
+      # The easiest way to resize the canvas is to emit a resizeEvent
+      # since we implement all the logic for resizing the canvas for
+      # that event.
+      self.geometryChanged(self.boundingRect(), self.boundingRect())
+      # resizeEvent triggers a paintEvent itself, so we exit this one
+      # (after making sure that the event is immediately handled).
+
+  dpi_ratio = QtCore.Property(float,
+                              get_dpi_ratio,
+                              set_dpi_ratio,
+                              notify=dpi_ratio_changed)
+
+  def get_width_height(self):
+    w, h = FigureCanvasBase.get_width_height(self)
+    return int(w / self.dpi_ratio), int(h / self.dpi_ratio)
+
+  def drawRectangle(self, rect):
+    # Draw the zoom rectangle to the QPainter.  _draw_rect_callback needs
+    # to be called at the end of paintEvent.
+    if rect is not None:
+
+      def _draw_rect_callback(painter):
+        pen = QtGui.QPen(QtCore.Qt.black, 1 / self.dpi_ratio, QtCore.Qt.DotLine)
+        painter.setPen(pen)
+        painter.drawRect(*(pt / self.dpi_ratio for pt in rect))
+    else:
+
+      def _draw_rect_callback(painter):
+        return
+
+    self._draw_rect_callback = _draw_rect_callback
+    self.update()
+
+  def draw(self):
+    &#34;&#34;&#34;Render the figure, and queue a request for a Qt draw.
+        &#34;&#34;&#34;
+    # The renderer draw is done here; delaying causes problems with code
+    # that uses the result of the draw() to update plot elements.
+    if self._is_drawing:
+      return
+    with cbook._setattr_cm(self, _is_drawing=True):
+      super().draw()
+    self.update()
+
+  def draw_idle(self):
+    &#34;&#34;&#34;
+        Queue redraw of the Agg buffer and request Qt paintEvent.
+        &#34;&#34;&#34;
+    # The Agg draw needs to be handled by the same thread matplotlib
+    # modifies the scene graph from. Post Agg draw request to the
+    # current event loop in order to ensure thread affinity and to
+    # accumulate multiple draw requests from event handling.
+    # TODO: queued signal connection might be safer than singleShot
+    if not (getattr(self, &#39;_draw_pending&#39;, False) or
+            getattr(self, &#39;_is_drawing&#39;, False)):
+      self._draw_pending = True
+      QtCore.QTimer.singleShot(0, self._draw_idle)
+
+  def _draw_idle(self):
+    with self._idle_draw_cntx():
+      if not self._draw_pending:
+        return
+      self._draw_pending = False
+      if self.height() &lt; 0 or self.width() &lt; 0:
+        return
+      try:
+        self.draw()
+      except Exception:
+        # Uncaught exceptions are fatal for PyQt5, so catch them.
+        traceback.print_exc()
+
+  def geometryChanged(self, new_geometry, old_geometry):
+    w = new_geometry.width() * self.dpi_ratio
+    h = new_geometry.height() * self.dpi_ratio
+
+    if (w &lt;= 0.0) or (h &lt;= 0.0):
+      return
+
+    dpival = self.figure.dpi
+    winch = w / dpival
+    hinch = h / dpival
+    self.figure.set_size_inches(winch, hinch, forward=False)
+    FigureCanvasBase.resize_event(self)
+    self.draw_idle()
+    QtQuick.QQuickPaintedItem.geometryChanged(self, new_geometry, old_geometry)
+
+  def sizeHint(self):
+    w, h = self.get_width_height()
+    return QtCore.QSize(w, h)
+
+  def minumumSizeHint(self):
+    return QtCore.QSize(10, 10)
+
+  def hoverEnterEvent(self, event):
+    try:
+      x, y = self.mouseEventCoords(event.pos())
+    except AttributeError:
+      # the event from PyQt4 does not include the position
+      x = y = None
+    FigureCanvasBase.enter_notify_event(self, guiEvent=event, xy=(x, y))
+
+  def hoverLeaveEvent(self, event):
+    QtWidgets.QApplication.restoreOverrideCursor()
+    FigureCanvasBase.leave_notify_event(self, guiEvent=event)
+
+  def mouseEventCoords(self, pos):
+    &#34;&#34;&#34;Calculate mouse coordinates in physical pixels
+
+        Qt5 use logical pixels, but the figure is scaled to physical
+        pixels for rendering.   Transform to physical pixels so that
+        all of the down-stream transforms work as expected.
+
+        Also, the origin is different and needs to be corrected.
+
+        &#34;&#34;&#34;
+    dpi_ratio = self.dpi_ratio
+    x = pos.x()
+    # flip y so y=0 is bottom of canvas
+    y = self.figure.bbox.height / dpi_ratio - pos.y()
+    return x * dpi_ratio, y * dpi_ratio
+
+  def hoverMoveEvent(self, event):
+    x, y = self.mouseEventCoords(event.pos())
+    FigureCanvasBase.motion_notify_event(self, x, y, guiEvent=event)
+
+  # hoverMoveEvent kicks in when no mouse buttons are pressed
+  # otherwise mouseMoveEvent are emitted
+  def mouseMoveEvent(self, event):
+    x, y = self.mouseEventCoords(event.pos())
+    FigureCanvasBase.motion_notify_event(self, x, y, guiEvent=event)
+
+  def mousePressEvent(self, event):
+    x, y = self.mouseEventCoords(event.pos())
+    button = self.buttond.get(event.button())
+    if button is not None:
+      FigureCanvasBase.button_press_event(self, x, y, button, guiEvent=event)
+
+  def mouseReleaseEvent(self, event):
+    x, y = self.mouseEventCoords(event.pos())
+    button = self.buttond.get(event.button())
+    if button is not None:
+      FigureCanvasBase.button_release_event(self, x, y, button, guiEvent=event)
+
+  def mouseDoubleClickEvent(self, event):
+    x, y = self.mouseEventCoords(event.pos())
+    button = self.buttond.get(event.button())
+    if button is not None:
+      FigureCanvasBase.button_press_event(self,
+                                          x,
+                                          y,
+                                          button,
+                                          dblclick=True,
+                                          guiEvent=event)
+
+  def wheelEvent(self, event):
+    x, y = self.mouseEventCoords(event.pos())
+    # from QWheelEvent::delta doc
+    if event.pixelDelta().x() == 0 and event.pixelDelta().y() == 0:
+      steps = event.angleDelta().y() / 120
+    else:
+      steps = event.pixelDelta().y()
+    if steps:
+      FigureCanvasBase.scroll_event(self, x, y, steps, guiEvent=event)
+
+  def keyPressEvent(self, event):
+    key = self._get_key(event)
+    if key is not None:
+      FigureCanvasBase.key_press_event(self, key, guiEvent=event)
+
+  def keyReleaseEvent(self, event):
+    key = self._get_key(event)
+    if key is not None:
+      FigureCanvasBase.key_release_event(self, key, guiEvent=event)
+
+  def _get_key(self, event):
+    # if event.isAutoRepeat():
+    #     return None
+
+    event_key = event.key()
+    event_mods = int(event.modifiers())  # actually a bitmask
+
+    # get names of the pressed modifier keys
+    # bit twiddling to pick out modifier keys from event_mods bitmask,
+    # if event_key is a MODIFIER, it should not be duplicated in mods
+    mods = [
+        name for name, mod_key, qt_key in MODIFIER_KEYS
+        if event_key != qt_key and (event_mods &amp; mod_key) == mod_key
+    ]
+    try:
+      # for certain keys (enter, left, backspace, etc) use a word for the
+      # key, rather than unicode
+      key = SPECIAL_KEYS[event_key]
+    except KeyError:
+      # unicode defines code points up to 0x0010ffff
+      # QT will use Key_Codes larger than that for keyboard keys that are
+      # are not unicode characters (like multimedia keys)
+      # skip these
+      # if you really want them, you should add them to SPECIAL_KEYS
+      MAX_UNICODE = 0x10ffff
+      if event_key &gt; MAX_UNICODE:
+        return None
+
+      key = chr(event_key)
+      # qt delivers capitalized letters.  fix capitalization
+      # note that capslock is ignored
+      if &#39;shift&#39; in mods:
+        mods.remove(&#39;shift&#39;)
+      else:
+        key = key.lower()
+
+    mods.reverse()
+    return &#39;+&#39;.join(mods + [key])
+
+  def new_timer(self, *args, **kwargs):
+    &#34;&#34;&#34;
+        Creates a new backend-specific subclass of
+        :class:`backend_bases.Timer`.  This is useful for getting
+        periodic events through the backend&#39;s native event
+        loop. Implemented only for backends with GUIs.
+
+        optional arguments:
+
+        *interval*
+            Timer interval in milliseconds
+
+        *callbacks*
+            Sequence of (func, args, kwargs) where func(*args, **kwargs)
+            will be executed by the timer every *interval*.
+        &#34;&#34;&#34;
+    return TimerQT(*args, **kwargs)
+
+  def flush_events(self):
+    global qApp
+    qApp.processEvents()</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>PyQt5.QtQuick.QQuickPaintedItem</li>
+<li>PyQt5.QtQuick.QQuickItem</li>
+<li>PyQt5.QtCore.QObject</li>
+<li>sip.wrapper</li>
+<li>PyQt5.QtQml.QQmlParserStatus</li>
+<li>sip.simplewrapper</li>
+<li>matplotlib.backend_bases.FigureCanvasBase</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="pano.interface.mbq.backend_qtquickagg.FigureCanvasQtQuickAgg" href="backend_qtquickagg.html#pano.interface.mbq.backend_qtquickagg.FigureCanvasQtQuickAgg">FigureCanvasQtQuickAgg</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.buttond"><code class="name">var <span class="ident">buttond</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.dpi_ratio"><code class="name">var <span class="ident">dpi_ratio</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_dpi_ratio(self):
+  return self._dpi_ratio</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.boundingRect"><code class="name flex">
+<span>def <span class="ident">boundingRect</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def boundingRect(self):
+  return QtCore.QRectF(0, 0, self.width(), self.height())</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.dpi_ratio_changed"><code class="name flex">
+<span>def <span class="ident">dpi_ratio_changed</span></span>(<span>...)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.draw"><code class="name flex">
+<span>def <span class="ident">draw</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Render the figure, and queue a request for a Qt draw.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def draw(self):
+  &#34;&#34;&#34;Render the figure, and queue a request for a Qt draw.
+      &#34;&#34;&#34;
+  # The renderer draw is done here; delaying causes problems with code
+  # that uses the result of the draw() to update plot elements.
+  if self._is_drawing:
+    return
+  with cbook._setattr_cm(self, _is_drawing=True):
+    super().draw()
+  self.update()</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.drawRectangle"><code class="name flex">
+<span>def <span class="ident">drawRectangle</span></span>(<span>self, rect)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def drawRectangle(self, rect):
+  # Draw the zoom rectangle to the QPainter.  _draw_rect_callback needs
+  # to be called at the end of paintEvent.
+  if rect is not None:
+
+    def _draw_rect_callback(painter):
+      pen = QtGui.QPen(QtCore.Qt.black, 1 / self.dpi_ratio, QtCore.Qt.DotLine)
+      painter.setPen(pen)
+      painter.drawRect(*(pt / self.dpi_ratio for pt in rect))
+  else:
+
+    def _draw_rect_callback(painter):
+      return
+
+  self._draw_rect_callback = _draw_rect_callback
+  self.update()</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.draw_idle"><code class="name flex">
+<span>def <span class="ident">draw_idle</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Queue redraw of the Agg buffer and request Qt paintEvent.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def draw_idle(self):
+  &#34;&#34;&#34;
+      Queue redraw of the Agg buffer and request Qt paintEvent.
+      &#34;&#34;&#34;
+  # The Agg draw needs to be handled by the same thread matplotlib
+  # modifies the scene graph from. Post Agg draw request to the
+  # current event loop in order to ensure thread affinity and to
+  # accumulate multiple draw requests from event handling.
+  # TODO: queued signal connection might be safer than singleShot
+  if not (getattr(self, &#39;_draw_pending&#39;, False) or
+          getattr(self, &#39;_is_drawing&#39;, False)):
+    self._draw_pending = True
+    QtCore.QTimer.singleShot(0, self._draw_idle)</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.flush_events"><code class="name flex">
+<span>def <span class="ident">flush_events</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Flush the GUI events for the figure.</p>
+<p>Interactive backends need to reimplement this method.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def flush_events(self):
+  global qApp
+  qApp.processEvents()</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.geometryChanged"><code class="name flex">
+<span>def <span class="ident">geometryChanged</span></span>(<span>self, new_geometry, old_geometry)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>geometryChanged(self, QRectF, QRectF)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def geometryChanged(self, new_geometry, old_geometry):
+  w = new_geometry.width() * self.dpi_ratio
+  h = new_geometry.height() * self.dpi_ratio
+
+  if (w &lt;= 0.0) or (h &lt;= 0.0):
+    return
+
+  dpival = self.figure.dpi
+  winch = w / dpival
+  hinch = h / dpival
+  self.figure.set_size_inches(winch, hinch, forward=False)
+  FigureCanvasBase.resize_event(self)
+  self.draw_idle()
+  QtQuick.QQuickPaintedItem.geometryChanged(self, new_geometry, old_geometry)</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.get_dpi_ratio"><code class="name flex">
+<span>def <span class="ident">get_dpi_ratio</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_dpi_ratio(self):
+  return self._dpi_ratio</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.get_width_height"><code class="name flex">
+<span>def <span class="ident">get_width_height</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return the figure width and height in points or pixels
+(depending on the backend), truncated to integers.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_width_height(self):
+  w, h = FigureCanvasBase.get_width_height(self)
+  return int(w / self.dpi_ratio), int(h / self.dpi_ratio)</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.hoverEnterEvent"><code class="name flex">
+<span>def <span class="ident">hoverEnterEvent</span></span>(<span>self, event)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>hoverEnterEvent(self, QHoverEvent)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def hoverEnterEvent(self, event):
+  try:
+    x, y = self.mouseEventCoords(event.pos())
+  except AttributeError:
+    # the event from PyQt4 does not include the position
+    x = y = None
+  FigureCanvasBase.enter_notify_event(self, guiEvent=event, xy=(x, y))</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.hoverLeaveEvent"><code class="name flex">
+<span>def <span class="ident">hoverLeaveEvent</span></span>(<span>self, event)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>hoverLeaveEvent(self, QHoverEvent)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def hoverLeaveEvent(self, event):
+  QtWidgets.QApplication.restoreOverrideCursor()
+  FigureCanvasBase.leave_notify_event(self, guiEvent=event)</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.hoverMoveEvent"><code class="name flex">
+<span>def <span class="ident">hoverMoveEvent</span></span>(<span>self, event)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>hoverMoveEvent(self, QHoverEvent)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def hoverMoveEvent(self, event):
+  x, y = self.mouseEventCoords(event.pos())
+  FigureCanvasBase.motion_notify_event(self, x, y, guiEvent=event)</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.keyPressEvent"><code class="name flex">
+<span>def <span class="ident">keyPressEvent</span></span>(<span>self, event)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>keyPressEvent(self, QKeyEvent)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def keyPressEvent(self, event):
+  key = self._get_key(event)
+  if key is not None:
+    FigureCanvasBase.key_press_event(self, key, guiEvent=event)</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.keyReleaseEvent"><code class="name flex">
+<span>def <span class="ident">keyReleaseEvent</span></span>(<span>self, event)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>keyReleaseEvent(self, QKeyEvent)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def keyReleaseEvent(self, event):
+  key = self._get_key(event)
+  if key is not None:
+    FigureCanvasBase.key_release_event(self, key, guiEvent=event)</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.minumumSizeHint"><code class="name flex">
+<span>def <span class="ident">minumumSizeHint</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def minumumSizeHint(self):
+  return QtCore.QSize(10, 10)</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.mouseDoubleClickEvent"><code class="name flex">
+<span>def <span class="ident">mouseDoubleClickEvent</span></span>(<span>self, event)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>mouseDoubleClickEvent(self, QMouseEvent)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def mouseDoubleClickEvent(self, event):
+  x, y = self.mouseEventCoords(event.pos())
+  button = self.buttond.get(event.button())
+  if button is not None:
+    FigureCanvasBase.button_press_event(self,
+                                        x,
+                                        y,
+                                        button,
+                                        dblclick=True,
+                                        guiEvent=event)</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.mouseEventCoords"><code class="name flex">
+<span>def <span class="ident">mouseEventCoords</span></span>(<span>self, pos)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Calculate mouse coordinates in physical pixels</p>
+<p>Qt5 use logical pixels, but the figure is scaled to physical
+pixels for rendering.
+Transform to physical pixels so that
+all of the down-stream transforms work as expected.</p>
+<p>Also, the origin is different and needs to be corrected.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def mouseEventCoords(self, pos):
+  &#34;&#34;&#34;Calculate mouse coordinates in physical pixels
+
+      Qt5 use logical pixels, but the figure is scaled to physical
+      pixels for rendering.   Transform to physical pixels so that
+      all of the down-stream transforms work as expected.
+
+      Also, the origin is different and needs to be corrected.
+
+      &#34;&#34;&#34;
+  dpi_ratio = self.dpi_ratio
+  x = pos.x()
+  # flip y so y=0 is bottom of canvas
+  y = self.figure.bbox.height / dpi_ratio - pos.y()
+  return x * dpi_ratio, y * dpi_ratio</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.mouseMoveEvent"><code class="name flex">
+<span>def <span class="ident">mouseMoveEvent</span></span>(<span>self, event)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>mouseMoveEvent(self, QMouseEvent)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def mouseMoveEvent(self, event):
+  x, y = self.mouseEventCoords(event.pos())
+  FigureCanvasBase.motion_notify_event(self, x, y, guiEvent=event)</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.mousePressEvent"><code class="name flex">
+<span>def <span class="ident">mousePressEvent</span></span>(<span>self, event)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>mousePressEvent(self, QMouseEvent)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def mousePressEvent(self, event):
+  x, y = self.mouseEventCoords(event.pos())
+  button = self.buttond.get(event.button())
+  if button is not None:
+    FigureCanvasBase.button_press_event(self, x, y, button, guiEvent=event)</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.mouseReleaseEvent"><code class="name flex">
+<span>def <span class="ident">mouseReleaseEvent</span></span>(<span>self, event)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>mouseReleaseEvent(self, QMouseEvent)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def mouseReleaseEvent(self, event):
+  x, y = self.mouseEventCoords(event.pos())
+  button = self.buttond.get(event.button())
+  if button is not None:
+    FigureCanvasBase.button_release_event(self, x, y, button, guiEvent=event)</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.new_timer"><code class="name flex">
+<span>def <span class="ident">new_timer</span></span>(<span>self, *args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Creates a new backend-specific subclass of
+:class:<code>backend_bases.Timer</code>.
+This is useful for getting
+periodic events through the backend's native event
+loop. Implemented only for backends with GUIs.</p>
+<p>optional arguments:</p>
+<p><em>interval</em>
+Timer interval in milliseconds</p>
+<p><em>callbacks</em>
+Sequence of (func, args, kwargs) where func(<em>args, </em><em>kwargs)
+will be executed by the timer every </em>interval*.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def new_timer(self, *args, **kwargs):
+  &#34;&#34;&#34;
+      Creates a new backend-specific subclass of
+      :class:`backend_bases.Timer`.  This is useful for getting
+      periodic events through the backend&#39;s native event
+      loop. Implemented only for backends with GUIs.
+
+      optional arguments:
+
+      *interval*
+          Timer interval in milliseconds
+
+      *callbacks*
+          Sequence of (func, args, kwargs) where func(*args, **kwargs)
+          will be executed by the timer every *interval*.
+      &#34;&#34;&#34;
+  return TimerQT(*args, **kwargs)</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.set_dpi_ratio"><code class="name flex">
+<span>def <span class="ident">set_dpi_ratio</span></span>(<span>self, new_ratio)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_dpi_ratio(self, new_ratio):
+  # As described in __init__ above, we need to be careful in cases with
+  # mixed resolution displays if dpi_ratio is changing between painting
+  # events.
+  # Return whether we triggered a resizeEvent (and thus a paintEvent)
+  # from within this function.
+  if new_ratio != self._dpi_ratio:
+    self._dpi_ratio = new_ratio
+    # We need to update the figure DPI.
+    self._update_figure_dpi()
+    # The easiest way to resize the canvas is to emit a resizeEvent
+    # since we implement all the logic for resizing the canvas for
+    # that event.
+    self.geometryChanged(self.boundingRect(), self.boundingRect())
+    # resizeEvent triggers a paintEvent itself, so we exit this one
+    # (after making sure that the event is immediately handled).</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.sizeHint"><code class="name flex">
+<span>def <span class="ident">sizeHint</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def sizeHint(self):
+  w, h = self.get_width_height()
+  return QtCore.QSize(w, h)</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.wheelEvent"><code class="name flex">
+<span>def <span class="ident">wheelEvent</span></span>(<span>self, event)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>wheelEvent(self, QWheelEvent)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def wheelEvent(self, event):
+  x, y = self.mouseEventCoords(event.pos())
+  # from QWheelEvent::delta doc
+  if event.pixelDelta().x() == 0 and event.pixelDelta().y() == 0:
+    steps = event.angleDelta().y() / 120
+  else:
+    steps = event.pixelDelta().y()
+  if steps:
+    FigureCanvasBase.scroll_event(self, x, y, steps, guiEvent=event)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.MatplotlibIconProvider"><code class="flex name class">
+<span>class <span class="ident">MatplotlibIconProvider</span></span>
+<span>(</span><span>img_type=0)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>This class provide the matplotlib icons for the navigation toolbar.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MatplotlibIconProvider(QtQuick.QQuickImageProvider):
+  &#34;&#34;&#34; This class provide the matplotlib icons for the navigation toolbar.
+    &#34;&#34;&#34;
+
+  def __init__(self, img_type=QtQuick.QQuickImageProvider.Image):
+    self.basedir = os.path.join(matplotlib.rcParams[&#39;datapath&#39;], &#39;images&#39;)
+    QtQuick.QQuickImageProvider.__init__(self, img_type)
+
+  def requestImage(self, ids, size, reqSize):
+    img = QtGui.QImage(os.path.join(self.basedir, ids + &#39;.png&#39;))
+    size.setWidth(img.width())
+    size.setHeight(img.height())
+    return img</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>PyQt5.QtQuick.QQuickImageProvider</li>
+<li>PyQt5.QtQml.QQmlImageProviderBase</li>
+<li>sip.wrapper</li>
+<li>sip.simplewrapper</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="pano.interface.mbq.backend_qtquick.MatplotlibIconProvider.requestImage"><code class="name flex">
+<span>def <span class="ident">requestImage</span></span>(<span>self, ids, size, reqSize)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>requestImage(self, str, QSize) -&gt; Tuple[QImage, QSize]</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def requestImage(self, ids, size, reqSize):
+  img = QtGui.QImage(os.path.join(self.basedir, ids + &#39;.png&#39;))
+  size.setWidth(img.width())
+  size.setHeight(img.height())
+  return img</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick"><code class="flex name class">
+<span>class <span class="ident">NavigationToolbar2QtQuick</span></span>
+<span>(</span><span>canvas, parent=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>NavigationToolbar2 customized for QtQuick</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class NavigationToolbar2QtQuick(QtCore.QObject, NavigationToolbar2):
+  &#34;&#34;&#34; NavigationToolbar2 customized for QtQuick
+    &#34;&#34;&#34;
+
+  messageChanged = QtCore.Signal(str)
+
+  leftChanged = QtCore.Signal()
+  rightChanged = QtCore.Signal()
+  topChanged = QtCore.Signal()
+  bottomChanged = QtCore.Signal()
+  wspaceChanged = QtCore.Signal()
+  hspaceChanged = QtCore.Signal()
+
+  def __init__(self, canvas, parent=None):
+
+    # I think this is needed due to a bug in PySide2
+    if QT_API == QT_API_PYSIDE2:
+      QtCore.QObject.__init__(self, parent)
+      NavigationToolbar2.__init__(self, canvas)
+    else:
+      super().__init__(canvas=canvas, parent=parent)
+
+    self._message = &#34;&#34;
+
+    #
+    # Store margin
+    #
+    self._defaults = {}
+    for attr in (
+        &#39;left&#39;,
+        &#39;bottom&#39;,
+        &#39;right&#39;,
+        &#39;top&#39;,
+        &#39;wspace&#39;,
+        &#39;hspace&#39;,
+    ):
+      val = getattr(self.canvas.figure.subplotpars, attr)
+      self._defaults[attr] = val
+      setattr(self, attr, val)
+
+  def _init_toolbar(self):
+    &#34;&#34;&#34; don&#39;t actually build the widgets here, build them in QML
+        &#34;&#34;&#34;
+    pass
+
+  # Define a few properties.
+  def getMessage(self):
+    return self._message
+
+  def setMessage(self, msg):
+    if msg != self._message:
+      self._message = msg
+      self.messageChanged.emit(msg)
+
+  message = QtCore.Property(str, getMessage, setMessage, notify=messageChanged)
+
+  def getLeft(self):
+    return self.canvas.figure.subplotpars.left
+
+  def setLeft(self, value):
+    if value != self.canvas.figure.subplotpars.left:
+      self.canvas.figure.subplots_adjust(left=value)
+      self.leftChanged.emit()
+
+      self.canvas.draw_idle()
+
+  left = QtCore.Property(float, getLeft, setLeft, notify=leftChanged)
+
+  def getRight(self):
+    return self.canvas.figure.subplotpars.right
+
+  def setRight(self, value):
+    if value != self.canvas.figure.subplotpars.right:
+      self.canvas.figure.subplots_adjust(right=value)
+      self.rightChanged.emit()
+
+      self.canvas.draw_idle()
+
+  right = QtCore.Property(float, getRight, setRight, notify=rightChanged)
+
+  def getTop(self):
+    return self.canvas.figure.subplotpars.top
+
+  def setTop(self, value):
+    if value != self.canvas.figure.subplotpars.top:
+      self.canvas.figure.subplots_adjust(top=value)
+      self.topChanged.emit()
+
+      self.canvas.draw_idle()
+
+  top = QtCore.Property(float, getTop, setTop, notify=topChanged)
+
+  def getBottom(self):
+    return self.canvas.figure.subplotpars.bottom
+
+  def setBottom(self, value):
+    if value != self.canvas.figure.subplotpars.bottom:
+      self.canvas.figure.subplots_adjust(bottom=value)
+      self.bottomChanged.emit()
+
+      self.canvas.draw_idle()
+
+  bottom = QtCore.Property(float, getBottom, setBottom, notify=bottomChanged)
+
+  def getHspace(self):
+    return self.canvas.figure.subplotpars.hspace
+
+  def setHspace(self, value):
+    if value != self.canvas.figure.subplotpars.hspace:
+      self.canvas.figure.subplots_adjust(hspace=value)
+      self.hspaceChanged.emit()
+
+      self.canvas.draw_idle()
+
+  hspace = QtCore.Property(float, getHspace, setHspace, notify=hspaceChanged)
+
+  def getWspace(self):
+    return self.canvas.figure.subplotpars.wspace
+
+  def setWspace(self, value):
+    if value != self.canvas.figure.subplotpars.wspace:
+      self.canvas.figure.subplots_adjust(wspace=value)
+      self.wspaceChanged.emit()
+
+      self.canvas.draw_idle()
+
+  wspace = QtCore.Property(float, getWspace, setWspace, notify=wspaceChanged)
+
+  def set_history_buttons(self):
+    &#34;&#34;&#34;Enable or disable back/forward button&#34;&#34;&#34;
+    pass
+
+  def set_cursor(self, cursor):
+    &#34;&#34;&#34;
+        Set the current cursor to one of the :class:`Cursors`
+        enums values
+        &#34;&#34;&#34;
+    self.canvas.setCursor(cursord[cursor])
+
+  def draw_with_locators_update(self):
+    &#34;&#34;&#34;Redraw the canvases, update the locators&#34;&#34;&#34;
+    for a in self.canvas.figure.get_axes():
+      xaxis = getattr(a, &#39;xaxis&#39;, None)
+      yaxis = getattr(a, &#39;yaxis&#39;, None)
+      locators = []
+      if xaxis is not None:
+        locators.append(xaxis.get_major_locator())
+        locators.append(xaxis.get_minor_locator())
+      if yaxis is not None:
+        locators.append(yaxis.get_major_locator())
+        locators.append(yaxis.get_minor_locator())
+
+      for loc in locators:
+        loc.refresh()
+    self.canvas.draw_idle()
+
+  def draw_rubberband(self, event, x0, y0, x1, y1):
+    &#34;&#34;&#34;Draw a rectangle rubberband to indicate zoom limits&#34;&#34;&#34;
+    height = self.canvas.figure.bbox.height
+    y1 = height - y1
+    y0 = height - y0
+
+    w = abs(x1 - x0)
+    h = abs(y1 - y0)
+
+    rect = [int(val) for val in (min(x0, x1), min(y0, y1), w, h)]
+    self.canvas.drawRectangle(rect)
+
+  def remove_rubberband(self):
+    &#34;&#34;&#34;Remove the rubberband&#34;&#34;&#34;
+    self.canvas.drawRectangle(None)
+
+  def tight_layout(self):
+    self.canvas.figure.tight_layout()
+    # self._setSliderPositions()
+    self.canvas.draw_idle()
+
+  def reset_margin(self):
+    self.canvas.figure.subplots_adjust(**self._defaults)
+    # self._setSliderPositions()
+    self.canvas.draw_idle()
+
+  def print_figure(self, fname, *args, **kwargs):
+    if fname:
+      fname = QtCore.QUrl(fname).toLocalFile()
+      # save dir for next time
+      matplotlib.rcParams[&#39;savefig.directory&#39;] = os.path.dirname(fname)
+    NavigationToolbar2.print_figure(self, fname, *args, **kwargs)
+    self.canvas.draw_idle()
+
+  def save_figure(self, *args):
+    raise NotImplementedError(&#34;save_figure is not yet implemented&#34;)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>PyQt5.QtCore.QObject</li>
+<li>sip.wrapper</li>
+<li>sip.simplewrapper</li>
+<li>matplotlib.backend_bases.NavigationToolbar2</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.bottom"><code class="name">var <span class="ident">bottom</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getBottom(self):
+  return self.canvas.figure.subplotpars.bottom</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.hspace"><code class="name">var <span class="ident">hspace</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getHspace(self):
+  return self.canvas.figure.subplotpars.hspace</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.left"><code class="name">var <span class="ident">left</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getLeft(self):
+  return self.canvas.figure.subplotpars.left</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.message"><code class="name">var <span class="ident">message</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getMessage(self):
+  return self._message</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.right"><code class="name">var <span class="ident">right</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getRight(self):
+  return self.canvas.figure.subplotpars.right</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.top"><code class="name">var <span class="ident">top</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getTop(self):
+  return self.canvas.figure.subplotpars.top</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.wspace"><code class="name">var <span class="ident">wspace</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getWspace(self):
+  return self.canvas.figure.subplotpars.wspace</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.bottomChanged"><code class="name flex">
+<span>def <span class="ident">bottomChanged</span></span>(<span>...)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.draw_rubberband"><code class="name flex">
+<span>def <span class="ident">draw_rubberband</span></span>(<span>self, event, x0, y0, x1, y1)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Draw a rectangle rubberband to indicate zoom limits</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def draw_rubberband(self, event, x0, y0, x1, y1):
+  &#34;&#34;&#34;Draw a rectangle rubberband to indicate zoom limits&#34;&#34;&#34;
+  height = self.canvas.figure.bbox.height
+  y1 = height - y1
+  y0 = height - y0
+
+  w = abs(x1 - x0)
+  h = abs(y1 - y0)
+
+  rect = [int(val) for val in (min(x0, x1), min(y0, y1), w, h)]
+  self.canvas.drawRectangle(rect)</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.draw_with_locators_update"><code class="name flex">
+<span>def <span class="ident">draw_with_locators_update</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Redraw the canvases, update the locators</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def draw_with_locators_update(self):
+  &#34;&#34;&#34;Redraw the canvases, update the locators&#34;&#34;&#34;
+  for a in self.canvas.figure.get_axes():
+    xaxis = getattr(a, &#39;xaxis&#39;, None)
+    yaxis = getattr(a, &#39;yaxis&#39;, None)
+    locators = []
+    if xaxis is not None:
+      locators.append(xaxis.get_major_locator())
+      locators.append(xaxis.get_minor_locator())
+    if yaxis is not None:
+      locators.append(yaxis.get_major_locator())
+      locators.append(yaxis.get_minor_locator())
+
+    for loc in locators:
+      loc.refresh()
+  self.canvas.draw_idle()</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.getBottom"><code class="name flex">
+<span>def <span class="ident">getBottom</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getBottom(self):
+  return self.canvas.figure.subplotpars.bottom</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.getHspace"><code class="name flex">
+<span>def <span class="ident">getHspace</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getHspace(self):
+  return self.canvas.figure.subplotpars.hspace</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.getLeft"><code class="name flex">
+<span>def <span class="ident">getLeft</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getLeft(self):
+  return self.canvas.figure.subplotpars.left</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.getMessage"><code class="name flex">
+<span>def <span class="ident">getMessage</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getMessage(self):
+  return self._message</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.getRight"><code class="name flex">
+<span>def <span class="ident">getRight</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getRight(self):
+  return self.canvas.figure.subplotpars.right</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.getTop"><code class="name flex">
+<span>def <span class="ident">getTop</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getTop(self):
+  return self.canvas.figure.subplotpars.top</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.getWspace"><code class="name flex">
+<span>def <span class="ident">getWspace</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getWspace(self):
+  return self.canvas.figure.subplotpars.wspace</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.hspaceChanged"><code class="name flex">
+<span>def <span class="ident">hspaceChanged</span></span>(<span>...)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.leftChanged"><code class="name flex">
+<span>def <span class="ident">leftChanged</span></span>(<span>...)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.messageChanged"><code class="name flex">
+<span>def <span class="ident">messageChanged</span></span>(<span>...)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.print_figure"><code class="name flex">
+<span>def <span class="ident">print_figure</span></span>(<span>self, fname, *args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def print_figure(self, fname, *args, **kwargs):
+  if fname:
+    fname = QtCore.QUrl(fname).toLocalFile()
+    # save dir for next time
+    matplotlib.rcParams[&#39;savefig.directory&#39;] = os.path.dirname(fname)
+  NavigationToolbar2.print_figure(self, fname, *args, **kwargs)
+  self.canvas.draw_idle()</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.remove_rubberband"><code class="name flex">
+<span>def <span class="ident">remove_rubberband</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Remove the rubberband</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def remove_rubberband(self):
+  &#34;&#34;&#34;Remove the rubberband&#34;&#34;&#34;
+  self.canvas.drawRectangle(None)</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.reset_margin"><code class="name flex">
+<span>def <span class="ident">reset_margin</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def reset_margin(self):
+  self.canvas.figure.subplots_adjust(**self._defaults)
+  # self._setSliderPositions()
+  self.canvas.draw_idle()</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.rightChanged"><code class="name flex">
+<span>def <span class="ident">rightChanged</span></span>(<span>...)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.save_figure"><code class="name flex">
+<span>def <span class="ident">save_figure</span></span>(<span>self, *args)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Save the current figure.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def save_figure(self, *args):
+  raise NotImplementedError(&#34;save_figure is not yet implemented&#34;)</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.setBottom"><code class="name flex">
+<span>def <span class="ident">setBottom</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def setBottom(self, value):
+  if value != self.canvas.figure.subplotpars.bottom:
+    self.canvas.figure.subplots_adjust(bottom=value)
+    self.bottomChanged.emit()
+
+    self.canvas.draw_idle()</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.setHspace"><code class="name flex">
+<span>def <span class="ident">setHspace</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def setHspace(self, value):
+  if value != self.canvas.figure.subplotpars.hspace:
+    self.canvas.figure.subplots_adjust(hspace=value)
+    self.hspaceChanged.emit()
+
+    self.canvas.draw_idle()</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.setLeft"><code class="name flex">
+<span>def <span class="ident">setLeft</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def setLeft(self, value):
+  if value != self.canvas.figure.subplotpars.left:
+    self.canvas.figure.subplots_adjust(left=value)
+    self.leftChanged.emit()
+
+    self.canvas.draw_idle()</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.setMessage"><code class="name flex">
+<span>def <span class="ident">setMessage</span></span>(<span>self, msg)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def setMessage(self, msg):
+  if msg != self._message:
+    self._message = msg
+    self.messageChanged.emit(msg)</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.setRight"><code class="name flex">
+<span>def <span class="ident">setRight</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def setRight(self, value):
+  if value != self.canvas.figure.subplotpars.right:
+    self.canvas.figure.subplots_adjust(right=value)
+    self.rightChanged.emit()
+
+    self.canvas.draw_idle()</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.setTop"><code class="name flex">
+<span>def <span class="ident">setTop</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def setTop(self, value):
+  if value != self.canvas.figure.subplotpars.top:
+    self.canvas.figure.subplots_adjust(top=value)
+    self.topChanged.emit()
+
+    self.canvas.draw_idle()</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.setWspace"><code class="name flex">
+<span>def <span class="ident">setWspace</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def setWspace(self, value):
+  if value != self.canvas.figure.subplotpars.wspace:
+    self.canvas.figure.subplots_adjust(wspace=value)
+    self.wspaceChanged.emit()
+
+    self.canvas.draw_idle()</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.set_cursor"><code class="name flex">
+<span>def <span class="ident">set_cursor</span></span>(<span>self, cursor)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Set the current cursor to one of the :class:<code>Cursors</code>
+enums values</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_cursor(self, cursor):
+  &#34;&#34;&#34;
+      Set the current cursor to one of the :class:`Cursors`
+      enums values
+      &#34;&#34;&#34;
+  self.canvas.setCursor(cursord[cursor])</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.set_history_buttons"><code class="name flex">
+<span>def <span class="ident">set_history_buttons</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Enable or disable back/forward button</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_history_buttons(self):
+  &#34;&#34;&#34;Enable or disable back/forward button&#34;&#34;&#34;
+  pass</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.tight_layout"><code class="name flex">
+<span>def <span class="ident">tight_layout</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def tight_layout(self):
+  self.canvas.figure.tight_layout()
+  # self._setSliderPositions()
+  self.canvas.draw_idle()</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.topChanged"><code class="name flex">
+<span>def <span class="ident">topChanged</span></span>(<span>...)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.wspaceChanged"><code class="name flex">
+<span>def <span class="ident">wspaceChanged</span></span>(<span>...)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="pano.interface.mbq" href="index.html">pano.interface.mbq</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick" href="#pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick">FigureCanvasQtQuick</a></code></h4>
+<ul class="">
+<li><code><a title="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.boundingRect" href="#pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.boundingRect">boundingRect</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.buttond" href="#pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.buttond">buttond</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.dpi_ratio" href="#pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.dpi_ratio">dpi_ratio</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.dpi_ratio_changed" href="#pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.dpi_ratio_changed">dpi_ratio_changed</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.draw" href="#pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.draw">draw</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.drawRectangle" href="#pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.drawRectangle">drawRectangle</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.draw_idle" href="#pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.draw_idle">draw_idle</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.flush_events" href="#pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.flush_events">flush_events</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.geometryChanged" href="#pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.geometryChanged">geometryChanged</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.get_dpi_ratio" href="#pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.get_dpi_ratio">get_dpi_ratio</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.get_width_height" href="#pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.get_width_height">get_width_height</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.hoverEnterEvent" href="#pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.hoverEnterEvent">hoverEnterEvent</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.hoverLeaveEvent" href="#pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.hoverLeaveEvent">hoverLeaveEvent</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.hoverMoveEvent" href="#pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.hoverMoveEvent">hoverMoveEvent</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.keyPressEvent" href="#pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.keyPressEvent">keyPressEvent</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.keyReleaseEvent" href="#pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.keyReleaseEvent">keyReleaseEvent</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.minumumSizeHint" href="#pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.minumumSizeHint">minumumSizeHint</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.mouseDoubleClickEvent" href="#pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.mouseDoubleClickEvent">mouseDoubleClickEvent</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.mouseEventCoords" href="#pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.mouseEventCoords">mouseEventCoords</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.mouseMoveEvent" href="#pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.mouseMoveEvent">mouseMoveEvent</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.mousePressEvent" href="#pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.mousePressEvent">mousePressEvent</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.mouseReleaseEvent" href="#pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.mouseReleaseEvent">mouseReleaseEvent</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.new_timer" href="#pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.new_timer">new_timer</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.set_dpi_ratio" href="#pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.set_dpi_ratio">set_dpi_ratio</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.sizeHint" href="#pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.sizeHint">sizeHint</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.wheelEvent" href="#pano.interface.mbq.backend_qtquick.FigureCanvasQtQuick.wheelEvent">wheelEvent</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="pano.interface.mbq.backend_qtquick.MatplotlibIconProvider" href="#pano.interface.mbq.backend_qtquick.MatplotlibIconProvider">MatplotlibIconProvider</a></code></h4>
+<ul class="">
+<li><code><a title="pano.interface.mbq.backend_qtquick.MatplotlibIconProvider.requestImage" href="#pano.interface.mbq.backend_qtquick.MatplotlibIconProvider.requestImage">requestImage</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick" href="#pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick">NavigationToolbar2QtQuick</a></code></h4>
+<ul class="">
+<li><code><a title="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.bottom" href="#pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.bottom">bottom</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.bottomChanged" href="#pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.bottomChanged">bottomChanged</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.draw_rubberband" href="#pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.draw_rubberband">draw_rubberband</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.draw_with_locators_update" href="#pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.draw_with_locators_update">draw_with_locators_update</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.getBottom" href="#pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.getBottom">getBottom</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.getHspace" href="#pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.getHspace">getHspace</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.getLeft" href="#pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.getLeft">getLeft</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.getMessage" href="#pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.getMessage">getMessage</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.getRight" href="#pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.getRight">getRight</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.getTop" href="#pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.getTop">getTop</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.getWspace" href="#pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.getWspace">getWspace</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.hspace" href="#pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.hspace">hspace</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.hspaceChanged" href="#pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.hspaceChanged">hspaceChanged</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.left" href="#pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.left">left</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.leftChanged" href="#pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.leftChanged">leftChanged</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.message" href="#pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.message">message</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.messageChanged" href="#pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.messageChanged">messageChanged</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.print_figure" href="#pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.print_figure">print_figure</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.remove_rubberband" href="#pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.remove_rubberband">remove_rubberband</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.reset_margin" href="#pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.reset_margin">reset_margin</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.right" href="#pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.right">right</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.rightChanged" href="#pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.rightChanged">rightChanged</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.save_figure" href="#pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.save_figure">save_figure</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.setBottom" href="#pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.setBottom">setBottom</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.setHspace" href="#pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.setHspace">setHspace</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.setLeft" href="#pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.setLeft">setLeft</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.setMessage" href="#pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.setMessage">setMessage</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.setRight" href="#pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.setRight">setRight</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.setTop" href="#pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.setTop">setTop</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.setWspace" href="#pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.setWspace">setWspace</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.set_cursor" href="#pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.set_cursor">set_cursor</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.set_history_buttons" href="#pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.set_history_buttons">set_history_buttons</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.tight_layout" href="#pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.tight_layout">tight_layout</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.top" href="#pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.top">top</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.topChanged" href="#pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.topChanged">topChanged</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.wspace" href="#pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.wspace">wspace</a></code></li>
+<li><code><a title="pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.wspaceChanged" href="#pano.interface.mbq.backend_qtquick.NavigationToolbar2QtQuick.wspaceChanged">wspaceChanged</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+</footer>
+</body>
+</html>

@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+import sys
 
 import skimage.io
 
@@ -14,7 +15,7 @@ def init_project(qt: bool):
   skimage.io.use_plugin('pil')
 
   if qt:
-    if not is_frozen():
+    if not is_frozen() and 'PySide2' in sys.modules:
       import PySide2
 
       pyside_dir = Path(PySide2.__file__).parent

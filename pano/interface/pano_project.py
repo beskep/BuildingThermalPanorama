@@ -1,7 +1,7 @@
 """외피 열화상 파노라마 영상처리 알고리즘의 CLI 인터페이스"""
 
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Callable, List, Optional, Union
 
 from loguru import logger
 import matplotlib.pyplot as plt
@@ -193,14 +193,14 @@ class ThermalPanorama:
       self._fm.subdir(DIR.VIS, mkdir=True)
 
       files = self._fm.raw_files()
-      for file in track(sequence=files,
-                        description='Extracting images...',
-                        transient=True,
-                        console=utils.console):
+      for r, file in utils.ptrack(files, description='Extracting images...'):
         self._extract_raw_file(file=file)
+        yield r
+
+      yield 1.0
 
   def extract(self):
-    self._extract_raw_files()
+    return self._extract_raw_files()
 
   @property
   def _size_limit(self):
@@ -249,10 +249,7 @@ class ThermalPanorama:
 
     files = self._fm.raw_files()
     registrator, prep, mtx = None, None, {}
-    for file in track(sequence=files,
-                      description='Registering...',
-                      transient=True,
-                      console=utils.console):
+    for r, file in utils.ptrack(sequence=files, description='Registering...'):
       ir = IIO.read(self._fm.change_dir(DIR.IR, file))
       vis = IIO.read(self._fm.change_dir(DIR.VIS, file))
 
@@ -277,6 +274,8 @@ class ThermalPanorama:
           titles=('Thermal image (prep)', 'Visible image (prep)'))
       compare_fig.savefig(compare_path.joinpath())
       plt.close(compare_fig)
+
+      yield r
 
     np.savez(self._fm.rgst_matrix_path(), **mtx)
 

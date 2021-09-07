@@ -425,7 +425,7 @@ class SegMask:
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="pano.misc.tools.bin_size"><code class="name flex">
-<span>def <span class="ident">bin_size</span></span>(<span>image1: numpy.ndarray, image2: typing.Union[numpy.ndarray, NoneType] = None, bins='auto') ‑> int</span>
+<span>def <span class="ident">bin_size</span></span>(<span>image1: numpy.ndarray, image2: Optional[numpy.ndarray] = None, bins='auto') ‑> int</span>
 </code></dt>
 <dd>
 <div class="desc"><p>영상의 histogram, entropy 계산을 위한 적정 bin 개수 추정.
@@ -483,7 +483,7 @@ class SegMask:
 </details>
 </dd>
 <dt id="pano.misc.tools.crop_mask"><code class="name flex">
-<span>def <span class="ident">crop_mask</span></span>(<span>mask: numpy.ndarray, morphology_open=True) ‑> typing.Tuple[<a title="pano.misc.tools.CropRange" href="#pano.misc.tools.CropRange">CropRange</a>, numpy.ndarray]</span>
+<span>def <span class="ident">crop_mask</span></span>(<span>mask: numpy.ndarray, morphology_open=True) ‑> Tuple[<a title="pano.misc.tools.CropRange" href="#pano.misc.tools.CropRange">CropRange</a>, numpy.ndarray]</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -603,7 +603,7 @@ class SegMask:
 </details>
 </dd>
 <dt id="pano.misc.tools.mask_bbox"><code class="name flex">
-<span>def <span class="ident">mask_bbox</span></span>(<span>mask: numpy.ndarray, morphology_open=True) ‑> typing.Tuple[int, int, int, int]</span>
+<span>def <span class="ident">mask_bbox</span></span>(<span>mask: numpy.ndarray, morphology_open=True) ‑> Tuple[int, int, int, int]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>마스크 영상 중 True인 영역의 bounding box 좌표를 찾음</p>
@@ -751,7 +751,7 @@ class SegMask:
 </details>
 </dd>
 <dt id="pano.misc.tools.prep_compare_fig"><code class="name flex">
-<span>def <span class="ident">prep_compare_fig</span></span>(<span>images: typing.Tuple[numpy.ndarray, numpy.ndarray], titles=('Image 1', 'Image 2'), norm=False, eq_hist=True, n_tiles=(8, 8))</span>
+<span>def <span class="ident">prep_compare_fig</span></span>(<span>images: Tuple[numpy.ndarray, numpy.ndarray], titles=('Image 1', 'Image 2'), norm=False, eq_hist=True, n_tiles=(8, 8))</span>
 </code></dt>
 <dd>
 <div class="desc"><p>두 영상의 전처리 및 비교 영상 생성.
@@ -852,7 +852,7 @@ class SegMask:
 </details>
 </dd>
 <dt id="pano.misc.tools.prep_compare_images"><code class="name flex">
-<span>def <span class="ident">prep_compare_images</span></span>(<span>image1: numpy.ndarray, image2: numpy.ndarray, norm=False, eq_hist=True, method: typing.Union[str, typing.List[str]] = 'checkerboard', n_tiles=(8, 8)) ‑> typing.Union[numpy.ndarray, typing.List[numpy.ndarray]]</span>
+<span>def <span class="ident">prep_compare_images</span></span>(<span>image1: numpy.ndarray, image2: numpy.ndarray, norm=False, eq_hist=True, method: Union[str, List[str]] = 'checkerboard', n_tiles=(8, 8)) ‑> Union[numpy.ndarray, List[numpy.ndarray]]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>두 영상의 전처리 및 비교 영상 생성.
@@ -980,7 +980,8 @@ list로 주어지면 각 옵션을 적용한 비교 영상의 list 반환.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class CropRange:
+<pre><code class="python">@dc.dataclass
+class CropRange:
   x_min: int
   x_max: int
   y_min: int

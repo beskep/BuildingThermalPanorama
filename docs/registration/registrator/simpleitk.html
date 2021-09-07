@@ -541,7 +541,7 @@ class SITKRegistrator(BaseRegistrator):
 </dd>
 <dt id="pano.registration.registrator.simpleitk.SITKRegistrator"><code class="flex name class">
 <span>class <span class="ident">SITKRegistrator</span></span>
-<span>(</span><span>transformation=Transformation.Similarity, metric=Metric.JointHistMI, optimizer='powell', bins: typing.Union[str, int] = 'auto')</span>
+<span>(</span><span>transformation=Transformation.Similarity, metric=Metric.JointHistMI, optimizer='powell', bins: Union[str, int] = 'auto')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Helper class that provides a standard way to create an ABC using
@@ -1039,7 +1039,7 @@ def transformation(self):
 <h3>Methods</h3>
 <dl>
 <dt id="pano.registration.registrator.simpleitk.SITKRegistrator.register"><code class="name flex">
-<span>def <span class="ident">register</span></span>(<span>self, fixed_image: numpy.ndarray, moving_image: numpy.ndarray, **kwargs) ‑> typing.Tuple[numpy.ndarray, typing.Union[typing.Callable, NoneType], typing.Union[numpy.ndarray, NoneType]]</span>
+<span>def <span class="ident">register</span></span>(<span>self, fixed_image: numpy.ndarray, moving_image: numpy.ndarray, **kwargs) ‑> Tuple[numpy.ndarray, Optional[Callable], Optional[numpy.ndarray]]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Register image</p>
@@ -1136,7 +1136,7 @@ def transformation(self):
 </details>
 </dd>
 <dt id="pano.registration.registrator.simpleitk.SITKRegistrator.set_initial_params"><code class="name flex">
-<span>def <span class="ident">set_initial_params</span></span>(<span>self, scale: typing.Union[float, NoneType] = None, fixed_alpha: typing.Union[float, NoneType] = None, moving_alpha: typing.Union[float, NoneType] = None, translation: typing.Union[list, NoneType] = None)</span>
+<span>def <span class="ident">set_initial_params</span></span>(<span>self, scale: Optional[float] = None, fixed_alpha: Optional[float] = None, moving_alpha: Optional[float] = None, translation: Optional[list] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>정합을 위한 translation의 초기 패러미터 지정.</p>
@@ -1200,7 +1200,7 @@ e.g. FLIR T540의 경우 (5, -14).</p>
 </details>
 </dd>
 <dt id="pano.registration.registrator.simpleitk.SITKRegistrator.set_metric"><code class="name flex">
-<span>def <span class="ident">set_metric</span></span>(<span>self, metric: <a title="pano.registration.registrator.simpleitk.Metric" href="#pano.registration.registrator.simpleitk.Metric">Metric</a>, bins: typing.Union[int, str] = 'auto', pdf_var=1.5, ants_radius=2)</span>
+<span>def <span class="ident">set_metric</span></span>(<span>self, metric: <a title="pano.registration.registrator.simpleitk.Metric" href="#pano.registration.registrator.simpleitk.Metric">Metric</a>, bins: Union[int, str] = 'auto', pdf_var=1.5, ants_radius=2)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>

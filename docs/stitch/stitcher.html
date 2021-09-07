@@ -900,7 +900,7 @@ class Stitcher:
 <dl>
 <dt id="pano.stitch.stitcher.Panorama"><code class="flex name class">
 <span>class <span class="ident">Panorama</span></span>
-<span>(</span><span>panorama: numpy.ndarray, mask: numpy.ndarray, graph: str, indices: list, cameras: list, crop_range: typing.Union[<a title="pano.misc.tools.CropRange" href="../misc/tools.html#pano.misc.tools.CropRange">CropRange</a>, NoneType], image_names: typing.List[str])</span>
+<span>(</span><span>panorama: numpy.ndarray, mask: numpy.ndarray, graph: str, indices: list, cameras: list, crop_range: Optional[<a title="pano.misc.tools.CropRange" href="../misc/tools.html#pano.misc.tools.CropRange">CropRange</a>], image_names: List[str])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Stitch 결과</p></div>
@@ -908,7 +908,8 @@ class Stitcher:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Panorama:
+<pre><code class="python">@dataclass
+class Panorama:
   &#34;&#34;&#34;Stitch 결과&#34;&#34;&#34;
   panorama: np.ndarray
   mask: np.ndarray
@@ -942,7 +943,7 @@ class Stitcher:
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="pano.stitch.stitcher.Panorama.crop_range"><code class="name">var <span class="ident">crop_range</span> : typing.Union[<a title="pano.misc.tools.CropRange" href="../misc/tools.html#pano.misc.tools.CropRange">CropRange</a>, NoneType]</code></dt>
+<dt id="pano.stitch.stitcher.Panorama.crop_range"><code class="name">var <span class="ident">crop_range</span> : Optional[<a title="pano.misc.tools.CropRange" href="../misc/tools.html#pano.misc.tools.CropRange">CropRange</a>]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -950,7 +951,7 @@ class Stitcher:
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="pano.stitch.stitcher.Panorama.image_names"><code class="name">var <span class="ident">image_names</span> : typing.List[str]</code></dt>
+<dt id="pano.stitch.stitcher.Panorama.image_names"><code class="name">var <span class="ident">image_names</span> : List[str]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1041,7 +1042,7 @@ class Stitcher:
 </dd>
 <dt id="pano.stitch.stitcher.Stitcher"><code class="flex name class">
 <span>class <span class="ident">Stitcher</span></span>
-<span>(</span><span>mode='pano', features_finder: typing.Union[cv2.Feature2D, NoneType] = None, compose_scale=1.0, work_scale=1.0, warp_threshold=20.0, try_cuda=False)</span>
+<span>(</span><span>mode='pano', features_finder: Optional[cv2.Feature2D] = None, compose_scale=1.0, work_scale=1.0, warp_threshold=20.0, try_cuda=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>파노라마 생성자</p>
@@ -1870,7 +1871,7 @@ def warper(self) -&gt; cv.PyRotationWarper:
   return self._warper</code></pre>
 </details>
 </dd>
-<dt id="pano.stitch.stitcher.Stitcher.warper_type"><code class="name">var <span class="ident">warper_type</span> : typing.Union[str, NoneType]</code></dt>
+<dt id="pano.stitch.stitcher.Stitcher.warper_type"><code class="name">var <span class="ident">warper_type</span> : Optional[str]</code></dt>
 <dd>
 <div class="desc"><p><code>warper</code>의 종류. <code>available_warper_types</code> 중에서 선택 가능함.</p>
 <p><code>'plane'</code> : Rectilinear Projection.</p>
@@ -1901,7 +1902,7 @@ def warper_type(self) -&gt; Optional[str]:
 <h3>Methods</h3>
 <dl>
 <dt id="pano.stitch.stitcher.Stitcher.calculate_camera_matrix"><code class="name flex">
-<span>def <span class="ident">calculate_camera_matrix</span></span>(<span>self, images: typing.List[numpy.ndarray], image_names: typing.List[str]) ‑> typing.Tuple[typing.List[cv2.detail_CameraParams], typing.List[int], str]</span>
+<span>def <span class="ident">calculate_camera_matrix</span></span>(<span>self, images: List[numpy.ndarray], image_names: List[str]) ‑> Tuple[List[cv2.detail_CameraParams], List[int], str]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>영상의 특성 추출/매칭을 통해 camera matrix 추정</p>
@@ -2003,7 +2004,7 @@ def warper_type(self) -&gt; Optional[str]:
 </details>
 </dd>
 <dt id="pano.stitch.stitcher.Stitcher.find_features"><code class="name flex">
-<span>def <span class="ident">find_features</span></span>(<span>self, image: numpy.ndarray, mask: typing.Union[numpy.ndarray, NoneType])</span>
+<span>def <span class="ident">find_features</span></span>(<span>self, image: numpy.ndarray, mask: Optional[numpy.ndarray])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>대상 영상의 특징점 추출</p>
@@ -2039,7 +2040,7 @@ def warper_type(self) -&gt; Optional[str]:
 </details>
 </dd>
 <dt id="pano.stitch.stitcher.Stitcher.set_blend_type"><code class="name flex">
-<span>def <span class="ident">set_blend_type</span></span>(<span>self, value: typing.Union[bool, str])</span>
+<span>def <span class="ident">set_blend_type</span></span>(<span>self, value: Union[bool, str])</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -2085,7 +2086,7 @@ def warper_type(self) -&gt; Optional[str]:
 </details>
 </dd>
 <dt id="pano.stitch.stitcher.Stitcher.set_features_matcher"><code class="name flex">
-<span>def <span class="ident">set_features_matcher</span></span>(<span>self, matcher='affine', confidence: typing.Union[float, NoneType] = None, range_width=-1)</span>
+<span>def <span class="ident">set_features_matcher</span></span>(<span>self, matcher='affine', confidence: Optional[float] = None, range_width=-1)</span>
 </code></dt>
 <dd>
 <div class="desc"><h2 id="parameters">Parameters</h2>
@@ -2178,7 +2179,7 @@ The default is 0.3 for ORB and 0.65 for other feature types.</dd>
 </details>
 </dd>
 <dt id="pano.stitch.stitcher.Stitcher.stitch"><code class="name flex">
-<span>def <span class="ident">stitch</span></span>(<span>self, images: <a title="pano.stitch.stitcher.StitchingImages" href="#pano.stitch.stitcher.StitchingImages">StitchingImages</a>, masks: typing.Union[typing.List[numpy.ndarray], NoneType] = None, names: typing.Union[typing.List[str], NoneType] = None, crop=True) ‑> <a title="pano.stitch.stitcher.Panorama" href="#pano.stitch.stitcher.Panorama">Panorama</a></span>
+<span>def <span class="ident">stitch</span></span>(<span>self, images: <a title="pano.stitch.stitcher.StitchingImages" href="#pano.stitch.stitcher.StitchingImages">StitchingImages</a>, masks: Optional[List[numpy.ndarray]] = None, names: Optional[List[str]] = None, crop=True) ‑> <a title="pano.stitch.stitcher.Panorama" href="#pano.stitch.stitcher.Panorama">Panorama</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>영상의 특징점을 기반으로 정합 (stitch)하여 파노라마 영상 생성</p>
@@ -2274,7 +2275,7 @@ The default is 0.3 for ORB and 0.65 for other feature types.</dd>
 </details>
 </dd>
 <dt id="pano.stitch.stitcher.Stitcher.warp_and_blend"><code class="name flex">
-<span>def <span class="ident">warp_and_blend</span></span>(<span>self, images: <a title="pano.stitch.stitcher.StitchingImages" href="#pano.stitch.stitcher.StitchingImages">StitchingImages</a>, cameras: typing.List[cv2.detail_CameraParams], masks: typing.Union[typing.List[numpy.ndarray], NoneType] = None, names: typing.Union[typing.List[str], NoneType] = None) ‑> typing.Tuple[numpy.ndarray, numpy.ndarray, typing.List[int]]</span>
+<span>def <span class="ident">warp_and_blend</span></span>(<span>self, images: <a title="pano.stitch.stitcher.StitchingImages" href="#pano.stitch.stitcher.StitchingImages">StitchingImages</a>, cameras: List[cv2.detail_CameraParams], masks: Optional[List[numpy.ndarray]] = None, names: Optional[List[str]] = None) ‑> Tuple[numpy.ndarray, numpy.ndarray, List[int]]</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -2317,7 +2318,7 @@ The default is 0.3 for ORB and 0.65 for other feature types.</dd>
 </dd>
 <dt id="pano.stitch.stitcher.StitchingImages"><code class="flex name class">
 <span>class <span class="ident">StitchingImages</span></span>
-<span>(</span><span>arrays: typing.List[numpy.ndarray], preprocess: typing.Union[typing.Callable, NoneType] = None)</span>
+<span>(</span><span>arrays: List[numpy.ndarray], preprocess: Optional[Callable] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Stitching 대상 이미지</p>
@@ -2476,7 +2477,7 @@ The default is 0.3 for ORB and 0.65 for other feature types.</dd>
 </details>
 <h3>Instance variables</h3>
 <dl>
-<dt id="pano.stitch.stitcher.StitchingImages.arrays"><code class="name">var <span class="ident">arrays</span> : typing.List[numpy.ndarray]</code></dt>
+<dt id="pano.stitch.stitcher.StitchingImages.arrays"><code class="name">var <span class="ident">arrays</span> : List[numpy.ndarray]</code></dt>
 <dd>
 <div class="desc"><p>영상 원본</p></div>
 <details class="source">
@@ -2519,7 +2520,7 @@ def ndim(self) -&gt; int:
 <h3>Methods</h3>
 <dl>
 <dt id="pano.stitch.stitcher.StitchingImages.preprocess"><code class="name flex">
-<span>def <span class="ident">preprocess</span></span>(<span>self) ‑> typing.Tuple[typing.List[numpy.ndarray], typing.List[typing.Union[numpy.ndarray, NoneType]]]</span>
+<span>def <span class="ident">preprocess</span></span>(<span>self) ‑> Tuple[List[numpy.ndarray], List[Optional[numpy.ndarray]]]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>전처리 함수를 적용한 영상과 대상 영역 마스크 반환</p>
@@ -2602,7 +2603,7 @@ def ndim(self) -&gt; int:
 </details>
 </dd>
 <dt id="pano.stitch.stitcher.StitchingImages.select_images"><code class="name flex">
-<span>def <span class="ident">select_images</span></span>(<span>self, indices: typing.Iterable)</span>
+<span>def <span class="ident">select_images</span></span>(<span>self, indices: Iterable)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>주어진 인덱스에 해당하는 영상 반환</p>
@@ -2628,7 +2629,7 @@ def ndim(self) -&gt; int:
 </details>
 </dd>
 <dt id="pano.stitch.stitcher.StitchingImages.set_preprocess"><code class="name flex">
-<span>def <span class="ident">set_preprocess</span></span>(<span>self, fn: typing.Callable)</span>
+<span>def <span class="ident">set_preprocess</span></span>(<span>self, fn: Callable)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>

@@ -28,7 +28,7 @@ Pane {
             }
             Button {
                 text : qsTr('열화상 추출')
-                onReleased : con.prj_extract_images()
+                onReleased : con.command('extract')
             }
         }
 
@@ -40,7 +40,7 @@ Pane {
             Pane {
                 Material.elevation : 2
                 Layout.fillHeight : true
-                Layout.preferredWidth : 450
+                Layout.preferredWidth : 400
                 // TODO 적정 width 설정
 
                 ScrollView {

@@ -19,11 +19,9 @@ Pane {
 
         RowLayout {
             Button {
-                text : qsTr('전체 자동 정합')
-                onReleased : con.rgst_auto_register()
-            }
-            Button {
                 text : qsTr('자동 정합')
+                onReleased : con.command('register')
+                // TODO 개별 자동 정합 기능 추가?
             }
             Button {
                 text : qsTr('수동 정합')
@@ -33,6 +31,7 @@ Pane {
             }
             Button {
                 text : qsTr('저장')
+                // TODO 작업 진행 현황 따라 색 변환
             }
             Button {
                 text : qsTr('취소')

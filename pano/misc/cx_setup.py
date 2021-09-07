@@ -36,9 +36,8 @@ def build():
       'skimage.io._plugins.pil_plugin',
       'skimage',
       'tensorflow',
-      'PySide2',
   ]
-  excludes = ['tkinter', 'locket']
+  excludes = ['tkinter', 'locket', 'mypy']
   zip_include_packages = []
 
   bins = ['ITK']
