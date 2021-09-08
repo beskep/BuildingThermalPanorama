@@ -90,6 +90,11 @@ class _Window:
   def pbar(self, value: float):
     return self._window.pbar(value)
 
+  def popup(self, title: str, message: str, timeout=2000):
+    # TODO error popup wrap 만들기
+    logger.debug('[Popup] {}: {}', title, message)
+    self._window.popup(title, message, timeout)
+
   def panel_funtion(self, panel: str, fn: str, *args):
     p = self._window.get_panel(panel)
     if p is None:
@@ -101,6 +106,13 @@ class _Window:
 
 
 class Controller(QtCore.QObject):
+  _CMD_KR = {
+      'extract': '열화상 추출',
+      'register': '열화상-실화상 정합',
+      'segment': '외피 부위 인식',
+      'panorama': '파노라마 생성',
+      'correct': '왜곡 보정'
+  }
 
   def __init__(self, win: QtGui.QWindow, loglevel=20) -> None:
     super().__init__()
@@ -144,8 +156,8 @@ class Controller(QtCore.QObject):
 
     self._wd = wd
     self._fm = ThermalPanoramaFileManager(wd)
-    self.rpc.fm = self._fm
-    self.spc.fm = self._fm
+    self._rpc.fm = self._fm
+    self._spc.fm = self._fm
 
     self.prj_update_project_tree()
     self.update_image_view()
@@ -155,6 +167,7 @@ class Controller(QtCore.QObject):
     init_directory(directory=self._wd)
     self.prj_update_project_tree()
     self.update_image_view()
+    self.win.popup('Success', '초기화 완료')
 
   def prj_update_project_tree(self):
     tree = tree_string(self._wd)
@@ -169,7 +182,11 @@ class Controller(QtCore.QObject):
     self.pbar(0.0)
 
     queue = mp.Queue()
+    cmd_kr = self._CMD_KR[command]
+
     self._consumer.queue = queue
+    self._consumer.done.connect(
+        lambda: self.win.popup('Success', f'{cmd_kr} 완료'))
     self._consumer.start()
 
     process = mp.Process(name=command,

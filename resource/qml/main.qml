@@ -92,17 +92,25 @@ ApplicationWindow {
         }
 
         ProgressBar {
-            id : progress_bar
+            id : _pb
             Layout.fillWidth : true
             indeterminate : false
             value : 1.0
         }
     }
 
+    TimeoutPopup {
+        id : _popup
+    }
+
     footer : StatusBar {}
 
     function pbar(value) {
-        progress_bar.value = value
+        _pb.value = value
+    }
+
+    function popup(title, message, timeout = 2000) {
+        _popup.timeout_open(title, message, timeout)
     }
 
     function get_panel(name) {
