@@ -14,6 +14,7 @@ from pano.interface.mbq import FigureCanvas
 from pano.interface.mbq import QtCore
 from pano.interface.mbq import QtGui
 from pano.interface.mbq import QtQml
+from pano.interface.plot_controller import PanoramaPlotController
 from pano.interface.plot_controller import RegistrationPlotController
 from pano.interface.plot_controller import SegmentationPlotController
 
@@ -82,7 +83,11 @@ def main(debug=False, loglevel=20):
   spc = SegmentationPlotController()
   spc.init(app, seg_canvas)
 
-  controller.set_plot_controllers(rpc, spc)
+  pano_canvas = win.findChild(FigureCanvas, 'panorama_plot')
+  ppc = PanoramaPlotController()
+  ppc.init(app, pano_canvas)
+
+  controller.set_plot_controllers(rpc, spc, ppc)
 
   return app.exec_()
 

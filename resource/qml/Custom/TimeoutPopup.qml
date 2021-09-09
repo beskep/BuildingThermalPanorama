@@ -11,8 +11,9 @@ Popup {
     property var steps: 200.0
 
     padding : 0
-    implicitWidth : 400
-    implicitHeight : 250
+    implicitWidth : 300
+    implicitHeight : 200
+    // TODO 메세지별 크기 조절
 
     ColumnLayout {
         anchors.fill : parent
@@ -51,7 +52,7 @@ Popup {
                 Layout.fillWidth : true
                 Layout.fillHeight : true
 
-                font.pointSize : 14
+                font.pointSize : 12
                 wrapMode : Label.WordWrap
 
                 text : '[Default message]'

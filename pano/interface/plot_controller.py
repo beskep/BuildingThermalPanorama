@@ -6,23 +6,31 @@ from loguru import logger
 from matplotlib.axes import Axes
 from matplotlib.backend_bases import MouseEvent
 from matplotlib.cm import get_cmap
+from matplotlib.colorbar import make_axes_gridspec
 from matplotlib.figure import Figure
 from matplotlib.patches import Patch
 import numpy as np
 from skimage import transform
 from skimage.exposure import equalize_hist
 
+from pano.distortion.projection import ImageProjection
 from pano.misc.imageio import ImageIO
+from pano.misc.tools import limit_image_size
 from pano.misc.tools import prep_compare_images
 from pano.misc.tools import SegMask
 from pano.misc.tools import uint8_image
 
 from .common.pano_files import DIR
 from .common.pano_files import FN
+from .common.pano_files import SP
 from .common.pano_files import ThermalPanoramaFileManager
 from .mbq import FigureCanvas
 from .mbq import QtCore
 from .mbq import QtGui
+
+
+class WorkingDirNotSet(FileNotFoundError):
+  pass
 
 
 class PlotController(QtCore.QObject):
@@ -77,7 +85,31 @@ class PlotController(QtCore.QObject):
     self.app.processEvents()
 
 
-class RegistrationPlotController(PlotController):
+class _PanoPlotController(PlotController):
+
+  def __init__(self, parent=None) -> None:
+    super().__init__(parent=parent)
+    self._fm: Optional[ThermalPanoramaFileManager] = None
+
+  @property
+  def fm(self) -> ThermalPanoramaFileManager:
+    if self._fm is None:
+      raise WorkingDirNotSet
+    return self._fm
+
+  @fm.setter
+  def fm(self, value: ThermalPanoramaFileManager):
+    self._fm = value
+
+  def _set_style(self):
+    pass
+
+  def draw(self):
+    self._set_style()
+    super().draw()
+
+
+class RegistrationPlotController(_PanoPlotController):
   _REQUIRED = 4
   _TITLES = ('열화상', '실화상', '비교 (Checkerboard)', '비교 (Difference)')
 
@@ -87,21 +119,11 @@ class RegistrationPlotController(PlotController):
     self._pnts = defaultdict(list)  # 선택된 점들의 mpl 오브젝트
     self._pnts_coord = defaultdict(list)  # 선택된 점들의 좌표
     self._images: Optional[tuple] = None
-    self._fm: Optional[ThermalPanoramaFileManager] = None
     self._matrices: Optional[dict] = None
 
     self._file: Optional[Path] = None
     self._matrix: Optional[np.ndarray] = None  # 선택된 영상의 수동 정합 matrix
     self._registered_image: Optional[np.ndarray] = None
-
-  @property
-  def fm(self) -> ThermalPanoramaFileManager:
-    assert self._fm is not None
-    return self._fm
-
-  @fm.setter
-  def fm(self, value: ThermalPanoramaFileManager):
-    self._fm = value
 
   @property
   def matrices(self) -> dict:
@@ -147,10 +169,6 @@ class RegistrationPlotController(PlotController):
     ar = self.axes[0, 0].get_aspect()
     self.axes[0, 1].set_aspect(ar)
 
-  def draw(self):
-    self._set_style()
-    return super().draw()
-
   def reset(self):
     for ax in self.axes.ravel():
       ax.clear()
@@ -169,7 +187,6 @@ class RegistrationPlotController(PlotController):
                                       anti_aliasing=True)
 
     self._images = (fixed_image, moving_image)
-    # self.axes[0, 0].imshow(fixed_image)
     self.axes[0, 0].imshow(equalize_hist(fixed_image))
     self.axes[0, 1].imshow(moving_image)
 
@@ -278,13 +295,12 @@ class RegistrationPlotController(PlotController):
     self.update_matrices(path.stem, self._matrix)
 
 
-class SegmentationPlotController(PlotController):
+class SegmentationPlotController(_PanoPlotController):
   _TITLES = ('실화상', '부위 인식 결과')
   _CLASSES = ('Background', 'Wall', 'Window', 'etc.')
 
   def __init__(self, parent=None) -> None:
     super().__init__(parent=parent)
-    self._fm: Optional[ThermalPanoramaFileManager] = None
     self._cmap = get_cmap('Dark2')
 
   @property
@@ -312,19 +328,6 @@ class SegmentationPlotController(PlotController):
         ax.set_title(title)
       ax.set_axis_off()
 
-  def draw(self):
-    self._set_style()
-    return super().draw()
-
-  @property
-  def fm(self) -> ThermalPanoramaFileManager:
-    assert self._fm is not None
-    return self._fm
-
-  @fm.setter
-  def fm(self, value: ThermalPanoramaFileManager):
-    self._fm = value
-
   def plot(self, file: Path):
     vis_path = self.fm.change_dir(DIR.RGST, file)
     mask_path = self.fm.change_dir(DIR.SEG, file)
@@ -342,3 +345,152 @@ class SegmentationPlotController(PlotController):
     self.axes[1].imshow(mask_cmap, alpha=0.7)
 
     self.draw()
+
+
+class PanoramaPlotController(_PanoPlotController):
+  _DIR = ('bottom', 'top', 'left', 'right')
+  _TICK_PARAMS = {key: False for key in _DIR + tuple('label' + x for x in _DIR)}
+
+  def __init__(self, parent=None) -> None:
+    super().__init__(parent=parent)
+
+    self._cax: Optional[Axes] = None
+    self._prj: Optional[ImageProjection] = None
+    self._cmap = get_cmap('inferno')
+
+    self._image: Optional[np.ndarray] = None
+    self._dir = DIR.PANO
+    self._angles: Optional[np.ndarray] = None
+    self._limit = 0
+    self._grid = True
+    self._va = np.deg2rad(42.0)  # TODO
+
+  @property
+  def cax(self) -> Axes:
+    if self._cax is None:
+      raise ValueError('Colorbar ax not set')
+
+    return self._cax
+
+  def init(self, app: QtGui.QGuiApplication, canvas: FigureCanvas):
+    self._app = app
+    self._canvas = canvas
+
+    self._fig = canvas.figure
+    self._axes = self._fig.add_subplot(111)
+    self._cax = make_axes_gridspec(self._axes)[0]
+    self._fig.tight_layout()
+
+    self._axes.set_axis_off()
+    self._cax.set_axis_off()
+
+  def _set_style(self):
+    if self._grid:
+      self.axes.tick_params(axis='both', which='both', **self._TICK_PARAMS)
+    else:
+      self.axes.set_axis_off()
+
+  def _load_panorama(self):
+    pano_path = self.fm.panorama_path(DIR.COR, SP.IR)
+    mask_path = self.fm.panorama_path(DIR.COR, SP.MASK)
+    self._dir = DIR.COR
+
+    if not pano_path.exists():
+      pano_path = self.fm.panorama_path(DIR.PANO, SP.IR)
+      mask_path = self.fm.panorama_path(DIR.PANO, SP.MASK)
+      self._dir = DIR.PANO
+
+      if not pano_path.exists():
+        raise FileNotFoundError('파노라마가 생성되지 않았습니다.')
+
+    if not mask_path.exists():
+      raise FileNotFoundError(f'파노라마 마스크 파일이 존재하지 않습니다. ({mask_path})')
+
+    pano = ImageIO.read(pano_path).astype(np.float32)
+    mask = ImageIO.read(mask_path)
+    pano[np.logical_not(mask)] = np.nan
+
+    self._image = pano
+
+  def resize(self, limit: int):
+    if self._prj is not None and self._limit == limit:
+      return
+
+    assert self._image is not None
+    self._limit = limit
+    self._prj = ImageProjection(image=limit_image_size(image=self._image,
+                                                       limit=limit),
+                                viewing_angle=self._va)
+
+  def plot(self, force=False):
+    if not (force or self._image is None):
+      return
+
+    self._load_panorama()
+
+    self.axes.clear()
+    self.cax.clear()
+
+    im = self.axes.imshow(self._image, cmap=self._cmap)
+    self.fig.colorbar(im, cax=self.cax, ax=self.axes)
+    self.cax.get_yaxis().labelpad = 10
+    self.cax.set_ylabel('Temperature [℃]', rotation=90)
+
+    self.draw()
+
+  def project(self, roll=0.0, pitch=0.0, yaw=0.0, limit=9999):
+    if self._image is None:
+      return
+
+    self.resize(limit=limit)
+    assert self._prj is not None
+
+    self._angles = np.deg2rad([roll, pitch, yaw])
+    image = self._prj.project(*self._angles)
+
+    self.axes.clear()
+    self.axes.imshow(image, cmap=self._cmap)
+
+    self.draw()
+
+  def set_grid(self, grid):
+    if not self._grid ^ grid:
+      return
+
+    self._grid = grid
+
+    if grid:
+      self.plot(force=True)
+    else:
+      self.draw()
+
+  def save(self):
+    # TODO multiprocess
+    if any(x is None for x in [self._fm, self._image, self._angles]):
+      return
+
+    prj = ImageProjection(self._image, viewing_angle=self._va)
+
+    for sp in SP:
+      image = ImageIO.read(self.fm.panorama_path(self._dir, sp))
+      # cval = 0 if sp is SP.VIS else None
+      cval = None if sp is SP.IR else 0
+      corrected = prj.project(*self._angles, cval=cval, image=image)
+
+      if sp is SP.MASK:
+        corrected = uint8_image(corrected)
+
+      path = self.fm.panorama_path(DIR.COR, sp)
+      path = path.parent.joinpath(f'Manual{path.name}')
+
+      if sp is SP.IR:
+        ImageIO.save_with_meta(
+            path=path,
+            array=np.nan_to_num(corrected, nan=np.nanmin(corrected)),
+            exts=[FN.LL],
+            dtype='uint16',
+        )
+        # TODO colormap 버전
+        # self.fm.color_path
+      else:
+        ImageIO.save(path=path, array=corrected.astype(np.uint8))

@@ -5,9 +5,12 @@ import QtQuick.Dialogs 1.3
 import QtQuick.Layouts 1.15
 import QtQuick.Window 2.15
 
+import "Custom"
+
 
 ApplicationWindow {
-    id : root
+    id : app
+    property ApplicationWindow app : app
 
     width : 1600
     height : 900
@@ -51,11 +54,7 @@ ApplicationWindow {
                     width : parent.width
                 }
                 TabButton {
-                    text : '파노라마 생성'
-                    width : parent.width
-                }
-                TabButton {
-                    text : '왜곡 보정'
+                    text : '파노라마 생성·보정'
                     width : parent.width
                 }
             }
@@ -68,6 +67,13 @@ ApplicationWindow {
                     anchors.fill : parent
                     currentIndex : tab_bar.currentIndex
 
+                    onCurrentIndexChanged : {
+                        [project_panel,
+                        registration_panel,
+                        segmentation_panel,
+                        panorama_panel][currentIndex].init()
+                    }
+
                     ProjectPanel {
                         id : project_panel
                     }
@@ -77,15 +83,8 @@ ApplicationWindow {
                     SegmentationPanel {
                         id : segmentation_panel
                     }
-                    Page {
-                        Label {
-                            text : '파노라마 생성'
-                        }
-                    }
-                    Page {
-                        Label {
-                            text : '왜곡 보정'
-                        }
+                    PanoramaPanel {
+                        id : panorama_panel
                     }
                 }
             }
@@ -105,8 +104,12 @@ ApplicationWindow {
 
     footer : StatusBar {}
 
-    function pbar(value) {
+    function pb_value(value) {
         _pb.value = value
+    }
+
+    function pb_state(indeterminate) {
+        _pb.indeterminate = indeterminate
     }
 
     function popup(title, message, timeout = 2000) {
@@ -120,6 +123,8 @@ ApplicationWindow {
             return registration_panel
         } else if (name === 'segmentation') {
             return segmentation_panel
+        } else if (name === 'panorama') {
+            return panorama_panel
         }
         return null
     }

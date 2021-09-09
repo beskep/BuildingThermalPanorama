@@ -5,6 +5,7 @@ import QtQuick.Dialogs 1.3
 import QtQuick.Layouts 1.15
 import QtQuick.Window 2.15
 
+import 'Custom'
 import Backend 1.0
 
 
@@ -17,19 +18,23 @@ Pane {
     ColumnLayout {
         anchors.fill : parent
 
-        RowLayout {
-            Button {
-                text : qsTr('자동 정합')
-                onReleased : con.command('register')
-                // TODO 개별 자동 정합 기능 추가?
-            }
-            Button {
-                text : qsTr('저장')
-                onReleased : con.rgst_save()
-                // TODO 작업 진행 현황 따라 색 변환
-            }
-            Button {
-                text : qsTr('취소')
+        ToolBar {
+            RowLayout {
+                spacing : 10
+
+                ToolButton {
+                    text : qsTr('자동 정합')
+                    onReleased : con.command('register')
+                    // TODO 개별 자동 정합 기능 추가?
+                }
+                ToolButton {
+                    text : qsTr('저장')
+                    onReleased : con.rgst_save()
+                    // TODO 작업 진행 현황 따라 색 변환
+                }
+                ToolButton {
+                    text : qsTr('취소')
+                }
             }
         }
 
@@ -80,21 +85,22 @@ Pane {
                 Material.elevation : 2
                 Layout.fillHeight : true
                 Layout.fillWidth : true
+                padding : 0
 
-                ColumnLayout {
+                FigureCanvas {
+                    id : plot
                     anchors.fill : parent
 
-                    FigureCanvas {
-                        id : plot
-                        objectName : 'registration_plot'
-                        Layout.fillHeight : true
-                        Layout.fillWidth : true
-                        dpi_ratio : Screen.devicePixelRatio
-                    }
+                    objectName : 'registration_plot'
+                    Layout.fillHeight : true
+                    Layout.fillWidth : true
+                    dpi_ratio : Screen.devicePixelRatio
                 }
             }
         }
     }
+
+    function init() {}
 
     function update_image_view(paths) {
         image_model.clear()

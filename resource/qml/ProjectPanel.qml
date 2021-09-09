@@ -6,6 +6,8 @@ import QtQuick.Layouts 1.15
 import QtQuick.Window 2.15
 import Qt.labs.platform 1.1
 
+import 'Custom'
+
 
 Pane {
     width : 1280
@@ -15,20 +17,22 @@ Pane {
     ColumnLayout {
         anchors.fill : parent
 
-        RowLayout {
-            Layout.fillWidth : true
+        ToolBar {
+            RowLayout {
+                spacing : 10
 
-            Button {
-                text : qsTr('경로 선택')
-                onReleased : folder_dialog.open()
-            }
-            Button {
-                text : qsTr('프로젝트 초기화')
-                onReleased : con.prj_init_directory()
-            }
-            Button {
-                text : qsTr('열화상 추출')
-                onReleased : con.command('extract')
+                ToolButton {
+                    text : qsTr('경로 선택')
+                    onReleased : folder_dialog.open()
+                }
+                ToolButton {
+                    text : qsTr('프로젝트 초기화')
+                    onReleased : con.prj_init_directory()
+                }
+                ToolButton {
+                    text : qsTr('열화상 추출')
+                    onReleased : con.command('extract')
+                }
             }
         }
 
@@ -116,6 +120,8 @@ Pane {
             con.prj_select_working_dir(path);
         }
     }
+
+    function init() {}
 
     function update_project_tree(text) {
         project_tree.text = text

@@ -321,18 +321,14 @@ class ThermalPanorama:
     try:
       files = self._fm.files(DIR.RGST)
     except FileNotFoundError as e:
-      logger.exception(e)
-      logger.error('"{}" 파일을 찾을 수 없습니다. '
-                   '열화상-실화상 정합을 먼저 시행해주세요.',
-                   Path(e.args[0]).relative_to(self._wd))
-      return None, None
+      path = Path(e.args[0]).relative_to(self._wd)
+      msg = f'"{path}"를 찾을 수 없습니다. 열화상-실화상 정합을 먼저 시행해주세요.'
+      raise FileNotFoundError(msg) from e
 
     try:
       model_path = self._fm.segment_model_path()
     except FileNotFoundError as e:
-      logger.exception(e)
-      logger.error('부위 인식 모델 파일을 불러올 수 없습니다.')
-      return None, None
+      raise FileNotFoundError('부위 인식 모델 파일을 불러올 수 없습니다.') from e
 
     deeplab.tf_gpu_memory_config()
     model = deeplab.DeepLabModel(model_path.as_posix())
@@ -352,8 +348,6 @@ class ThermalPanorama:
 
   def segment(self):
     files, model = self._init_segment_model()
-    if model is None:
-      return
 
     self._fm.subdir(DIR.SEG, mkdir=True)
     for file in utils.track(files, description='Segmenting...'):
@@ -469,11 +463,9 @@ class ThermalPanorama:
     try:
       files = self._fm.files(self._SP_DIR[spectrum.value])
     except FileNotFoundError as e:
-      logger.exception(e)
-      logger.error('"{}" 파일을 찾을 수 없습니다. {} 파노라마를 생성하지 않습니다.',
-                   Path(e.args[0]).relative_to(self._wd),
-                   self._SP_KOR[spectrum.value])
-      return
+      msg = '"{}" 파일을 찾을 수 없습니다. {} 파노라마를 생성할 수 없습니다.'.format(
+          Path(e.args[0]).relative_to(self._wd), self._SP_KOR[spectrum.value])
+      raise FileNotFoundError(msg) from e
 
     files = [files[x] for x in panorama.indices]
     images = [IIO.read(x) for x in files]
@@ -555,9 +547,8 @@ class ThermalPanorama:
     try:
       path = self._fm.panorama_path(DIR.PANO, spectrum, error=True)
     except FileNotFoundError as e:
-      logger.exception(e)
-      logger.error('{} 파노라마가 존재하지 않습니다.', self._SP_KOR[spectrum.value])
-      return
+      raise FileNotFoundError('{} 파노라마가 존재하지 않습니다.'.format(
+          self._SP_KOR[spectrum.value])) from e
 
     pano = IIO.read(path=path)
     pano_corrected = correction.correct(pano)[0].astype(np.uint8)
@@ -572,8 +563,7 @@ class ThermalPanorama:
     try:
       ir_path = self._fm.panorama_path(DIR.PANO, SP.IR, error=True)
     except FileNotFoundError as e:
-      logger.exception(e)
-      logger.error('생성된 파노라마 파일이 없습니다.')
+      raise FileNotFoundError('생성된 파노라마 파일이 없습니다.') from e
 
     logger.trace('Init perspective correction')
 
@@ -587,10 +577,10 @@ class ThermalPanorama:
     # 왜곡 보정
     try:
       crct = pc.perspective_correct(image=pano, mask=mask)
-    except persp.NotEnoughEdgelets:
-      logger.critical('시점 왜곡을 추정할 edge의 개수가 부족합니다. '
-                      'Edge 추출 옵션을 변경하거나 높은 해상도의 파노라마를 사용하세요.')
-      return
+    except persp.NotEnoughEdgelets as e:
+      raise persp.NotEnoughEdgelets(
+          '시점 왜곡을 추정할 edge의 개수가 부족합니다. '
+          'Edge 추출 옵션을 변경하거나 높은 해상도의 파노라마를 사용하세요.') from e
 
     # plot 저장
     self._fm.subdir(DIR.COR, mkdir=True)
@@ -599,8 +589,7 @@ class ThermalPanorama:
     plt.close(fig)
 
     if not crct.success():
-      logger.error('IR 파노라마 왜곡 보정 중 오류 발생. 저장된 plot을 참고해주세요.')
-      return
+      raise ValueError('IR 파노라마 왜곡 보정 중 오류 발생. 저장된 plot을 참고해주세요.')
 
     logger.debug('IR 파노라마 왜곡 보정 완료')
 

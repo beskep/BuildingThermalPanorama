@@ -3,6 +3,7 @@ from pathlib import Path
 import sys
 
 import matplotlib as mpl
+import seaborn as sns
 import skimage.io
 
 from pano.utils import DIR
@@ -38,18 +39,13 @@ def init_project(qt: bool):
   fe = fm.FontEntry(fname=font_path.as_posix(), name=font_name)
   fm.fontManager.ttflist.insert(0, fe)
 
-  try:
-    import seaborn as sns
-  except ImportError:
-    pass
-  else:
-    sns.set_theme(context='notebook',
-                  style='whitegrid',
-                  font=font_name,
-                  rc={
-                      'axes.edgecolor': '0.2',
-                      'grid.color': '0.8'
-                  })
+  sns.set_theme(context='notebook',
+                style='whitegrid',
+                font=font_name,
+                rc={
+                    'axes.edgecolor': '0.2',
+                    'grid.color': '0.8'
+                })
 
   mpl.rcParams['font.family'] = font_name
   mpl.rcParams['axes.unicode_minus'] = False

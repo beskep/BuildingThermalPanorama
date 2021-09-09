@@ -10,6 +10,7 @@ from .common.pano_files import init_directory
 from .common.pano_files import ThermalPanoramaFileManager
 from .mbq import QtCore
 from .mbq import QtGui
+from .plot_controller import PanoramaPlotController
 from .plot_controller import RegistrationPlotController
 from .plot_controller import SegmentationPlotController
 from .tree import tree_string
@@ -43,18 +44,22 @@ def _producer(queue: mp.Queue, directory, command: str, loglevel: int):
   tp = ThermalPanorama(directory=directory)
 
   try:
-    fn = getattr(tp, f'{command}_generator')
-  except AttributeError:
-    getattr(tp, command)()
-    queue.put(1.0)
-  else:
-    for r in fn():
-      queue.put(r)
+    if hasattr(tp, f'{command}_generator'):
+      fn = getattr(tp, f'{command}_generator')
+      for r in fn():
+        queue.put(r)
+    else:
+      getattr(tp, command)()
+      queue.put(1.0)
+  except (ValueError, RuntimeError, IOError) as e:
+    logger.exception(e)
+    queue.put(str(e))
 
 
 class _Consumer(QtCore.QThread):
-  done = QtCore.Signal()  # TODO command 종료 후 화면 업데이트
-  update = QtCore.Signal(float)
+  update = QtCore.Signal(float)  # 진행률 [0, 1] 업데이트
+  done = QtCore.Signal()  # 작업 종료 signal (진행률 >= 1.0)
+  fail = QtCore.Signal(str)  # 에러 발생 signal. 에러 메세지 emit
 
   def __init__(self) -> None:
     super().__init__()
@@ -74,10 +79,15 @@ class _Consumer(QtCore.QThread):
 
     while True:
       if not self.queue.empty():
-        r = self.queue.get()
-        self.update.emit(r)
+        value = self.queue.get()
 
-        if r >= 1.0:
+        if isinstance(value, str):
+          self.fail.emit(value)
+          break
+
+        self.update.emit(value)
+
+        if value >= 1.0:
           self.done.emit()
           break
 
@@ -87,8 +97,11 @@ class _Window:
   def __init__(self, window: QtGui.QWindow) -> None:
     self._window = window
 
-  def pbar(self, value: float):
-    return self._window.pbar(value)
+  def pb_value(self, value: float):
+    return self._window.pb_value(value)
+
+  def pb_state(self, indeterminate: bool):
+    self._window.pb_state(indeterminate)
 
   def popup(self, title: str, message: str, timeout=2000):
     # TODO error popup wrap 만들기
@@ -121,12 +134,14 @@ class Controller(QtCore.QObject):
     self._loglevel = loglevel
 
     self._consumer = _Consumer()
-    self._consumer.update.connect(self.pbar)
+    self._consumer.update.connect(self._pb_value)
+    self._consumer.fail.connect(self._error_popup)
 
     self._wd: Optional[Path] = None
     self._fm: Optional[ThermalPanoramaFileManager] = None
     self._rpc: Optional[RegistrationPlotController] = None
     self._spc: Optional[SegmentationPlotController] = None
+    self._ppc: Optional[PanoramaPlotController] = None
 
   @property
   def win(self) -> _Window:
@@ -136,17 +151,22 @@ class Controller(QtCore.QObject):
   def win(self, win: QtGui.QWindow):
     self._win = _Window(win)
 
-  def set_plot_controllers(self, registration, segmentation):
+  def set_plot_controllers(self, registration, segmentation, panorama):
     self._rpc = registration
     self._spc = segmentation
+    self._ppc = panorama
 
   @QtCore.Slot(str)
   def log(self, message: str):
     _log(message=message)
 
-  @QtCore.Slot(float)
-  def pbar(self, r: float):
-    self.win.pbar(r)
+  def _pb_value(self, value: float):
+    self.win.pb_value(value)
+
+  def _error_popup(self, message: str):
+    self.win.popup('Error', message, timeout=10000)
+    self.win.pb_state(False)
+    self.win.pb_value(1.0)
 
   @QtCore.Slot(str)
   def prj_select_working_dir(self, wd):
@@ -158,6 +178,7 @@ class Controller(QtCore.QObject):
     self._fm = ThermalPanoramaFileManager(wd)
     self._rpc.fm = self._fm
     self._spc.fm = self._fm
+    self._ppc.fm = self._fm
 
     self.prj_update_project_tree()
     self.update_image_view()
@@ -176,17 +197,25 @@ class Controller(QtCore.QObject):
   @QtCore.Slot(str)
   def command(self, command: str):
     if self._wd is None:
-      logger.warning('Directory not set')
+      self.win.popup('Warning', '경로가 선택되지 않았습니다.')
+      self.win.pb_state(False)
       return
 
-    self.pbar(0.0)
+    self._pb_value(0.0)
 
     queue = mp.Queue()
     cmd_kr = self._CMD_KR[command]
 
+    def _done():
+      if command in ('panorama', 'correct'):
+        self._ppc.plot(force=True)
+        self.win.panel_funtion('panorama', 'reset')
+
+      self.win.popup('Success', f'{cmd_kr} 완료')
+      self.win.pb_state(False)
+
     self._consumer.queue = queue
-    self._consumer.done.connect(
-        lambda: self.win.popup('Success', f'{cmd_kr} 완료'))
+    self._consumer.done.connect(_done)
     self._consumer.start()
 
     process = mp.Process(name=command,
@@ -215,7 +244,11 @@ class Controller(QtCore.QObject):
     assert self._wd is not None
     assert self._rpc is not None
     path = _url2path(url)
-    self._rpc.plot(path)
+
+    try:
+      self._rpc.plot(path)
+    except FileNotFoundError:
+      logger.warning('File not found: {}', path)
 
   @QtCore.Slot()
   def rgst_save(self):
@@ -227,4 +260,30 @@ class Controller(QtCore.QObject):
     assert self._wd is not None
     assert self._spc is not None
     path = _url2path(url)
-    self._spc.plot(path)
+
+    try:
+      self._spc.plot(path)
+    except FileNotFoundError:
+      logger.warning('File not found: {}', path)
+
+  @QtCore.Slot()
+  def pano_plot(self):
+    try:
+      self._ppc.plot(force=False)
+    except OSError:
+      pass
+
+  @QtCore.Slot(float, float, float, int)
+  def pano_rotate(self, roll, pitch, yaw, limit):
+    self._ppc.project(roll=roll, pitch=pitch, yaw=yaw, limit=limit)
+
+  @QtCore.Slot(bool)
+  def pano_set_grid(self, grid):
+    self._ppc.set_grid(grid)
+
+  @QtCore.Slot()
+  def pano_save(self):
+    try:
+      self._ppc.save()
+    except OSError as e:
+      self.win.popup('Error', f'{type(e).__name__}: {e}')

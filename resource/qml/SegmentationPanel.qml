@@ -5,6 +5,7 @@ import QtQuick.Dialogs 1.3
 import QtQuick.Layouts 1.15
 import QtQuick.Window 2.15
 
+import 'Custom'
 import Backend 1.0
 
 
@@ -17,8 +18,8 @@ Pane {
     ColumnLayout {
         anchors.fill : parent
 
-        RowLayout {
-            Button {
+        ToolBar {
+            ToolButton {
                 text : qsTr('부위 인식')
                 onReleased : con.command('segment')
             }
@@ -28,17 +29,15 @@ Pane {
             Material.elevation : 2
             Layout.fillHeight : true
             Layout.fillWidth : true
+            padding : 0
 
-            ColumnLayout {
+            FigureCanvas {
+                id : plot
                 anchors.fill : parent
-
-                FigureCanvas {
-                    id : plot
-                    objectName : 'segmentation_plot'
-                    Layout.fillHeight : true
-                    Layout.fillWidth : true
-                    dpi_ratio : Screen.devicePixelRatio
-                }
+                objectName : 'segmentation_plot'
+                Layout.fillHeight : true
+                Layout.fillWidth : true
+                dpi_ratio : Screen.devicePixelRatio
             }
         }
 
@@ -56,6 +55,7 @@ Pane {
 
                 ScrollBar.horizontal : ScrollBar {
                     policy : ScrollBar.AsNeeded
+                    // TODO 마우스 스크롤
                 }
 
                 model : ListModel {
@@ -83,6 +83,8 @@ Pane {
             }
         }
     }
+
+    function init() {}
 
     function update_image_view(paths) {
         image_model.clear()
