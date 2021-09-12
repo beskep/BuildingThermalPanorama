@@ -23,7 +23,10 @@ ApplicationWindow {
     }
     FontLoader {
         id : sans
-        source : '../font/SpoqaHanSansNeo-Regular.ttf'
+        source : '../font/NotoSansCJKkr-DemiLight.otf'
+    }
+    FontLoader {
+        source : '../font/NotoSansCJKkr-Medium.otf'
     }
 
     ColumnLayout {

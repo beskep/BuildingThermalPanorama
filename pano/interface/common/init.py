@@ -31,9 +31,8 @@ def init_project(qt: bool):
 
   import matplotlib.font_manager as fm
 
-  # TODO font 변경
-  font_name = 'Spoqa Han Sans Neo'
-  font_path = DIR.RESOURCE.joinpath('font/SpoqaHanSansNeo-Regular.ttf')
+  font_name = 'Noto Sans CJK KR'
+  font_path = DIR.RESOURCE.joinpath('font/NotoSansCJKkr-Regular.otf')
   assert font_path.exists(), font_path
 
   fe = fm.FontEntry(fname=font_path.as_posix(), name=font_name)
