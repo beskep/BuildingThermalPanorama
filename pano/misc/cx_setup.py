@@ -31,6 +31,7 @@ def build():
       'rich.progress',
       'rich',
       'scipy.spatial.transform._rotation_groups',
+      'seaborn.cm',
       'SimpleITK',
       'skimage.feature._orb_descriptor_positions',
       'skimage.io._plugins.pil_plugin',

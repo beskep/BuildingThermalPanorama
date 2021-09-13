@@ -32,7 +32,7 @@ def init_project(qt: bool):
   import matplotlib.font_manager as fm
 
   font_name = 'Noto Sans CJK KR'
-  font_path = DIR.RESOURCE.joinpath('font/NotoSansCJKkr-Regular.otf')
+  font_path = DIR.RESOURCE.joinpath('font/NotoSansCJKkr-DemiLight.otf')
   assert font_path.exists(), font_path
 
   fe = fm.FontEntry(fname=font_path.as_posix(), name=font_name)

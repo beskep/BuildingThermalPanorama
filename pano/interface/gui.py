@@ -35,7 +35,10 @@ def _qt_message_handler(mode, context, message):
   logger.log(level, message)
 
 
-@click.command()
+@click.command(context_settings={
+    'allow_extra_args': True,
+    'ignore_unknown_options': True
+})
 @click.option('-d', '--debug', is_flag=True)
 @click.option('-l', '--loglevel', default=20)
 def main(debug=False, loglevel=20):

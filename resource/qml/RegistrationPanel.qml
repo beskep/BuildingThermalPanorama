@@ -4,6 +4,7 @@ import QtQuick.Controls.Material 2.15
 import QtQuick.Dialogs 1.3
 import QtQuick.Layouts 1.15
 import QtQuick.Window 2.15
+import QtGraphicalEffects 1.0
 
 import 'Custom'
 import Backend 1.0
@@ -44,6 +45,7 @@ Pane {
                 Material.elevation : 2
                 Layout.fillHeight : true
                 Layout.preferredWidth : 300
+                padding : 5
 
                 ListView {
                     id : image_view
@@ -65,9 +67,17 @@ Pane {
                         height : width * 3 / 4 + 10
 
                         Image {
+                            id : _image
                             source : path
                             width : parent.width
                             fillMode : Image.PreserveAspectFit
+                        }
+
+                        BrightnessContrast {
+                            id : _bc
+                            anchors.fill : _image
+                            source : _image
+                            brightness : 0
                         }
 
                         MouseArea {
@@ -75,6 +85,8 @@ Pane {
                             hoverEnabled : true
 
                             onReleased : con.rgst_plot(path)
+                            onEntered : _bc.brightness = -0.25
+                            onExited : _bc.brightness = 0
                         }
                     }
                 }

@@ -30,7 +30,7 @@ Pane {
                     onReleased : con.prj_init_directory()
                 }
                 ToolButton {
-                    text : qsTr('열화상 추출')
+                    text : qsTr('열화상 데이터 추출')
                     onReleased : con.command('extract')
                 }
             }
@@ -44,11 +44,12 @@ Pane {
             Pane {
                 Material.elevation : 2
                 Layout.fillHeight : true
-                Layout.preferredWidth : 400
+                Layout.preferredWidth : 300
                 // TODO 적정 width 설정
 
                 ScrollView {
                     anchors.fill : parent
+                    clip : true
 
                     ScrollBar.vertical.policy : ScrollBar.AsNeeded
                     ScrollBar.horizontal.policy : ScrollBar.AlwaysOff
@@ -73,9 +74,8 @@ Pane {
 
                     anchors.fill : parent
                     clip : true
-                    cellWidth : 220
-                    cellHeight : 190
-                    // TODO cellWidth Pane width에 따라 설정
+                    cellWidth : width / Math.ceil(width / 300)
+                    cellHeight : cellWidth * 3 / 4 + 20
 
                     ScrollBar.vertical : ScrollBar {
                         policy : ScrollBar.AsNeeded
@@ -87,7 +87,8 @@ Pane {
 
                     delegate : Pane {
                         Material.elevation : 0
-                        width : image_view.cellWidth - 20
+                        width : image_view.cellWidth
+                        height: image_view.cellHeight
 
                         Column {
                             anchors.fill : parent

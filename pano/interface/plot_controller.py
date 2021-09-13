@@ -240,12 +240,12 @@ class RegistrationPlotController(_PanoPlotController):
       self._pnts[ax].append(p)
 
   def _remove_points(self, ax: int):
-    self._pnts_coord.pop(ax)
+    self._pnts_coord.pop(ax, None)
 
     for p in self._pnts[ax]:
       p.remove()
 
-    self._pnts.pop(ax)
+    self._pnts.pop(ax, None)
 
   def all_points_selected(self):
     return all(len(self._pnts_coord[x]) == self._REQUIRED for x in range(2))

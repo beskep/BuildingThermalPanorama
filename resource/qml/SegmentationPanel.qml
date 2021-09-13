@@ -4,6 +4,7 @@ import QtQuick.Controls.Material 2.15
 import QtQuick.Dialogs 1.3
 import QtQuick.Layouts 1.15
 import QtQuick.Window 2.15
+import QtGraphicalEffects 1.0
 
 import 'Custom'
 import Backend 1.0
@@ -45,6 +46,7 @@ Pane {
             Material.elevation : 2
             Layout.fillWidth : true
             Layout.preferredHeight : 200
+            padding : 5
 
             ListView {
                 id : image_view
@@ -54,8 +56,18 @@ Pane {
                 orientation : ListView.Horizontal
 
                 ScrollBar.horizontal : ScrollBar {
+                    id : _sb
                     policy : ScrollBar.AsNeeded
-                    // TODO 마우스 스크롤
+                }
+
+                WheelHandler {
+                    onWheel : {
+                        if (event.angleDelta.y < 0) {
+                            _sb.increase()
+                        } else {
+                            _sb.decrease()
+                        }
+                    }
                 }
 
                 model : ListModel {
@@ -64,13 +76,21 @@ Pane {
 
                 delegate : Pane {
                     Material.elevation : 0
-                    height : image_view.height - 10
+                    height : image_view.height - 20
                     width : height * 4 / 3 + 10
 
                     Image {
+                        id: _image
                         source : path
                         width : parent.width
                         fillMode : Image.PreserveAspectFit
+                    }
+
+                    BrightnessContrast {
+                        id: _bc
+                        anchors.fill: _image
+                        source: _image
+                        brightness: 0
                     }
 
                     MouseArea {
@@ -78,6 +98,8 @@ Pane {
                         hoverEnabled : true
 
                         onReleased : con.seg_plot(path)
+                        onEntered: _bc.brightness = -0.25
+                        onExited: _bc.brightness = 0
                     }
                 }
             }

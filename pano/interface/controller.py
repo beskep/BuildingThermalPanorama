@@ -42,11 +42,11 @@ def _producer(queue: mp.Queue, directory, command: str, loglevel: int):
   from .pano_project import ThermalPanorama
 
   tp = ThermalPanorama(directory=directory)
-  queue.put(0.0)
 
   try:
     fn = getattr(tp, f'{command}_generator', None)
     if fn is not None:
+      queue.put(0.0)
       for r in fn():
         queue.put(r)
     else:
@@ -190,13 +190,16 @@ class Controller(QtCore.QObject):
 
   @QtCore.Slot()
   def prj_init_directory(self):
+    if self._wd is None:
+      return
+
     init_directory(directory=self._wd)
     self.prj_update_project_tree()
     self.update_image_view()
     self.win.popup('Success', '초기화 완료')
 
   def prj_update_project_tree(self):
-    tree = tree_string(self._wd)
+    tree = tree_string(self._wd, width=40)
     self.win.panel_funtion('project', 'update_project_tree', tree)
 
   @QtCore.Slot(str)
@@ -221,7 +224,11 @@ class Controller(QtCore.QObject):
       self.win.popup('Success', f'{cmd_kr} 완료')
       self.win.pb_state(False)
       self.win.pb_value(1.0)
-      self._consumer.done.disconnect()
+
+      try:
+        self._consumer.done.disconnect()
+      except TypeError:
+        pass
 
     self._consumer.queue = queue
     self._consumer.done.connect(_done)
@@ -257,7 +264,8 @@ class Controller(QtCore.QObject):
     try:
       self._rpc.plot(path)
     except FileNotFoundError:
-      logger.warning('File not found: {}', path)
+      logger.warning('Data not extracted: {}', path)
+      self.win.popup('Error', f'파일 {path.name}의 데이터가 추출되지 않았습니다.')
 
   @QtCore.Slot()
   def rgst_save(self):
