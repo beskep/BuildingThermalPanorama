@@ -45,7 +45,6 @@ Pane {
                 Material.elevation : 2
                 Layout.fillHeight : true
                 Layout.preferredWidth : 300
-                // TODO 적정 width 설정
 
                 ScrollView {
                     anchors.fill : parent

@@ -373,6 +373,14 @@ class PanoramaPlotController(_PanoPlotController):
 
     return self._cax
 
+  @property
+  def subdir(self) -> str:
+    return self._dir.name
+
+  @property
+  def viewing_angle(self):
+    return self._va
+
   def init(self, app: QtGui.QGuiApplication, canvas: FigureCanvas):
     self._app = app
     self._canvas = canvas
@@ -462,32 +470,38 @@ class PanoramaPlotController(_PanoPlotController):
     self._grid = grid
     self.draw()
 
-  def save(self):
-    # TODO multiprocess
-    if any(x is None for x in [self._fm, self._image, self._angles]):
-      return
 
-    prj = ImageProjection(self._image, viewing_angle=self._va)
+def save_manual_correction(wd, subdir, viewing_angle, roll, pitch, yaw):
+  fm = ThermalPanoramaFileManager(wd)
+  ir_pano = ImageIO.read(fm.panorama_path(subdir, SP.IR))
+  prj = ImageProjection(ir_pano, viewing_angle=viewing_angle)
 
-    for sp in SP:
-      image = ImageIO.read(self.fm.panorama_path(self._dir, sp))
-      cval = None if sp is SP.IR else 0
-      corrected = prj.project(*self._angles, cval=cval, image=image)
+  for sp in SP:
+    if sp is SP.IR:
+      image = ir_pano
+    else:
+      image = ImageIO.read(fm.panorama_path(subdir, sp))
 
-      if sp is SP.MASK:
-        corrected = uint8_image(corrected)
+    cval = None if sp is SP.IR else 0
+    corrected = prj.project(roll=np.deg2rad(roll),
+                            pitch=np.deg2rad(pitch),
+                            yaw=np.deg2rad(yaw),
+                            cval=cval,
+                            image=image)
+    if sp is SP.MASK:
+      corrected = uint8_image(corrected)
 
-      path = self.fm.panorama_path(DIR.COR, sp)
-      path = path.parent.joinpath(f'Manual{path.name}')
+    path = fm.panorama_path(DIR.COR, sp)
+    path = path.parent.joinpath(f'Manual{path.name}')
 
-      if sp is SP.IR:
-        ImageIO.save_with_meta(
-            path=path,
-            array=np.nan_to_num(corrected, nan=np.nanmin(corrected)),
-            exts=[FN.LL],
-            dtype='uint16',
-        )
-        # TODO colormap 버전
-        # self.fm.color_path
-      else:
-        ImageIO.save(path=path, array=corrected.astype(np.uint8))
+    if sp is SP.IR:
+      ImageIO.save_with_meta(
+          path=path,
+          array=np.nan_to_num(corrected, nan=np.nanmin(corrected)),
+          exts=[FN.LL],
+          dtype='uint16',
+      )
+      # TODO colormap 버전
+      # self.fm.color_path
+    else:
+      ImageIO.save(path=path, array=corrected.astype(np.uint8))

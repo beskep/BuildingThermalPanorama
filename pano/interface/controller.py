@@ -12,6 +12,7 @@ from .mbq import QtCore
 from .mbq import QtGui
 from .plot_controller import PanoramaPlotController
 from .plot_controller import RegistrationPlotController
+from .plot_controller import save_manual_correction
 from .plot_controller import SegmentationPlotController
 from .tree import tree_string
 
@@ -52,6 +53,18 @@ def _producer(queue: mp.Queue, directory, command: str, loglevel: int):
     else:
       fn = getattr(tp, command)
       queue.put(fn())
+  except (ValueError, RuntimeError, IOError) as e:
+    logger.exception(e)
+    queue.put(f'{type(e).__name__}: {e}')
+
+  queue.put(1.0)
+
+
+def _save_manual_correction(queue: mp.Queue, wd: str, subdir: str,
+                            viewing_angle: float, roll: float, pitch: float,
+                            yaw: float):
+  try:
+    save_manual_correction(wd, subdir, viewing_angle, roll, pitch, yaw)
   except (ValueError, RuntimeError, IOError) as e:
     logger.exception(e)
     queue.put(f'{type(e).__name__}: {e}')
@@ -298,9 +311,26 @@ class Controller(QtCore.QObject):
   def pano_set_grid(self, grid):
     self._ppc.set_grid(grid)
 
-  @QtCore.Slot()
-  def pano_save(self):
-    try:
-      self._ppc.save()
-    except OSError as e:
-      self.win.popup('Error', f'{type(e).__name__}: {e}')
+  @QtCore.Slot(float, float, float)
+  def pano_save_manual_correction(self, roll, pitch, yaw):
+    self.win.pb_state(True)
+
+    def _done():
+      self.win.popup('Success', '저장 완료', timeout=1000)
+      self.win.pb_state(False)
+      self.win.pb_value(1.0)
+
+      try:
+        self._consumer.done.disconnect()
+      except TypeError:
+        pass
+
+    queue = mp.Queue()
+    self._consumer.queue = queue
+    self._consumer.done.connect(_done)
+    self._consumer.start()
+
+    args = (queue, self._wd.as_posix(), self._ppc.subdir,
+            self._ppc.viewing_angle, roll, pitch, yaw)
+    process = mp.Process(name='save', target=_save_manual_correction, args=args)
+    process.start()

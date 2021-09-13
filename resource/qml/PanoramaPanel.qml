@@ -31,7 +31,7 @@ Pane {
                 }
                 ToolButton {
                     text : qsTr('자동 보정')
-                    onReleased: {
+                    onReleased : {
                         app.pb_state(true);
                         con.command('correct');
                     }
@@ -41,11 +41,11 @@ Pane {
 
                 ToolButton {
                     text : qsTr('저장')
-                    onReleased: con.pano_save()
+                    onReleased : con.pano_save_manual_correction(_roll.value, _pitch.value, _yaw.value)
                 }
                 ToolButton {
                     text : qsTr('취소')
-                    onReleased: reset()
+                    onReleased : reset()
                 }
             }
         }
@@ -150,8 +150,8 @@ Pane {
                             text : qsTr('그리드')
                         }
                         CheckBox {
-                            checkState: Qt.Checked
-                            onCheckStateChanged: con.pano_set_grid(checkState == Qt.Checked)
+                            checkState : Qt.Checked
+                            onCheckStateChanged : con.pano_set_grid(checkState == Qt.Checked)
                         }
                     }
                 }
