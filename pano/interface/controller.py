@@ -42,18 +42,21 @@ def _producer(queue: mp.Queue, directory, command: str, loglevel: int):
   from .pano_project import ThermalPanorama
 
   tp = ThermalPanorama(directory=directory)
+  queue.put(0.0)
 
   try:
-    if hasattr(tp, f'{command}_generator'):
-      fn = getattr(tp, f'{command}_generator')
+    fn = getattr(tp, f'{command}_generator', None)
+    if fn is not None:
       for r in fn():
         queue.put(r)
     else:
-      getattr(tp, command)()
-      queue.put(1.0)
+      fn = getattr(tp, command)
+      queue.put(fn())
   except (ValueError, RuntimeError, IOError) as e:
     logger.exception(e)
-    queue.put(str(e))
+    queue.put(f'{type(e).__name__}: {e}')
+
+  queue.put(1.0)
 
 
 class _Consumer(QtCore.QThread):
@@ -85,11 +88,12 @@ class _Consumer(QtCore.QThread):
           self.fail.emit(value)
           break
 
-        self.update.emit(value)
-
-        if value >= 1.0:
+        if value is None or value >= 1.0:
           self.done.emit()
+          self.quit()
           break
+
+        self.update.emit(value)
 
 
 class _Window:
@@ -104,7 +108,6 @@ class _Window:
     self._window.pb_state(indeterminate)
 
   def popup(self, title: str, message: str, timeout=2000):
-    # TODO error popup wrap 만들기
     logger.debug('[Popup] {}: {}', title, message)
     self._window.popup(title, message, timeout)
 
@@ -161,6 +164,8 @@ class Controller(QtCore.QObject):
     _log(message=message)
 
   def _pb_value(self, value: float):
+    if value == 0:
+      self.win.pb_state(False)
     self.win.pb_value(value)
 
   def _error_popup(self, message: str):
@@ -201,7 +206,7 @@ class Controller(QtCore.QObject):
       self.win.pb_state(False)
       return
 
-    self._pb_value(0.0)
+    self.win.pb_state(True)
 
     queue = mp.Queue()
     cmd_kr = self._CMD_KR[command]
@@ -210,9 +215,13 @@ class Controller(QtCore.QObject):
       if command in ('panorama', 'correct'):
         self._ppc.plot(force=True)
         self.win.panel_funtion('panorama', 'reset')
+      elif command == 'register':
+        self._rpc.reset()
 
       self.win.popup('Success', f'{cmd_kr} 완료')
       self.win.pb_state(False)
+      self.win.pb_value(1.0)
+      self._consumer.done.disconnect()
 
     self._consumer.queue = queue
     self._consumer.done.connect(_done)

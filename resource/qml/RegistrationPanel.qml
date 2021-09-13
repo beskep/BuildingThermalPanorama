@@ -25,7 +25,6 @@ Pane {
                 ToolButton {
                     text : qsTr('자동 정합')
                     onReleased : con.command('register')
-                    // TODO 개별 자동 정합 기능 추가?
                 }
                 ToolButton {
                     text : qsTr('저장')

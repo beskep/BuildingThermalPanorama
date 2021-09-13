@@ -295,7 +295,6 @@ class ThermalPanorama:
     logger.success('열화상-실화상 정합 완료')
 
   def register_generator(self):
-    self.extract()  # TODO 삭제? 마찬지로 yield?
     self._fm.subdir(DIR.RGST, mkdir=True)
 
     files = self._fm.raw_files()
@@ -305,7 +304,12 @@ class ThermalPanorama:
         ir = IIO.read(self._fm.change_dir(DIR.IR, file))
         registrator, prep = self._init_registrator(shape=ir.shape)
 
-      matrix = self._register(file=file, registrator=registrator, prep=prep)
+      try:
+        matrix = self._register(file=file, registrator=registrator, prep=prep)
+      except FileNotFoundError as e:
+        msg = f'"{e}"를 찾을 수 없습니다. 열화상을 먼저 추출하세요.'
+        raise FileNotFoundError(msg) from e
+
       matrices[file.stem] = matrix
 
       yield r
@@ -357,8 +361,6 @@ class ThermalPanorama:
 
   def segment_generator(self):
     files, model = self._init_segment_model()
-    if model is None:
-      return
 
     self._fm.subdir(DIR.SEG, mkdir=True)
     for r, file in utils.ptrack(files, description='Segmenting...'):

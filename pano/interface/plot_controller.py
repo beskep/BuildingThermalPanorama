@@ -177,6 +177,7 @@ class RegistrationPlotController(_PanoPlotController):
     self._pnts_coord.clear()
     self._registered_image = None
     self._matrix = None
+    self.draw()
 
   def set_images(self, fixed_image: np.ndarray, moving_image: np.ndarray):
     self.reset()
@@ -200,7 +201,7 @@ class RegistrationPlotController(_PanoPlotController):
 
     self.set_images(ir, vis)
 
-    matrix = self.matrices[file.stem]
+    matrix = self.matrices.get(file.stem, None)
     if matrix is not None:
       self._plot_registered(np.linalg.inv(matrix))
 
@@ -386,6 +387,7 @@ class PanoramaPlotController(_PanoPlotController):
 
   def _set_style(self):
     if self._grid:
+      self.axes.set_axis_on()
       self.axes.tick_params(axis='both', which='both', **self._TICK_PARAMS)
     else:
       self.axes.set_axis_off()
@@ -458,11 +460,7 @@ class PanoramaPlotController(_PanoPlotController):
       return
 
     self._grid = grid
-
-    if grid:
-      self.plot(force=True)
-    else:
-      self.draw()
+    self.draw()
 
   def save(self):
     # TODO multiprocess
@@ -473,7 +471,6 @@ class PanoramaPlotController(_PanoPlotController):
 
     for sp in SP:
       image = ImageIO.read(self.fm.panorama_path(self._dir, sp))
-      # cval = 0 if sp is SP.VIS else None
       cval = None if sp is SP.IR else 0
       corrected = prj.project(*self._angles, cval=cval, image=image)
 

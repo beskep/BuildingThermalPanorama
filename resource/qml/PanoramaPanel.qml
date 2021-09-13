@@ -88,7 +88,6 @@ Pane {
 
                                 from : -90
                                 to : 90
-                                stepSize : 2
 
                                 onValueChanged : rotate()
                             }
@@ -102,8 +101,8 @@ Pane {
                                 id : _pitch
                                 Layout.fillWidth : true
 
-                                from : -45
-                                to : 45
+                                from : -60
+                                to : 60
 
                                 onValueChanged : rotate()
                             }
@@ -117,8 +116,8 @@ Pane {
                                 id : _yaw
                                 Layout.fillWidth : true
 
-                                from : -45
-                                to : 45
+                                from : -60
+                                to : 60
 
                                 onValueChanged : rotate()
                             }
@@ -173,8 +172,8 @@ Pane {
     }
 
     function reset() {
-        roll.value = 0
-        pitch.value = 0
-        yaw.value = 0
+        _roll.value = 0
+        _pitch.value = 0
+        _yaw.value = 0
     }
 }

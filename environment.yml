@@ -8,7 +8,8 @@ dependencies:
     # UI
     - pip
     - pip:
-        - PySide2>=5.15
+        - PySide2>=5.15 # or
+        - PyQt5>=5.15
         - matplotlib-backend-qtquick
     # data analysis
     - numpy
