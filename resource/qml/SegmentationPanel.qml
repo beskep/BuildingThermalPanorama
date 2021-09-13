@@ -22,6 +22,7 @@ Pane {
         ToolBar {
             ToolButton {
                 text : qsTr('부위 인식')
+                icon : '\uea40'
                 onReleased : con.command('segment')
             }
         }

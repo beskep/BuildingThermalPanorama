@@ -28,6 +28,10 @@ ApplicationWindow {
     FontLoader {
         source : '../font/NotoSansCJKkr-Medium.otf'
     }
+    FontLoader {
+        id : icon
+        source : '../font/MaterialIcons-Regular.ttf'
+    }
 
     ColumnLayout {
         anchors.fill : parent

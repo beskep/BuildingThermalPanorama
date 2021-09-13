@@ -25,15 +25,19 @@ Pane {
 
                 ToolButton {
                     text : qsTr('자동 정합')
+                    icon : '\ue663'
                     onReleased : con.command('register')
                 }
                 ToolButton {
                     text : qsTr('저장')
+                    icon : '\ue161'
                     onReleased : con.rgst_save()
                     // TODO 작업 진행 현황 따라 색 변환
                 }
                 ToolButton {
                     text : qsTr('취소')
+                    icon : '\ue14a'
+                    // TODO
                 }
             }
         }

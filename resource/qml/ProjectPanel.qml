@@ -23,14 +23,17 @@ Pane {
 
                 ToolButton {
                     text : qsTr('경로 선택')
+                    icon : '\ue2c7'
                     onReleased : folder_dialog.open()
                 }
                 ToolButton {
                     text : qsTr('프로젝트 초기화')
+                    icon : '\ue97a'
                     onReleased : con.prj_init_directory()
                 }
                 ToolButton {
                     text : qsTr('열화상 데이터 추출')
+                    icon : '\ue8a7'
                     onReleased : con.command('extract')
                 }
             }

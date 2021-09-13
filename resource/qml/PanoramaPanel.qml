@@ -24,6 +24,7 @@ Pane {
 
                 ToolButton {
                     text : qsTr('파노라마 생성')
+                    icon : '\ue40b'
                     onReleased : {
                         app.pb_state(true);
                         con.command('panorama');
@@ -31,6 +32,7 @@ Pane {
                 }
                 ToolButton {
                     text : qsTr('자동 보정')
+                    icon : '\ue663'
                     onReleased : {
                         app.pb_state(true);
                         con.command('correct');
@@ -41,10 +43,12 @@ Pane {
 
                 ToolButton {
                     text : qsTr('저장')
+                    icon : '\ue161'
                     onReleased : con.pano_save_manual_correction(_roll.value, _pitch.value, _yaw.value)
                 }
                 ToolButton {
                     text : qsTr('취소')
+                    icon : '\ue14a'
                     onReleased : reset()
                 }
             }
@@ -74,13 +78,20 @@ Pane {
 
                 RowLayout {
                     anchors.fill : parent
+                    Layout.alignment : Qt.AlignVCenter
 
                     ColumnLayout {
 
                         RowLayout {
                             Label {
+                                text : '\ue028'
+                                font.family : 'Material Icons'
+                                font.pointSize : 18
+                                Layout.preferredWidth : 30
+                            }
+                            Label {
                                 text : qsTr('Roll')
-                                Layout.preferredWidth : 150
+                                Layout.preferredWidth : 50
                             }
                             BiSlider {
                                 id : _roll
@@ -94,8 +105,14 @@ Pane {
                         }
                         RowLayout {
                             Label {
-                                text : qsTr('Pitch (Up-Down)')
-                                Layout.preferredWidth : 150
+                                text : '\ue0c3'
+                                font.family : 'Material Icons'
+                                font.pointSize : 18
+                                Layout.preferredWidth : 30
+                            }
+                            Label {
+                                text : qsTr('Pitch')
+                                Layout.preferredWidth : 50
                             }
                             BiSlider {
                                 id : _pitch
@@ -109,8 +126,14 @@ Pane {
                         }
                         RowLayout {
                             Label {
-                                text : qsTr('Yaw (Left-Right)')
-                                Layout.preferredWidth : 150
+                                text : '\ue8d4'
+                                font.family : 'Material Icons'
+                                font.pointSize : 18
+                                Layout.preferredWidth : 30
+                            }
+                            Label {
+                                text : qsTr('Yaw')
+                                Layout.preferredWidth : 50
                             }
                             BiSlider {
                                 id : _yaw
