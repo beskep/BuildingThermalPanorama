@@ -8,4 +8,6 @@ ToolBar {
     Layout.fillWidth : true
     Material.elevation : 1
     Material.background : Material.color(Material.foreground, Material.ShadeA200)
+    leftPadding : 10
+    rightPadding : 10
 }

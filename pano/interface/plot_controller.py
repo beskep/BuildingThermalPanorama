@@ -303,6 +303,7 @@ class SegmentationPlotController(_PanoPlotController):
   def __init__(self, parent=None) -> None:
     super().__init__(parent=parent)
     self._cmap = get_cmap('Dark2')
+    self._legend = None
 
   @property
   def axes(self) -> np.ndarray:
@@ -314,12 +315,6 @@ class SegmentationPlotController(_PanoPlotController):
 
     self._fig = canvas.figure
     self._axes = self._fig.subplots(1, 2)
-
-    patches = [
-        Patch(color=self._cmap(i), label=label)
-        for i, label in enumerate(self._CLASSES)
-    ]
-    self._fig.legend(handles=patches, loc='right')
 
     self.draw()
 
@@ -341,9 +336,23 @@ class SegmentationPlotController(_PanoPlotController):
     mask = SegMask.vis_to_index(mask_vis)
     mask_cmap = self._cmap(mask)
 
+    self.axes[0].clear()
+    self.axes[1].clear()
+
     self.axes[0].imshow(vis)
     self.axes[1].imshow(vis)
     self.axes[1].imshow(mask_cmap, alpha=0.7)
+
+    if self._legend is None:
+      patches = [
+          Patch(color=self._cmap(i), label=label)
+          for i, label in enumerate(self._CLASSES)
+      ]
+      self._legend = self.fig.legend(handles=patches,
+                                     ncol=len(patches),
+                                     loc='lower center',
+                                     bbox_to_anchor=(0.5, 0.01))
+      self.fig.tight_layout()
 
     self.draw()
 

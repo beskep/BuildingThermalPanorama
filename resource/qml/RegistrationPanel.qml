@@ -37,7 +37,7 @@ Pane {
                 ToolButton {
                     text : qsTr('취소')
                     icon : '\ue14a'
-                    // TODO
+                    onReleased : con.rgst_reset()
                 }
             }
         }

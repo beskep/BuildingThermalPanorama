@@ -233,6 +233,7 @@ class Controller(QtCore.QObject):
         self.win.panel_funtion('panorama', 'reset')
       elif command == 'register':
         self._rpc.reset()
+        self._rpc.reset_matrices()
 
       self.win.popup('Success', f'{cmd_kr} 완료')
       self.win.pb_state(False)
@@ -284,6 +285,11 @@ class Controller(QtCore.QObject):
   def rgst_save(self):
     assert self._rpc is not None
     self._rpc.save()
+
+  @QtCore.Slot()
+  def rgst_reset(self):
+    assert self._rpc is not None
+    self._rpc.reset()
 
   @QtCore.Slot(str)
   def seg_plot(self, url):
