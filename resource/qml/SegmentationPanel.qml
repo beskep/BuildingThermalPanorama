@@ -81,17 +81,17 @@ Pane {
                     width : height * 4 / 3 + 10
 
                     Image {
-                        id: _image
+                        id : _image
                         source : path
                         width : parent.width
                         fillMode : Image.PreserveAspectFit
                     }
 
                     BrightnessContrast {
-                        id: _bc
-                        anchors.fill: _image
-                        source: _image
-                        brightness: 0
+                        id : _bc
+                        anchors.fill : _image
+                        source : _image
+                        brightness : 0
                     }
 
                     MouseArea {
@@ -99,8 +99,8 @@ Pane {
                         hoverEnabled : true
 
                         onReleased : con.seg_plot(path)
-                        onEntered: _bc.brightness = -0.25
-                        onExited: _bc.brightness = 0
+                        onEntered : _bc.brightness = -0.25
+                        onExited : _bc.brightness = 0
                     }
                 }
             }

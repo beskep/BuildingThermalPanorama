@@ -90,7 +90,7 @@ Pane {
                     delegate : Pane {
                         Material.elevation : 0
                         width : image_view.cellWidth
-                        height: image_view.cellHeight
+                        height : image_view.cellHeight
 
                         Column {
                             anchors.fill : parent

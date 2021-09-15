@@ -7,16 +7,21 @@ import QtQuick.Layouts 1.15
 Popup {
     id : _popup
 
+    property var steps: 200.0;
+
     anchors.centerIn : Overlay.overlay
-
-    property var steps: 200.0
-
+    Material.elevation : 5
     padding : 0
-    implicitWidth : 300
-    implicitHeight : 200
-    // TODO 메세지별 크기 조절
+    height : _content.implicitHeight
+
+    TextMetrics {
+        id : _metrics
+        font.pointSize : 12
+        text : ''
+    }
 
     ColumnLayout {
+        id : _content
         anchors.fill : parent
 
         ProgressBar {
@@ -37,6 +42,8 @@ Popup {
             Layout.fillWidth : true
             Layout.fillHeight : true
             Layout.margins : 20
+            Layout.minimumWidth : 200
+            Layout.maximumWidth : 750
             spacing : 10
 
             Label {
@@ -54,9 +61,16 @@ Popup {
                 Layout.fillHeight : true
 
                 font.pointSize : 12
-                wrapMode : Label.WordWrap
+                wrapMode : Label.Wrap
 
-                text : '[Default message]'
+                text : _metrics.text
+                onTextChanged : {
+                    if (_metrics.width <= 200) {
+                        Layout.preferredWidth = 200
+                    } else {
+                        Layout.preferredWidth = Math.ceil(Math.sqrt(_metrics.width * _message.height * 2))
+                    }
+                }
             }
             Button {
                 Layout.alignment : Qt.AlignRight | Qt.AlignBottom
@@ -64,9 +78,7 @@ Popup {
 
                 text : 'OK'
 
-                onClicked : {
-                    _popup.close()
-                }
+                onClicked : _popup.close()
             }
         }
     }
@@ -83,7 +95,7 @@ Popup {
 
     function timeout_open(title, message, timeout = 2000) {
         _title.text = title
-        _message.text = message
+        _metrics.text = message
         _timer.interval = timeout / steps
         _pb.value = 0.0
 
