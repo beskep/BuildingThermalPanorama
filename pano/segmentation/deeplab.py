@@ -190,8 +190,8 @@ def predict(model_path: str,
     mask = PIL.ImageImage.fromarray(seg_map)
     mask.save(outpug_dir.joinpath(fname + '_mask').with_suffix('.png'))
 
-    seg_image = PIL.ImageImage.fromarray(seg_image)
-    seg_image.save(outpug_dir.joinpath(fname + '_vis').with_suffix('.png'))
+    seg_pil = PIL.ImageImage.fromarray(seg_image)
+    seg_pil.save(outpug_dir.joinpath(fname + '_vis').with_suffix('.png'))
 
     fig.savefig(outpug_dir.joinpath(fname + '_fig').with_suffix('.png'))
     plt.close(fig)
@@ -292,7 +292,7 @@ class DeepLabModel:
       seg_map = _resize(seg_map,
                         output_shape=image.shape[:2],
                         preserve_range=True,
-                        anti_aliasing=True)
+                        anti_aliasing=False)
       seg_map = np.round(seg_map).astype(np.uint8)
 
     fig, seg_image = vis_segmentation(image=vis_image,
