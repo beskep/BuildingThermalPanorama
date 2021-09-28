@@ -176,6 +176,29 @@ Pane {
                             checkState : Qt.Checked
                             onCheckStateChanged : con.pano_set_grid(checkState == Qt.Checked)
                         }
+
+                        Rectangle {
+                            Layout.preferredWidth : 10
+                        }
+
+                        Label {
+                            text : qsTr('시야각')
+                        }
+                        Rectangle {
+                            Layout.preferredWidth : 5
+                        }
+                        TextField {
+                            text : '42'
+                            Layout.preferredWidth : 40
+
+                            validator : DoubleValidator {}
+                            onTextChanged : {
+                                con.pano_set_viewing_angle(text)
+                            }
+                        }
+                        Label {
+                            text : qsTr('º')
+                        }
                     }
                 }
             }

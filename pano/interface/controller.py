@@ -317,6 +317,16 @@ class Controller(QtCore.QObject):
   def pano_set_grid(self, grid):
     self._ppc.set_grid(grid)
 
+  @QtCore.Slot(str)
+  def pano_set_viewing_angle(self, value):
+    try:
+      angle = float(value)
+    except ValueError:
+      pass
+    else:
+      self._ppc.viewing_angle = angle
+      logger.debug('Vewing angle: {}', angle)
+
   @QtCore.Slot(float, float, float)
   def pano_save_manual_correction(self, roll, pitch, yaw):
     self.win.pb_state(True)

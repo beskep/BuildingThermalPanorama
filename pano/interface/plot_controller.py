@@ -360,6 +360,7 @@ class SegmentationPlotController(_PanoPlotController):
 class PanoramaPlotController(_PanoPlotController):
   _DIR = ('bottom', 'top', 'left', 'right')
   _TICK_PARAMS = {key: False for key in _DIR + tuple('label' + x for x in _DIR)}
+  _GRID_COUNTS = (7, 7)  # (height, width)
 
   def __init__(self, parent=None) -> None:
     super().__init__(parent=parent)
@@ -373,7 +374,7 @@ class PanoramaPlotController(_PanoPlotController):
     self._angles: Optional[np.ndarray] = None
     self._limit = 0
     self._grid = True
-    self._va = np.deg2rad(42.0)  # TODO
+    self._va = np.deg2rad(42.0)
 
   @property
   def cax(self) -> Axes:
@@ -389,6 +390,17 @@ class PanoramaPlotController(_PanoPlotController):
   @property
   def viewing_angle(self):
     return self._va
+
+  @viewing_angle.setter
+  def viewing_angle(self, value):
+    """
+    Parameters
+    ----------
+    value : float
+        Viewing angle [deg]
+    """
+    self._va = np.deg2rad(value)
+    self._prj = None
 
   def init(self, app: QtGui.QGuiApplication, canvas: FigureCanvas):
     self._app = app
@@ -439,7 +451,19 @@ class PanoramaPlotController(_PanoPlotController):
     self._limit = limit
     self._prj = ImageProjection(image=limit_image_size(image=self._image,
                                                        limit=limit),
-                                viewing_angle=self._va)
+                                viewing_angle=self.viewing_angle)
+
+  def _set_grid(self, image: np.ndarray):
+    ticks = tuple(
+        np.linspace(
+            0,
+            image.shape[x],
+            num=self._GRID_COUNTS[x],
+            endpoint=True,
+        ) for x in range(2))
+
+    self.axes.set_xticks(ticks[1])
+    self.axes.set_yticks(ticks[0])
 
   def plot(self, force=False):
     if not (force or self._image is None):
@@ -455,6 +479,7 @@ class PanoramaPlotController(_PanoPlotController):
     self.cax.get_yaxis().labelpad = 10
     self.cax.set_ylabel('Temperature [℃]', rotation=90)
 
+    self._set_grid(self._image)
     self.draw()
 
   def project(self, roll=0.0, pitch=0.0, yaw=0.0, limit=9999):
@@ -470,6 +495,7 @@ class PanoramaPlotController(_PanoPlotController):
     self.axes.clear()
     self.axes.imshow(image, cmap=self._cmap)
 
+    self._set_grid(image)
     self.draw()
 
   def set_grid(self, grid):
