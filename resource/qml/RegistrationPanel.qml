@@ -38,6 +38,64 @@ Pane {
                     icon : '\ue14a'
                     onReleased : con.rgst_reset()
                 }
+
+                ToolSeparator {}
+
+                ToolButton {
+                    icon : '\ue88a'
+                    text : qsTr('Home')
+
+                    onReleased : con.rgst_home()
+                }
+
+                ToolButton {
+                    id : _point
+                    checkable : true
+                    Material.accent : "#ffffff"
+                    icon : '\ue837'
+
+                    checked : true
+                    text : qsTr('Point')
+
+                    onReleased : {
+                        if (_zoom.checked) {
+                            _zoom.checked = false
+                        }
+                        checked = true;
+                        con.rgst_zoom(false);
+                    }
+                    onCheckedChanged : {
+                        if (checked) {
+                            icon = '\ue837'
+                        } else {
+                            icon = '\ue836'
+                        }
+                    }
+                }
+
+                ToolButton {
+                    id : _zoom
+                    checkable : true
+                    Material.accent : "#ffffff"
+                    icon : '\ue836'
+
+                    text : qsTr('Zoom')
+
+                    onReleased : {
+                        if (_point.checked) {
+                            _point.checked = false
+                        }
+                        checked = true;
+                        con.rgst_zoom(true);
+                    }
+                    onCheckedChanged : {
+                        if (checked) {
+                            icon = '\ue837'
+                        } else {
+                            icon = '\ue836'
+                        }
+                    }
+                }
             }
         }
 
@@ -109,6 +167,24 @@ Pane {
                     Layout.fillHeight : true
                     Layout.fillWidth : true
                     dpi_ratio : Screen.devicePixelRatio
+                }
+
+                GridLayout {
+                    anchors.fill : parent
+
+                    RowLayout {
+                        Layout.alignment : Qt.AlignRight | Qt.AlignBottom
+                        Layout.rightMargin : 20
+
+                        Label {
+                            text : qsTr('그리드')
+                        }
+                        CheckBox {
+                            padding : 0
+                            checkState : Qt.Unchecked
+                            onCheckStateChanged : con.rgst_set_grid(checkState == Qt.Checked)
+                        }
+                    }
                 }
             }
         }

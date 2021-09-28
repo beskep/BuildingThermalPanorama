@@ -25,8 +25,12 @@ from .common.pano_files import FN
 from .common.pano_files import SP
 from .common.pano_files import ThermalPanoramaFileManager
 from .mbq import FigureCanvas
+from .mbq import NavigationToolbar2QtQuick as NavToolbar
 from .mbq import QtCore
 from .mbq import QtGui
+
+_DIRS = ('bottom', 'top', 'left', 'right')
+_TICK_PARAMS = {key: False for key in _DIRS + tuple('label' + x for x in _DIRS)}
 
 
 class WorkingDirNotSet(FileNotFoundError):
@@ -112,12 +116,18 @@ class _PanoPlotController(PlotController):
 class RegistrationPlotController(_PanoPlotController):
   _REQUIRED = 4
   _TITLES = ('열화상', '실화상', '비교 (Checkerboard)', '비교 (Difference)')
+  _GRID_COUNTS = (8, 8)
 
   def __init__(self, parent=None) -> None:
     super().__init__(parent=parent)
 
+    self._toolbar: Optional[NavToolbar] = None
+
     self._pnts = defaultdict(list)  # 선택된 점들의 mpl 오브젝트
     self._pnts_coord = defaultdict(list)  # 선택된 점들의 좌표
+    self._zoom = False
+    self._grid = False
+
     self._images: Optional[tuple] = None
     self._matrices: Optional[dict] = None
 
@@ -151,6 +161,7 @@ class RegistrationPlotController(_PanoPlotController):
   def init(self, app: QtGui.QGuiApplication, canvas: FigureCanvas):
     self._app = app
     self._canvas = canvas
+    self._toolbar = NavToolbar(canvas=canvas)
 
     self._fig = canvas.figure
     self._axes = self.fig.subplots(2, 2)
@@ -160,6 +171,16 @@ class RegistrationPlotController(_PanoPlotController):
     self.canvas.mpl_connect('button_press_event', self._on_click)
     self.draw()
 
+  def home(self):
+    if self._images is not None:
+      self._toolbar.home()
+
+  def zoom(self, value: bool):
+    self._zoom = value
+    if not self._zoom ^ value:
+      assert self._toolbar is not None
+      self._toolbar.zoom()
+
   def _set_style(self):
     for ax, title in zip(self.axes.ravel(), self._TITLES):
       if ax.has_data():
@@ -168,6 +189,32 @@ class RegistrationPlotController(_PanoPlotController):
 
     ar = self.axes[0, 0].get_aspect()
     self.axes[0, 1].set_aspect(ar)
+
+    if self._grid:
+      for ax in self.axes[0]:
+        ax.set_axis_on()
+        ax.tick_params(axis='both', which='both', **_TICK_PARAMS)
+
+  def set_grid(self, grid: bool):
+    if not self._grid ^ grid:
+      return
+
+    self._grid = grid
+    self.draw()
+
+  def _set_ticks(self, image: np.ndarray):
+    ticks = tuple(
+        np.linspace(
+            0,
+            image.shape[x],
+            num=self._GRID_COUNTS[x],
+            endpoint=True,
+        ) for x in range(2))
+
+    self.axes[0, 0].set_xticks(ticks[1])
+    self.axes[0, 0].set_yticks(ticks[0])
+    self.axes[0, 1].set_xticks(ticks[1])
+    self.axes[0, 1].set_yticks(ticks[0])
 
   def reset(self):
     for ax in self.axes.ravel():
@@ -191,6 +238,8 @@ class RegistrationPlotController(_PanoPlotController):
     self.axes[0, 0].imshow(equalize_hist(fixed_image))
     self.axes[0, 1].imshow(moving_image)
 
+    self._set_ticks(fixed_image)
+
   def plot(self, file: Path):
     self._file = file
 
@@ -209,7 +258,7 @@ class RegistrationPlotController(_PanoPlotController):
 
   def _on_click(self, event: MouseEvent):
     logger.trace(event)
-    if self._images is None:
+    if self._zoom or self._images is None:
       return
 
     ax: Axes = event.inaxes
@@ -236,7 +285,11 @@ class RegistrationPlotController(_PanoPlotController):
     if len(self._pnts_coord[ax]) < self._REQUIRED:
       self._pnts_coord[ax].append((event.xdata, event.ydata))
 
-      p = event.inaxes.scatter(event.xdata, event.ydata, edgecolors='w', s=50)
+      p = event.inaxes.scatter(event.xdata,
+                               event.ydata,
+                               s=50,
+                               edgecolors='w',
+                               linewidths=1)
       self._pnts[ax].append(p)
 
   def _remove_points(self, ax: int):
@@ -358,8 +411,6 @@ class SegmentationPlotController(_PanoPlotController):
 
 
 class PanoramaPlotController(_PanoPlotController):
-  _DIR = ('bottom', 'top', 'left', 'right')
-  _TICK_PARAMS = {key: False for key in _DIR + tuple('label' + x for x in _DIR)}
   _GRID_COUNTS = (7, 7)  # (height, width)
 
   def __init__(self, parent=None) -> None:
@@ -367,14 +418,15 @@ class PanoramaPlotController(_PanoPlotController):
 
     self._cax: Optional[Axes] = None
     self._prj: Optional[ImageProjection] = None
-    self._cmap = get_cmap('inferno')
 
     self._image: Optional[np.ndarray] = None
     self._dir = DIR.PANO
     self._angles: Optional[np.ndarray] = None
+    self._va = np.deg2rad(42.0)
+
+    self._cmap = get_cmap('inferno')
     self._limit = 0
     self._grid = True
-    self._va = np.deg2rad(42.0)
 
   @property
   def cax(self) -> Axes:
@@ -417,7 +469,7 @@ class PanoramaPlotController(_PanoPlotController):
   def _set_style(self):
     if self._grid:
       self.axes.set_axis_on()
-      self.axes.tick_params(axis='both', which='both', **self._TICK_PARAMS)
+      self.axes.tick_params(axis='both', which='both', **_TICK_PARAMS)
     else:
       self.axes.set_axis_off()
 
@@ -453,7 +505,7 @@ class PanoramaPlotController(_PanoPlotController):
                                                        limit=limit),
                                 viewing_angle=self.viewing_angle)
 
-  def _set_grid(self, image: np.ndarray):
+  def _set_ticks(self, image: np.ndarray):
     ticks = tuple(
         np.linspace(
             0,
@@ -479,7 +531,7 @@ class PanoramaPlotController(_PanoPlotController):
     self.cax.get_yaxis().labelpad = 10
     self.cax.set_ylabel('Temperature [℃]', rotation=90)
 
-    self._set_grid(self._image)
+    self._set_ticks(self._image)
     self.draw()
 
   def project(self, roll=0.0, pitch=0.0, yaw=0.0, limit=9999):
@@ -495,7 +547,7 @@ class PanoramaPlotController(_PanoPlotController):
     self.axes.clear()
     self.axes.imshow(image, cmap=self._cmap)
 
-    self._set_grid(image)
+    self._set_ticks(image)
     self.draw()
 
   def set_grid(self, grid):

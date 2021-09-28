@@ -291,6 +291,18 @@ class Controller(QtCore.QObject):
     assert self._rpc is not None
     self._rpc.reset()
 
+  @QtCore.Slot(bool)
+  def rgst_set_grid(self, grid):
+    self._rpc.set_grid(grid)
+
+  @QtCore.Slot()
+  def rgst_home(self):
+    self._rpc.home()
+
+  @QtCore.Slot(bool)
+  def rgst_zoom(self, value):
+    self._rpc.zoom(value)
+
   @QtCore.Slot(str)
   def seg_plot(self, url):
     assert self._wd is not None
