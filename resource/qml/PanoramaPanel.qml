@@ -20,7 +20,7 @@ Pane {
 
         ToolBar {
             RowLayout {
-                spacing : 10
+                spacing : 0
 
                 ToolButton {
                     text : qsTr('파노라마 생성')
@@ -45,6 +45,7 @@ Pane {
                     id : _manual
                     text : qsTr('수동 보정')
                     icon : '\ue41e'
+
                     down : true
                     onReleased : {
                         down = true;
@@ -55,6 +56,7 @@ Pane {
                     id : _crop
                     text : qsTr('자르기')
                     icon : '\ue3be'
+
                     onReleased : {
                         down = true;
                         _manual.down = false;
@@ -65,6 +67,11 @@ Pane {
                 ToolSeparator {}
 
                 ToolButton {
+                    text : qsTr('저장')
+                    icon : '\ue161'
+                    onReleased : con.pano_save_manual_correction(_roll.value, _pitch.value, _yaw.value)
+                }
+                ToolButton {
                     text : qsTr('취소')
                     icon : '\ue14a'
                     onReleased : {
@@ -74,11 +81,6 @@ Pane {
                             con.pano_home()
                         }
                     }
-                }
-                ToolButton {
-                    text : qsTr('저장')
-                    icon : '\ue161'
-                    onReleased : con.pano_save_manual_correction(_roll.value, _pitch.value, _yaw.value)
                 }
             }
         }

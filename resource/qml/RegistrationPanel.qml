@@ -21,13 +21,49 @@ Pane {
 
         ToolBar {
             RowLayout {
-                spacing : 10
+                spacing : 0
 
                 ToolButton {
                     text : qsTr('자동 정합')
                     icon : '\ue663'
                     onReleased : con.command('register')
                 }
+
+                ToolSeparator {}
+
+                ToolButton {
+                    id : _point
+                    text : qsTr('지점 선택')
+                    icon : '\ue55c'
+
+                    down : true
+                    onReleased : {
+                        down = true;
+                        _zoom.down = false;
+                    }
+                }
+
+                ToolButton {
+                    id : _zoom
+                    text : qsTr('확대')
+                    icon : '\ue56b'
+
+                    onReleased : {
+                        down = true;
+                        _point.down = false;
+                    }
+                    onDownChanged : con.rgst_zoom(down)
+                }
+
+                ToolSeparator {}
+
+                ToolButton {
+                    icon : '\ue88a'
+                    text : qsTr('초기 시점')
+
+                    onReleased : con.rgst_home()
+                }
+
                 ToolButton {
                     text : qsTr('저장')
                     icon : '\ue161'
@@ -37,64 +73,6 @@ Pane {
                     text : qsTr('취소')
                     icon : '\ue14a'
                     onReleased : con.rgst_reset()
-                }
-
-                ToolSeparator {}
-
-                ToolButton {
-                    icon : '\ue88a'
-                    text : qsTr('Home')
-
-                    onReleased : con.rgst_home()
-                }
-
-                ToolButton {
-                    id : _point
-                    checkable : true
-                    Material.accent : "#ffffff"
-                    icon : '\ue837'
-
-                    checked : true
-                    text : qsTr('Point')
-
-                    onReleased : {
-                        if (_zoom.checked) {
-                            _zoom.checked = false
-                        }
-                        checked = true;
-                        con.rgst_zoom(false);
-                    }
-                    onCheckedChanged : {
-                        if (checked) {
-                            icon = '\ue837'
-                        } else {
-                            icon = '\ue836'
-                        }
-                    }
-                }
-
-                ToolButton {
-                    id : _zoom
-                    checkable : true
-                    Material.accent : "#ffffff"
-                    icon : '\ue836'
-
-                    text : qsTr('Zoom')
-
-                    onReleased : {
-                        if (_point.checked) {
-                            _point.checked = false
-                        }
-                        checked = true;
-                        con.rgst_zoom(true);
-                    }
-                    onCheckedChanged : {
-                        if (checked) {
-                            icon = '\ue837'
-                        } else {
-                            icon = '\ue836'
-                        }
-                    }
                 }
             }
         }

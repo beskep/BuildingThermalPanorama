@@ -13,8 +13,8 @@ T.ToolButton {
     baselineOffset : contentItem.y + contentItem.baselineOffset
 
     padding : 4
-    leftPadding: 10
-    rightPadding: 10
+    leftPadding: 15
+    rightPadding: 15
 
     property alias icon : _icon.text
 

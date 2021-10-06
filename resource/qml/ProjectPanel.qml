@@ -19,7 +19,7 @@ Pane {
 
         ToolBar {
             RowLayout {
-                spacing : 10
+                spacing : 0
 
                 ToolButton {
                     text : qsTr('경로 선택')
