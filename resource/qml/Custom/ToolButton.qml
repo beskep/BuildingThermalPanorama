@@ -12,7 +12,9 @@ T.ToolButton {
     implicitHeight : Math.max(background ? background.implicitHeight : 0, contentItem.implicitHeight + topPadding + bottomPadding)
     baselineOffset : contentItem.y + contentItem.baselineOffset
 
-    padding : 6
+    padding : 4
+    leftPadding: 10
+    rightPadding: 10
 
     property alias icon : _icon.text
 

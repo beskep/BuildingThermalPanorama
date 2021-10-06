@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Optional
 
 from loguru import logger
+import numpy as np
 
 from pano.utils import set_logger
 
@@ -61,10 +62,10 @@ def _producer(queue: mp.Queue, directory, command: str, loglevel: int):
 
 
 def _save_manual_correction(queue: mp.Queue, wd: str, subdir: str,
-                            viewing_angle: float, roll: float, pitch: float,
-                            yaw: float):
+                            viewing_angle: float, angles: tuple,
+                            crop_range: Optional[np.ndarray]):
   try:
-    save_manual_correction(wd, subdir, viewing_angle, roll, pitch, yaw)
+    save_manual_correction(wd, subdir, viewing_angle, angles, crop_range)
   except (ValueError, RuntimeError, IOError) as e:
     logger.exception(e)
     queue.put(f'{type(e).__name__}: {e}')
@@ -339,6 +340,14 @@ class Controller(QtCore.QObject):
       self._ppc.viewing_angle = angle
       logger.debug('Vewing angle: {}', angle)
 
+  @QtCore.Slot()
+  def pano_home(self):
+    self._ppc.home()
+
+  @QtCore.Slot(bool)
+  def pano_crop_mode(self, value):
+    self._ppc.crop_mode(value)
+
   @QtCore.Slot(float, float, float)
   def pano_save_manual_correction(self, roll, pitch, yaw):
     self.win.pb_state(True)
@@ -359,6 +368,6 @@ class Controller(QtCore.QObject):
     self._consumer.start()
 
     args = (queue, self._wd.as_posix(), self._ppc.subdir,
-            self._ppc.viewing_angle, roll, pitch, yaw)
+            self._ppc.viewing_angle, (roll, pitch, yaw), self._ppc.crop_range())
     process = mp.Process(name='save', target=_save_manual_correction, args=args)
     process.start()

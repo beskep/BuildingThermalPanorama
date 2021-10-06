@@ -37,6 +37,19 @@ class WorkingDirNotSet(FileNotFoundError):
   pass
 
 
+class CropToolbar(NavToolbar):
+
+  def none(self):
+    """마우스 클릭에 반응하지 않는 모드"""
+    self.mode = ''
+
+  def crop(self):
+    self.zoom()
+
+  def save_figure(self, *args):
+    pass
+
+
 class PlotController(QtCore.QObject):
 
   def __init__(self, parent=None) -> None:
@@ -418,6 +431,7 @@ class PanoramaPlotController(_PanoPlotController):
 
     self._cax: Optional[Axes] = None
     self._prj: Optional[ImageProjection] = None
+    self._toolbar: Optional[CropToolbar] = None
 
     self._image: Optional[np.ndarray] = None
     self._dir = DIR.PANO
@@ -457,6 +471,7 @@ class PanoramaPlotController(_PanoPlotController):
   def init(self, app: QtGui.QGuiApplication, canvas: FigureCanvas):
     self._app = app
     self._canvas = canvas
+    self._toolbar = CropToolbar(canvas=canvas)
 
     self._fig = canvas.figure
     self._axes = self._fig.add_subplot(111)
@@ -465,6 +480,30 @@ class PanoramaPlotController(_PanoPlotController):
 
     self._axes.set_axis_off()
     self._cax.set_axis_off()
+
+  def home(self):
+    if self._image is not None:
+      self._toolbar.home()
+
+  def crop_mode(self, value: bool):
+    assert self._toolbar is not None
+    if value:
+      self._toolbar.crop()
+    else:
+      self._toolbar.none()
+
+  def crop_range(self) -> np.ndarray:
+    """
+    Returns
+    -------
+    np.ndarray
+        [[xr0, yr0], [xr1, yr1]]
+    """
+    data_lim = self.axes.dataLim.get_points()
+    width_height = data_lim[1] - data_lim[0]
+    view_lim = self.axes.viewLim.get_points()
+
+    return view_lim / width_height
 
   def _set_style(self):
     if self._grid:
@@ -558,10 +597,12 @@ class PanoramaPlotController(_PanoPlotController):
     self.draw()
 
 
-def save_manual_correction(wd, subdir, viewing_angle, roll, pitch, yaw):
+def save_manual_correction(wd, subdir, viewing_angle, angles,
+                           crop_range: Optional[np.ndarray]):
   fm = ThermalPanoramaFileManager(wd)
   ir_pano = ImageIO.read(fm.panorama_path(subdir, SP.IR))
   prj = ImageProjection(ir_pano, viewing_angle=viewing_angle)
+  angles = np.deg2rad(angles)
 
   for sp in SP:
     if sp is SP.IR:
@@ -569,14 +610,19 @@ def save_manual_correction(wd, subdir, viewing_angle, roll, pitch, yaw):
     else:
       image = ImageIO.read(fm.panorama_path(subdir, sp))
 
-    cval = None if sp is SP.IR else 0
-    corrected = prj.project(roll=np.deg2rad(roll),
-                            pitch=np.deg2rad(pitch),
-                            yaw=np.deg2rad(yaw),
-                            cval=cval,
+    corrected = prj.project(roll=angles[0],
+                            pitch=angles[1],
+                            yaw=angles[2],
+                            cval=(None if sp is SP.IR else 0),
                             image=image)
     if sp is SP.MASK:
       corrected = uint8_image(corrected)
+
+    if crop_range is not None:
+      cr = np.multiply(crop_range, ir_pano.shape[::-1]).astype(int)
+      xx = (np.min(cr[:, 0]), np.max(cr[:, 0]))
+      yy = (np.min(cr[:, 1]), np.max(cr[:, 1]))
+      corrected = corrected[yy[0]:yy[1], xx[0]:xx[1]]
 
     path = fm.panorama_path(DIR.COR, sp)
     path = path.parent.joinpath(f'Manual{path.name}')

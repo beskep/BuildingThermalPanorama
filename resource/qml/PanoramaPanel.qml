@@ -42,14 +42,43 @@ Pane {
                 ToolSeparator {}
 
                 ToolButton {
-                    text : qsTr('저장')
-                    icon : '\ue161'
-                    onReleased : con.pano_save_manual_correction(_roll.value, _pitch.value, _yaw.value)
+                    id : _manual
+                    text : qsTr('수동 보정')
+                    icon : '\ue41e'
+                    down : true
+                    onReleased : {
+                        down = true;
+                        _crop.down = false;
+                    }
                 }
+                ToolButton {
+                    id : _crop
+                    text : qsTr('자르기')
+                    icon : '\ue3be'
+                    onReleased : {
+                        down = true;
+                        _manual.down = false;
+                    }
+                    onDownChanged : con.pano_crop_mode(down)
+                }
+
+                ToolSeparator {}
+
                 ToolButton {
                     text : qsTr('취소')
                     icon : '\ue14a'
-                    onReleased : reset()
+                    onReleased : {
+                        if (_manual.down) {
+                            reset()
+                        } else {
+                            con.pano_home()
+                        }
+                    }
+                }
+                ToolButton {
+                    text : qsTr('저장')
+                    icon : '\ue161'
+                    onReleased : con.pano_save_manual_correction(_roll.value, _pitch.value, _yaw.value)
                 }
             }
         }
@@ -96,6 +125,7 @@ Pane {
                             BiSlider {
                                 id : _roll
                                 Layout.fillWidth : true
+                                enabled : _manual.down
 
                                 from : -90
                                 to : 90
@@ -117,6 +147,7 @@ Pane {
                             BiSlider {
                                 id : _pitch
                                 Layout.fillWidth : true
+                                enabled : _manual.down
 
                                 from : -60
                                 to : 60
@@ -138,6 +169,7 @@ Pane {
                             BiSlider {
                                 id : _yaw
                                 Layout.fillWidth : true
+                                enabled : _manual.down
 
                                 from : -60
                                 to : 60
@@ -161,6 +193,7 @@ Pane {
                         }
                         SpinBox {
                             id : _resolution
+                            Layout.alignment : Qt.AlignRight | Qt.AlignVCenter
                             from : 200
                             to : 2000
                             value : 1000
