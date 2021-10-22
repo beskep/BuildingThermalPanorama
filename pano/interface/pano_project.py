@@ -272,7 +272,7 @@ class ThermalPanorama:
     compare_fig, _ = tools.prep_compare_fig(
         images=(fri.prep_image(), mri.registered_prep_image()),
         titles=('열화상', '실화상', '비교 (Checkerboard)', '비교 (Difference)'))
-    compare_fig.savefig(compare_path.joinpath(), dpi=300)
+    compare_fig.savefig(compare_path.joinpath(), dpi=200)
     plt.close(compare_fig)
 
     return mri.matrix

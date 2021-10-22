@@ -14,6 +14,7 @@ from pano.interface.mbq import FigureCanvas
 from pano.interface.mbq import QtCore
 from pano.interface.mbq import QtGui
 from pano.interface.mbq import QtQml
+from pano.interface.plot_controller import DistPlotController
 from pano.interface.plot_controller import PanoramaPlotController
 from pano.interface.plot_controller import RegistrationPlotController
 from pano.interface.plot_controller import SegmentationPlotController
@@ -35,6 +36,17 @@ def _qt_message_handler(mode, context, message):
   logger.log(level, message)
 
 
+conf_path = utils.DIR.RESOURCE.joinpath('qtquickcontrols2.conf')
+qml_path = utils.DIR.RESOURCE.joinpath('qml/main.qml')
+
+for p in [conf_path, qml_path]:
+  p.stat()
+
+pc_names = ('registration', 'segmentation', 'panorama', 'dist')
+pc_classes = (RegistrationPlotController, SegmentationPlotController,
+              PanoramaPlotController, DistPlotController)
+
+
 @click.command(context_settings={
     'allow_extra_args': True,
     'ignore_unknown_options': True
@@ -49,13 +61,6 @@ def main(debug=False, loglevel=20):
 
   if loglevel < 10:
     os.environ['QT_DEBUG_PLUGINS'] = '1'
-
-  conf_path = utils.DIR.RESOURCE.joinpath('qtquickcontrols2.conf')
-  qml_path = utils.DIR.RESOURCE.joinpath('qml/main.qml')
-
-  for p in [conf_path, qml_path]:
-    if not p.exists():
-      raise FileNotFoundError(p)
 
   QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
   QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
@@ -77,19 +82,15 @@ def main(debug=False, loglevel=20):
   context = engine.rootContext()
   context.setContextProperty('con', controller)
 
-  rgst_canvas = win.findChild(FigureCanvas, 'registration_plot')
-  rpc = RegistrationPlotController()
-  rpc.init(app, rgst_canvas)
+  plot_controllers = []
+  for name, cls in zip(pc_names, pc_classes):
+    canvas = win.findChild(FigureCanvas, f'{name}_plot')
+    pc = cls()
+    pc.init(app, canvas)
+    plot_controllers.append(pc)
 
-  seg_canvas = win.findChild(FigureCanvas, 'segmentation_plot')
-  spc = SegmentationPlotController()
-  spc.init(app, seg_canvas)
-
-  pano_canvas = win.findChild(FigureCanvas, 'panorama_plot')
-  ppc = PanoramaPlotController()
-  ppc.init(app, pano_canvas)
-
-  controller.set_plot_controllers(rpc, spc, ppc)
+  # pylint: disable=no-value-for-parameter
+  controller.set_plot_controllers(*plot_controllers)
 
   return app.exec_()
 

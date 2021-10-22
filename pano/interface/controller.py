@@ -11,6 +11,7 @@ from .common.pano_files import init_directory
 from .common.pano_files import ThermalPanoramaFileManager
 from .mbq import QtCore
 from .mbq import QtGui
+from .plot_controller import DistPlotController
 from .plot_controller import PanoramaPlotController
 from .plot_controller import RegistrationPlotController
 from .plot_controller import save_manual_correction
@@ -159,6 +160,7 @@ class Controller(QtCore.QObject):
     self._rpc: Optional[RegistrationPlotController] = None
     self._spc: Optional[SegmentationPlotController] = None
     self._ppc: Optional[PanoramaPlotController] = None
+    self._dpc: Optional[DistPlotController] = None
 
   @property
   def win(self) -> _Window:
@@ -168,10 +170,14 @@ class Controller(QtCore.QObject):
   def win(self, win: QtGui.QWindow):
     self._win = _Window(win)
 
-  def set_plot_controllers(self, registration, segmentation, panorama):
-    self._rpc = registration
-    self._spc = segmentation
-    self._ppc = panorama
+  def set_plot_controllers(self, rgst: RegistrationPlotController,
+                           seg: SegmentationPlotController,
+                           pano: PanoramaPlotController,
+                           dist: DistPlotController):
+    self._rpc = rgst
+    self._spc = seg
+    self._ppc = pano
+    self._dpc = dist
 
   @QtCore.Slot(str)
   def log(self, message: str):
@@ -195,9 +201,9 @@ class Controller(QtCore.QObject):
 
     self._wd = wd
     self._fm = ThermalPanoramaFileManager(wd)
-    self._rpc.fm = self._fm
-    self._spc.fm = self._fm
-    self._ppc.fm = self._fm
+
+    for pc in (self._rpc, self._spc, self._ppc, self._dpc):
+      pc.fm = self._fm
 
     self.prj_update_project_tree()
     self.update_image_view()
@@ -371,3 +377,10 @@ class Controller(QtCore.QObject):
             self._ppc.viewing_angle, (roll, pitch, yaw), self._ppc.crop_range())
     process = mp.Process(name='save', target=_save_manual_correction, args=args)
     process.start()
+
+  @QtCore.Slot()
+  def dist_plot(self):
+    try:
+      self._dpc.plot()
+    except OSError as e:
+      self.win.popup('Warning', str(e))

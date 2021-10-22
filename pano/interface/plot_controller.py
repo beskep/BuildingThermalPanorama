@@ -10,6 +10,7 @@ from matplotlib.colorbar import make_axes_gridspec
 from matplotlib.figure import Figure
 from matplotlib.patches import Patch
 import numpy as np
+import seaborn as sns
 from skimage import transform
 from skimage.exposure import equalize_hist
 
@@ -34,7 +35,9 @@ _TICK_PARAMS = {key: False for key in _DIRS + tuple('label' + x for x in _DIRS)}
 
 
 class WorkingDirNotSet(FileNotFoundError):
-  pass
+
+  def __str__(self) -> str:
+    return self.args[0] if self.args else '대상 경로가 지정되지 않았습니다.'
 
 
 class CropToolbar(NavToolbar):
@@ -631,10 +634,101 @@ def save_manual_correction(wd, subdir, viewing_angle, angles,
       ImageIO.save_with_meta(
           path=path,
           array=np.nan_to_num(corrected, nan=np.nanmin(corrected)),
-          exts=[FN.LL],
+          exts=[FN.NPY, FN.LL],
           dtype='uint16',
       )
       # TODO colormap 버전
       # self.fm.color_path
     else:
       ImageIO.save(path=path, array=corrected.astype(np.uint8))
+
+
+class DistPlotController(_PanoPlotController):
+  _CLASSES = ('Background', 'Wall', 'Window', 'etc.')
+
+  def _set_style(self):
+    if self.axes.has_data():
+      self.axes.set_xlabel('Temperature [℃]')
+      self.axes.tick_params(axis='both', which='both', top=False, right=False)
+    else:
+      self.axes.set_axis_off()
+
+  def get_panorama_path(self):
+    for subdir in (DIR.COR, DIR.PANO):
+      path = self.fm.panorama_path(subdir, SP.IR)
+
+      manual_path = path.parent.joinpath(f'Manual{path.name}')
+      if manual_path.exists():
+        return subdir, manual_path
+
+      if path.exists():
+        return subdir, path
+
+    return None, None
+
+  def read_images(self):
+    subdir, ir_path = self.get_panorama_path()
+    logger.debug('IR pano path: {}', ir_path)
+    if ir_path is None:
+      raise FileNotFoundError('생성된 파노라마가 없습니다.')
+
+    mask_path = self.fm.panorama_path(subdir, SP.MASK)
+    seg_path = self.fm.panorama_path(subdir, SP.SEG)
+    if ir_path.stem.startswith('Manual'):
+      mask_path = mask_path.parent.joinpath(f'Manual{mask_path.name}')
+      seg_path = seg_path.parent.joinpath(f'Manual{seg_path.name}')
+
+    ir = ImageIO.read(ir_path)
+    mask = ImageIO.read(mask_path)
+    ir[np.logical_not(mask)] = np.nan
+
+    seg = ImageIO.read(seg_path)
+    if seg.ndim == 3:
+      seg = seg[:, :, 0]
+
+    seg = SegMask.vis_to_index(seg)
+
+    return ir, seg
+
+  @staticmethod
+  def remove_outliers(data: np.ndarray, k=1.5):
+    data = data[~np.isnan(data)]
+
+    q1 = np.quantile(data, q=0.25)
+    q3 = np.quantile(data, q=0.75)
+    iqr = q3 - q1
+
+    lower = q1 - k * iqr
+    upper = q3 + k * iqr
+
+    return data[(lower < data) & (data < upper)]
+
+  @staticmethod
+  def bin_width(array: np.ndarray, min_width=0.5):
+    r = np.nanmax(array) - np.nanmin(array)
+    bin_width = r / np.histogram_bin_edges(array[~np.isnan(array)],
+                                           bins='fd').size
+
+    return max(min_width, bin_width)
+
+  def plot(self):
+    self.axes.clear()
+
+    ir, seg = self.read_images()
+    data = {
+        label: ir[seg == self._CLASSES.index(label)].ravel()
+        for label in self._CLASSES[1:-1]
+    }
+
+    # TODO k 정하기
+    data = {
+        key: self.remove_outliers(value, k=2.5) for key, value in data.items()
+    }
+
+    sns.histplot(data=data,
+                 stat='probability',
+                 binwidth=self.bin_width(ir),
+                 element='step',
+                 ax=self.axes)
+
+    self.draw()

@@ -64,6 +64,10 @@ ApplicationWindow {
                     text : '파노라마 생성·보정'
                     width : parent.width
                 }
+                TabButton {
+                    text : '온도 분포'
+                    width : parent.width
+                }
             }
 
             Page {
@@ -75,10 +79,13 @@ ApplicationWindow {
                     currentIndex : tab_bar.currentIndex
 
                     onCurrentIndexChanged : {
-                        [project_panel,
-                        registration_panel,
-                        segmentation_panel,
-                        panorama_panel][currentIndex].init()
+                        [
+                            project_panel,
+                            registration_panel,
+                            segmentation_panel,
+                            panorama_panel,
+                            dist_panel
+                        ][currentIndex].init()
                     }
 
                     ProjectPanel {
@@ -92,6 +99,9 @@ ApplicationWindow {
                     }
                     PanoramaPanel {
                         id : panorama_panel
+                    }
+                    DescriptivePanel {
+                        id : dist_panel
                     }
                 }
             }

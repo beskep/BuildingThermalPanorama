@@ -1,19 +1,19 @@
 camera:
     default:
-        scale: 0.75 # IR / VIS image scale
         IR_AOV: null # 열화상 시야각 [degree]
         VIS_AOV: null # 실화상 시야각 [degree]
+        scale: 0.75 # IR / VIS image scale
         translation: null
     FLIR E95:
-        scale: null
-        IR_AOV: 32
-        VIS_AOV: 42
-        translation: null
-    FLIR T540:
-        scale: 0.75
         IR_AOV: null
         VIS_AOV: null
-        translation: [5, -14]
+        scale: 0.758
+        translation: [-17.16, -8.2]
+    FLIR T540:
+        IR_AOV: null
+        VIS_AOV: null
+        scale: 0.735
+        translation: [5.07, -12.6]
 color:
     colormap: iron # optional, {"iron", "inferno", "rainbow", ...}
     extract_color_image: true

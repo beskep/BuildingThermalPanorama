@@ -246,7 +246,7 @@ def init_directory(directory: Path):
     raw_dir.mkdir()
 
     for file in directory.iterdir():
-      if file.suffix in ('.jpg', '.xlsx', '.png'):
+      if file.suffix.lower() in ('.jpg', '.xlsx', '.png'):
         file.replace(raw_dir.joinpath(file.name))
 
   set_config(directory=directory, default=True)
