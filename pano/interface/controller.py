@@ -44,12 +44,15 @@ def _producer(queue: mp.Queue, directory, command: str, loglevel: int):
   # pylint: disable=import-outside-toplevel
   from .pano_project import ThermalPanorama
 
-  tp = ThermalPanorama(directory=directory)
+  try:
+    tp = ThermalPanorama(directory=directory)
+  except (ValueError, OSError) as e:
+    queue.put(f'{type(e).__name__}: {e}')
+    return
 
   try:
     fn = getattr(tp, f'{command}_generator', None)
     if fn is not None:
-      queue.put(0.0)
       for r in fn():
         queue.put(r)
     else:
@@ -125,6 +128,9 @@ class _Window:
   def popup(self, title: str, message: str, timeout=2000):
     logger.debug('[Popup] {}: {}', title, message)
     self._window.popup(title, message, timeout)
+    if title.lower() != 'error':
+      msg = message.replace('\n', ' ')
+      self._window.status_message(f'[{title}] {msg}')
 
   def panel_funtion(self, panel: str, fn: str, *args):
     p = self._window.get_panel(panel)
@@ -184,8 +190,7 @@ class Controller(QtCore.QObject):
     _log(message=message)
 
   def _pb_value(self, value: float):
-    if value == 0:
-      self.win.pb_state(False)
+    self.win.pb_state(False)
     self.win.pb_value(value)
 
   def _error_popup(self, message: str):

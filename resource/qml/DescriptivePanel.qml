@@ -79,9 +79,21 @@ Pane {
                     Layout.fillWidth : true
                     Layout.fillHeight : true
 
-                    model : TableModel {
-                        id : table_model
-                    }
+                    // model : TableModel {
+                    //     id : table_model
+
+                    //     TableModelColumn {
+                    //         display : 'class'
+                    //     }
+                    //     TableModelColumn {
+                    //         display : 'avg'
+                    //     }
+
+                    //     rows : [{
+                    //             'class': 'foo',
+                    //             'avg': 'bar'
+                    //         }]
+                    // }
 
                     delegate : Rectangle {
                         implicitHeight : 50

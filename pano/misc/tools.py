@@ -4,6 +4,7 @@ import dataclasses as dc
 from typing import List, Optional, Tuple, Union
 
 import cv2 as cv
+from loguru import logger
 import matplotlib.pyplot as plt
 import numpy as np
 from skimage.color import rgb2gray
@@ -136,10 +137,17 @@ class CropRange:
   def as_tuple(self):
     return (self.x_min, self.x_max, self.y_min, self.y_max)
 
-  def crop(self, image: np.ndarray):
+  def crop(self, image: np.ndarray, strict=True):
     if image.shape[:2] != self.image_shape[:2]:
-      raise ValueError('Input shape ({}) != {}'.format(image.shape[:2],
-                                                       self.image_shape[:2]))
+      msg = 'CropRange image shape ({}) != Input image shape {}'.format(
+          self.image_shape[:2], image.shape[:2])
+      if strict:
+        raise ValueError(msg)
+
+      logger.warning(msg)
+      image = resize(image,
+                     output_shape=self.image_shape[:2],
+                     preserve_range=True)
 
     return image[self.y_min:self.y_max, self.x_min:self.x_max]
 
@@ -375,7 +383,7 @@ def limit_image_size(image: np.ndarray, limit: int) -> np.ndarray:
 
 
 class SegMask:
-  _scale = 60
+  _scale = 80
 
   @classmethod
   def index_to_vis(cls, array: np.ndarray):

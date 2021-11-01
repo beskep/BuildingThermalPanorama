@@ -629,6 +629,8 @@ def save_manual_correction(wd, subdir, viewing_angle, angles,
 
     path = fm.panorama_path(DIR.COR, sp)
     path = path.parent.joinpath(f'Manual{path.name}')
+    if not path.parent.exists():
+      path.parent.mkdir()
 
     if sp is SP.IR:
       ImageIO.save_with_meta(

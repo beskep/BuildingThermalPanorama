@@ -20,7 +20,7 @@ Pane {
             id : status_text
 
             Layout.alignment : Qt.AlignVCenter
-            font.pointSize : 10
+            font.pointSize : 11
             color : "#212121"
 
             text : '건물 에너지 검진을 위한 열화상 파노라마 영상처리 프로그램'
@@ -29,5 +29,9 @@ Pane {
         Label {
             Layout.fillWidth : true
         }
+    }
+
+    function status_message(msg) {
+        status_text.text = msg
     }
 }

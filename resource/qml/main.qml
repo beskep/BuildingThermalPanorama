@@ -119,7 +119,9 @@ ApplicationWindow {
         id : _popup
     }
 
-    footer : StatusBar {}
+    footer : StatusBar {
+        id : _status_bar
+    }
 
     function pb_value(value) {
         _pb.value = value
@@ -127,6 +129,10 @@ ApplicationWindow {
 
     function pb_state(indeterminate) {
         _pb.indeterminate = indeterminate
+    }
+
+    function status_message(msg) {
+        _status_bar.status_message(msg)
     }
 
     function popup(title, message, timeout = 2000) {

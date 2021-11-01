@@ -115,9 +115,16 @@ class ThermalPanorama:
 
     if self._config['file']['force_horizontal'] and (ir.shape[0] > ir.shape[1]):
       # 수직 영상을 수평으로 만들기 위해 90도 회전
-      logger.debug('rot90 "{}"', path.name)
-      ir = np.rot90(ir, k=1, axes=(0, 1))
-      vis = np.rot90(vis, k=1, axes=(0, 1))
+      if self._config['file']['force_horizontal'] == 'CCW':
+        k = 1
+      elif self._config['file']['force_horizontal'] == 'CW':
+        k = 3
+      else:
+        raise ValueError('"force_horizontal must be one of {"CW", "CCW"}')
+
+      logger.debug('Rotate "{}" (k={})', path.name, k)
+      ir = np.rot90(ir, k=k, axes=(0, 1))
+      vis = np.rot90(vis, k=k, axes=(0, 1))
 
     # FLIR One로 찍은 사진은 수직으로 촬영해도 orientation 번호가
     # `1` (`Horizontal (normal)`)로 표시되어서 아래 정보가 쓸모가 없음...
@@ -471,15 +478,16 @@ class ThermalPanorama:
 
     files = [files[x] for x in panorama.indices]
     images = [IIO.read(x) for x in files]
+    cameras = [panorama.cameras[x] for x in panorama.indices]
 
     pano, _, _ = stitcher.warp_and_blend(
         images=stitch.StitchingImages(arrays=images),
-        cameras=panorama.cameras,
+        cameras=cameras,
         masks=None,
         names=[x.name for x in files])
 
     if panorama.crop_range:
-      pano = panorama.crop_range.crop(pano)
+      pano = panorama.crop_range.crop(pano, strict=False)
 
     if spectrum is SP.IR:
       pano = pano[:, :, 0]

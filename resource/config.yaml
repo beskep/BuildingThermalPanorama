@@ -24,7 +24,7 @@ file:
     testo:
         IR: "*.xlsx"
         VIS: "*_실화상 이미지.JPG"
-    force_horizontal: false
+    force_horizontal: false # {false, "CW", "CCW"}
 registration:
     metric: JointHistMI # {"JointHistMI", "MattesMI", "MeanSquare", ...}
     transformation: Similarity # {"Similarity", "Affine"}
@@ -76,7 +76,7 @@ distort_correction:
         ransac_iter: 2000
         clip_factor: 5
         vp_iter: 5
-        erode: 50 # [pixcel/iteration]
+        erode: 50 # [iteration]
     canny: # optional
         sigma: 3.0
         low_threshold: null
