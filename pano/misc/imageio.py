@@ -59,7 +59,7 @@ class ImageIO:
     elif path.suffix == cls.CSV_EXT:
       image = np.loadtxt(fname=path.as_posix(), delimiter=cls.DELIMITER)
     elif path.suffix == cls.XLSX_EXT:
-      image = pd.read_excel(path.as_posix())
+      image = pd.read_excel(path.as_posix(), na_values='---')
       image = np.array(image)
     else:
       image = imread(fname=path.as_posix())

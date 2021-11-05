@@ -95,7 +95,7 @@ class StitchingImages:
     self.arrays = arrays
     self._preprocess = preprocess
 
-    minmax = np.array([[np.min(x), np.max(x)] for x in arrays])
+    minmax = np.array([[np.nanmin(x), np.nanmax(x)] for x in arrays])
     self._in_range = (np.min(minmax[:, 0]), np.max(minmax[:, 1]))
 
   @property
@@ -145,7 +145,7 @@ class StitchingImages:
     ----------
     image : np.ndarray
         대상 영상.
-    out_range
+    out_range : Any
         조정할 픽셀값 범위 (`skimage.exposure.rescale_intensity` 참조).
 
     Returns
@@ -165,7 +165,7 @@ class StitchingImages:
     ----------
     image : np.ndarray
         대상 영상.
-    out_range
+    out_range : Any
         과거 변경했던 영상 범위 (`skimage.exposure.rescale_intensity` 참조).
 
     Returns
@@ -190,7 +190,7 @@ class StitchingImages:
     """
     if self._preprocess is None:
       images = self.arrays
-      masks = [None for _ in range(self.count)]
+      masks: List[Optional[np.ndarray]] = [None for _ in range(self.count)]
     else:
       prep = [self._preprocess(x.copy()) for x in self.arrays]
       images = [x[0] for x in prep]
@@ -301,6 +301,7 @@ class Stitcher:
     """Bundle adjuster가 이용하는 Refinement mask"""
     if self._refine_mask is None:
       self.set_bundle_adjuster_refine_mask()
+    assert self._refine_mask is not None
 
     return self._refine_mask
 
@@ -388,7 +389,7 @@ class Stitcher:
     confidence : Optional[float], optional
         Confidence for feature matching step.
         The default is 0.3 for ORB and 0.65 for other feature types.
-    range_width
+    range_width : int
         uses range_width to limit number of images to match with
     """
     if confidence is None:
@@ -473,7 +474,7 @@ class Stitcher:
 
   def stitch(self,
              images: StitchingImages,
-             masks: Optional[List[np.ndarray]] = None,
+             masks: Optional[List[Optional[np.ndarray]]] = None,
              names: Optional[List[str]] = None,
              crop=True) -> Panorama:
     """
@@ -483,7 +484,7 @@ class Stitcher:
     ----------
     images : StitchingImages
         대상 영상 목록.
-    masks : Optional[List[np.ndarray]], optional
+    masks : Optional[List[Optional[np.ndarray]]], optional
         대상 영상의 마스크 목록., by default None
     names : Optional[List[str]], optional
         대상 영상의 이름 목록. 미지정 시 `Image n` 형식으로 지정.
@@ -629,7 +630,7 @@ class Stitcher:
   def _warp_image(
       self,
       image: np.ndarray,
-      mask: np.ndarray,
+      mask: Optional[np.ndarray],
       camera: cv.detail_CameraParams,
   ) -> Tuple[np.ndarray, np.ndarray, Tuple[int, int, int, int]]:
     """
@@ -639,7 +640,7 @@ class Stitcher:
     ----------
     image : np.ndarray
         대상 영상.
-    mask : np.ndarray
+    mask : Optional[np.ndarray]
         대상 영상의 유의미한 영역 마스크.
     camera : cv.detail_CameraParams
         Camera parameter.
@@ -713,7 +714,7 @@ class Stitcher:
       self,
       images: List[np.ndarray],
       cameras: List[cv.detail_CameraParams],
-      masks: Optional[List[np.ndarray]] = None,
+      masks: Optional[List[Optional[np.ndarray]]] = None,
       names: Optional[List[str]] = None,
   ) -> Tuple[List[np.ndarray], List[np.ndarray], np.ndarray, List[int]]:
     """
@@ -833,7 +834,7 @@ class Stitcher:
       self,
       images: StitchingImages,
       cameras: List[cv.detail_CameraParams],
-      masks: Optional[List[np.ndarray]] = None,
+      masks: Optional[List[Optional[np.ndarray]]] = None,
       names: Optional[List[str]] = None
   ) -> Tuple[np.ndarray, np.ndarray, List[int]]:
     # warp each image

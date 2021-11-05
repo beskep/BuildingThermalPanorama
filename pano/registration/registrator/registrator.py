@@ -19,6 +19,7 @@ class RegistrationPreprocess:
 
   def __init__(self,
                shape: tuple,
+               fillnan: Optional[float] = 0.0,
                eqhist: Union[bool, Tuple[bool, bool]] = True,
                unsharp: Union[bool, Tuple[bool, bool]] = False,
                edge: Union[bool, Tuple[bool, bool]] = False) -> None:
@@ -48,6 +49,7 @@ class RegistrationPreprocess:
 
     self._shape = shape
 
+    self._fillnan = fillnan
     self._eqhist = eqhist
     self._unsharp = unsharp
     self._edge = edge
@@ -61,6 +63,9 @@ class RegistrationPreprocess:
       yield name, value
 
   def fixed_preprocess(self, image: np.ndarray) -> np.ndarray:
+    if self._fillnan is not None:
+      image = np.nan_to_num(image, nan=self._fillnan)
+
     image = normalize_image(image)
 
     if self._eqhist[0]:
@@ -77,6 +82,9 @@ class RegistrationPreprocess:
   def moving_preprocess(self, image: np.ndarray) -> np.ndarray:
     if image.ndim == 3:
       image = rgb2gray(image)
+
+    if self._fillnan is not None:
+      image = np.nan_to_num(image, nan=self._fillnan)
 
     image = normalize_image(image)
 

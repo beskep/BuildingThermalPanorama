@@ -54,6 +54,7 @@ Pane {
 
             ColumnLayout {
                 anchors.fill : parent
+                spacing : 0
 
                 HorizontalHeaderView {
                     syncView : table_view
@@ -61,43 +62,74 @@ Pane {
 
                     model : ListModel {
                         ListElement {
-                            name : 'col1'
+                            name : '클래스'
                         }
                         ListElement {
-                            name : 'col2'
+                            name : '평균'
+                        }
+                        ListElement {
+                            name : '표준편차'
+                        }
+                        ListElement {
+                            name : 'Q1'
+                        }
+                        ListElement {
+                            name : '중위수'
+                        }
+                        ListElement {
+                            name : 'Q3'
                         }
                     }
-                    delegate : Label {
-                        text : name
+                    delegate : Rectangle {
+                        implicitHeight : 40
+                        implicitWidth : 120
+                        color : '#eeeeee'
+
+                        Label {
+                            text : name
+                            // font.bold : true
+                            anchors.centerIn : parent
+                        }
                     }
                 }
+
                 TableView {
                     id : table_view
                     columnSpacing : 1
                     rowSpacing : 1
+                    boundsBehavior : Flickable.StopAtBounds
 
                     Layout.fillWidth : true
                     Layout.fillHeight : true
 
-                    // model : TableModel {
-                    //     id : table_model
+                    model : TableModel {
+                        id : table_model
 
-                    //     TableModelColumn {
-                    //         display : 'class'
-                    //     }
-                    //     TableModelColumn {
-                    //         display : 'avg'
-                    //     }
+                        TableModelColumn {
+                            display : 'class'
+                        }
+                        TableModelColumn {
+                            display : 'avg'
+                        }
+                        TableModelColumn {
+                            display : 'std'
+                        }
+                        TableModelColumn {
+                            display : 'q1'
+                        }
+                        TableModelColumn {
+                            display : 'median'
+                        }
+                        TableModelColumn {
+                            display : 'q3'
+                        }
 
-                    //     rows : [{
-                    //             'class': 'foo',
-                    //             'avg': 'bar'
-                    //         }]
-                    // }
+                        rows : []
+                    }
 
                     delegate : Rectangle {
-                        implicitHeight : 50
-                        implicitWidth : 100
+                        implicitHeight : 40
+                        implicitWidth : 120
 
                         Label {
                             text : display
@@ -110,4 +142,12 @@ Pane {
     }
 
     function init() {}
+
+    function clear_table() {
+        table_model.clear()
+    }
+
+    function add_table_row(row) {
+        table_model.appendRow(row)
+    }
 }

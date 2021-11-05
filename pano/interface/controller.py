@@ -386,6 +386,13 @@ class Controller(QtCore.QObject):
   @QtCore.Slot()
   def dist_plot(self):
     try:
-      self._dpc.plot()
+      data = self._dpc.plot()
     except OSError as e:
       self.win.popup('Warning', str(e))
+    else:
+      self.win.panel_funtion('descriptive', 'clear_table')
+
+      for class_ in ('Wall', 'Window'):
+        row = {key: f'{value:.2f}' for key, value in data[class_].items()}
+        row['class'] = class_
+        self.win.panel_funtion('descriptive', 'add_table_row', row)

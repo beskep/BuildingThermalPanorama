@@ -18,6 +18,7 @@ class PanoramaPreprocess:
 
   def __init__(self,
                is_numeric: bool,
+               fillna: Optional[float] = 0.0,
                mask_threshold: Optional[float] = -30.0,
                contrast: Optional[str] = 'equalization',
                denoise: Optional[str] = 'bilateral'):
@@ -27,6 +28,9 @@ class PanoramaPreprocess:
     is_numeric : bool
         전처리 대상 영상의 픽셀값이 물리적 의미가 있는지 (실화상인지) 여부.
         `True`인 경우, `mask_threshold` 적용.
+
+    fillna : Optional[float]
+        nan이 존재하는 경우 채워넣을 값.
 
     mask_threshold : Optional[float], optional
         `is_numeric`이 `True`인 경우, 픽셀 값이 `mask_threshold` 미만인 영역은
@@ -59,6 +63,7 @@ class PanoramaPreprocess:
       raise ValueError
 
     self._is_numeric = is_numeric
+    self._fillna = fillna
     self._mask_threshold = mask_threshold
     self._contrast_type = contrast
     self._denoise_type = denoise
@@ -110,27 +115,38 @@ class PanoramaPreprocess:
   def _gaussian_filter(self, image: np.ndarray) -> np.ndarray:
     return cv.GaussianBlur(image, **self._gaussian_args)
 
-  def masking(self, image: np.ndarray) -> Optional[np.ndarray]:
+  def masking(self,
+              image: np.ndarray) -> Tuple[np.ndarray, Optional[np.ndarray]]:
     """
-    영상의 픽셀값에 따라 마스킹. 대상 영상이 열화상이 아닌 경우 (not `is_numeric`)
-    `None` 반환.
+    영상의 픽셀값에 따라 마스킹하고 영상과 마스크 반환.
+    대상 영상이 열화상이 아닌 경우 (not `is_numeric`) 마스크는 `None` 반환.
 
     Parameters
     ----------
     image : np.ndarray
-        대상 영상
 
     Returns
     -------
-    Optional[np.ndarray]
-        추출한 마스크. 파노라마를 생성할 영역의 픽셀값은 1, 제외할 영역은 0
-    """
-    if self._is_numeric and self.mask_threshold is not None:
-      mask = (self._mask_threshold < image).astype('uint8')
-    else:
-      mask = None
+    Tuple[np.ndarray, Optional[np.ndarray]]
+        영상. nan이 존재하는 경우 fillna값으로 변경.
 
-    return mask
+        마스크. 파노라마를 생성할 영역은 1, 이외 영역은 0.
+    """
+    if not self._is_numeric:
+      return image, None
+
+    if self.mask_threshold is None:
+      threshold_mask = None
+    else:
+      threshold_mask = (self.mask_threshold < image).astype(bool)
+
+    mask = np.logical_not(np.isnan(image))
+    image = np.nan_to_num(image, nan=self._fillna)
+
+    if threshold_mask is not None:
+      mask = np.logical_or(mask, threshold_mask)
+
+    return image, mask.astype(np.uint8)
 
   def adjust_contrast(self, image: np.ndarray) -> np.ndarray:
     """
@@ -206,7 +222,7 @@ class PanoramaPreprocess:
     mask : Optional[np.ndarray]
         마스크
     """
-    mask = self.masking(image)
+    image, mask = self.masking(image)
 
     image = self.adjust_contrast(image)
     image = rescale_intensity(image, out_range='uint8')

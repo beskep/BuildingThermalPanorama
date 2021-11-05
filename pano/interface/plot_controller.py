@@ -713,6 +713,16 @@ class DistPlotController(_PanoPlotController):
 
     return max(min_width, bin_width)
 
+  @staticmethod
+  def _summary(arr: np.ndarray):
+    return {
+        'avg': np.average(arr),
+        'std': np.std(arr),
+        'q1': np.quantile(arr, 0.25),
+        'median': np.median(arr),
+        'q3': np.quantile(arr, 0.75),
+    }
+
   def plot(self):
     self.axes.clear()
 
@@ -724,7 +734,7 @@ class DistPlotController(_PanoPlotController):
 
     # TODO k 정하기
     data = {
-        key: self.remove_outliers(value, k=2.5) for key, value in data.items()
+        key: self.remove_outliers(value, k=1.5) for key, value in data.items()
     }
 
     sns.histplot(data=data,
@@ -734,3 +744,8 @@ class DistPlotController(_PanoPlotController):
                  ax=self.axes)
 
     self.draw()
+
+    return {
+        key: self._summary(value.astype(np.float64))
+        for key, value in data.items()
+    }
