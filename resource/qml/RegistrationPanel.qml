@@ -27,6 +27,10 @@ Pane {
                     text : qsTr('자동 정합')
                     icon : '\ue663'
                     onReleased : con.command('register')
+
+                    ToolTip.visible : hovered
+                    ToolTip.delay : 500
+                    ToolTip.text : qsTr('전체 열화상·실화상 자동 정합')
                 }
 
                 ToolSeparator {}
@@ -41,8 +45,11 @@ Pane {
                         down = true;
                         _zoom.down = false;
                     }
-                }
 
+                    ToolTip.visible : hovered
+                    ToolTip.delay : 500
+                    ToolTip.text : qsTr('열화상과 실화상의 대응되는 네 지점을 선택해서 수동으로 정합')
+                }
                 ToolButton {
                     id : _zoom
                     text : qsTr('확대')
@@ -53,6 +60,10 @@ Pane {
                         _point.down = false;
                     }
                     onDownChanged : con.rgst_zoom(down)
+
+                    ToolTip.visible : hovered
+                    ToolTip.delay : 500
+                    ToolTip.text : qsTr('정밀한 지점 선택을 위해 확대할 영역 지정')
                 }
 
                 ToolSeparator {}
@@ -62,17 +73,28 @@ Pane {
                     text : qsTr('초기 시점')
 
                     onReleased : con.rgst_home()
-                }
 
+                    ToolTip.visible : hovered
+                    ToolTip.delay : 500
+                    ToolTip.text : qsTr('영역 확대를 취소하고 전체 영상 표시')
+                }
                 ToolButton {
                     text : qsTr('저장')
                     icon : '\ue161'
                     onReleased : con.rgst_save()
+
+                    ToolTip.visible : hovered
+                    ToolTip.delay : 500
+                    ToolTip.text : qsTr('대상 영상의 수동 정합 결과 저장')
                 }
                 ToolButton {
                     text : qsTr('취소')
                     icon : '\ue14a'
                     onReleased : con.rgst_reset()
+
+                    ToolTip.visible : hovered
+                    ToolTip.delay : 500
+                    ToolTip.text : qsTr('수동 정합 취소')
                 }
             }
         }

@@ -25,16 +25,28 @@ Pane {
                     text : qsTr('경로 선택')
                     icon : '\ue2c7'
                     onReleased : folder_dialog.open()
+
+                    ToolTip.visible : hovered
+                    ToolTip.delay : 500
+                    ToolTip.text : qsTr('열화상 파노라마가 저장된 작업 경로 선택')
                 }
                 ToolButton {
                     text : qsTr('프로젝트 초기화')
                     icon : '\ue97a'
                     onReleased : con.prj_init_directory()
+
+                    ToolTip.visible : hovered
+                    ToolTip.delay : 500
+                    ToolTip.text : qsTr('프로젝트 폴더에 Raw 파일 폴더와 설정 파일 생성')
                 }
                 ToolButton {
                     text : qsTr('열화상 데이터 추출')
                     icon : '\ue8a7'
                     onReleased : con.command('extract')
+
+                    ToolTip.visible : hovered
+                    ToolTip.delay : 500
+                    ToolTip.text : qsTr('Raw 파일로부터 열화상과 실화상 데이터 추출')
                 }
             }
         }

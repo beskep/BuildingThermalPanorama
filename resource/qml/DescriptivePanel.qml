@@ -28,6 +28,10 @@ Pane {
                 icon : '\ue01d'
 
                 onReleased : con.dist_plot()
+
+                ToolTip.visible : hovered
+                ToolTip.delay : 500
+                ToolTip.text : qsTr('외피 열화상의 부위별 온도 분포 분석')
             }
         }
 
@@ -87,7 +91,6 @@ Pane {
 
                         Label {
                             text : name
-                            // font.bold : true
                             anchors.centerIn : parent
                         }
                     }

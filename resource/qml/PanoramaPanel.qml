@@ -29,6 +29,10 @@ Pane {
                         app.pb_state(true);
                         con.command('panorama');
                     }
+
+                    ToolTip.visible : hovered
+                    ToolTip.delay : 500
+                    ToolTip.text : qsTr('열화상 정합을 통해 파노라마 생성')
                 }
                 ToolButton {
                     text : qsTr('자동 보정')
@@ -37,6 +41,10 @@ Pane {
                         app.pb_state(true);
                         con.command('correct');
                     }
+
+                    ToolTip.visible : hovered
+                    ToolTip.delay : 500
+                    ToolTip.text : qsTr('시점 왜곡 자동 보정')
                 }
 
                 ToolSeparator {}
@@ -51,6 +59,10 @@ Pane {
                         down = true;
                         _crop.down = false;
                     }
+
+                    ToolTip.visible : hovered
+                    ToolTip.delay : 500
+                    ToolTip.text : qsTr('사용자가 지정한 각도에 따라 시점 왜곡을 수동으로 보정')
                 }
                 ToolButton {
                     id : _crop
@@ -62,6 +74,10 @@ Pane {
                         _manual.down = false;
                     }
                     onDownChanged : con.pano_crop_mode(down)
+
+                    ToolTip.visible : hovered
+                    ToolTip.delay : 500
+                    ToolTip.text : qsTr('시점 왜곡이 보정된 영상의 저장 영역을 마우스 드래그를 통해 지정')
                 }
 
                 ToolSeparator {}
@@ -70,6 +86,10 @@ Pane {
                     text : qsTr('저장')
                     icon : '\ue161'
                     onReleased : con.pano_save_manual_correction(_roll.value, _pitch.value, _yaw.value)
+
+                    ToolTip.visible : hovered
+                    ToolTip.delay : 500
+                    ToolTip.text : qsTr('수동 시점 왜곡 보정·영역 지정 결과를 저장')
                 }
                 ToolButton {
                     text : qsTr('취소')
@@ -81,6 +101,10 @@ Pane {
                             con.pano_home()
                         }
                     }
+
+                    ToolTip.visible : hovered
+                    ToolTip.delay : 500
+                    ToolTip.text : qsTr('수동 시점 왜곡 보정·영역 지정 취소')
                 }
             }
         }
@@ -106,6 +130,11 @@ Pane {
                 Material.elevation : 2
                 Layout.fillWidth : true
                 Layout.preferredHeight : 140
+
+                ToolTip.visible : hovered
+                ToolTip.delay : 500
+                ToolTip.timeout : 2000
+                ToolTip.text : qsTr('시점 왜곡을 보정하기 위한 촬영 각도 변경')
 
                 RowLayout {
                     anchors.fill : parent
@@ -182,57 +211,86 @@ Pane {
                     }
                 }
             }
+
             Pane {
                 Material.elevation : 2
                 Layout.preferredHeight : 140
 
                 ColumnLayout {
                     anchors.fill : parent
+                    spacing : 0
 
-                    RowLayout {
-                        Label {
-                            text : qsTr('해상도')
-                        }
-                        SpinBox {
-                            id : _resolution
-                            Layout.alignment : Qt.AlignRight | Qt.AlignVCenter
-                            from : 200
-                            to : 2000
-                            value : 1000
-                            stepSize : 100
+                    Pane {
+                        Layout.preferredHeight : 50
+
+                        ToolTip.visible : hovered
+                        ToolTip.delay : 500
+                        ToolTip.text : qsTr('수동 시점 보정 결과의 시각화를 위한 영상의 해상도 (저장 해상도와 다름)')
+
+                        RowLayout {
+                            anchors.fill : parent
+
+                            Label {
+                                text : qsTr('해상도')
+                            }
+                            SpinBox {
+                                id : _resolution
+                                Layout.alignment : Qt.AlignRight | Qt.AlignVCenter
+                                from : 200
+                                to : 2000
+                                value : 1000
+                                stepSize : 100
+                            }
                         }
                     }
 
                     RowLayout {
-                        Label {
-                            text : qsTr('그리드')
-                        }
-                        CheckBox {
-                            checkState : Qt.Checked
-                            onCheckStateChanged : con.pano_set_grid(checkState == Qt.Checked)
-                        }
+                        Pane {
+                            Layout.preferredHeight : 50
 
-                        Rectangle {
-                            Layout.preferredWidth : 10
-                        }
+                            RowLayout {
+                                Label {
+                                    text : qsTr('그리드')
+                                }
+                                CheckBox {
+                                    checkState : Qt.Checked
+                                    onCheckStateChanged : con.pano_set_grid(checkState == Qt.Checked)
+                                }
 
-                        Label {
-                            text : qsTr('시야각')
-                        }
-                        Rectangle {
-                            Layout.preferredWidth : 5
-                        }
-                        TextField {
-                            text : '42'
-                            Layout.preferredWidth : 40
-
-                            validator : DoubleValidator {}
-                            onTextChanged : {
-                                con.pano_set_viewing_angle(text)
+                                Rectangle {
+                                    Layout.preferredWidth : 10
+                                }
                             }
                         }
-                        Label {
-                            text : qsTr('º')
+
+                        Pane {
+                            Layout.fillWidth : true
+                            Layout.preferredHeight : 50
+
+                            ToolTip.visible : hovered
+                            ToolTip.delay : 500
+                            ToolTip.text : qsTr('열화상 카메라의 시야각')
+
+                            RowLayout {
+                                Label {
+                                    text : qsTr('시야각')
+                                }
+                                Rectangle {
+                                    Layout.preferredWidth : 5
+                                }
+                                TextField {
+                                    text : '42'
+                                    Layout.preferredWidth : 40
+
+                                    validator : DoubleValidator {}
+                                    onTextChanged : {
+                                        con.pano_set_viewing_angle(text)
+                                    }
+                                }
+                                Label {
+                                    text : qsTr('º')
+                                }
+                            }
                         }
                     }
                 }

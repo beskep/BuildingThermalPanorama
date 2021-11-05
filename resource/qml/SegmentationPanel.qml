@@ -24,6 +24,10 @@ Pane {
                 text : qsTr('부위 인식')
                 icon : '\uea40'
                 onReleased : con.command('segment')
+
+                ToolTip.visible : hovered
+                ToolTip.delay : 500
+                ToolTip.text : qsTr('정합된 실화상의 자동 부위 인식 실행')
             }
         }
 
