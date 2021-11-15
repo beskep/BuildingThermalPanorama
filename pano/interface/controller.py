@@ -176,14 +176,17 @@ class Controller(QtCore.QObject):
   def win(self, win: QtGui.QWindow):
     self._win = _Window(win)
 
-  def set_plot_controllers(self, rgst: RegistrationPlotController,
-                           seg: SegmentationPlotController,
-                           pano: PanoramaPlotController,
-                           dist: DistPlotController):
+  def set_plot_controllers(
+      self,
+      rgst: RegistrationPlotController,
+      seg: SegmentationPlotController,
+      pano: PanoramaPlotController,
+      # dist: DistPlotController,
+  ):
     self._rpc = rgst
     self._spc = seg
     self._ppc = pano
-    self._dpc = dist
+    # self._dpc = dist
 
   @QtCore.Slot(str)
   def log(self, message: str):
@@ -207,7 +210,12 @@ class Controller(QtCore.QObject):
     self._wd = wd
     self._fm = ThermalPanoramaFileManager(wd)
 
-    for pc in (self._rpc, self._spc, self._ppc, self._dpc):
+    for pc in (
+        self._rpc,
+        self._spc,
+        self._ppc,
+        # self._dpc,
+    ):
       pc.fm = self._fm
 
     self.prj_update_project_tree()

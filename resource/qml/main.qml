@@ -64,10 +64,10 @@ ApplicationWindow {
                     text : '파노라마 생성·보정'
                     width : parent.width
                 }
-                TabButton {
-                    text : '온도 분포'
-                    width : parent.width
-                }
+                // TabButton {
+                //     text : '온도 분포'
+                //     width : parent.width
+                // }
             }
 
             Page {
@@ -84,7 +84,7 @@ ApplicationWindow {
                             registration_panel,
                             segmentation_panel,
                             panorama_panel,
-                            descriptive_panel
+                            // descriptive_panel
                         ][currentIndex].init()
                     }
 
@@ -100,9 +100,9 @@ ApplicationWindow {
                     PanoramaPanel {
                         id : panorama_panel
                     }
-                    DescriptivePanel {
-                        id : descriptive_panel
-                    }
+                    // DescriptivePanel {
+                    //     id : descriptive_panel
+                    // }
                 }
             }
         }
@@ -148,9 +148,10 @@ ApplicationWindow {
             return segmentation_panel
         } else if (name === 'panorama') {
             return panorama_panel
-        } else if (name === 'descriptive') {
-            return descriptive_panel
         }
+        // else if (name === 'descriptive') {
+        //     return descriptive_panel
+        // }
 
         return null
     }

@@ -42,9 +42,18 @@ qml_path = utils.DIR.RESOURCE.joinpath('qml/main.qml')
 for p in [conf_path, qml_path]:
   p.stat()
 
-pc_names = ('registration', 'segmentation', 'panorama', 'dist')
-pc_classes = (RegistrationPlotController, SegmentationPlotController,
-              PanoramaPlotController, DistPlotController)
+pc_names = (
+    'registration',
+    'segmentation',
+    'panorama',
+    # 'dist',
+)
+pc_classes = (
+    RegistrationPlotController,
+    SegmentationPlotController,
+    PanoramaPlotController,
+    # DistPlotController,
+)
 
 
 @click.command(context_settings={
