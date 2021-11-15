@@ -28,7 +28,6 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;파노라마 영상처리 GUI&#34;&#34;&#34;
-# pylint: disable=wrong-import-position, ungrouped-imports
 
 from multiprocessing import freeze_support
 import os
@@ -40,11 +39,14 @@ from loguru import logger
 from pano import utils
 from pano.interface.common.init import init_project
 from pano.interface.controller import Controller
-from pano.interface.controller import RegistrationPlotController
 from pano.interface.mbq import FigureCanvas
 from pano.interface.mbq import QtCore
 from pano.interface.mbq import QtGui
 from pano.interface.mbq import QtQml
+from pano.interface.plot_controller import DistPlotController
+from pano.interface.plot_controller import PanoramaPlotController
+from pano.interface.plot_controller import RegistrationPlotController
+from pano.interface.plot_controller import SegmentationPlotController
 
 init_project(qt=True)
 
@@ -63,7 +65,21 @@ def _qt_message_handler(mode, context, message):
   logger.log(level, message)
 
 
-@click.command()
+conf_path = utils.DIR.RESOURCE.joinpath(&#39;qtquickcontrols2.conf&#39;)
+qml_path = utils.DIR.RESOURCE.joinpath(&#39;qml/main.qml&#39;)
+
+for p in [conf_path, qml_path]:
+  p.stat()
+
+pc_names = (&#39;registration&#39;, &#39;segmentation&#39;, &#39;panorama&#39;, &#39;dist&#39;)
+pc_classes = (RegistrationPlotController, SegmentationPlotController,
+              PanoramaPlotController, DistPlotController)
+
+
+@click.command(context_settings={
+    &#39;allow_extra_args&#39;: True,
+    &#39;ignore_unknown_options&#39;: True
+})
 @click.option(&#39;-d&#39;, &#39;--debug&#39;, is_flag=True)
 @click.option(&#39;-l&#39;, &#39;--loglevel&#39;, default=20)
 def main(debug=False, loglevel=20):
@@ -75,18 +91,11 @@ def main(debug=False, loglevel=20):
   if loglevel &lt; 10:
     os.environ[&#39;QT_DEBUG_PLUGINS&#39;] = &#39;1&#39;
 
-  conf_path = utils.DIR.RESOURCE.joinpath(&#39;qtquickcontrols2.conf&#39;)
-  qml_path = utils.DIR.RESOURCE.joinpath(&#39;qml/main.qml&#39;)
-
-  for p in [conf_path, qml_path]:
-    if not p.exists():
-      raise FileNotFoundError(p)
-
   QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
   QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
   os.environ[&#39;QT_QUICK_CONTROLS_CONF&#39;] = conf_path.as_posix()
 
-  QtQml.qmlRegisterType(FigureCanvas, &#39;Backend&#39;, 1, 0, &#39;RegistrationCanvas&#39;)
+  QtQml.qmlRegisterType(FigureCanvas, &#39;Backend&#39;, 1, 0, &#39;FigureCanvas&#39;)
 
   app = QtGui.QGuiApplication(sys.argv)
   engine = QtQml.QQmlApplicationEngine(qml_path.as_posix())
@@ -102,10 +111,15 @@ def main(debug=False, loglevel=20):
   context = engine.rootContext()
   context.setContextProperty(&#39;con&#39;, controller)
 
-  canvas = win.findChild(FigureCanvas, &#39;registration_plot&#39;)
-  rpc = RegistrationPlotController()
-  rpc.init(app, canvas)
-  controller.rpc = rpc
+  plot_controllers = []
+  for name, cls in zip(pc_names, pc_classes):
+    canvas = win.findChild(FigureCanvas, f&#39;{name}_plot&#39;)
+    pc = cls()
+    pc.init(app, canvas)
+    plot_controllers.append(pc)
+
+  # pylint: disable=no-value-for-parameter
+  controller.set_plot_controllers(*plot_controllers)
 
   return app.exec_()
 

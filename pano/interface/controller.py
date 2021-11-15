@@ -349,7 +349,7 @@ class Controller(QtCore.QObject):
       pass
     else:
       self._ppc.viewing_angle = angle
-      logger.debug('Vewing angle: {}', angle)
+      logger.debug('Viewing angle: {}', angle)
 
   @QtCore.Slot()
   def pano_home(self):

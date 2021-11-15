@@ -219,8 +219,8 @@ def predict(model_path: str,
     mask = PIL.ImageImage.fromarray(seg_map)
     mask.save(outpug_dir.joinpath(fname + &#39;_mask&#39;).with_suffix(&#39;.png&#39;))
 
-    seg_image = PIL.ImageImage.fromarray(seg_image)
-    seg_image.save(outpug_dir.joinpath(fname + &#39;_vis&#39;).with_suffix(&#39;.png&#39;))
+    seg_pil = PIL.ImageImage.fromarray(seg_image)
+    seg_pil.save(outpug_dir.joinpath(fname + &#39;_vis&#39;).with_suffix(&#39;.png&#39;))
 
     fig.savefig(outpug_dir.joinpath(fname + &#39;_fig&#39;).with_suffix(&#39;.png&#39;))
     plt.close(fig)
@@ -321,7 +321,7 @@ class DeepLabModel:
       seg_map = _resize(seg_map,
                         output_shape=image.shape[:2],
                         preserve_range=True,
-                        anti_aliasing=True)
+                        anti_aliasing=False)
       seg_map = np.round(seg_map).astype(np.uint8)
 
     fig, seg_image = vis_segmentation(image=vis_image,
@@ -502,8 +502,8 @@ map maximum entry.</dd>
     mask = PIL.ImageImage.fromarray(seg_map)
     mask.save(outpug_dir.joinpath(fname + &#39;_mask&#39;).with_suffix(&#39;.png&#39;))
 
-    seg_image = PIL.ImageImage.fromarray(seg_image)
-    seg_image.save(outpug_dir.joinpath(fname + &#39;_vis&#39;).with_suffix(&#39;.png&#39;))
+    seg_pil = PIL.ImageImage.fromarray(seg_image)
+    seg_pil.save(outpug_dir.joinpath(fname + &#39;_vis&#39;).with_suffix(&#39;.png&#39;))
 
     fig.savefig(outpug_dir.joinpath(fname + &#39;_fig&#39;).with_suffix(&#39;.png&#39;))
     plt.close(fig)</code></pre>
@@ -729,7 +729,7 @@ map maximum entry.</dd>
       seg_map = _resize(seg_map,
                         output_shape=image.shape[:2],
                         preserve_range=True,
-                        anti_aliasing=True)
+                        anti_aliasing=False)
       seg_map = np.round(seg_map).astype(np.uint8)
 
     fig, seg_image = vis_segmentation(image=vis_image,
@@ -825,7 +825,7 @@ map maximum entry.</dd>
     seg_map = _resize(seg_map,
                       output_shape=image.shape[:2],
                       preserve_range=True,
-                      anti_aliasing=True)
+                      anti_aliasing=False)
     seg_map = np.round(seg_map).astype(np.uint8)
 
   fig, seg_image = vis_segmentation(image=vis_image,

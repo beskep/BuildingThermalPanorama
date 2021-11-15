@@ -48,6 +48,7 @@ class RegistrationPreprocess:
 
   def __init__(self,
                shape: tuple,
+               fillnan: Optional[float] = 0.0,
                eqhist: Union[bool, Tuple[bool, bool]] = True,
                unsharp: Union[bool, Tuple[bool, bool]] = False,
                edge: Union[bool, Tuple[bool, bool]] = False) -&gt; None:
@@ -77,6 +78,7 @@ class RegistrationPreprocess:
 
     self._shape = shape
 
+    self._fillnan = fillnan
     self._eqhist = eqhist
     self._unsharp = unsharp
     self._edge = edge
@@ -90,6 +92,9 @@ class RegistrationPreprocess:
       yield name, value
 
   def fixed_preprocess(self, image: np.ndarray) -&gt; np.ndarray:
+    if self._fillnan is not None:
+      image = np.nan_to_num(image, nan=self._fillnan)
+
     image = normalize_image(image)
 
     if self._eqhist[0]:
@@ -106,6 +111,9 @@ class RegistrationPreprocess:
   def moving_preprocess(self, image: np.ndarray) -&gt; np.ndarray:
     if image.ndim == 3:
       image = rgb2gray(image)
+
+    if self._fillnan is not None:
+      image = np.nan_to_num(image, nan=self._fillnan)
 
     image = normalize_image(image)
 
@@ -124,7 +132,7 @@ class RegistrationPreprocess:
 class RegisteringImage:
 
   def __init__(self,
-               image: Optional[np.ndarray] = None,
+               image: np.ndarray,
                shape: Optional[tuple] = None,
                preprocess: Optional[Callable] = None) -&gt; None:
     &#34;&#34;&#34;
@@ -143,10 +151,7 @@ class RegisteringImage:
     self._shape = shape
     self._prep = preprocess
 
-    self._prep_image = None
-
-    self._rgst_orig_image = None
-    self._rgst_prep_image = None
+    self._prep_image: Optional[np.ndarray] = None
 
     self._trsf_mtx: Optional[np.ndarray] = None
     self._trsf_fn: Optional[Callable] = None
@@ -523,7 +528,7 @@ def register(
 </dd>
 <dt id="pano.registration.registrator.registrator.RegisteringImage"><code class="flex name class">
 <span>class <span class="ident">RegisteringImage</span></span>
-<span>(</span><span>image: Optional[numpy.ndarray] = None, shape: Optional[tuple] = None, preprocess: Optional[Callable] = None)</span>
+<span>(</span><span>image: numpy.ndarray, shape: Optional[tuple] = None, preprocess: Optional[Callable] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>정합 대상 영상 및 전처리 방법</p>
@@ -543,7 +548,7 @@ def register(
 <pre><code class="python">class RegisteringImage:
 
   def __init__(self,
-               image: Optional[np.ndarray] = None,
+               image: np.ndarray,
                shape: Optional[tuple] = None,
                preprocess: Optional[Callable] = None) -&gt; None:
     &#34;&#34;&#34;
@@ -562,10 +567,7 @@ def register(
     self._shape = shape
     self._prep = preprocess
 
-    self._prep_image = None
-
-    self._rgst_orig_image = None
-    self._rgst_prep_image = None
+    self._prep_image: Optional[np.ndarray] = None
 
     self._trsf_mtx: Optional[np.ndarray] = None
     self._trsf_fn: Optional[Callable] = None
@@ -1059,7 +1061,7 @@ def orig_image(self) -&gt; np.ndarray:
 </dd>
 <dt id="pano.registration.registrator.registrator.RegistrationPreprocess"><code class="flex name class">
 <span>class <span class="ident">RegistrationPreprocess</span></span>
-<span>(</span><span>shape: tuple, eqhist: Union[bool, Tuple[bool, bool]] = True, unsharp: Union[bool, Tuple[bool, bool]] = False, edge: Union[bool, Tuple[bool, bool]] = False)</span>
+<span>(</span><span>shape: tuple, fillnan: Optional[float] = 0.0, eqhist: Union[bool, Tuple[bool, bool]] = True, unsharp: Union[bool, Tuple[bool, bool]] = False, edge: Union[bool, Tuple[bool, bool]] = False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>영상 정합을 위한 전처리 방법.
@@ -1085,6 +1087,7 @@ tuple로 입력한 경우 (e.g. (<code>True</code>, <code>False</code>)), 각각
 
   def __init__(self,
                shape: tuple,
+               fillnan: Optional[float] = 0.0,
                eqhist: Union[bool, Tuple[bool, bool]] = True,
                unsharp: Union[bool, Tuple[bool, bool]] = False,
                edge: Union[bool, Tuple[bool, bool]] = False) -&gt; None:
@@ -1114,6 +1117,7 @@ tuple로 입력한 경우 (e.g. (<code>True</code>, <code>False</code>)), 각각
 
     self._shape = shape
 
+    self._fillnan = fillnan
     self._eqhist = eqhist
     self._unsharp = unsharp
     self._edge = edge
@@ -1127,6 +1131,9 @@ tuple로 입력한 경우 (e.g. (<code>True</code>, <code>False</code>)), 각각
       yield name, value
 
   def fixed_preprocess(self, image: np.ndarray) -&gt; np.ndarray:
+    if self._fillnan is not None:
+      image = np.nan_to_num(image, nan=self._fillnan)
+
     image = normalize_image(image)
 
     if self._eqhist[0]:
@@ -1143,6 +1150,9 @@ tuple로 입력한 경우 (e.g. (<code>True</code>, <code>False</code>)), 각각
   def moving_preprocess(self, image: np.ndarray) -&gt; np.ndarray:
     if image.ndim == 3:
       image = rgb2gray(image)
+
+    if self._fillnan is not None:
+      image = np.nan_to_num(image, nan=self._fillnan)
 
     image = normalize_image(image)
 
@@ -1169,6 +1179,9 @@ tuple로 입력한 경우 (e.g. (<code>True</code>, <code>False</code>)), 각각
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def fixed_preprocess(self, image: np.ndarray) -&gt; np.ndarray:
+  if self._fillnan is not None:
+    image = np.nan_to_num(image, nan=self._fillnan)
+
   image = normalize_image(image)
 
   if self._eqhist[0]:
@@ -1195,6 +1208,9 @@ tuple로 입력한 경우 (e.g. (<code>True</code>, <code>False</code>)), 각각
 <pre><code class="python">def moving_preprocess(self, image: np.ndarray) -&gt; np.ndarray:
   if image.ndim == 3:
     image = rgb2gray(image)
+
+  if self._fillnan is not None:
+    image = np.nan_to_num(image, nan=self._fillnan)
 
   image = normalize_image(image)
 

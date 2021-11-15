@@ -26,29 +26,24 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from collections import defaultdict
-import multiprocessing as mp
+<pre><code class="python">import multiprocessing as mp
 from pathlib import Path
 from typing import Optional
 
 from loguru import logger
-from matplotlib.axes import Axes
-from matplotlib.backend_bases import MouseEvent
-from matplotlib.figure import Figure
 import numpy as np
-from skimage import transform
 
-from pano.misc.imageio import ImageIO
-from pano.misc.tools import prep_compare_images
 from pano.utils import set_logger
 
-from .common.pano_files import DIR
-from .common.pano_files import FN
 from .common.pano_files import init_directory
 from .common.pano_files import ThermalPanoramaFileManager
-from .mbq import FigureCanvas
 from .mbq import QtCore
 from .mbq import QtGui
+from .plot_controller import DistPlotController
+from .plot_controller import PanoramaPlotController
+from .plot_controller import RegistrationPlotController
+from .plot_controller import save_manual_correction
+from .plot_controller import SegmentationPlotController
 from .tree import tree_string
 
 
@@ -77,14 +72,43 @@ def _producer(queue: mp.Queue, directory, command: str, loglevel: int):
   # pylint: disable=import-outside-toplevel
   from .pano_project import ThermalPanorama
 
-  tp = ThermalPanorama(directory=directory)
-  for r in getattr(tp, command)():
-    queue.put(r)
+  try:
+    tp = ThermalPanorama(directory=directory)
+  except (ValueError, OSError) as e:
+    queue.put(f&#39;{type(e).__name__}: {e}&#39;)
+    return
+
+  try:
+    fn = getattr(tp, f&#39;{command}_generator&#39;, None)
+    if fn is not None:
+      for r in fn():
+        queue.put(r)
+    else:
+      fn = getattr(tp, command)
+      queue.put(fn())
+  except (ValueError, RuntimeError, IOError) as e:
+    logger.exception(e)
+    queue.put(f&#39;{type(e).__name__}: {e}&#39;)
+
+  queue.put(1.0)
+
+
+def _save_manual_correction(queue: mp.Queue, wd: str, subdir: str,
+                            viewing_angle: float, angles: tuple,
+                            crop_range: Optional[np.ndarray]):
+  try:
+    save_manual_correction(wd, subdir, viewing_angle, angles, crop_range)
+  except (ValueError, RuntimeError, IOError) as e:
+    logger.exception(e)
+    queue.put(f&#39;{type(e).__name__}: {e}&#39;)
+
+  queue.put(1.0)
 
 
 class _Consumer(QtCore.QThread):
-  done = QtCore.Signal()  # TODO command 종료 후 화면 업데이트
-  update = QtCore.Signal(float)
+  update = QtCore.Signal(float)  # 진행률 [0, 1] 업데이트
+  done = QtCore.Signal()  # 작업 종료 signal (진행률 &gt;= 1.0)
+  fail = QtCore.Signal(str)  # 에러 발생 signal. 에러 메세지 emit
 
   def __init__(self) -&gt; None:
     super().__init__()
@@ -104,12 +128,18 @@ class _Consumer(QtCore.QThread):
 
     while True:
       if not self.queue.empty():
-        r = self.queue.get()
-        self.update.emit(r)
+        value = self.queue.get()
 
-        if r &gt;= 1.0:
-          self.done.emit()
+        if isinstance(value, str):
+          self.fail.emit(value)
           break
+
+        if value is None or value &gt;= 1.0:
+          self.done.emit()
+          self.quit()
+          break
+
+        self.update.emit(value)
 
 
 class _Window:
@@ -117,8 +147,18 @@ class _Window:
   def __init__(self, window: QtGui.QWindow) -&gt; None:
     self._window = window
 
-  def pbar(self, value: float):
-    return self._window.pbar(value)
+  def pb_value(self, value: float):
+    return self._window.pb_value(value)
+
+  def pb_state(self, indeterminate: bool):
+    self._window.pb_state(indeterminate)
+
+  def popup(self, title: str, message: str, timeout=2000):
+    logger.debug(&#39;[Popup] {}: {}&#39;, title, message)
+    self._window.popup(title, message, timeout)
+    if title.lower() != &#39;error&#39;:
+      msg = message.replace(&#39;\n&#39;, &#39; &#39;)
+      self._window.status_message(f&#39;[{title}] {msg}&#39;)
 
   def panel_funtion(self, panel: str, fn: str, *args):
     p = self._window.get_panel(panel)
@@ -131,6 +171,13 @@ class _Window:
 
 
 class Controller(QtCore.QObject):
+  _CMD_KR = {
+      &#39;extract&#39;: &#39;열화상 추출&#39;,
+      &#39;register&#39;: &#39;열화상-실화상 정합&#39;,
+      &#39;segment&#39;: &#39;외피 부위 인식&#39;,
+      &#39;panorama&#39;: &#39;파노라마 생성&#39;,
+      &#39;correct&#39;: &#39;왜곡 보정&#39;
+  }
 
   def __init__(self, win: QtGui.QWindow, loglevel=20) -&gt; None:
     super().__init__()
@@ -139,11 +186,15 @@ class Controller(QtCore.QObject):
     self._loglevel = loglevel
 
     self._consumer = _Consumer()
-    self._consumer.update.connect(self.pbar)
+    self._consumer.update.connect(self._pb_value)
+    self._consumer.fail.connect(self._error_popup)
 
     self._wd: Optional[Path] = None
     self._fm: Optional[ThermalPanoramaFileManager] = None
     self._rpc: Optional[RegistrationPlotController] = None
+    self._spc: Optional[SegmentationPlotController] = None
+    self._ppc: Optional[PanoramaPlotController] = None
+    self._dpc: Optional[DistPlotController] = None
 
   @property
   def win(self) -&gt; _Window:
@@ -153,21 +204,27 @@ class Controller(QtCore.QObject):
   def win(self, win: QtGui.QWindow):
     self._win = _Window(win)
 
-  @property
-  def rpc(self):
-    return self._rpc
-
-  @rpc.setter
-  def rpc(self, value):
-    self._rpc = value
+  def set_plot_controllers(self, rgst: RegistrationPlotController,
+                           seg: SegmentationPlotController,
+                           pano: PanoramaPlotController,
+                           dist: DistPlotController):
+    self._rpc = rgst
+    self._spc = seg
+    self._ppc = pano
+    self._dpc = dist
 
   @QtCore.Slot(str)
   def log(self, message: str):
     _log(message=message)
 
-  @QtCore.Slot(float)
-  def pbar(self, r: float):
-    self.win.pbar(r)
+  def _pb_value(self, value: float):
+    self.win.pb_state(False)
+    self.win.pb_value(value)
+
+  def _error_popup(self, message: str):
+    self.win.popup(&#39;Error&#39;, message, timeout=10000)
+    self.win.pb_state(False)
+    self.win.pb_value(1.0)
 
   @QtCore.Slot(str)
   def prj_select_working_dir(self, wd):
@@ -177,31 +234,58 @@ class Controller(QtCore.QObject):
 
     self._wd = wd
     self._fm = ThermalPanoramaFileManager(wd)
+
+    for pc in (self._rpc, self._spc, self._ppc, self._dpc):
+      pc.fm = self._fm
+
     self.prj_update_project_tree()
-    self.update_image_view(panel=&#39;project&#39;)
-    self.update_image_view(panel=&#39;registration&#39;)
+    self.update_image_view()
 
   @QtCore.Slot()
   def prj_init_directory(self):
+    if self._wd is None:
+      return
+
     init_directory(directory=self._wd)
     self.prj_update_project_tree()
-    self.update_image_view(panel=&#39;project&#39;)
-    self.update_image_view(panel=&#39;registration&#39;)
+    self.update_image_view()
+    self.win.popup(&#39;Success&#39;, &#39;초기화 완료&#39;)
 
   def prj_update_project_tree(self):
-    tree = tree_string(self._wd)
+    tree = tree_string(self._wd, width=40)
     self.win.panel_funtion(&#39;project&#39;, &#39;update_project_tree&#39;, tree)
 
   @QtCore.Slot(str)
   def command(self, command: str):
     if self._wd is None:
-      logger.warning(&#39;Directory not set&#39;)
+      self.win.popup(&#39;Warning&#39;, &#39;경로가 선택되지 않았습니다.&#39;)
+      self.win.pb_state(False)
       return
 
-    self.pbar(0.0)
+    self.win.pb_state(True)
 
     queue = mp.Queue()
+    cmd_kr = self._CMD_KR[command]
+
+    def _done():
+      if command in (&#39;panorama&#39;, &#39;correct&#39;):
+        self._ppc.plot(force=True)
+        self.win.panel_funtion(&#39;panorama&#39;, &#39;reset&#39;)
+      elif command == &#39;register&#39;:
+        self._rpc.reset()
+        self._rpc.reset_matrices()
+
+      self.win.popup(&#39;Success&#39;, f&#39;{cmd_kr} 완료&#39;)
+      self.win.pb_state(False)
+      self.win.pb_value(1.0)
+
+      try:
+        self._consumer.done.disconnect()
+      except TypeError:
+        pass
+
     self._consumer.queue = queue
+    self._consumer.done.connect(_done)
     self._consumer.start()
 
     process = mp.Process(name=command,
@@ -209,7 +293,8 @@ class Controller(QtCore.QObject):
                          args=(queue, self._wd, command, self._loglevel))
     process.start()
 
-  def update_image_view(self, panel: str):
+  def update_image_view(self,
+                        panels=(&#39;project&#39;, &#39;registration&#39;, &#39;segmentation&#39;)):
     if self._fm is None:
       logger.warning(&#39;Directory not set&#39;)
       return
@@ -219,200 +304,126 @@ class Controller(QtCore.QObject):
       # logger.warning(&#39;No raw files&#39;)
       return
 
-    self.win.panel_funtion(panel, &#39;update_image_view&#39;,
-                           [_path2url(x) for x in files])
+    # TODO testo .xlsx 파일
+    for panel in panels:
+      self.win.panel_funtion(panel, &#39;update_image_view&#39;,
+                             [_path2url(x) for x in files])
 
   @QtCore.Slot(str)
   def rgst_plot(self, url):
+    assert self._wd is not None
+    assert self._rpc is not None
     path = _url2path(url)
-    logger.debug(&#39;Register plot &#34;{}&#34;&#39;, path)
 
-    irf = self._wd.joinpath(DIR.IR.value, path.stem).with_suffix(FN.NPY)
-    visf = self._wd.joinpath(DIR.VIS.value, path.stem).with_suffix(FN.LL)
-    ir = ImageIO.read(irf)
-    vis = ImageIO.read(visf)
+    try:
+      self._rpc.plot(path)
+    except FileNotFoundError:
+      logger.warning(&#39;Data not extracted: {}&#39;, path)
+      self.win.popup(&#39;Error&#39;, f&#39;파일 {path.name}의 데이터가 추출되지 않았습니다.&#39;)
 
-    self.rpc.set_images(fixed_image=ir, moving_image=vis)
+  @QtCore.Slot()
+  def rgst_save(self):
+    assert self._rpc is not None
+    self._rpc.save()
 
+  @QtCore.Slot()
+  def rgst_reset(self):
+    assert self._rpc is not None
+    self._rpc.reset()
 
-class PlotController(QtCore.QObject):
+  @QtCore.Slot(bool)
+  def rgst_set_grid(self, grid):
+    self._rpc.set_grid(grid)
 
-  def __init__(self, parent=None) -&gt; None:
-    super().__init__(parent=parent)
+  @QtCore.Slot()
+  def rgst_home(self):
+    self._rpc.home()
 
-    self._app: Optional[QtGui.QGuiApplication] = None
-    self._canvas: Optional[FigureCanvas] = None
-    self._fig: Optional[Figure] = None
-    self._axes: Optional[Axes] = None
+  @QtCore.Slot(bool)
+  def rgst_zoom(self, value):
+    self._rpc.zoom(value)
 
-  @property
-  def app(self) -&gt; QtGui.QGuiApplication:
-    if self._app is None:
-      raise ValueError(&#39;app not set&#39;)
+  @QtCore.Slot(str)
+  def seg_plot(self, url):
+    assert self._wd is not None
+    assert self._spc is not None
+    path = _url2path(url)
 
-    return self._app
+    try:
+      self._spc.plot(path)
+    except FileNotFoundError:
+      logger.warning(&#39;File not found: {}&#39;, path)
 
-  @property
-  def canvas(self) -&gt; FigureCanvas:
-    if self._canvas is None:
-      raise ValueError(&#39;canvas not set&#39;)
+  @QtCore.Slot()
+  def pano_plot(self):
+    try:
+      self._ppc.plot(force=False)
+    except OSError:
+      pass
 
-    return self._canvas
+  @QtCore.Slot(float, float, float, int)
+  def pano_rotate(self, roll, pitch, yaw, limit):
+    self._ppc.project(roll=roll, pitch=pitch, yaw=yaw, limit=limit)
 
-  @property
-  def fig(self) -&gt; Figure:
-    if self._fig is None:
-      raise ValueError(&#39;fig not set&#39;)
+  @QtCore.Slot(bool)
+  def pano_set_grid(self, grid):
+    self._ppc.set_grid(grid)
 
-    return self._fig
-
-  @property
-  def axes(self) -&gt; Axes:
-    if self._axes is None:
-      raise ValueError(&#39;axes not set&#39;)
-
-    return self._axes
-
-  def init(self, app: QtGui.QGuiApplication, canvas: FigureCanvas):
-    self._app = app
-    self._canvas = canvas
-
-    self._fig = canvas.figure
-    self._axes = self._fig.add_subplot(111)
-
-    self.draw()
-
-  def draw(self):
-    self.canvas.draw()
-    self.app.processEvents()
-
-
-class RegistrationPlotController(PlotController):
-  _REQUIRED = 4
-  _TITLES = [&#39;열화상&#39;, &#39;실화상&#39;, &#39;비교 (Checkerboard)&#39;, &#39;비교 (Difference)&#39;]
-
-  def __init__(self, parent=None) -&gt; None:
-    super().__init__(parent=parent)
-
-    self._pnts = defaultdict(list)  # 선택된 점들의 mpl 오브젝트
-    self._pnts_coord = defaultdict(list)  # 선택된 점들의 좌표
-    self._registered = False  # TODO pnts 개수로 판단?
-    self._images: Optional[tuple] = None
-
-  @property
-  def axes(self) -&gt; np.ndarray:
-    return super().axes
-
-  def init(self, app: QtGui.QGuiApplication, canvas: FigureCanvas):
-    self._app = app
-    self._canvas = canvas
-
-    self._fig = canvas.figure
-    self._axes = self.fig.subplots(2, 2)
-    self._set_style()
-    self._fig.tight_layout(pad=2)
-
-    self.canvas.mpl_connect(&#39;button_press_event&#39;, self._on_click)
-    self.draw()
-
-  def _set_style(self):
-    for ax, title in zip(self.axes.ravel(), self._TITLES):
-      if ax.has_data():
-        ax.set_title(title)
-      ax.set_axis_off()
-
-    ar = self.axes[0, 0].get_aspect()
-    self.axes[0, 1].set_aspect(ar)
-
-  def reset(self):
-    for ax in self.axes.ravel():
-      ax.clear()
-
-    self._pnts.clear()
-    self._pnts_coord.clear()
-    self._registered = False
-
-    self._set_style()
-
-  def set_images(self, fixed_image: np.ndarray, moving_image: np.ndarray):
-    self.reset()
-
-    self._images = (fixed_image, moving_image)
-    self.axes[0, 0].imshow(fixed_image)
-    self.axes[0, 1].imshow(moving_image)
-
-    self._set_style()
-    self.draw()
-
-  def _on_click(self, event: MouseEvent):
-    logger.trace(event)
-    if self._images is None:
-      return
-
-    ax: Axes = event.inaxes
-    if ax is None:
-      return
-
-    axi = list(self.axes.ravel()).index(ax)
-    if axi not in (0, 1):
-      return
-
-    if event.button == 1:
-      self._add_point(axi, event=event)
-    elif event.button == 3:
-      self._remove_points(axi)
+  @QtCore.Slot(str)
+  def pano_set_viewing_angle(self, value):
+    try:
+      angle = float(value)
+    except ValueError:
+      pass
     else:
-      return
+      self._ppc.viewing_angle = angle
+      logger.debug(&#39;Viewing angle: {}&#39;, angle)
 
-    self.canvas.draw()
+  @QtCore.Slot()
+  def pano_home(self):
+    self._ppc.home()
 
-    if not self._registered and self.all_points_selected():
-      self._register()
+  @QtCore.Slot(bool)
+  def pano_crop_mode(self, value):
+    self._ppc.crop_mode(value)
 
-  def _add_point(self, ax: int, event: MouseEvent):
-    if len(self._pnts_coord[ax]) &lt; self._REQUIRED:
-      self._pnts_coord[ax].append((event.xdata, event.ydata))
+  @QtCore.Slot(float, float, float)
+  def pano_save_manual_correction(self, roll, pitch, yaw):
+    self.win.pb_state(True)
 
-      p = event.inaxes.scatter(event.xdata, event.ydata, edgecolors=&#39;w&#39;, s=50)
-      self._pnts[ax].append(p)
+    def _done():
+      self.win.popup(&#39;Success&#39;, &#39;저장 완료&#39;, timeout=1000)
+      self.win.pb_state(False)
+      self.win.pb_value(1.0)
 
-  def _remove_points(self, ax: int):
-    self._pnts_coord.pop(ax)
+      try:
+        self._consumer.done.disconnect()
+      except TypeError:
+        pass
 
-    for p in self._pnts[ax]:
-      p.remove()
+    queue = mp.Queue()
+    self._consumer.queue = queue
+    self._consumer.done.connect(_done)
+    self._consumer.start()
 
-    self._pnts.pop(ax)
-    self.reset()
+    args = (queue, self._wd.as_posix(), self._ppc.subdir,
+            self._ppc.viewing_angle, (roll, pitch, yaw), self._ppc.crop_range())
+    process = mp.Process(name=&#39;save&#39;, target=_save_manual_correction, args=args)
+    process.start()
 
-  def all_points_selected(self):
-    return all(len(self._pnts_coord[x]) == self._REQUIRED for x in range(2))
+  @QtCore.Slot()
+  def dist_plot(self):
+    try:
+      data = self._dpc.plot()
+    except OSError as e:
+      self.win.popup(&#39;Warning&#39;, str(e))
+    else:
+      self.win.panel_funtion(&#39;descriptive&#39;, &#39;clear_table&#39;)
 
-  def _register(self):
-    src = np.array(self._pnts_coord[1])
-    dst = np.array(self._pnts_coord[0])
-
-    trsf = transform.ProjectiveTransform()
-    trsf.estimate(src=src, dst=dst)
-
-    registered = transform.warp(image=self._images[1],
-                                inverse_map=trsf.inverse,
-                                output_shape=self._images[0].shape[:2],
-                                preserve_range=True)
-
-    cb, diff = prep_compare_images(image1=self._images[0],
-                                   image2=registered,
-                                   norm=True,
-                                   eq_hist=True,
-                                   method=[&#39;checkerboard&#39;, &#39;diff&#39;])
-
-    self._axes[1, 0].imshow(cb)
-    self._axes[1, 1].imshow(diff)
-
-    self._set_style()
-    self.canvas.draw()
-
-    self._registered = True</code></pre>
+      for class_ in (&#39;Wall&#39;, &#39;Window&#39;):
+        row = {key: f&#39;{value:.2f}&#39; for key, value in data[class_].items()}
+        row[&#39;class&#39;] = class_
+        self.win.panel_funtion(&#39;descriptive&#39;, &#39;add_table_row&#39;, row)</code></pre>
 </details>
 </section>
 <section>
@@ -435,6 +446,13 @@ class RegistrationPlotController(PlotController):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Controller(QtCore.QObject):
+  _CMD_KR = {
+      &#39;extract&#39;: &#39;열화상 추출&#39;,
+      &#39;register&#39;: &#39;열화상-실화상 정합&#39;,
+      &#39;segment&#39;: &#39;외피 부위 인식&#39;,
+      &#39;panorama&#39;: &#39;파노라마 생성&#39;,
+      &#39;correct&#39;: &#39;왜곡 보정&#39;
+  }
 
   def __init__(self, win: QtGui.QWindow, loglevel=20) -&gt; None:
     super().__init__()
@@ -443,11 +461,15 @@ class RegistrationPlotController(PlotController):
     self._loglevel = loglevel
 
     self._consumer = _Consumer()
-    self._consumer.update.connect(self.pbar)
+    self._consumer.update.connect(self._pb_value)
+    self._consumer.fail.connect(self._error_popup)
 
     self._wd: Optional[Path] = None
     self._fm: Optional[ThermalPanoramaFileManager] = None
     self._rpc: Optional[RegistrationPlotController] = None
+    self._spc: Optional[SegmentationPlotController] = None
+    self._ppc: Optional[PanoramaPlotController] = None
+    self._dpc: Optional[DistPlotController] = None
 
   @property
   def win(self) -&gt; _Window:
@@ -457,21 +479,27 @@ class RegistrationPlotController(PlotController):
   def win(self, win: QtGui.QWindow):
     self._win = _Window(win)
 
-  @property
-  def rpc(self):
-    return self._rpc
-
-  @rpc.setter
-  def rpc(self, value):
-    self._rpc = value
+  def set_plot_controllers(self, rgst: RegistrationPlotController,
+                           seg: SegmentationPlotController,
+                           pano: PanoramaPlotController,
+                           dist: DistPlotController):
+    self._rpc = rgst
+    self._spc = seg
+    self._ppc = pano
+    self._dpc = dist
 
   @QtCore.Slot(str)
   def log(self, message: str):
     _log(message=message)
 
-  @QtCore.Slot(float)
-  def pbar(self, r: float):
-    self.win.pbar(r)
+  def _pb_value(self, value: float):
+    self.win.pb_state(False)
+    self.win.pb_value(value)
+
+  def _error_popup(self, message: str):
+    self.win.popup(&#39;Error&#39;, message, timeout=10000)
+    self.win.pb_state(False)
+    self.win.pb_value(1.0)
 
   @QtCore.Slot(str)
   def prj_select_working_dir(self, wd):
@@ -481,31 +509,58 @@ class RegistrationPlotController(PlotController):
 
     self._wd = wd
     self._fm = ThermalPanoramaFileManager(wd)
+
+    for pc in (self._rpc, self._spc, self._ppc, self._dpc):
+      pc.fm = self._fm
+
     self.prj_update_project_tree()
-    self.update_image_view(panel=&#39;project&#39;)
-    self.update_image_view(panel=&#39;registration&#39;)
+    self.update_image_view()
 
   @QtCore.Slot()
   def prj_init_directory(self):
+    if self._wd is None:
+      return
+
     init_directory(directory=self._wd)
     self.prj_update_project_tree()
-    self.update_image_view(panel=&#39;project&#39;)
-    self.update_image_view(panel=&#39;registration&#39;)
+    self.update_image_view()
+    self.win.popup(&#39;Success&#39;, &#39;초기화 완료&#39;)
 
   def prj_update_project_tree(self):
-    tree = tree_string(self._wd)
+    tree = tree_string(self._wd, width=40)
     self.win.panel_funtion(&#39;project&#39;, &#39;update_project_tree&#39;, tree)
 
   @QtCore.Slot(str)
   def command(self, command: str):
     if self._wd is None:
-      logger.warning(&#39;Directory not set&#39;)
+      self.win.popup(&#39;Warning&#39;, &#39;경로가 선택되지 않았습니다.&#39;)
+      self.win.pb_state(False)
       return
 
-    self.pbar(0.0)
+    self.win.pb_state(True)
 
     queue = mp.Queue()
+    cmd_kr = self._CMD_KR[command]
+
+    def _done():
+      if command in (&#39;panorama&#39;, &#39;correct&#39;):
+        self._ppc.plot(force=True)
+        self.win.panel_funtion(&#39;panorama&#39;, &#39;reset&#39;)
+      elif command == &#39;register&#39;:
+        self._rpc.reset()
+        self._rpc.reset_matrices()
+
+      self.win.popup(&#39;Success&#39;, f&#39;{cmd_kr} 완료&#39;)
+      self.win.pb_state(False)
+      self.win.pb_value(1.0)
+
+      try:
+        self._consumer.done.disconnect()
+      except TypeError:
+        pass
+
     self._consumer.queue = queue
+    self._consumer.done.connect(_done)
     self._consumer.start()
 
     process = mp.Process(name=command,
@@ -513,7 +568,8 @@ class RegistrationPlotController(PlotController):
                          args=(queue, self._wd, command, self._loglevel))
     process.start()
 
-  def update_image_view(self, panel: str):
+  def update_image_view(self,
+                        panels=(&#39;project&#39;, &#39;registration&#39;, &#39;segmentation&#39;)):
     if self._fm is None:
       logger.warning(&#39;Directory not set&#39;)
       return
@@ -523,20 +579,126 @@ class RegistrationPlotController(PlotController):
       # logger.warning(&#39;No raw files&#39;)
       return
 
-    self.win.panel_funtion(panel, &#39;update_image_view&#39;,
-                           [_path2url(x) for x in files])
+    # TODO testo .xlsx 파일
+    for panel in panels:
+      self.win.panel_funtion(panel, &#39;update_image_view&#39;,
+                             [_path2url(x) for x in files])
 
   @QtCore.Slot(str)
   def rgst_plot(self, url):
+    assert self._wd is not None
+    assert self._rpc is not None
     path = _url2path(url)
-    logger.debug(&#39;Register plot &#34;{}&#34;&#39;, path)
 
-    irf = self._wd.joinpath(DIR.IR.value, path.stem).with_suffix(FN.NPY)
-    visf = self._wd.joinpath(DIR.VIS.value, path.stem).with_suffix(FN.LL)
-    ir = ImageIO.read(irf)
-    vis = ImageIO.read(visf)
+    try:
+      self._rpc.plot(path)
+    except FileNotFoundError:
+      logger.warning(&#39;Data not extracted: {}&#39;, path)
+      self.win.popup(&#39;Error&#39;, f&#39;파일 {path.name}의 데이터가 추출되지 않았습니다.&#39;)
 
-    self.rpc.set_images(fixed_image=ir, moving_image=vis)</code></pre>
+  @QtCore.Slot()
+  def rgst_save(self):
+    assert self._rpc is not None
+    self._rpc.save()
+
+  @QtCore.Slot()
+  def rgst_reset(self):
+    assert self._rpc is not None
+    self._rpc.reset()
+
+  @QtCore.Slot(bool)
+  def rgst_set_grid(self, grid):
+    self._rpc.set_grid(grid)
+
+  @QtCore.Slot()
+  def rgst_home(self):
+    self._rpc.home()
+
+  @QtCore.Slot(bool)
+  def rgst_zoom(self, value):
+    self._rpc.zoom(value)
+
+  @QtCore.Slot(str)
+  def seg_plot(self, url):
+    assert self._wd is not None
+    assert self._spc is not None
+    path = _url2path(url)
+
+    try:
+      self._spc.plot(path)
+    except FileNotFoundError:
+      logger.warning(&#39;File not found: {}&#39;, path)
+
+  @QtCore.Slot()
+  def pano_plot(self):
+    try:
+      self._ppc.plot(force=False)
+    except OSError:
+      pass
+
+  @QtCore.Slot(float, float, float, int)
+  def pano_rotate(self, roll, pitch, yaw, limit):
+    self._ppc.project(roll=roll, pitch=pitch, yaw=yaw, limit=limit)
+
+  @QtCore.Slot(bool)
+  def pano_set_grid(self, grid):
+    self._ppc.set_grid(grid)
+
+  @QtCore.Slot(str)
+  def pano_set_viewing_angle(self, value):
+    try:
+      angle = float(value)
+    except ValueError:
+      pass
+    else:
+      self._ppc.viewing_angle = angle
+      logger.debug(&#39;Viewing angle: {}&#39;, angle)
+
+  @QtCore.Slot()
+  def pano_home(self):
+    self._ppc.home()
+
+  @QtCore.Slot(bool)
+  def pano_crop_mode(self, value):
+    self._ppc.crop_mode(value)
+
+  @QtCore.Slot(float, float, float)
+  def pano_save_manual_correction(self, roll, pitch, yaw):
+    self.win.pb_state(True)
+
+    def _done():
+      self.win.popup(&#39;Success&#39;, &#39;저장 완료&#39;, timeout=1000)
+      self.win.pb_state(False)
+      self.win.pb_value(1.0)
+
+      try:
+        self._consumer.done.disconnect()
+      except TypeError:
+        pass
+
+    queue = mp.Queue()
+    self._consumer.queue = queue
+    self._consumer.done.connect(_done)
+    self._consumer.start()
+
+    args = (queue, self._wd.as_posix(), self._ppc.subdir,
+            self._ppc.viewing_angle, (roll, pitch, yaw), self._ppc.crop_range())
+    process = mp.Process(name=&#39;save&#39;, target=_save_manual_correction, args=args)
+    process.start()
+
+  @QtCore.Slot()
+  def dist_plot(self):
+    try:
+      data = self._dpc.plot()
+    except OSError as e:
+      self.win.popup(&#39;Warning&#39;, str(e))
+    else:
+      self.win.panel_funtion(&#39;descriptive&#39;, &#39;clear_table&#39;)
+
+      for class_ in (&#39;Wall&#39;, &#39;Window&#39;):
+        row = {key: f&#39;{value:.2f}&#39; for key, value in data[class_].items()}
+        row[&#39;class&#39;] = class_
+        self.win.panel_funtion(&#39;descriptive&#39;, &#39;add_table_row&#39;, row)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -546,18 +708,6 @@ class RegistrationPlotController(PlotController):
 </ul>
 <h3>Instance variables</h3>
 <dl>
-<dt id="pano.interface.controller.Controller.rpc"><code class="name">var <span class="ident">rpc</span></code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def rpc(self):
-  return self._rpc</code></pre>
-</details>
-</dd>
 <dt id="pano.interface.controller.Controller.win"><code class="name">var <span class="ident">win</span> : pano.interface.controller._Window</code></dt>
 <dd>
 <div class="desc"></div>
@@ -585,19 +735,64 @@ def win(self) -&gt; _Window:
 <pre><code class="python">@QtCore.Slot(str)
 def command(self, command: str):
   if self._wd is None:
-    logger.warning(&#39;Directory not set&#39;)
+    self.win.popup(&#39;Warning&#39;, &#39;경로가 선택되지 않았습니다.&#39;)
+    self.win.pb_state(False)
     return
 
-  self.pbar(0.0)
+  self.win.pb_state(True)
 
   queue = mp.Queue()
+  cmd_kr = self._CMD_KR[command]
+
+  def _done():
+    if command in (&#39;panorama&#39;, &#39;correct&#39;):
+      self._ppc.plot(force=True)
+      self.win.panel_funtion(&#39;panorama&#39;, &#39;reset&#39;)
+    elif command == &#39;register&#39;:
+      self._rpc.reset()
+      self._rpc.reset_matrices()
+
+    self.win.popup(&#39;Success&#39;, f&#39;{cmd_kr} 완료&#39;)
+    self.win.pb_state(False)
+    self.win.pb_value(1.0)
+
+    try:
+      self._consumer.done.disconnect()
+    except TypeError:
+      pass
+
   self._consumer.queue = queue
+  self._consumer.done.connect(_done)
   self._consumer.start()
 
   process = mp.Process(name=command,
                        target=_producer,
                        args=(queue, self._wd, command, self._loglevel))
   process.start()</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.controller.Controller.dist_plot"><code class="name flex">
+<span>def <span class="ident">dist_plot</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@QtCore.Slot()
+def dist_plot(self):
+  try:
+    data = self._dpc.plot()
+  except OSError as e:
+    self.win.popup(&#39;Warning&#39;, str(e))
+  else:
+    self.win.panel_funtion(&#39;descriptive&#39;, &#39;clear_table&#39;)
+
+    for class_ in (&#39;Wall&#39;, &#39;Window&#39;):
+      row = {key: f&#39;{value:.2f}&#39; for key, value in data[class_].items()}
+      row[&#39;class&#39;] = class_
+      self.win.panel_funtion(&#39;descriptive&#39;, &#39;add_table_row&#39;, row)</code></pre>
 </details>
 </dd>
 <dt id="pano.interface.controller.Controller.log"><code class="name flex">
@@ -614,8 +809,8 @@ def log(self, message: str):
   _log(message=message)</code></pre>
 </details>
 </dd>
-<dt id="pano.interface.controller.Controller.pbar"><code class="name flex">
-<span>def <span class="ident">pbar</span></span>(<span>self, r: float)</span>
+<dt id="pano.interface.controller.Controller.pano_crop_mode"><code class="name flex">
+<span>def <span class="ident">pano_crop_mode</span></span>(<span>self, value)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -623,9 +818,122 @@ def log(self, message: str):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@QtCore.Slot(float)
-def pbar(self, r: float):
-  self.win.pbar(r)</code></pre>
+<pre><code class="python">@QtCore.Slot(bool)
+def pano_crop_mode(self, value):
+  self._ppc.crop_mode(value)</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.controller.Controller.pano_home"><code class="name flex">
+<span>def <span class="ident">pano_home</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@QtCore.Slot()
+def pano_home(self):
+  self._ppc.home()</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.controller.Controller.pano_plot"><code class="name flex">
+<span>def <span class="ident">pano_plot</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@QtCore.Slot()
+def pano_plot(self):
+  try:
+    self._ppc.plot(force=False)
+  except OSError:
+    pass</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.controller.Controller.pano_rotate"><code class="name flex">
+<span>def <span class="ident">pano_rotate</span></span>(<span>self, roll, pitch, yaw, limit)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@QtCore.Slot(float, float, float, int)
+def pano_rotate(self, roll, pitch, yaw, limit):
+  self._ppc.project(roll=roll, pitch=pitch, yaw=yaw, limit=limit)</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.controller.Controller.pano_save_manual_correction"><code class="name flex">
+<span>def <span class="ident">pano_save_manual_correction</span></span>(<span>self, roll, pitch, yaw)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@QtCore.Slot(float, float, float)
+def pano_save_manual_correction(self, roll, pitch, yaw):
+  self.win.pb_state(True)
+
+  def _done():
+    self.win.popup(&#39;Success&#39;, &#39;저장 완료&#39;, timeout=1000)
+    self.win.pb_state(False)
+    self.win.pb_value(1.0)
+
+    try:
+      self._consumer.done.disconnect()
+    except TypeError:
+      pass
+
+  queue = mp.Queue()
+  self._consumer.queue = queue
+  self._consumer.done.connect(_done)
+  self._consumer.start()
+
+  args = (queue, self._wd.as_posix(), self._ppc.subdir,
+          self._ppc.viewing_angle, (roll, pitch, yaw), self._ppc.crop_range())
+  process = mp.Process(name=&#39;save&#39;, target=_save_manual_correction, args=args)
+  process.start()</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.controller.Controller.pano_set_grid"><code class="name flex">
+<span>def <span class="ident">pano_set_grid</span></span>(<span>self, grid)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@QtCore.Slot(bool)
+def pano_set_grid(self, grid):
+  self._ppc.set_grid(grid)</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.controller.Controller.pano_set_viewing_angle"><code class="name flex">
+<span>def <span class="ident">pano_set_viewing_angle</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@QtCore.Slot(str)
+def pano_set_viewing_angle(self, value):
+  try:
+    angle = float(value)
+  except ValueError:
+    pass
+  else:
+    self._ppc.viewing_angle = angle
+    logger.debug(&#39;Viewing angle: {}&#39;, angle)</code></pre>
 </details>
 </dd>
 <dt id="pano.interface.controller.Controller.prj_init_directory"><code class="name flex">
@@ -639,10 +947,13 @@ def pbar(self, r: float):
 </summary>
 <pre><code class="python">@QtCore.Slot()
 def prj_init_directory(self):
+  if self._wd is None:
+    return
+
   init_directory(directory=self._wd)
   self.prj_update_project_tree()
-  self.update_image_view(panel=&#39;project&#39;)
-  self.update_image_view(panel=&#39;registration&#39;)</code></pre>
+  self.update_image_view()
+  self.win.popup(&#39;Success&#39;, &#39;초기화 완료&#39;)</code></pre>
 </details>
 </dd>
 <dt id="pano.interface.controller.Controller.prj_select_working_dir"><code class="name flex">
@@ -662,9 +973,12 @@ def prj_select_working_dir(self, wd):
 
   self._wd = wd
   self._fm = ThermalPanoramaFileManager(wd)
+
+  for pc in (self._rpc, self._spc, self._ppc, self._dpc):
+    pc.fm = self._fm
+
   self.prj_update_project_tree()
-  self.update_image_view(panel=&#39;project&#39;)
-  self.update_image_view(panel=&#39;registration&#39;)</code></pre>
+  self.update_image_view()</code></pre>
 </details>
 </dd>
 <dt id="pano.interface.controller.Controller.prj_update_project_tree"><code class="name flex">
@@ -677,8 +991,22 @@ def prj_select_working_dir(self, wd):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def prj_update_project_tree(self):
-  tree = tree_string(self._wd)
+  tree = tree_string(self._wd, width=40)
   self.win.panel_funtion(&#39;project&#39;, &#39;update_project_tree&#39;, tree)</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.controller.Controller.rgst_home"><code class="name flex">
+<span>def <span class="ident">rgst_home</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@QtCore.Slot()
+def rgst_home(self):
+  self._rpc.home()</code></pre>
 </details>
 </dd>
 <dt id="pano.interface.controller.Controller.rgst_plot"><code class="name flex">
@@ -692,19 +1020,19 @@ def prj_select_working_dir(self, wd):
 </summary>
 <pre><code class="python">@QtCore.Slot(str)
 def rgst_plot(self, url):
+  assert self._wd is not None
+  assert self._rpc is not None
   path = _url2path(url)
-  logger.debug(&#39;Register plot &#34;{}&#34;&#39;, path)
 
-  irf = self._wd.joinpath(DIR.IR.value, path.stem).with_suffix(FN.NPY)
-  visf = self._wd.joinpath(DIR.VIS.value, path.stem).with_suffix(FN.LL)
-  ir = ImageIO.read(irf)
-  vis = ImageIO.read(visf)
-
-  self.rpc.set_images(fixed_image=ir, moving_image=vis)</code></pre>
+  try:
+    self._rpc.plot(path)
+  except FileNotFoundError:
+    logger.warning(&#39;Data not extracted: {}&#39;, path)
+    self.win.popup(&#39;Error&#39;, f&#39;파일 {path.name}의 데이터가 추출되지 않았습니다.&#39;)</code></pre>
 </details>
 </dd>
-<dt id="pano.interface.controller.Controller.update_image_view"><code class="name flex">
-<span>def <span class="ident">update_image_view</span></span>(<span>self, panel: str)</span>
+<dt id="pano.interface.controller.Controller.rgst_reset"><code class="name flex">
+<span>def <span class="ident">rgst_reset</span></span>(<span>self)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -712,7 +1040,106 @@ def rgst_plot(self, url):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def update_image_view(self, panel: str):
+<pre><code class="python">@QtCore.Slot()
+def rgst_reset(self):
+  assert self._rpc is not None
+  self._rpc.reset()</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.controller.Controller.rgst_save"><code class="name flex">
+<span>def <span class="ident">rgst_save</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@QtCore.Slot()
+def rgst_save(self):
+  assert self._rpc is not None
+  self._rpc.save()</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.controller.Controller.rgst_set_grid"><code class="name flex">
+<span>def <span class="ident">rgst_set_grid</span></span>(<span>self, grid)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@QtCore.Slot(bool)
+def rgst_set_grid(self, grid):
+  self._rpc.set_grid(grid)</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.controller.Controller.rgst_zoom"><code class="name flex">
+<span>def <span class="ident">rgst_zoom</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@QtCore.Slot(bool)
+def rgst_zoom(self, value):
+  self._rpc.zoom(value)</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.controller.Controller.seg_plot"><code class="name flex">
+<span>def <span class="ident">seg_plot</span></span>(<span>self, url)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@QtCore.Slot(str)
+def seg_plot(self, url):
+  assert self._wd is not None
+  assert self._spc is not None
+  path = _url2path(url)
+
+  try:
+    self._spc.plot(path)
+  except FileNotFoundError:
+    logger.warning(&#39;File not found: {}&#39;, path)</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.controller.Controller.set_plot_controllers"><code class="name flex">
+<span>def <span class="ident">set_plot_controllers</span></span>(<span>self, rgst: <a title="pano.interface.plot_controller.RegistrationPlotController" href="plot_controller.html#pano.interface.plot_controller.RegistrationPlotController">RegistrationPlotController</a>, seg: <a title="pano.interface.plot_controller.SegmentationPlotController" href="plot_controller.html#pano.interface.plot_controller.SegmentationPlotController">SegmentationPlotController</a>, pano: <a title="pano.interface.plot_controller.PanoramaPlotController" href="plot_controller.html#pano.interface.plot_controller.PanoramaPlotController">PanoramaPlotController</a>, dist: <a title="pano.interface.plot_controller.DistPlotController" href="plot_controller.html#pano.interface.plot_controller.DistPlotController">DistPlotController</a>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_plot_controllers(self, rgst: RegistrationPlotController,
+                         seg: SegmentationPlotController,
+                         pano: PanoramaPlotController,
+                         dist: DistPlotController):
+  self._rpc = rgst
+  self._spc = seg
+  self._ppc = pano
+  self._dpc = dist</code></pre>
+</details>
+</dd>
+<dt id="pano.interface.controller.Controller.update_image_view"><code class="name flex">
+<span>def <span class="ident">update_image_view</span></span>(<span>self, panels=('project', 'registration', 'segmentation'))</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def update_image_view(self,
+                      panels=(&#39;project&#39;, &#39;registration&#39;, &#39;segmentation&#39;)):
   if self._fm is None:
     logger.warning(&#39;Directory not set&#39;)
     return
@@ -722,417 +1149,10 @@ def rgst_plot(self, url):
     # logger.warning(&#39;No raw files&#39;)
     return
 
-  self.win.panel_funtion(panel, &#39;update_image_view&#39;,
-                         [_path2url(x) for x in files])</code></pre>
-</details>
-</dd>
-</dl>
-</dd>
-<dt id="pano.interface.controller.PlotController"><code class="flex name class">
-<span>class <span class="ident">PlotController</span></span>
-<span>(</span><span>parent=None)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>QObject(parent: QObject = None)</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class PlotController(QtCore.QObject):
-
-  def __init__(self, parent=None) -&gt; None:
-    super().__init__(parent=parent)
-
-    self._app: Optional[QtGui.QGuiApplication] = None
-    self._canvas: Optional[FigureCanvas] = None
-    self._fig: Optional[Figure] = None
-    self._axes: Optional[Axes] = None
-
-  @property
-  def app(self) -&gt; QtGui.QGuiApplication:
-    if self._app is None:
-      raise ValueError(&#39;app not set&#39;)
-
-    return self._app
-
-  @property
-  def canvas(self) -&gt; FigureCanvas:
-    if self._canvas is None:
-      raise ValueError(&#39;canvas not set&#39;)
-
-    return self._canvas
-
-  @property
-  def fig(self) -&gt; Figure:
-    if self._fig is None:
-      raise ValueError(&#39;fig not set&#39;)
-
-    return self._fig
-
-  @property
-  def axes(self) -&gt; Axes:
-    if self._axes is None:
-      raise ValueError(&#39;axes not set&#39;)
-
-    return self._axes
-
-  def init(self, app: QtGui.QGuiApplication, canvas: FigureCanvas):
-    self._app = app
-    self._canvas = canvas
-
-    self._fig = canvas.figure
-    self._axes = self._fig.add_subplot(111)
-
-    self.draw()
-
-  def draw(self):
-    self.canvas.draw()
-    self.app.processEvents()</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li>PyQt5.QtCore.QObject</li>
-<li>sip.wrapper</li>
-<li>sip.simplewrapper</li>
-</ul>
-<h3>Subclasses</h3>
-<ul class="hlist">
-<li><a title="pano.interface.controller.RegistrationPlotController" href="#pano.interface.controller.RegistrationPlotController">RegistrationPlotController</a></li>
-</ul>
-<h3>Instance variables</h3>
-<dl>
-<dt id="pano.interface.controller.PlotController.app"><code class="name">var <span class="ident">app</span> : PyQt5.QtGui.QGuiApplication</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def app(self) -&gt; QtGui.QGuiApplication:
-  if self._app is None:
-    raise ValueError(&#39;app not set&#39;)
-
-  return self._app</code></pre>
-</details>
-</dd>
-<dt id="pano.interface.controller.PlotController.axes"><code class="name">var <span class="ident">axes</span> : matplotlib.axes._axes.Axes</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def axes(self) -&gt; Axes:
-  if self._axes is None:
-    raise ValueError(&#39;axes not set&#39;)
-
-  return self._axes</code></pre>
-</details>
-</dd>
-<dt id="pano.interface.controller.PlotController.canvas"><code class="name">var <span class="ident">canvas</span> : <a title="pano.interface.mbq.backend_qtquickagg.FigureCanvasQtQuickAgg" href="mbq/backend_qtquickagg.html#pano.interface.mbq.backend_qtquickagg.FigureCanvasQtQuickAgg">FigureCanvasQtQuickAgg</a></code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def canvas(self) -&gt; FigureCanvas:
-  if self._canvas is None:
-    raise ValueError(&#39;canvas not set&#39;)
-
-  return self._canvas</code></pre>
-</details>
-</dd>
-<dt id="pano.interface.controller.PlotController.fig"><code class="name">var <span class="ident">fig</span> : matplotlib.figure.Figure</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def fig(self) -&gt; Figure:
-  if self._fig is None:
-    raise ValueError(&#39;fig not set&#39;)
-
-  return self._fig</code></pre>
-</details>
-</dd>
-</dl>
-<h3>Methods</h3>
-<dl>
-<dt id="pano.interface.controller.PlotController.draw"><code class="name flex">
-<span>def <span class="ident">draw</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def draw(self):
-  self.canvas.draw()
-  self.app.processEvents()</code></pre>
-</details>
-</dd>
-<dt id="pano.interface.controller.PlotController.init"><code class="name flex">
-<span>def <span class="ident">init</span></span>(<span>self, app: PyQt5.QtGui.QGuiApplication, canvas: <a title="pano.interface.mbq.backend_qtquickagg.FigureCanvasQtQuickAgg" href="mbq/backend_qtquickagg.html#pano.interface.mbq.backend_qtquickagg.FigureCanvasQtQuickAgg">FigureCanvasQtQuickAgg</a>)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def init(self, app: QtGui.QGuiApplication, canvas: FigureCanvas):
-  self._app = app
-  self._canvas = canvas
-
-  self._fig = canvas.figure
-  self._axes = self._fig.add_subplot(111)
-
-  self.draw()</code></pre>
-</details>
-</dd>
-</dl>
-</dd>
-<dt id="pano.interface.controller.RegistrationPlotController"><code class="flex name class">
-<span>class <span class="ident">RegistrationPlotController</span></span>
-<span>(</span><span>parent=None)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>QObject(parent: QObject = None)</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class RegistrationPlotController(PlotController):
-  _REQUIRED = 4
-  _TITLES = [&#39;열화상&#39;, &#39;실화상&#39;, &#39;비교 (Checkerboard)&#39;, &#39;비교 (Difference)&#39;]
-
-  def __init__(self, parent=None) -&gt; None:
-    super().__init__(parent=parent)
-
-    self._pnts = defaultdict(list)  # 선택된 점들의 mpl 오브젝트
-    self._pnts_coord = defaultdict(list)  # 선택된 점들의 좌표
-    self._registered = False  # TODO pnts 개수로 판단?
-    self._images: Optional[tuple] = None
-
-  @property
-  def axes(self) -&gt; np.ndarray:
-    return super().axes
-
-  def init(self, app: QtGui.QGuiApplication, canvas: FigureCanvas):
-    self._app = app
-    self._canvas = canvas
-
-    self._fig = canvas.figure
-    self._axes = self.fig.subplots(2, 2)
-    self._set_style()
-    self._fig.tight_layout(pad=2)
-
-    self.canvas.mpl_connect(&#39;button_press_event&#39;, self._on_click)
-    self.draw()
-
-  def _set_style(self):
-    for ax, title in zip(self.axes.ravel(), self._TITLES):
-      if ax.has_data():
-        ax.set_title(title)
-      ax.set_axis_off()
-
-    ar = self.axes[0, 0].get_aspect()
-    self.axes[0, 1].set_aspect(ar)
-
-  def reset(self):
-    for ax in self.axes.ravel():
-      ax.clear()
-
-    self._pnts.clear()
-    self._pnts_coord.clear()
-    self._registered = False
-
-    self._set_style()
-
-  def set_images(self, fixed_image: np.ndarray, moving_image: np.ndarray):
-    self.reset()
-
-    self._images = (fixed_image, moving_image)
-    self.axes[0, 0].imshow(fixed_image)
-    self.axes[0, 1].imshow(moving_image)
-
-    self._set_style()
-    self.draw()
-
-  def _on_click(self, event: MouseEvent):
-    logger.trace(event)
-    if self._images is None:
-      return
-
-    ax: Axes = event.inaxes
-    if ax is None:
-      return
-
-    axi = list(self.axes.ravel()).index(ax)
-    if axi not in (0, 1):
-      return
-
-    if event.button == 1:
-      self._add_point(axi, event=event)
-    elif event.button == 3:
-      self._remove_points(axi)
-    else:
-      return
-
-    self.canvas.draw()
-
-    if not self._registered and self.all_points_selected():
-      self._register()
-
-  def _add_point(self, ax: int, event: MouseEvent):
-    if len(self._pnts_coord[ax]) &lt; self._REQUIRED:
-      self._pnts_coord[ax].append((event.xdata, event.ydata))
-
-      p = event.inaxes.scatter(event.xdata, event.ydata, edgecolors=&#39;w&#39;, s=50)
-      self._pnts[ax].append(p)
-
-  def _remove_points(self, ax: int):
-    self._pnts_coord.pop(ax)
-
-    for p in self._pnts[ax]:
-      p.remove()
-
-    self._pnts.pop(ax)
-    self.reset()
-
-  def all_points_selected(self):
-    return all(len(self._pnts_coord[x]) == self._REQUIRED for x in range(2))
-
-  def _register(self):
-    src = np.array(self._pnts_coord[1])
-    dst = np.array(self._pnts_coord[0])
-
-    trsf = transform.ProjectiveTransform()
-    trsf.estimate(src=src, dst=dst)
-
-    registered = transform.warp(image=self._images[1],
-                                inverse_map=trsf.inverse,
-                                output_shape=self._images[0].shape[:2],
-                                preserve_range=True)
-
-    cb, diff = prep_compare_images(image1=self._images[0],
-                                   image2=registered,
-                                   norm=True,
-                                   eq_hist=True,
-                                   method=[&#39;checkerboard&#39;, &#39;diff&#39;])
-
-    self._axes[1, 0].imshow(cb)
-    self._axes[1, 1].imshow(diff)
-
-    self._set_style()
-    self.canvas.draw()
-
-    self._registered = True</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="pano.interface.controller.PlotController" href="#pano.interface.controller.PlotController">PlotController</a></li>
-<li>PyQt5.QtCore.QObject</li>
-<li>sip.wrapper</li>
-<li>sip.simplewrapper</li>
-</ul>
-<h3>Instance variables</h3>
-<dl>
-<dt id="pano.interface.controller.RegistrationPlotController.axes"><code class="name">var <span class="ident">axes</span> : numpy.ndarray</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def axes(self) -&gt; np.ndarray:
-  return super().axes</code></pre>
-</details>
-</dd>
-</dl>
-<h3>Methods</h3>
-<dl>
-<dt id="pano.interface.controller.RegistrationPlotController.all_points_selected"><code class="name flex">
-<span>def <span class="ident">all_points_selected</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def all_points_selected(self):
-  return all(len(self._pnts_coord[x]) == self._REQUIRED for x in range(2))</code></pre>
-</details>
-</dd>
-<dt id="pano.interface.controller.RegistrationPlotController.init"><code class="name flex">
-<span>def <span class="ident">init</span></span>(<span>self, app: PyQt5.QtGui.QGuiApplication, canvas: <a title="pano.interface.mbq.backend_qtquickagg.FigureCanvasQtQuickAgg" href="mbq/backend_qtquickagg.html#pano.interface.mbq.backend_qtquickagg.FigureCanvasQtQuickAgg">FigureCanvasQtQuickAgg</a>)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def init(self, app: QtGui.QGuiApplication, canvas: FigureCanvas):
-  self._app = app
-  self._canvas = canvas
-
-  self._fig = canvas.figure
-  self._axes = self.fig.subplots(2, 2)
-  self._set_style()
-  self._fig.tight_layout(pad=2)
-
-  self.canvas.mpl_connect(&#39;button_press_event&#39;, self._on_click)
-  self.draw()</code></pre>
-</details>
-</dd>
-<dt id="pano.interface.controller.RegistrationPlotController.reset"><code class="name flex">
-<span>def <span class="ident">reset</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def reset(self):
-  for ax in self.axes.ravel():
-    ax.clear()
-
-  self._pnts.clear()
-  self._pnts_coord.clear()
-  self._registered = False
-
-  self._set_style()</code></pre>
-</details>
-</dd>
-<dt id="pano.interface.controller.RegistrationPlotController.set_images"><code class="name flex">
-<span>def <span class="ident">set_images</span></span>(<span>self, fixed_image: numpy.ndarray, moving_image: numpy.ndarray)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def set_images(self, fixed_image: np.ndarray, moving_image: np.ndarray):
-  self.reset()
-
-  self._images = (fixed_image, moving_image)
-  self.axes[0, 0].imshow(fixed_image)
-  self.axes[0, 1].imshow(moving_image)
-
-  self._set_style()
-  self.draw()</code></pre>
+  # TODO testo .xlsx 파일
+  for panel in panels:
+    self.win.panel_funtion(panel, &#39;update_image_view&#39;,
+                           [_path2url(x) for x in files])</code></pre>
 </details>
 </dd>
 </dl>
@@ -1157,36 +1177,28 @@ def axes(self) -&gt; np.ndarray:
 <h4><code><a title="pano.interface.controller.Controller" href="#pano.interface.controller.Controller">Controller</a></code></h4>
 <ul class="">
 <li><code><a title="pano.interface.controller.Controller.command" href="#pano.interface.controller.Controller.command">command</a></code></li>
+<li><code><a title="pano.interface.controller.Controller.dist_plot" href="#pano.interface.controller.Controller.dist_plot">dist_plot</a></code></li>
 <li><code><a title="pano.interface.controller.Controller.log" href="#pano.interface.controller.Controller.log">log</a></code></li>
-<li><code><a title="pano.interface.controller.Controller.pbar" href="#pano.interface.controller.Controller.pbar">pbar</a></code></li>
+<li><code><a title="pano.interface.controller.Controller.pano_crop_mode" href="#pano.interface.controller.Controller.pano_crop_mode">pano_crop_mode</a></code></li>
+<li><code><a title="pano.interface.controller.Controller.pano_home" href="#pano.interface.controller.Controller.pano_home">pano_home</a></code></li>
+<li><code><a title="pano.interface.controller.Controller.pano_plot" href="#pano.interface.controller.Controller.pano_plot">pano_plot</a></code></li>
+<li><code><a title="pano.interface.controller.Controller.pano_rotate" href="#pano.interface.controller.Controller.pano_rotate">pano_rotate</a></code></li>
+<li><code><a title="pano.interface.controller.Controller.pano_save_manual_correction" href="#pano.interface.controller.Controller.pano_save_manual_correction">pano_save_manual_correction</a></code></li>
+<li><code><a title="pano.interface.controller.Controller.pano_set_grid" href="#pano.interface.controller.Controller.pano_set_grid">pano_set_grid</a></code></li>
+<li><code><a title="pano.interface.controller.Controller.pano_set_viewing_angle" href="#pano.interface.controller.Controller.pano_set_viewing_angle">pano_set_viewing_angle</a></code></li>
 <li><code><a title="pano.interface.controller.Controller.prj_init_directory" href="#pano.interface.controller.Controller.prj_init_directory">prj_init_directory</a></code></li>
 <li><code><a title="pano.interface.controller.Controller.prj_select_working_dir" href="#pano.interface.controller.Controller.prj_select_working_dir">prj_select_working_dir</a></code></li>
 <li><code><a title="pano.interface.controller.Controller.prj_update_project_tree" href="#pano.interface.controller.Controller.prj_update_project_tree">prj_update_project_tree</a></code></li>
+<li><code><a title="pano.interface.controller.Controller.rgst_home" href="#pano.interface.controller.Controller.rgst_home">rgst_home</a></code></li>
 <li><code><a title="pano.interface.controller.Controller.rgst_plot" href="#pano.interface.controller.Controller.rgst_plot">rgst_plot</a></code></li>
-<li><code><a title="pano.interface.controller.Controller.rpc" href="#pano.interface.controller.Controller.rpc">rpc</a></code></li>
+<li><code><a title="pano.interface.controller.Controller.rgst_reset" href="#pano.interface.controller.Controller.rgst_reset">rgst_reset</a></code></li>
+<li><code><a title="pano.interface.controller.Controller.rgst_save" href="#pano.interface.controller.Controller.rgst_save">rgst_save</a></code></li>
+<li><code><a title="pano.interface.controller.Controller.rgst_set_grid" href="#pano.interface.controller.Controller.rgst_set_grid">rgst_set_grid</a></code></li>
+<li><code><a title="pano.interface.controller.Controller.rgst_zoom" href="#pano.interface.controller.Controller.rgst_zoom">rgst_zoom</a></code></li>
+<li><code><a title="pano.interface.controller.Controller.seg_plot" href="#pano.interface.controller.Controller.seg_plot">seg_plot</a></code></li>
+<li><code><a title="pano.interface.controller.Controller.set_plot_controllers" href="#pano.interface.controller.Controller.set_plot_controllers">set_plot_controllers</a></code></li>
 <li><code><a title="pano.interface.controller.Controller.update_image_view" href="#pano.interface.controller.Controller.update_image_view">update_image_view</a></code></li>
 <li><code><a title="pano.interface.controller.Controller.win" href="#pano.interface.controller.Controller.win">win</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="pano.interface.controller.PlotController" href="#pano.interface.controller.PlotController">PlotController</a></code></h4>
-<ul class="two-column">
-<li><code><a title="pano.interface.controller.PlotController.app" href="#pano.interface.controller.PlotController.app">app</a></code></li>
-<li><code><a title="pano.interface.controller.PlotController.axes" href="#pano.interface.controller.PlotController.axes">axes</a></code></li>
-<li><code><a title="pano.interface.controller.PlotController.canvas" href="#pano.interface.controller.PlotController.canvas">canvas</a></code></li>
-<li><code><a title="pano.interface.controller.PlotController.draw" href="#pano.interface.controller.PlotController.draw">draw</a></code></li>
-<li><code><a title="pano.interface.controller.PlotController.fig" href="#pano.interface.controller.PlotController.fig">fig</a></code></li>
-<li><code><a title="pano.interface.controller.PlotController.init" href="#pano.interface.controller.PlotController.init">init</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="pano.interface.controller.RegistrationPlotController" href="#pano.interface.controller.RegistrationPlotController">RegistrationPlotController</a></code></h4>
-<ul class="">
-<li><code><a title="pano.interface.controller.RegistrationPlotController.all_points_selected" href="#pano.interface.controller.RegistrationPlotController.all_points_selected">all_points_selected</a></code></li>
-<li><code><a title="pano.interface.controller.RegistrationPlotController.axes" href="#pano.interface.controller.RegistrationPlotController.axes">axes</a></code></li>
-<li><code><a title="pano.interface.controller.RegistrationPlotController.init" href="#pano.interface.controller.RegistrationPlotController.init">init</a></code></li>
-<li><code><a title="pano.interface.controller.RegistrationPlotController.reset" href="#pano.interface.controller.RegistrationPlotController.reset">reset</a></code></li>
-<li><code><a title="pano.interface.controller.RegistrationPlotController.set_images" href="#pano.interface.controller.RegistrationPlotController.set_images">set_images</a></code></li>
 </ul>
 </li>
 </ul>

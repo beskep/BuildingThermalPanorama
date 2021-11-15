@@ -33,6 +33,7 @@ import dataclasses as dc
 from typing import List, Optional, Tuple, Union
 
 import cv2 as cv
+from loguru import logger
 import matplotlib.pyplot as plt
 import numpy as np
 from skimage.color import rgb2gray
@@ -165,10 +166,17 @@ class CropRange:
   def as_tuple(self):
     return (self.x_min, self.x_max, self.y_min, self.y_max)
 
-  def crop(self, image: np.ndarray):
+  def crop(self, image: np.ndarray, strict=True):
     if image.shape[:2] != self.image_shape[:2]:
-      raise ValueError(&#39;Input shape ({}) != {}&#39;.format(image.shape[:2],
-                                                       self.image_shape[:2]))
+      msg = &#39;CropRange image shape ({}) != Input image shape {}&#39;.format(
+          self.image_shape[:2], image.shape[:2])
+      if strict:
+        raise ValueError(msg)
+
+      logger.warning(msg)
+      image = resize(image,
+                     output_shape=self.image_shape[:2],
+                     preserve_range=True)
 
     return image[self.y_min:self.y_max, self.x_min:self.x_max]
 
@@ -323,10 +331,12 @@ def prep_compare_images(
 
 
 def prep_compare_fig(images: Tuple[np.ndarray, np.ndarray],
-                     titles=(&#39;Image 1&#39;, &#39;Image 2&#39;),
+                     titles=(&#39;Image 1&#39;, &#39;Image 2&#39;, &#39;Compare (checkerboard)&#39;,
+                             &#39;Compare (difference)&#39;),
                      norm=False,
                      eq_hist=True,
-                     n_tiles=(8, 8)):
+                     n_tiles=(8, 8),
+                     cmap=None):
   &#34;&#34;&#34;
   두 영상의 전처리 및 비교 영상 생성.
   두 영상 모두 2차원 (gray image)이며 해상도 (ndarray.shape)이 동일해야 함.
@@ -343,6 +353,8 @@ def prep_compare_fig(images: Tuple[np.ndarray, np.ndarray],
       명암 개선을 위해 Histogram Equalization 적용 여부
   n_tiles : tuple, optional
       Checkerboard 타일 개수
+  cmap : Optional[str, Colormap]
+      Colormap
 
   Returns
   -------
@@ -362,25 +374,19 @@ def prep_compare_fig(images: Tuple[np.ndarray, np.ndarray],
                                eq_hist=eq_hist)
 
   fig, axes = plt.subplots(2, 2, figsize=(16, 9))
-  cmap = &#39;gray&#39;
 
   axes[0, 0].imshow(images[0], cmap=cmap)
-  axes[0, 0].set_title(titles[0])
-
   axes[0, 1].imshow(images[1], cmap=cmap)
-  axes[0, 1].set_title(titles[1])
 
   cb = compare_images(img1, img2, method=&#39;checkerboard&#39;, n_tiles=n_tiles)
+  diff = compare_images(img1, img2, method=&#39;diff&#39;)
 
   axes[1, 0].imshow(cb, cmap=cmap)
-  axes[1, 0].set_title(&#39;Compare (checkerboard)&#39;)
-
-  diff = compare_images(img1, img2, method=&#39;diff&#39;)
   axes[1, 1].imshow(diff, cmap=cmap)
-  axes[1, 1].set_title(&#39;Compare (difference)&#39;)
 
-  for ax in axes.ravel():
+  for ax, title in zip(axes.ravel(), titles):
     ax.set_axis_off()
+    ax.set_title(title)
 
   fig.tight_layout()
 
@@ -406,7 +412,7 @@ def limit_image_size(image: np.ndarray, limit: int) -&gt; np.ndarray:
 
 
 class SegMask:
-  _scale = 60
+  _scale = 80
 
   @classmethod
   def index_to_vis(cls, array: np.ndarray):
@@ -751,7 +757,7 @@ class SegMask:
 </details>
 </dd>
 <dt id="pano.misc.tools.prep_compare_fig"><code class="name flex">
-<span>def <span class="ident">prep_compare_fig</span></span>(<span>images: Tuple[numpy.ndarray, numpy.ndarray], titles=('Image 1', 'Image 2'), norm=False, eq_hist=True, n_tiles=(8, 8))</span>
+<span>def <span class="ident">prep_compare_fig</span></span>(<span>images: Tuple[numpy.ndarray, numpy.ndarray], titles=('Image 1', 'Image 2', 'Compare (checkerboard)', 'Compare (difference)'), norm=False, eq_hist=True, n_tiles=(8, 8), cmap=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>두 영상의 전처리 및 비교 영상 생성.
@@ -768,6 +774,8 @@ class SegMask:
 <dd>명암 개선을 위해 Histogram Equalization 적용 여부</dd>
 <dt><strong><code>n_tiles</code></strong> :&ensp;<code>tuple</code>, optional</dt>
 <dd>Checkerboard 타일 개수</dd>
+<dt><strong><code>cmap</code></strong> :&ensp;<code>Optional[str, Colormap]</code></dt>
+<dd>Colormap</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -787,10 +795,12 @@ class SegMask:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def prep_compare_fig(images: Tuple[np.ndarray, np.ndarray],
-                     titles=(&#39;Image 1&#39;, &#39;Image 2&#39;),
+                     titles=(&#39;Image 1&#39;, &#39;Image 2&#39;, &#39;Compare (checkerboard)&#39;,
+                             &#39;Compare (difference)&#39;),
                      norm=False,
                      eq_hist=True,
-                     n_tiles=(8, 8)):
+                     n_tiles=(8, 8),
+                     cmap=None):
   &#34;&#34;&#34;
   두 영상의 전처리 및 비교 영상 생성.
   두 영상 모두 2차원 (gray image)이며 해상도 (ndarray.shape)이 동일해야 함.
@@ -807,6 +817,8 @@ class SegMask:
       명암 개선을 위해 Histogram Equalization 적용 여부
   n_tiles : tuple, optional
       Checkerboard 타일 개수
+  cmap : Optional[str, Colormap]
+      Colormap
 
   Returns
   -------
@@ -826,25 +838,19 @@ class SegMask:
                                eq_hist=eq_hist)
 
   fig, axes = plt.subplots(2, 2, figsize=(16, 9))
-  cmap = &#39;gray&#39;
 
   axes[0, 0].imshow(images[0], cmap=cmap)
-  axes[0, 0].set_title(titles[0])
-
   axes[0, 1].imshow(images[1], cmap=cmap)
-  axes[0, 1].set_title(titles[1])
 
   cb = compare_images(img1, img2, method=&#39;checkerboard&#39;, n_tiles=n_tiles)
+  diff = compare_images(img1, img2, method=&#39;diff&#39;)
 
   axes[1, 0].imshow(cb, cmap=cmap)
-  axes[1, 0].set_title(&#39;Compare (checkerboard)&#39;)
-
-  diff = compare_images(img1, img2, method=&#39;diff&#39;)
   axes[1, 1].imshow(diff, cmap=cmap)
-  axes[1, 1].set_title(&#39;Compare (difference)&#39;)
 
-  for ax in axes.ravel():
+  for ax, title in zip(axes.ravel(), titles):
     ax.set_axis_off()
+    ax.set_title(title)
 
   fig.tight_layout()
 
@@ -997,10 +1003,17 @@ class CropRange:
   def as_tuple(self):
     return (self.x_min, self.x_max, self.y_min, self.y_max)
 
-  def crop(self, image: np.ndarray):
+  def crop(self, image: np.ndarray, strict=True):
     if image.shape[:2] != self.image_shape[:2]:
-      raise ValueError(&#39;Input shape ({}) != {}&#39;.format(image.shape[:2],
-                                                       self.image_shape[:2]))
+      msg = &#39;CropRange image shape ({}) != Input image shape {}&#39;.format(
+          self.image_shape[:2], image.shape[:2])
+      if strict:
+        raise ValueError(msg)
+
+      logger.warning(msg)
+      image = resize(image,
+                     output_shape=self.image_shape[:2],
+                     preserve_range=True)
 
     return image[self.y_min:self.y_max, self.x_min:self.x_max]</code></pre>
 </details>
@@ -1047,7 +1060,7 @@ class CropRange:
 </details>
 </dd>
 <dt id="pano.misc.tools.CropRange.crop"><code class="name flex">
-<span>def <span class="ident">crop</span></span>(<span>self, image: numpy.ndarray)</span>
+<span>def <span class="ident">crop</span></span>(<span>self, image: numpy.ndarray, strict=True)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -1055,10 +1068,17 @@ class CropRange:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def crop(self, image: np.ndarray):
+<pre><code class="python">def crop(self, image: np.ndarray, strict=True):
   if image.shape[:2] != self.image_shape[:2]:
-    raise ValueError(&#39;Input shape ({}) != {}&#39;.format(image.shape[:2],
-                                                     self.image_shape[:2]))
+    msg = &#39;CropRange image shape ({}) != Input image shape {}&#39;.format(
+        self.image_shape[:2], image.shape[:2])
+    if strict:
+      raise ValueError(msg)
+
+    logger.warning(msg)
+    image = resize(image,
+                   output_shape=self.image_shape[:2],
+                   preserve_range=True)
 
   return image[self.y_min:self.y_max, self.x_min:self.x_max]</code></pre>
 </details>
@@ -1075,7 +1095,7 @@ class CropRange:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class SegMask:
-  _scale = 60
+  _scale = 80
 
   @classmethod
   def index_to_vis(cls, array: np.ndarray):

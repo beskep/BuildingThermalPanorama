@@ -47,12 +47,14 @@ from .qt_compat import QtGui
 from .qt_compat import QtQuick
 from .qt_compat import QtWidgets
 
+# pylint: disable-all
+
 
 class FigureCanvasQtQuick(QtQuick.QQuickPaintedItem, FigureCanvasBase):
   &#34;&#34;&#34; This class creates a QtQuick Item encapsulating a Matplotlib
-        Figure and all the functions to interact with the &#39;standard&#39;
-        Matplotlib navigation toolbar.
-    &#34;&#34;&#34;
+      Figure and all the functions to interact with the &#39;standard&#39;
+      Matplotlib navigation toolbar.
+  &#34;&#34;&#34;
 
   dpi_ratio_changed = QtCore.Signal()
 
@@ -153,8 +155,7 @@ class FigureCanvasQtQuick(QtQuick.QQuickPaintedItem, FigureCanvasBase):
     self.update()
 
   def draw(self):
-    &#34;&#34;&#34;Render the figure, and queue a request for a Qt draw.
-        &#34;&#34;&#34;
+    &#34;&#34;&#34;Render the figure, and queue a request for a Qt draw.&#34;&#34;&#34;
     # The renderer draw is done here; delaying causes problems with code
     # that uses the result of the draw() to update plot elements.
     if self._is_drawing:
@@ -165,8 +166,8 @@ class FigureCanvasQtQuick(QtQuick.QQuickPaintedItem, FigureCanvasBase):
 
   def draw_idle(self):
     &#34;&#34;&#34;
-        Queue redraw of the Agg buffer and request Qt paintEvent.
-        &#34;&#34;&#34;
+    Queue redraw of the Agg buffer and request Qt paintEvent.
+    &#34;&#34;&#34;
     # The Agg draw needs to be handled by the same thread matplotlib
     # modifies the scene graph from. Post Agg draw request to the
     # current event loop in order to ensure thread affinity and to
@@ -227,13 +228,13 @@ class FigureCanvasQtQuick(QtQuick.QQuickPaintedItem, FigureCanvasBase):
   def mouseEventCoords(self, pos):
     &#34;&#34;&#34;Calculate mouse coordinates in physical pixels
 
-        Qt5 use logical pixels, but the figure is scaled to physical
-        pixels for rendering.   Transform to physical pixels so that
-        all of the down-stream transforms work as expected.
+    Qt5 use logical pixels, but the figure is scaled to physical
+    pixels for rendering.   Transform to physical pixels so that
+    all of the down-stream transforms work as expected.
 
-        Also, the origin is different and needs to be corrected.
+    Also, the origin is different and needs to be corrected.
 
-        &#34;&#34;&#34;
+    &#34;&#34;&#34;
     dpi_ratio = self.dpi_ratio
     x = pos.x()
     # flip y so y=0 is bottom of canvas
@@ -334,20 +335,20 @@ class FigureCanvasQtQuick(QtQuick.QQuickPaintedItem, FigureCanvasBase):
 
   def new_timer(self, *args, **kwargs):
     &#34;&#34;&#34;
-        Creates a new backend-specific subclass of
-        :class:`backend_bases.Timer`.  This is useful for getting
-        periodic events through the backend&#39;s native event
-        loop. Implemented only for backends with GUIs.
+    Creates a new backend-specific subclass of
+    :class:`backend_bases.Timer`.  This is useful for getting
+    periodic events through the backend&#39;s native event
+    loop. Implemented only for backends with GUIs.
 
-        optional arguments:
+    optional arguments:
 
-        *interval*
-            Timer interval in milliseconds
+    *interval*
+        Timer interval in milliseconds
 
-        *callbacks*
-            Sequence of (func, args, kwargs) where func(*args, **kwargs)
-            will be executed by the timer every *interval*.
-        &#34;&#34;&#34;
+    *callbacks*
+        Sequence of (func, args, kwargs) where func(*args, **kwargs)
+        will be executed by the timer every *interval*.
+    &#34;&#34;&#34;
     return TimerQT(*args, **kwargs)
 
   def flush_events(self):
@@ -372,7 +373,7 @@ class MatplotlibIconProvider(QtQuick.QQuickImageProvider):
 
 class NavigationToolbar2QtQuick(QtCore.QObject, NavigationToolbar2):
   &#34;&#34;&#34; NavigationToolbar2 customized for QtQuick
-    &#34;&#34;&#34;
+  &#34;&#34;&#34;
 
   messageChanged = QtCore.Signal(str)
 
@@ -412,7 +413,7 @@ class NavigationToolbar2QtQuick(QtCore.QObject, NavigationToolbar2):
 
   def _init_toolbar(self):
     &#34;&#34;&#34; don&#39;t actually build the widgets here, build them in QML
-        &#34;&#34;&#34;
+    &#34;&#34;&#34;
     pass
 
   # Define a few properties.
@@ -504,9 +505,9 @@ class NavigationToolbar2QtQuick(QtCore.QObject, NavigationToolbar2):
 
   def set_cursor(self, cursor):
     &#34;&#34;&#34;
-        Set the current cursor to one of the :class:`Cursors`
-        enums values
-        &#34;&#34;&#34;
+    Set the current cursor to one of the :class:`Cursors`
+    enums values
+    &#34;&#34;&#34;
     self.canvas.setCursor(cursord[cursor])
 
   def draw_with_locators_update(self):
@@ -587,9 +588,9 @@ Matplotlib navigation toolbar.</p></div>
 </summary>
 <pre><code class="python">class FigureCanvasQtQuick(QtQuick.QQuickPaintedItem, FigureCanvasBase):
   &#34;&#34;&#34; This class creates a QtQuick Item encapsulating a Matplotlib
-        Figure and all the functions to interact with the &#39;standard&#39;
-        Matplotlib navigation toolbar.
-    &#34;&#34;&#34;
+      Figure and all the functions to interact with the &#39;standard&#39;
+      Matplotlib navigation toolbar.
+  &#34;&#34;&#34;
 
   dpi_ratio_changed = QtCore.Signal()
 
@@ -690,8 +691,7 @@ Matplotlib navigation toolbar.</p></div>
     self.update()
 
   def draw(self):
-    &#34;&#34;&#34;Render the figure, and queue a request for a Qt draw.
-        &#34;&#34;&#34;
+    &#34;&#34;&#34;Render the figure, and queue a request for a Qt draw.&#34;&#34;&#34;
     # The renderer draw is done here; delaying causes problems with code
     # that uses the result of the draw() to update plot elements.
     if self._is_drawing:
@@ -702,8 +702,8 @@ Matplotlib navigation toolbar.</p></div>
 
   def draw_idle(self):
     &#34;&#34;&#34;
-        Queue redraw of the Agg buffer and request Qt paintEvent.
-        &#34;&#34;&#34;
+    Queue redraw of the Agg buffer and request Qt paintEvent.
+    &#34;&#34;&#34;
     # The Agg draw needs to be handled by the same thread matplotlib
     # modifies the scene graph from. Post Agg draw request to the
     # current event loop in order to ensure thread affinity and to
@@ -764,13 +764,13 @@ Matplotlib navigation toolbar.</p></div>
   def mouseEventCoords(self, pos):
     &#34;&#34;&#34;Calculate mouse coordinates in physical pixels
 
-        Qt5 use logical pixels, but the figure is scaled to physical
-        pixels for rendering.   Transform to physical pixels so that
-        all of the down-stream transforms work as expected.
+    Qt5 use logical pixels, but the figure is scaled to physical
+    pixels for rendering.   Transform to physical pixels so that
+    all of the down-stream transforms work as expected.
 
-        Also, the origin is different and needs to be corrected.
+    Also, the origin is different and needs to be corrected.
 
-        &#34;&#34;&#34;
+    &#34;&#34;&#34;
     dpi_ratio = self.dpi_ratio
     x = pos.x()
     # flip y so y=0 is bottom of canvas
@@ -871,20 +871,20 @@ Matplotlib navigation toolbar.</p></div>
 
   def new_timer(self, *args, **kwargs):
     &#34;&#34;&#34;
-        Creates a new backend-specific subclass of
-        :class:`backend_bases.Timer`.  This is useful for getting
-        periodic events through the backend&#39;s native event
-        loop. Implemented only for backends with GUIs.
+    Creates a new backend-specific subclass of
+    :class:`backend_bases.Timer`.  This is useful for getting
+    periodic events through the backend&#39;s native event
+    loop. Implemented only for backends with GUIs.
 
-        optional arguments:
+    optional arguments:
 
-        *interval*
-            Timer interval in milliseconds
+    *interval*
+        Timer interval in milliseconds
 
-        *callbacks*
-            Sequence of (func, args, kwargs) where func(*args, **kwargs)
-            will be executed by the timer every *interval*.
-        &#34;&#34;&#34;
+    *callbacks*
+        Sequence of (func, args, kwargs) where func(*args, **kwargs)
+        will be executed by the timer every *interval*.
+    &#34;&#34;&#34;
     return TimerQT(*args, **kwargs)
 
   def flush_events(self):
@@ -957,8 +957,7 @@ Matplotlib navigation toolbar.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def draw(self):
-  &#34;&#34;&#34;Render the figure, and queue a request for a Qt draw.
-      &#34;&#34;&#34;
+  &#34;&#34;&#34;Render the figure, and queue a request for a Qt draw.&#34;&#34;&#34;
   # The renderer draw is done here; delaying causes problems with code
   # that uses the result of the draw() to update plot elements.
   if self._is_drawing:
@@ -1006,8 +1005,8 @@ Matplotlib navigation toolbar.</p></div>
 </summary>
 <pre><code class="python">def draw_idle(self):
   &#34;&#34;&#34;
-      Queue redraw of the Agg buffer and request Qt paintEvent.
-      &#34;&#34;&#34;
+  Queue redraw of the Agg buffer and request Qt paintEvent.
+  &#34;&#34;&#34;
   # The Agg draw needs to be handled by the same thread matplotlib
   # modifies the scene graph from. Post Agg draw request to the
   # current event loop in order to ensure thread affinity and to
@@ -1214,13 +1213,13 @@ all of the down-stream transforms work as expected.</p>
 <pre><code class="python">def mouseEventCoords(self, pos):
   &#34;&#34;&#34;Calculate mouse coordinates in physical pixels
 
-      Qt5 use logical pixels, but the figure is scaled to physical
-      pixels for rendering.   Transform to physical pixels so that
-      all of the down-stream transforms work as expected.
+  Qt5 use logical pixels, but the figure is scaled to physical
+  pixels for rendering.   Transform to physical pixels so that
+  all of the down-stream transforms work as expected.
 
-      Also, the origin is different and needs to be corrected.
+  Also, the origin is different and needs to be corrected.
 
-      &#34;&#34;&#34;
+  &#34;&#34;&#34;
   dpi_ratio = self.dpi_ratio
   x = pos.x()
   # flip y so y=0 is bottom of canvas
@@ -1295,20 +1294,20 @@ will be executed by the timer every </em>interval*.</p></div>
 </summary>
 <pre><code class="python">def new_timer(self, *args, **kwargs):
   &#34;&#34;&#34;
-      Creates a new backend-specific subclass of
-      :class:`backend_bases.Timer`.  This is useful for getting
-      periodic events through the backend&#39;s native event
-      loop. Implemented only for backends with GUIs.
+  Creates a new backend-specific subclass of
+  :class:`backend_bases.Timer`.  This is useful for getting
+  periodic events through the backend&#39;s native event
+  loop. Implemented only for backends with GUIs.
 
-      optional arguments:
+  optional arguments:
 
-      *interval*
-          Timer interval in milliseconds
+  *interval*
+      Timer interval in milliseconds
 
-      *callbacks*
-          Sequence of (func, args, kwargs) where func(*args, **kwargs)
-          will be executed by the timer every *interval*.
-      &#34;&#34;&#34;
+  *callbacks*
+      Sequence of (func, args, kwargs) where func(*args, **kwargs)
+      will be executed by the timer every *interval*.
+  &#34;&#34;&#34;
   return TimerQT(*args, **kwargs)</code></pre>
 </details>
 </dd>
@@ -1438,7 +1437,7 @@ will be executed by the timer every </em>interval*.</p></div>
 </summary>
 <pre><code class="python">class NavigationToolbar2QtQuick(QtCore.QObject, NavigationToolbar2):
   &#34;&#34;&#34; NavigationToolbar2 customized for QtQuick
-    &#34;&#34;&#34;
+  &#34;&#34;&#34;
 
   messageChanged = QtCore.Signal(str)
 
@@ -1478,7 +1477,7 @@ will be executed by the timer every </em>interval*.</p></div>
 
   def _init_toolbar(self):
     &#34;&#34;&#34; don&#39;t actually build the widgets here, build them in QML
-        &#34;&#34;&#34;
+    &#34;&#34;&#34;
     pass
 
   # Define a few properties.
@@ -1570,9 +1569,9 @@ will be executed by the timer every </em>interval*.</p></div>
 
   def set_cursor(self, cursor):
     &#34;&#34;&#34;
-        Set the current cursor to one of the :class:`Cursors`
-        enums values
-        &#34;&#34;&#34;
+    Set the current cursor to one of the :class:`Cursors`
+    enums values
+    &#34;&#34;&#34;
     self.canvas.setCursor(cursord[cursor])
 
   def draw_with_locators_update(self):
@@ -1635,6 +1634,10 @@ will be executed by the timer every </em>interval*.</p></div>
 <li>sip.wrapper</li>
 <li>sip.simplewrapper</li>
 <li>matplotlib.backend_bases.NavigationToolbar2</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="pano.interface.plot_controller.CropToolbar" href="../plot_controller.html#pano.interface.plot_controller.CropToolbar">CropToolbar</a></li>
 </ul>
 <h3>Instance variables</h3>
 <dl>
@@ -2077,9 +2080,9 @@ enums values</p></div>
 </summary>
 <pre><code class="python">def set_cursor(self, cursor):
   &#34;&#34;&#34;
-      Set the current cursor to one of the :class:`Cursors`
-      enums values
-      &#34;&#34;&#34;
+  Set the current cursor to one of the :class:`Cursors`
+  enums values
+  &#34;&#34;&#34;
   self.canvas.setCursor(cursord[cursor])</code></pre>
 </details>
 </dd>

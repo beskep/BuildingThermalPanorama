@@ -84,7 +84,7 @@ ApplicationWindow {
                             registration_panel,
                             segmentation_panel,
                             panorama_panel,
-                            discriptive_panel
+                            descriptive_panel
                         ][currentIndex].init()
                     }
 
@@ -101,7 +101,7 @@ ApplicationWindow {
                         id : panorama_panel
                     }
                     DescriptivePanel {
-                        id : discriptive_panel
+                        id : descriptive_panel
                     }
                 }
             }
@@ -149,7 +149,7 @@ ApplicationWindow {
         } else if (name === 'panorama') {
             return panorama_panel
         } else if (name === 'descriptive') {
-            return discriptive_panel
+            return descriptive_panel
         }
 
         return null

@@ -1,0 +1,921 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.2" />
+<title>pano.distortion.projection API documentation</title>
+<meta name="description" content="지정한 roll, yaw, pitch를 적용한 영상 projection" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>pano.distortion.projection</code></h1>
+</header>
+<section id="section-intro">
+<p>지정한 roll, yaw, pitch를 적용한 영상 projection</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;지정한 roll, yaw, pitch를 적용한 영상 projection&#34;&#34;&#34;
+
+from typing import Optional
+
+import numpy as np
+from skimage import transform
+
+
+class ProjectionMatrix:
+
+  def __init__(self, image_shape: tuple, viewing_angle: float) -&gt; None:
+    &#34;&#34;&#34;
+    영상 시야각과 회전 각도로부터 projection matrix 계산
+
+    Parameters
+    ----------
+    image_shape : tuple
+        ndarray.shape
+    viewing_angle : float
+        Viewing angle of camera [rad]
+    &#34;&#34;&#34;
+    self._cam_mtx = self.camera_matrix(image_shape=image_shape,
+                                       viewing_angle=viewing_angle)
+    self._inv_cam_mtx = np.linalg.inv(self._cam_mtx)
+
+  def __call__(self, roll=0.0, pitch=0.0, yaw=0.0) -&gt; np.ndarray:
+    &#34;&#34;&#34;
+    대상 영상에 roll, pitch, yaw를 차례로 적용하는 projection matrix 계산.
+
+    Parameters
+    ----------
+    roll : float, optional
+        Roll angle [rad], by default 0.0
+    pitch : float, optional
+        Pitch angle [rad], by default 0.0
+    yaw : float, optional
+        Yaw angle [rad], by default 0.0
+
+    Returns
+    -------
+    np.ndarray
+    &#34;&#34;&#34;
+    rot = self.rotate(roll=roll, pitch=pitch, yaw=yaw)
+    mtx = np.linalg.multi_dot([self._cam_mtx, rot, self._inv_cam_mtx])
+
+    return mtx
+
+  @staticmethod
+  def camera_matrix(image_shape: tuple, viewing_angle: float) -&gt; np.ndarray:
+    &#34;&#34;&#34;
+    영상 해상도, 카메라 시야각 (폭)으로부터 camera matrix 추정
+
+    Parameters
+    ----------
+    image_shape : tuple
+        ndarray.shape
+    viewing_angle : float
+        Viewing angle of camera [rad]
+
+    Returns
+    -------
+    np.ndarray
+    &#34;&#34;&#34;
+    f = image_shape[0] / np.tan(viewing_angle / 2.0)
+    translation = (image_shape[1] / 2.0, image_shape[0] / 2.0)
+    trsf = transform.AffineTransform(scale=(f, f), translation=translation)
+    return trsf.params
+
+  @staticmethod
+  def roll(angle=0.0) -&gt; np.ndarray:
+    &#34;&#34;&#34;
+    Roll의 projection matrix (평면 법선 방향을 축으로 회전).
+
+    Parameters
+    ----------
+    angle : float, optional
+        [rad], by default 0.0
+
+    Returns
+    -------
+    np.ndarray
+    &#34;&#34;&#34;
+    if angle:
+      mtx = np.array([
+          [np.cos(angle), -np.sin(angle), 0],
+          [np.sin(angle), np.cos(angle), 0],
+          [0.0, 0.0, 1.0],
+      ])
+    else:
+      mtx = np.identity(n=3)
+
+    return mtx
+
+  @staticmethod
+  def yaw(angle=0.0) -&gt; np.ndarray:
+    &#34;&#34;&#34;
+    Yaw의 projection matrix (up-down).
+
+    Parameters
+    ----------
+    angle : float, optional
+        [rad], by default 0.0
+
+    Returns
+    -------
+    np.ndarray
+    &#34;&#34;&#34;
+    if angle:
+      mtx_lr = np.array([
+          [np.cos(angle), 0.0, np.sin(angle)],
+          [0.0, 1.0, 0.0],
+          [-np.sin(angle), 0.0, np.cos(angle)],
+      ])
+    else:
+      mtx_lr = np.identity(n=3)
+
+    return mtx_lr
+
+  @staticmethod
+  def pitch(angle=0.0) -&gt; np.ndarray:
+    &#34;&#34;&#34;
+    Pitch의 projection matrix (left-right).
+
+    Parameters
+    ----------
+    angle : float, optional
+        [rad], by default 0.0
+
+    Returns
+    -------
+    np.ndarray
+    &#34;&#34;&#34;
+    if angle:
+      mtx_ud = np.array([
+          [1.0, 0.0, 0.0],
+          [0.0, np.cos(angle), -np.sin(angle)],
+          [0.0, np.sin(angle), np.cos(angle)],
+      ])
+    else:
+      mtx_ud = np.identity(n=3)
+
+    return mtx_ud
+
+  @classmethod
+  def rotate(cls, roll=0.0, pitch=0.0, yaw=0.0) -&gt; np.ndarray:
+    &#34;&#34;&#34;
+    roll, pitch, yaw를 차례로 적용하는 projection matrix 계산.
+
+    Parameters
+    ----------
+    roll : float, optional
+        Roll angle [rad], by default 0.0
+    pitch : float, optional
+        Pitch angle [rad], by default 0.0
+    yaw : float, optional
+        Yaw angle [rad], by default 0.0
+
+    Returns
+    -------
+    np.ndarray
+    &#34;&#34;&#34;
+    mtx_roll = cls.roll(angle=roll)
+    mtx_pitch = cls.pitch(angle=pitch)
+    mtx_yaw = cls.yaw(angle=yaw)
+    mtx = np.linalg.multi_dot([mtx_yaw, mtx_pitch, mtx_roll])
+
+    return mtx
+
+
+class ImageProjection:
+
+  def __init__(self, image: np.ndarray, viewing_angle: float) -&gt; None:
+    &#34;&#34;&#34;
+    Parameters
+    ----------
+    image : np.ndarray
+    viewing_angle : float
+        Viewing angle of camera [rad]
+    &#34;&#34;&#34;
+    self._image = image
+    self._prj_mtx = ProjectionMatrix(image_shape=image.shape[:2],
+                                     viewing_angle=viewing_angle)
+
+    self._vertex0 = np.array([
+        [0, 0],
+        [image.shape[1], 0],
+        [image.shape[1], image.shape[0]],
+        [0, image.shape[0]],
+    ])
+
+  @property
+  def image(self):
+    return self._image
+
+  def _rotate_matrix(self, roll=0.0, pitch=0.0, yaw=0.0, scale=True):
+    mtx_rot = self._prj_mtx(roll=roll, pitch=pitch, yaw=yaw)
+
+    # 영상 원점을 맞추기 위한 translation
+    rotated_vertex = transform.matrix_transform(self._vertex0, mtx_rot)
+    translation = -np.min(rotated_vertex, axis=0)
+
+    # scale factor 계산
+    if not scale:
+      scale_factor = 1.0
+    else:
+      rotated_area = 0.5 * np.abs(
+          np.dot(rotated_vertex[:, 0], np.roll(rotated_vertex[:, 1], 1)) -
+          np.dot(rotated_vertex[:, 1], np.roll(rotated_vertex[:, 0], 1)))
+      scale_factor = np.sqrt(self._image.shape[0] * self._image.shape[1] /
+                             rotated_area)
+
+    mtx_fit = transform.AffineTransform(
+        scale=scale_factor,
+        translation=(translation * scale_factor),
+    ).params
+
+    return np.matmul(mtx_fit, mtx_rot)
+
+  def project(self,
+              roll=0.0,
+              pitch=0.0,
+              yaw=0.0,
+              scale=True,
+              cval=None,
+              image: Optional[np.ndarray] = None) -&gt; np.ndarray:
+    if image is None:
+      image = self._image
+    elif image.shape[:2] != self._image.shape[:2]:
+      raise ValueError(&#39;image.shape[:2] != self._image.shape[:2]&#39;)
+
+    if cval is None:
+      cval = np.nan
+
+    if all(x == 0.0 for x in [roll, pitch, yaw]):
+      return image
+
+    mtx = self._rotate_matrix(roll=roll, pitch=pitch, yaw=yaw, scale=scale)
+
+    vertex = transform.matrix_transform(self._vertex0, mtx)
+    shape = np.max(vertex, axis=0) - np.min(vertex, axis=0)
+
+    projected = transform.warp(image=image,
+                               inverse_map=np.linalg.inv(mtx),
+                               output_shape=np.ceil(shape)[[1, 0]],
+                               cval=cval,
+                               clip=False,
+                               preserve_range=True)
+
+    return projected
+
+
+if __name__ == &#39;__main__&#39;:
+  # pylint: disable=ungrouped-imports
+  import matplotlib.pyplot as plt
+  from skimage import data
+  from skimage import img_as_float
+
+  image = img_as_float(data.chelsea())
+
+  prj = ImageProjection(image=image, viewing_angle=np.deg2rad(42.0))
+  angles = (2, 0.1, 0.7)
+
+  img_rot = prj.project(*angles, scale=False)
+  img_fit = prj.project(*angles, scale=True)
+
+  fig, axes = plt.subplots(1, 3)
+
+  axes[0].imshow(image)
+  axes[1].imshow(img_rot)
+  axes[2].imshow(img_fit)
+
+  plt.show()</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="pano.distortion.projection.ImageProjection"><code class="flex name class">
+<span>class <span class="ident">ImageProjection</span></span>
+<span>(</span><span>image: numpy.ndarray, viewing_angle: float)</span>
+</code></dt>
+<dd>
+<div class="desc"><h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>image</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>viewing_angle</code></strong> :&ensp;<code>float</code></dt>
+<dd>Viewing angle of camera [rad]</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ImageProjection:
+
+  def __init__(self, image: np.ndarray, viewing_angle: float) -&gt; None:
+    &#34;&#34;&#34;
+    Parameters
+    ----------
+    image : np.ndarray
+    viewing_angle : float
+        Viewing angle of camera [rad]
+    &#34;&#34;&#34;
+    self._image = image
+    self._prj_mtx = ProjectionMatrix(image_shape=image.shape[:2],
+                                     viewing_angle=viewing_angle)
+
+    self._vertex0 = np.array([
+        [0, 0],
+        [image.shape[1], 0],
+        [image.shape[1], image.shape[0]],
+        [0, image.shape[0]],
+    ])
+
+  @property
+  def image(self):
+    return self._image
+
+  def _rotate_matrix(self, roll=0.0, pitch=0.0, yaw=0.0, scale=True):
+    mtx_rot = self._prj_mtx(roll=roll, pitch=pitch, yaw=yaw)
+
+    # 영상 원점을 맞추기 위한 translation
+    rotated_vertex = transform.matrix_transform(self._vertex0, mtx_rot)
+    translation = -np.min(rotated_vertex, axis=0)
+
+    # scale factor 계산
+    if not scale:
+      scale_factor = 1.0
+    else:
+      rotated_area = 0.5 * np.abs(
+          np.dot(rotated_vertex[:, 0], np.roll(rotated_vertex[:, 1], 1)) -
+          np.dot(rotated_vertex[:, 1], np.roll(rotated_vertex[:, 0], 1)))
+      scale_factor = np.sqrt(self._image.shape[0] * self._image.shape[1] /
+                             rotated_area)
+
+    mtx_fit = transform.AffineTransform(
+        scale=scale_factor,
+        translation=(translation * scale_factor),
+    ).params
+
+    return np.matmul(mtx_fit, mtx_rot)
+
+  def project(self,
+              roll=0.0,
+              pitch=0.0,
+              yaw=0.0,
+              scale=True,
+              cval=None,
+              image: Optional[np.ndarray] = None) -&gt; np.ndarray:
+    if image is None:
+      image = self._image
+    elif image.shape[:2] != self._image.shape[:2]:
+      raise ValueError(&#39;image.shape[:2] != self._image.shape[:2]&#39;)
+
+    if cval is None:
+      cval = np.nan
+
+    if all(x == 0.0 for x in [roll, pitch, yaw]):
+      return image
+
+    mtx = self._rotate_matrix(roll=roll, pitch=pitch, yaw=yaw, scale=scale)
+
+    vertex = transform.matrix_transform(self._vertex0, mtx)
+    shape = np.max(vertex, axis=0) - np.min(vertex, axis=0)
+
+    projected = transform.warp(image=image,
+                               inverse_map=np.linalg.inv(mtx),
+                               output_shape=np.ceil(shape)[[1, 0]],
+                               cval=cval,
+                               clip=False,
+                               preserve_range=True)
+
+    return projected</code></pre>
+</details>
+<h3>Instance variables</h3>
+<dl>
+<dt id="pano.distortion.projection.ImageProjection.image"><code class="name">var <span class="ident">image</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def image(self):
+  return self._image</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="pano.distortion.projection.ImageProjection.project"><code class="name flex">
+<span>def <span class="ident">project</span></span>(<span>self, roll=0.0, pitch=0.0, yaw=0.0, scale=True, cval=None, image: Optional[numpy.ndarray] = None) ‑> numpy.ndarray</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def project(self,
+            roll=0.0,
+            pitch=0.0,
+            yaw=0.0,
+            scale=True,
+            cval=None,
+            image: Optional[np.ndarray] = None) -&gt; np.ndarray:
+  if image is None:
+    image = self._image
+  elif image.shape[:2] != self._image.shape[:2]:
+    raise ValueError(&#39;image.shape[:2] != self._image.shape[:2]&#39;)
+
+  if cval is None:
+    cval = np.nan
+
+  if all(x == 0.0 for x in [roll, pitch, yaw]):
+    return image
+
+  mtx = self._rotate_matrix(roll=roll, pitch=pitch, yaw=yaw, scale=scale)
+
+  vertex = transform.matrix_transform(self._vertex0, mtx)
+  shape = np.max(vertex, axis=0) - np.min(vertex, axis=0)
+
+  projected = transform.warp(image=image,
+                             inverse_map=np.linalg.inv(mtx),
+                             output_shape=np.ceil(shape)[[1, 0]],
+                             cval=cval,
+                             clip=False,
+                             preserve_range=True)
+
+  return projected</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="pano.distortion.projection.ProjectionMatrix"><code class="flex name class">
+<span>class <span class="ident">ProjectionMatrix</span></span>
+<span>(</span><span>image_shape: tuple, viewing_angle: float)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>영상 시야각과 회전 각도로부터 projection matrix 계산</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>image_shape</code></strong> :&ensp;<code>tuple</code></dt>
+<dd>ndarray.shape</dd>
+<dt><strong><code>viewing_angle</code></strong> :&ensp;<code>float</code></dt>
+<dd>Viewing angle of camera [rad]</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ProjectionMatrix:
+
+  def __init__(self, image_shape: tuple, viewing_angle: float) -&gt; None:
+    &#34;&#34;&#34;
+    영상 시야각과 회전 각도로부터 projection matrix 계산
+
+    Parameters
+    ----------
+    image_shape : tuple
+        ndarray.shape
+    viewing_angle : float
+        Viewing angle of camera [rad]
+    &#34;&#34;&#34;
+    self._cam_mtx = self.camera_matrix(image_shape=image_shape,
+                                       viewing_angle=viewing_angle)
+    self._inv_cam_mtx = np.linalg.inv(self._cam_mtx)
+
+  def __call__(self, roll=0.0, pitch=0.0, yaw=0.0) -&gt; np.ndarray:
+    &#34;&#34;&#34;
+    대상 영상에 roll, pitch, yaw를 차례로 적용하는 projection matrix 계산.
+
+    Parameters
+    ----------
+    roll : float, optional
+        Roll angle [rad], by default 0.0
+    pitch : float, optional
+        Pitch angle [rad], by default 0.0
+    yaw : float, optional
+        Yaw angle [rad], by default 0.0
+
+    Returns
+    -------
+    np.ndarray
+    &#34;&#34;&#34;
+    rot = self.rotate(roll=roll, pitch=pitch, yaw=yaw)
+    mtx = np.linalg.multi_dot([self._cam_mtx, rot, self._inv_cam_mtx])
+
+    return mtx
+
+  @staticmethod
+  def camera_matrix(image_shape: tuple, viewing_angle: float) -&gt; np.ndarray:
+    &#34;&#34;&#34;
+    영상 해상도, 카메라 시야각 (폭)으로부터 camera matrix 추정
+
+    Parameters
+    ----------
+    image_shape : tuple
+        ndarray.shape
+    viewing_angle : float
+        Viewing angle of camera [rad]
+
+    Returns
+    -------
+    np.ndarray
+    &#34;&#34;&#34;
+    f = image_shape[0] / np.tan(viewing_angle / 2.0)
+    translation = (image_shape[1] / 2.0, image_shape[0] / 2.0)
+    trsf = transform.AffineTransform(scale=(f, f), translation=translation)
+    return trsf.params
+
+  @staticmethod
+  def roll(angle=0.0) -&gt; np.ndarray:
+    &#34;&#34;&#34;
+    Roll의 projection matrix (평면 법선 방향을 축으로 회전).
+
+    Parameters
+    ----------
+    angle : float, optional
+        [rad], by default 0.0
+
+    Returns
+    -------
+    np.ndarray
+    &#34;&#34;&#34;
+    if angle:
+      mtx = np.array([
+          [np.cos(angle), -np.sin(angle), 0],
+          [np.sin(angle), np.cos(angle), 0],
+          [0.0, 0.0, 1.0],
+      ])
+    else:
+      mtx = np.identity(n=3)
+
+    return mtx
+
+  @staticmethod
+  def yaw(angle=0.0) -&gt; np.ndarray:
+    &#34;&#34;&#34;
+    Yaw의 projection matrix (up-down).
+
+    Parameters
+    ----------
+    angle : float, optional
+        [rad], by default 0.0
+
+    Returns
+    -------
+    np.ndarray
+    &#34;&#34;&#34;
+    if angle:
+      mtx_lr = np.array([
+          [np.cos(angle), 0.0, np.sin(angle)],
+          [0.0, 1.0, 0.0],
+          [-np.sin(angle), 0.0, np.cos(angle)],
+      ])
+    else:
+      mtx_lr = np.identity(n=3)
+
+    return mtx_lr
+
+  @staticmethod
+  def pitch(angle=0.0) -&gt; np.ndarray:
+    &#34;&#34;&#34;
+    Pitch의 projection matrix (left-right).
+
+    Parameters
+    ----------
+    angle : float, optional
+        [rad], by default 0.0
+
+    Returns
+    -------
+    np.ndarray
+    &#34;&#34;&#34;
+    if angle:
+      mtx_ud = np.array([
+          [1.0, 0.0, 0.0],
+          [0.0, np.cos(angle), -np.sin(angle)],
+          [0.0, np.sin(angle), np.cos(angle)],
+      ])
+    else:
+      mtx_ud = np.identity(n=3)
+
+    return mtx_ud
+
+  @classmethod
+  def rotate(cls, roll=0.0, pitch=0.0, yaw=0.0) -&gt; np.ndarray:
+    &#34;&#34;&#34;
+    roll, pitch, yaw를 차례로 적용하는 projection matrix 계산.
+
+    Parameters
+    ----------
+    roll : float, optional
+        Roll angle [rad], by default 0.0
+    pitch : float, optional
+        Pitch angle [rad], by default 0.0
+    yaw : float, optional
+        Yaw angle [rad], by default 0.0
+
+    Returns
+    -------
+    np.ndarray
+    &#34;&#34;&#34;
+    mtx_roll = cls.roll(angle=roll)
+    mtx_pitch = cls.pitch(angle=pitch)
+    mtx_yaw = cls.yaw(angle=yaw)
+    mtx = np.linalg.multi_dot([mtx_yaw, mtx_pitch, mtx_roll])
+
+    return mtx</code></pre>
+</details>
+<h3>Static methods</h3>
+<dl>
+<dt id="pano.distortion.projection.ProjectionMatrix.camera_matrix"><code class="name flex">
+<span>def <span class="ident">camera_matrix</span></span>(<span>image_shape: tuple, viewing_angle: float) ‑> numpy.ndarray</span>
+</code></dt>
+<dd>
+<div class="desc"><p>영상 해상도, 카메라 시야각 (폭)으로부터 camera matrix 추정</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>image_shape</code></strong> :&ensp;<code>tuple</code></dt>
+<dd>ndarray.shape</dd>
+<dt><strong><code>viewing_angle</code></strong> :&ensp;<code>float</code></dt>
+<dd>Viewing angle of camera [rad]</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>np.ndarray</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def camera_matrix(image_shape: tuple, viewing_angle: float) -&gt; np.ndarray:
+  &#34;&#34;&#34;
+  영상 해상도, 카메라 시야각 (폭)으로부터 camera matrix 추정
+
+  Parameters
+  ----------
+  image_shape : tuple
+      ndarray.shape
+  viewing_angle : float
+      Viewing angle of camera [rad]
+
+  Returns
+  -------
+  np.ndarray
+  &#34;&#34;&#34;
+  f = image_shape[0] / np.tan(viewing_angle / 2.0)
+  translation = (image_shape[1] / 2.0, image_shape[0] / 2.0)
+  trsf = transform.AffineTransform(scale=(f, f), translation=translation)
+  return trsf.params</code></pre>
+</details>
+</dd>
+<dt id="pano.distortion.projection.ProjectionMatrix.pitch"><code class="name flex">
+<span>def <span class="ident">pitch</span></span>(<span>angle=0.0) ‑> numpy.ndarray</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Pitch의 projection matrix (left-right).</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>angle</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>[rad], by default 0.0</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>np.ndarray</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def pitch(angle=0.0) -&gt; np.ndarray:
+  &#34;&#34;&#34;
+  Pitch의 projection matrix (left-right).
+
+  Parameters
+  ----------
+  angle : float, optional
+      [rad], by default 0.0
+
+  Returns
+  -------
+  np.ndarray
+  &#34;&#34;&#34;
+  if angle:
+    mtx_ud = np.array([
+        [1.0, 0.0, 0.0],
+        [0.0, np.cos(angle), -np.sin(angle)],
+        [0.0, np.sin(angle), np.cos(angle)],
+    ])
+  else:
+    mtx_ud = np.identity(n=3)
+
+  return mtx_ud</code></pre>
+</details>
+</dd>
+<dt id="pano.distortion.projection.ProjectionMatrix.roll"><code class="name flex">
+<span>def <span class="ident">roll</span></span>(<span>angle=0.0) ‑> numpy.ndarray</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Roll의 projection matrix (평면 법선 방향을 축으로 회전).</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>angle</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>[rad], by default 0.0</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>np.ndarray</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def roll(angle=0.0) -&gt; np.ndarray:
+  &#34;&#34;&#34;
+  Roll의 projection matrix (평면 법선 방향을 축으로 회전).
+
+  Parameters
+  ----------
+  angle : float, optional
+      [rad], by default 0.0
+
+  Returns
+  -------
+  np.ndarray
+  &#34;&#34;&#34;
+  if angle:
+    mtx = np.array([
+        [np.cos(angle), -np.sin(angle), 0],
+        [np.sin(angle), np.cos(angle), 0],
+        [0.0, 0.0, 1.0],
+    ])
+  else:
+    mtx = np.identity(n=3)
+
+  return mtx</code></pre>
+</details>
+</dd>
+<dt id="pano.distortion.projection.ProjectionMatrix.rotate"><code class="name flex">
+<span>def <span class="ident">rotate</span></span>(<span>roll=0.0, pitch=0.0, yaw=0.0) ‑> numpy.ndarray</span>
+</code></dt>
+<dd>
+<div class="desc"><p>roll, pitch, yaw를 차례로 적용하는 projection matrix 계산.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>roll</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>Roll angle [rad], by default 0.0</dd>
+<dt><strong><code>pitch</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>Pitch angle [rad], by default 0.0</dd>
+<dt><strong><code>yaw</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>Yaw angle [rad], by default 0.0</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>np.ndarray</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def rotate(cls, roll=0.0, pitch=0.0, yaw=0.0) -&gt; np.ndarray:
+  &#34;&#34;&#34;
+  roll, pitch, yaw를 차례로 적용하는 projection matrix 계산.
+
+  Parameters
+  ----------
+  roll : float, optional
+      Roll angle [rad], by default 0.0
+  pitch : float, optional
+      Pitch angle [rad], by default 0.0
+  yaw : float, optional
+      Yaw angle [rad], by default 0.0
+
+  Returns
+  -------
+  np.ndarray
+  &#34;&#34;&#34;
+  mtx_roll = cls.roll(angle=roll)
+  mtx_pitch = cls.pitch(angle=pitch)
+  mtx_yaw = cls.yaw(angle=yaw)
+  mtx = np.linalg.multi_dot([mtx_yaw, mtx_pitch, mtx_roll])
+
+  return mtx</code></pre>
+</details>
+</dd>
+<dt id="pano.distortion.projection.ProjectionMatrix.yaw"><code class="name flex">
+<span>def <span class="ident">yaw</span></span>(<span>angle=0.0) ‑> numpy.ndarray</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Yaw의 projection matrix (up-down).</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>angle</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>[rad], by default 0.0</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>np.ndarray</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def yaw(angle=0.0) -&gt; np.ndarray:
+  &#34;&#34;&#34;
+  Yaw의 projection matrix (up-down).
+
+  Parameters
+  ----------
+  angle : float, optional
+      [rad], by default 0.0
+
+  Returns
+  -------
+  np.ndarray
+  &#34;&#34;&#34;
+  if angle:
+    mtx_lr = np.array([
+        [np.cos(angle), 0.0, np.sin(angle)],
+        [0.0, 1.0, 0.0],
+        [-np.sin(angle), 0.0, np.cos(angle)],
+    ])
+  else:
+    mtx_lr = np.identity(n=3)
+
+  return mtx_lr</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="pano.distortion" href="index.html">pano.distortion</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="pano.distortion.projection.ImageProjection" href="#pano.distortion.projection.ImageProjection">ImageProjection</a></code></h4>
+<ul class="">
+<li><code><a title="pano.distortion.projection.ImageProjection.image" href="#pano.distortion.projection.ImageProjection.image">image</a></code></li>
+<li><code><a title="pano.distortion.projection.ImageProjection.project" href="#pano.distortion.projection.ImageProjection.project">project</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="pano.distortion.projection.ProjectionMatrix" href="#pano.distortion.projection.ProjectionMatrix">ProjectionMatrix</a></code></h4>
+<ul class="">
+<li><code><a title="pano.distortion.projection.ProjectionMatrix.camera_matrix" href="#pano.distortion.projection.ProjectionMatrix.camera_matrix">camera_matrix</a></code></li>
+<li><code><a title="pano.distortion.projection.ProjectionMatrix.pitch" href="#pano.distortion.projection.ProjectionMatrix.pitch">pitch</a></code></li>
+<li><code><a title="pano.distortion.projection.ProjectionMatrix.roll" href="#pano.distortion.projection.ProjectionMatrix.roll">roll</a></code></li>
+<li><code><a title="pano.distortion.projection.ProjectionMatrix.rotate" href="#pano.distortion.projection.ProjectionMatrix.rotate">rotate</a></code></li>
+<li><code><a title="pano.distortion.projection.ProjectionMatrix.yaw" href="#pano.distortion.projection.ProjectionMatrix.yaw">yaw</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+</footer>
+</body>
+</html>

@@ -47,6 +47,7 @@ class PanoramaPreprocess:
 
   def __init__(self,
                is_numeric: bool,
+               fillna: Optional[float] = 0.0,
                mask_threshold: Optional[float] = -30.0,
                contrast: Optional[str] = &#39;equalization&#39;,
                denoise: Optional[str] = &#39;bilateral&#39;):
@@ -56,6 +57,9 @@ class PanoramaPreprocess:
     is_numeric : bool
         전처리 대상 영상의 픽셀값이 물리적 의미가 있는지 (실화상인지) 여부.
         `True`인 경우, `mask_threshold` 적용.
+
+    fillna : Optional[float]
+        nan이 존재하는 경우 채워넣을 값.
 
     mask_threshold : Optional[float], optional
         `is_numeric`이 `True`인 경우, 픽셀 값이 `mask_threshold` 미만인 영역은
@@ -88,6 +92,7 @@ class PanoramaPreprocess:
       raise ValueError
 
     self._is_numeric = is_numeric
+    self._fillna = fillna
     self._mask_threshold = mask_threshold
     self._contrast_type = contrast
     self._denoise_type = denoise
@@ -139,27 +144,38 @@ class PanoramaPreprocess:
   def _gaussian_filter(self, image: np.ndarray) -&gt; np.ndarray:
     return cv.GaussianBlur(image, **self._gaussian_args)
 
-  def masking(self, image: np.ndarray) -&gt; Optional[np.ndarray]:
+  def masking(self,
+              image: np.ndarray) -&gt; Tuple[np.ndarray, Optional[np.ndarray]]:
     &#34;&#34;&#34;
-    영상의 픽셀값에 따라 마스킹. 대상 영상이 열화상이 아닌 경우 (not `is_numeric`)
-    `None` 반환.
+    영상의 픽셀값에 따라 마스킹하고 영상과 마스크 반환.
+    대상 영상이 열화상이 아닌 경우 (not `is_numeric`) 마스크는 `None` 반환.
 
     Parameters
     ----------
     image : np.ndarray
-        대상 영상
 
     Returns
     -------
-    Optional[np.ndarray]
-        추출한 마스크. 파노라마를 생성할 영역의 픽셀값은 1, 제외할 영역은 0
-    &#34;&#34;&#34;
-    if self._is_numeric and self.mask_threshold is not None:
-      mask = (self._mask_threshold &lt; image).astype(&#39;uint8&#39;)
-    else:
-      mask = None
+    Tuple[np.ndarray, Optional[np.ndarray]]
+        영상. nan이 존재하는 경우 fillna값으로 변경.
 
-    return mask
+        마스크. 파노라마를 생성할 영역은 1, 이외 영역은 0.
+    &#34;&#34;&#34;
+    if not self._is_numeric:
+      return image, None
+
+    if self.mask_threshold is None:
+      threshold_mask = None
+    else:
+      threshold_mask = (self.mask_threshold &lt; image).astype(bool)
+
+    mask = np.logical_not(np.isnan(image))
+    image = np.nan_to_num(image, nan=self._fillna)
+
+    if threshold_mask is not None:
+      mask = np.logical_or(mask, threshold_mask)
+
+    return image, mask.astype(np.uint8)
 
   def adjust_contrast(self, image: np.ndarray) -&gt; np.ndarray:
     &#34;&#34;&#34;
@@ -235,7 +251,7 @@ class PanoramaPreprocess:
     mask : Optional[np.ndarray]
         마스크
     &#34;&#34;&#34;
-    mask = self.masking(image)
+    image, mask = self.masking(image)
 
     image = self.adjust_contrast(image)
     image = rescale_intensity(image, out_range=&#39;uint8&#39;)
@@ -255,7 +271,7 @@ class PanoramaPreprocess:
 <dl>
 <dt id="pano.stitch.preprocess.PanoramaPreprocess"><code class="flex name class">
 <span>class <span class="ident">PanoramaPreprocess</span></span>
-<span>(</span><span>is_numeric: bool, mask_threshold: Optional[float] = -30.0, contrast: Optional[str] = 'equalization', denoise: Optional[str] = 'bilateral')</span>
+<span>(</span><span>is_numeric: bool, fillna: Optional[float] = 0.0, mask_threshold: Optional[float] = -30.0, contrast: Optional[str] = 'equalization', denoise: Optional[str] = 'bilateral')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>파노라마 생성을 위한 열화상, 실화상의 전처리</p>
@@ -264,6 +280,8 @@ class PanoramaPreprocess:
 <dt><strong><code>is_numeric</code></strong> :&ensp;<code>bool</code></dt>
 <dd>전처리 대상 영상의 픽셀값이 물리적 의미가 있는지 (실화상인지) 여부.
 <code>True</code>인 경우, <code>mask_threshold</code> 적용.</dd>
+<dt><strong><code>fillna</code></strong> :&ensp;<code>Optional[float]</code></dt>
+<dd>nan이 존재하는 경우 채워넣을 값.</dd>
 <dt><strong><code>mask_threshold</code></strong> :&ensp;<code>Optional[float]</code>, optional</dt>
 <dd><code>is_numeric</code>이 <code>True</code>인 경우, 픽셀 값이 <code>mask_threshold</code> 미만인 영역은
 파노라마 생성 시 제외함.</dd>
@@ -298,6 +316,7 @@ RGB 형식의 실화상에만 적용.</p>
 
   def __init__(self,
                is_numeric: bool,
+               fillna: Optional[float] = 0.0,
                mask_threshold: Optional[float] = -30.0,
                contrast: Optional[str] = &#39;equalization&#39;,
                denoise: Optional[str] = &#39;bilateral&#39;):
@@ -307,6 +326,9 @@ RGB 형식의 실화상에만 적용.</p>
     is_numeric : bool
         전처리 대상 영상의 픽셀값이 물리적 의미가 있는지 (실화상인지) 여부.
         `True`인 경우, `mask_threshold` 적용.
+
+    fillna : Optional[float]
+        nan이 존재하는 경우 채워넣을 값.
 
     mask_threshold : Optional[float], optional
         `is_numeric`이 `True`인 경우, 픽셀 값이 `mask_threshold` 미만인 영역은
@@ -339,6 +361,7 @@ RGB 형식의 실화상에만 적용.</p>
       raise ValueError
 
     self._is_numeric = is_numeric
+    self._fillna = fillna
     self._mask_threshold = mask_threshold
     self._contrast_type = contrast
     self._denoise_type = denoise
@@ -390,27 +413,38 @@ RGB 형식의 실화상에만 적용.</p>
   def _gaussian_filter(self, image: np.ndarray) -&gt; np.ndarray:
     return cv.GaussianBlur(image, **self._gaussian_args)
 
-  def masking(self, image: np.ndarray) -&gt; Optional[np.ndarray]:
+  def masking(self,
+              image: np.ndarray) -&gt; Tuple[np.ndarray, Optional[np.ndarray]]:
     &#34;&#34;&#34;
-    영상의 픽셀값에 따라 마스킹. 대상 영상이 열화상이 아닌 경우 (not `is_numeric`)
-    `None` 반환.
+    영상의 픽셀값에 따라 마스킹하고 영상과 마스크 반환.
+    대상 영상이 열화상이 아닌 경우 (not `is_numeric`) 마스크는 `None` 반환.
 
     Parameters
     ----------
     image : np.ndarray
-        대상 영상
 
     Returns
     -------
-    Optional[np.ndarray]
-        추출한 마스크. 파노라마를 생성할 영역의 픽셀값은 1, 제외할 영역은 0
-    &#34;&#34;&#34;
-    if self._is_numeric and self.mask_threshold is not None:
-      mask = (self._mask_threshold &lt; image).astype(&#39;uint8&#39;)
-    else:
-      mask = None
+    Tuple[np.ndarray, Optional[np.ndarray]]
+        영상. nan이 존재하는 경우 fillna값으로 변경.
 
-    return mask
+        마스크. 파노라마를 생성할 영역은 1, 이외 영역은 0.
+    &#34;&#34;&#34;
+    if not self._is_numeric:
+      return image, None
+
+    if self.mask_threshold is None:
+      threshold_mask = None
+    else:
+      threshold_mask = (self.mask_threshold &lt; image).astype(bool)
+
+    mask = np.logical_not(np.isnan(image))
+    image = np.nan_to_num(image, nan=self._fillna)
+
+    if threshold_mask is not None:
+      mask = np.logical_or(mask, threshold_mask)
+
+    return image, mask.astype(np.uint8)
 
   def adjust_contrast(self, image: np.ndarray) -&gt; np.ndarray:
     &#34;&#34;&#34;
@@ -486,7 +520,7 @@ RGB 형식의 실화상에만 적용.</p>
     mask : Optional[np.ndarray]
         마스크
     &#34;&#34;&#34;
-    mask = self.masking(image)
+    image, mask = self.masking(image)
 
     image = self.adjust_contrast(image)
     image = rescale_intensity(image, out_range=&#39;uint8&#39;)
@@ -640,46 +674,60 @@ Histogram normalization을 적용하지 않고 경고 메세지. 실화상의 �
 </details>
 </dd>
 <dt id="pano.stitch.preprocess.PanoramaPreprocess.masking"><code class="name flex">
-<span>def <span class="ident">masking</span></span>(<span>self, image: numpy.ndarray) ‑> Optional[numpy.ndarray]</span>
+<span>def <span class="ident">masking</span></span>(<span>self, image: numpy.ndarray) ‑> Tuple[numpy.ndarray, Optional[numpy.ndarray]]</span>
 </code></dt>
 <dd>
-<div class="desc"><p>영상의 픽셀값에 따라 마스킹. 대상 영상이 열화상이 아닌 경우 (not <code>is_numeric</code>)
-<code>None</code> 반환.</p>
+<div class="desc"><p>영상의 픽셀값에 따라 마스킹하고 영상과 마스크 반환.
+대상 영상이 열화상이 아닌 경우 (not <code>is_numeric</code>) 마스크는 <code>None</code> 반환.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>image</code></strong> :&ensp;<code>np.ndarray</code></dt>
-<dd>대상 영상</dd>
+<dd>&nbsp;</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>Optional[np.ndarray]</code></dt>
-<dd>추출한 마스크. 파노라마를 생성할 영역의 픽셀값은 1, 제외할 영역은 0</dd>
+<dt><code>Tuple[np.ndarray, Optional[np.ndarray]]</code></dt>
+<dd>
+<p>영상. nan이 존재하는 경우 fillna값으로 변경.</p>
+<p>마스크. 파노라마를 생성할 영역은 1, 이외 영역은 0.</p>
+</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def masking(self, image: np.ndarray) -&gt; Optional[np.ndarray]:
+<pre><code class="python">def masking(self,
+            image: np.ndarray) -&gt; Tuple[np.ndarray, Optional[np.ndarray]]:
   &#34;&#34;&#34;
-  영상의 픽셀값에 따라 마스킹. 대상 영상이 열화상이 아닌 경우 (not `is_numeric`)
-  `None` 반환.
+  영상의 픽셀값에 따라 마스킹하고 영상과 마스크 반환.
+  대상 영상이 열화상이 아닌 경우 (not `is_numeric`) 마스크는 `None` 반환.
 
   Parameters
   ----------
   image : np.ndarray
-      대상 영상
 
   Returns
   -------
-  Optional[np.ndarray]
-      추출한 마스크. 파노라마를 생성할 영역의 픽셀값은 1, 제외할 영역은 0
-  &#34;&#34;&#34;
-  if self._is_numeric and self.mask_threshold is not None:
-    mask = (self._mask_threshold &lt; image).astype(&#39;uint8&#39;)
-  else:
-    mask = None
+  Tuple[np.ndarray, Optional[np.ndarray]]
+      영상. nan이 존재하는 경우 fillna값으로 변경.
 
-  return mask</code></pre>
+      마스크. 파노라마를 생성할 영역은 1, 이외 영역은 0.
+  &#34;&#34;&#34;
+  if not self._is_numeric:
+    return image, None
+
+  if self.mask_threshold is None:
+    threshold_mask = None
+  else:
+    threshold_mask = (self.mask_threshold &lt; image).astype(bool)
+
+  mask = np.logical_not(np.isnan(image))
+  image = np.nan_to_num(image, nan=self._fillna)
+
+  if threshold_mask is not None:
+    mask = np.logical_or(mask, threshold_mask)
+
+  return image, mask.astype(np.uint8)</code></pre>
 </details>
 </dd>
 <dt id="pano.stitch.preprocess.PanoramaPreprocess.set_bilateral_args"><code class="name flex">

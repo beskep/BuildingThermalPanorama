@@ -142,7 +142,8 @@ from pano import utils
 
 from .config import set_config
 
-MODEL_PATH = utils.DIR.RESOURCE.joinpath(&#39;DeepLabV3/frozen_inference_graph.pb&#39;)
+MODEL_PATH = utils.DIR.RESOURCE.joinpath(
+    &#39;DeepLabV3/frozen_inference_graph_20210927.pb&#39;)
 
 
 class DIR(Enum):
@@ -164,6 +165,8 @@ class FN:
   COLOR = &#39;_color&#39;
 
   RGST_CMPR = &#39;_compare&#39;
+  RGST_AUTO = &#39;_automatic&#39;
+  RGST_MANUAL = &#39;_manual&#39;
   SEG_FIG = &#39;_fig&#39;
 
 
@@ -296,6 +299,10 @@ class ThermalPanoramaFileManager:
     return path.with_name(f&#39;{path.stem}{FN.COLOR}{FN.LL}&#39;)
 
   def rgst_matrix_path(self):
+    &#34;&#34;&#34;
+    자동 열/실화상 정합 결과인 transform matrix 저장 경로.
+    실화상을 열화상 크기에 맞게 resize 후 matrix를 적용 필요.
+    &#34;&#34;&#34;
     return self.subdir(DIR.RGST).joinpath(&#39;transformation_matrix.npz&#39;)
 
   @staticmethod
@@ -332,7 +339,7 @@ def init_directory(directory: Path):
     raw_dir.mkdir()
 
     for file in directory.iterdir():
-      if file.suffix in (&#39;.jpg&#39;, &#39;.xlsx&#39;, &#39;.png&#39;):
+      if file.suffix.lower() in (&#39;.jpg&#39;, &#39;.xlsx&#39;, &#39;.png&#39;):
         file.replace(raw_dir.joinpath(file.name))
 
   set_config(directory=directory, default=True)</code></pre>
@@ -370,7 +377,7 @@ default config 파일 저장.</p></div>
     raw_dir.mkdir()
 
     for file in directory.iterdir():
-      if file.suffix in (&#39;.jpg&#39;, &#39;.xlsx&#39;, &#39;.png&#39;):
+      if file.suffix.lower() in (&#39;.jpg&#39;, &#39;.xlsx&#39;, &#39;.png&#39;):
         file.replace(raw_dir.joinpath(file.name))
 
   set_config(directory=directory, default=True)</code></pre>
@@ -454,6 +461,8 @@ default config 파일 저장.</p></div>
   COLOR = &#39;_color&#39;
 
   RGST_CMPR = &#39;_compare&#39;
+  RGST_AUTO = &#39;_automatic&#39;
+  RGST_MANUAL = &#39;_manual&#39;
   SEG_FIG = &#39;_fig&#39;</code></pre>
 </details>
 <h3>Class variables</h3>
@@ -474,7 +483,15 @@ default config 파일 저장.</p></div>
 <dd>
 <div class="desc"></div>
 </dd>
+<dt id="pano.interface.common.pano_files.FN.RGST_AUTO"><code class="name">var <span class="ident">RGST_AUTO</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="pano.interface.common.pano_files.FN.RGST_CMPR"><code class="name">var <span class="ident">RGST_CMPR</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="pano.interface.common.pano_files.FN.RGST_MANUAL"><code class="name">var <span class="ident">RGST_MANUAL</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -649,6 +666,10 @@ default config 파일 저장.</p></div>
     return path.with_name(f&#39;{path.stem}{FN.COLOR}{FN.LL}&#39;)
 
   def rgst_matrix_path(self):
+    &#34;&#34;&#34;
+    자동 열/실화상 정합 결과인 transform matrix 저장 경로.
+    실화상을 열화상 크기에 맞게 resize 후 matrix를 적용 필요.
+    &#34;&#34;&#34;
     return self.subdir(DIR.RGST).joinpath(&#39;transformation_matrix.npz&#39;)
 
   @staticmethod
@@ -923,12 +944,17 @@ Raw 파일 목록과 대응하는 파일이 하나라도 존재하지 않으면 
 <span>def <span class="ident">rgst_matrix_path</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>자동 열/실화상 정합 결과인 transform matrix 저장 경로.
+실화상을 열화상 크기에 맞게 resize 후 matrix를 적용 필요.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def rgst_matrix_path(self):
+  &#34;&#34;&#34;
+  자동 열/실화상 정합 결과인 transform matrix 저장 경로.
+  실화상을 열화상 크기에 맞게 resize 후 matrix를 적용 필요.
+  &#34;&#34;&#34;
   return self.subdir(DIR.RGST).joinpath(&#39;transformation_matrix.npz&#39;)</code></pre>
 </details>
 </dd>
@@ -993,7 +1019,9 @@ Raw 파일 목록과 대응하는 파일이 하나라도 존재하지 않으면 
 <li><code><a title="pano.interface.common.pano_files.FN.LL" href="#pano.interface.common.pano_files.FN.LL">LL</a></code></li>
 <li><code><a title="pano.interface.common.pano_files.FN.LS" href="#pano.interface.common.pano_files.FN.LS">LS</a></code></li>
 <li><code><a title="pano.interface.common.pano_files.FN.NPY" href="#pano.interface.common.pano_files.FN.NPY">NPY</a></code></li>
+<li><code><a title="pano.interface.common.pano_files.FN.RGST_AUTO" href="#pano.interface.common.pano_files.FN.RGST_AUTO">RGST_AUTO</a></code></li>
 <li><code><a title="pano.interface.common.pano_files.FN.RGST_CMPR" href="#pano.interface.common.pano_files.FN.RGST_CMPR">RGST_CMPR</a></code></li>
+<li><code><a title="pano.interface.common.pano_files.FN.RGST_MANUAL" href="#pano.interface.common.pano_files.FN.RGST_MANUAL">RGST_MANUAL</a></code></li>
 <li><code><a title="pano.interface.common.pano_files.FN.SEG_FIG" href="#pano.interface.common.pano_files.FN.SEG_FIG">SEG_FIG</a></code></li>
 </ul>
 </li>
