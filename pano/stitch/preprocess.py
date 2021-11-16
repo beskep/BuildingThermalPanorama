@@ -144,7 +144,7 @@ class PanoramaPreprocess:
     image = np.nan_to_num(image, nan=self._fillna)
 
     if threshold_mask is not None:
-      mask = np.logical_or(mask, threshold_mask)
+      mask = np.logical_and(mask, threshold_mask)
 
     return image, mask.astype(np.uint8)
 
