@@ -15,6 +15,7 @@ from skimage import transform
 from skimage.exposure import equalize_hist
 
 from pano.distortion.projection import ImageProjection
+from pano.misc.cmap import apply_colormap
 from pano.misc.imageio import ImageIO
 from pano.misc.tools import limit_image_size
 from pano.misc.tools import prep_compare_images
@@ -29,6 +30,7 @@ from .mbq import FigureCanvas
 from .mbq import NavigationToolbar2QtQuick as NavToolbar
 from .mbq import QtCore
 from .mbq import QtGui
+from .pano_project import ThermalPanorama
 
 _DIRS = ('bottom', 'top', 'left', 'right')
 _TICK_PARAMS = {key: False for key in _DIRS + tuple('label' + x for x in _DIRS)}
@@ -602,8 +604,8 @@ class PanoramaPlotController(_PanoPlotController):
 
 def save_manual_correction(wd, subdir, viewing_angle, angles,
                            crop_range: Optional[np.ndarray]):
-  fm = ThermalPanoramaFileManager(wd)
-  ir_pano = ImageIO.read(fm.panorama_path(subdir, SP.IR))
+  tp = ThermalPanorama(wd, init_loglevel='TRACE')
+  ir_pano = ImageIO.read(tp.fm.panorama_path(subdir, SP.IR))
   prj = ImageProjection(ir_pano, viewing_angle=viewing_angle)
   angles = np.deg2rad(angles)
 
@@ -611,7 +613,7 @@ def save_manual_correction(wd, subdir, viewing_angle, angles,
     if sp is SP.IR:
       image = ir_pano
     else:
-      image = ImageIO.read(fm.panorama_path(subdir, sp))
+      image = ImageIO.read(tp.fm.panorama_path(subdir, sp))
 
     corrected = prj.project(roll=angles[0],
                             pitch=angles[1],
@@ -627,20 +629,22 @@ def save_manual_correction(wd, subdir, viewing_angle, angles,
       yy = (np.min(cr[:, 1]), np.max(cr[:, 1]))
       corrected = corrected[yy[0]:yy[1], xx[0]:xx[1]]
 
-    path = fm.panorama_path(DIR.COR, sp)
+    corrected = np.nan_to_num(corrected, nan=np.nanmin(corrected))
+
+    path = tp.fm.panorama_path(DIR.COR, sp)
     path = path.parent.joinpath(f'Manual{path.name}')
     if not path.parent.exists():
       path.parent.mkdir()
 
     if sp is SP.IR:
-      ImageIO.save_with_meta(
-          path=path,
-          array=np.nan_to_num(corrected, nan=np.nanmin(corrected)),
-          exts=[FN.NPY, FN.LL],
-          dtype='uint16',
-      )
-      # TODO colormap 버전
-      # self.fm.color_path
+      ImageIO.save_with_meta(path=path,
+                             array=corrected,
+                             exts=[FN.NPY, FN.LL],
+                             dtype='uint16')
+      # colormap 버전
+      ImageIO.save(path=tp.fm.color_path(path),
+                   array=apply_colormap(image=corrected, cmap=tp.cmap))
+
     else:
       ImageIO.save(path=path, array=corrected.astype(np.uint8))
 

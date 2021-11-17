@@ -39,7 +39,10 @@ class ThermalPanorama:
       SP.SEG.value: '부위 인식',
   }
 
-  def __init__(self, directory: Union[str, Path], default_config=False) -> None:
+  def __init__(self,
+               directory: Union[str, Path],
+               default_config=False,
+               init_loglevel='INFO') -> None:
     # working directory
     wd = Path(directory).resolve()
     if not wd.exists():
@@ -56,15 +59,23 @@ class ThermalPanorama:
       self._flir_ext = None
     else:
       self._flir_ext = flir.FlirExtractor()
-    logger.info('Manufacturer: {}', self._manufacturer)
+    logger.log(init_loglevel, 'Manufacturer: {}', self._manufacturer)
 
     # 카메라 기종
     self._camera = self._check_camera_model()
-    logger.info('Camera: {}', self._camera)
+    logger.log(init_loglevel, 'Camera: {}', self._camera)
 
     # 컬러맵
     self._cmap = get_thermal_colormap(
         name=self._config['color'].get('colormap', 'iron'))
+
+  @property
+  def fm(self):
+    return self._fm
+
+  @property
+  def cmap(self):
+    return self._cmap
 
   def _check_manufacturer(self) -> str:
     fopt: DictConfig = self._config['file']
