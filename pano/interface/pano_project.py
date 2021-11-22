@@ -1,12 +1,11 @@
 """외피 열화상 파노라마 영상처리 알고리즘의 CLI 인터페이스"""
 
 from pathlib import Path
-from typing import Callable, List, Optional, Union
+from typing import List, Optional, Union
 
 from loguru import logger
 import matplotlib.pyplot as plt
 import numpy as np
-from rich.progress import track
 
 from pano import flir
 from pano import stitch

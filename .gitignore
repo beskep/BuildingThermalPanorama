@@ -132,4 +132,3 @@ resource/font
 .*.py
 *.pyproject*
 TODO.md
-script/
