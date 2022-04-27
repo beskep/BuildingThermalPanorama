@@ -2,6 +2,7 @@
 
 from pathlib import Path
 from shutil import copy2
+from typing import Union
 
 from loguru import logger
 from omegaconf import DictConfig
@@ -52,4 +53,17 @@ def set_config(directory: Path, read_only=True, default=False) -> DictConfig:
   if read_only:
     OmegaConf.set_readonly(config, True)
 
+  assert isinstance(config, DictConfig)
+
   return config
+
+
+def update_config(directory: Union[str, Path], config: dict):
+  path = Path(directory).joinpath(CONFIG_FNAME)
+  base = OmegaConf.load(path)
+
+  # struct -> base에 없는 항목을 지정하려 하면 오류 발생
+  OmegaConf.set_struct(base, True)
+
+  updated = OmegaConf.merge(base, config)
+  OmegaConf.save(updated, path)

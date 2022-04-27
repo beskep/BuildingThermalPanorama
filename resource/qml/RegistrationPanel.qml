@@ -7,6 +7,7 @@ import QtQuick.Window 2.15
 import QtGraphicalEffects 1.0
 
 import 'Custom'
+import 'OptionPopup'
 import Backend 1.0
 
 
@@ -15,6 +16,10 @@ Pane {
     height : 720
     padding : 10
     objectName : 'registration_panel'
+
+    RegistrationOption {
+        id : _option
+    }
 
     ColumnLayout {
         anchors.fill : parent
@@ -69,8 +74,8 @@ Pane {
                 ToolSeparator {}
 
                 ToolButton {
-                    icon : '\ue88a'
                     text : qsTr('초기 시점')
+                    icon : '\ue88a'
 
                     onReleased : con.rgst_home()
 
@@ -95,6 +100,19 @@ Pane {
                     ToolTip.visible : hovered
                     ToolTip.delay : 500
                     ToolTip.text : qsTr('수동 정합 취소')
+                }
+
+                ToolSeparator {}
+
+                ToolButton {
+                    text : qsTr('설정')
+                    icon : '\ue8b8'
+
+                    onReleased : _option.open()
+
+                    ToolTip.visible : hovered
+                    ToolTip.delay : 500
+                    ToolTip.text : qsTr('설정')
                 }
             }
         }

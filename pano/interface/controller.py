@@ -1,3 +1,4 @@
+import json
 import multiprocessing as mp
 from pathlib import Path
 from typing import Optional
@@ -7,6 +8,7 @@ import numpy as np
 
 from pano.utils import set_logger
 
+from .common.config import update_config
 from .common.pano_files import init_directory
 from .common.pano_files import ThermalPanoramaFileManager
 from .mbq import QtCore
@@ -264,6 +266,14 @@ class Controller(QtCore.QObject):
                          target=_producer,
                          args=(queue, self._wd, command, self._loglevel))
     process.start()
+
+  @QtCore.Slot(str)
+  def configure(self, string: str):
+    config = json.loads(string)
+    logger.debug(config)
+
+    assert self._wd is not None
+    update_config(directory=self._wd, config=config)
 
   def update_image_view(self,
                         panels=('project', 'registration', 'segmentation')):
