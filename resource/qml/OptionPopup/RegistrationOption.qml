@@ -3,9 +3,21 @@ import QtQuick.Controls 2.15
 import QtQuick.Controls.Material 2.15
 import QtQuick.Layouts 1.15
 
-
 Popup {
     id : _popup
+
+    property var _config: {
+        'registration': {
+            'metric': 'JointHistMI',
+            'transformation': 'Similarity',
+            'bins': 'auto',
+            'optimizer': 'gradient_descent',
+            'preprocess': {
+                'equalize_histogram': true,
+                'unsharp': false
+            }
+        }
+    }
 
     anchors.centerIn : Overlay.overlay
     Material.elevation : 5
@@ -110,14 +122,14 @@ Popup {
                         model : ['Similarity', 'Affine']
                     }
                     Label {
-                        text : '밝기 구간 방법'
+                        text : '밝기 구간 분할 방법'
                         Layout.fillWidth : true
                     }
                     ComboBox {
                         id : _bins
                         Layout.fillWidth : true
 
-                        model : ['auto', 'fd', 'sqrt']
+                        model : ['Auto', 'Freedman-Diaconis', 'Square Root']
                     }
                     Label {
                         text : '최적화 방법'
@@ -156,16 +168,18 @@ Popup {
     }
 
     function reset() {
-        _hist_eq.checked = true;
-        _hist_eq.checked = false;
-        _metric.currentIndex = 0;
-        _transformation.currentIndex = 0;
-        _bins.currentIndex = 0;
-        _optimizer.currentIndex = 0;
+        let cfg = _config['registration']
+
+        _hist_eq.checked = cfg['preprocess']['equalize_histogram'];
+        _unsharp.checked = cfg['preprocess']['unsharp'];
+        _metric.currentIndex = ['JointHistMI', 'MattesMI', 'MeanSquare'].indexOf(cfg['metric']);
+        _transformation.currentIndex = ['Similarity', 'Affine'].indexOf(cfg['transformation']);
+        _bins.currentIndex = ['auto', 'fd', 'sqrt'].indexOf(cfg['bins']);
+        _optimizer.currentIndex = ['gradient_descent', 'powell'].indexOf(cfg['optimizer']);
     }
 
     function configure() {
-        let cfg = {
+        _config = {
             'registration': {
                 'preprocess': {
                     'equalize_histogram': (_hist_eq.checkState === Qt.Checked),
@@ -173,11 +187,16 @@ Popup {
                 },
                 'metric': _metric.currentText,
                 'transformation': _transformation.currentText,
-                'bins': _bins.currentText,
-                'optimizer': _optimizer.currentText
+                'bins': ['auto', 'fd', 'sqrt'][_bins.currentIndex],
+                'optimizer': ['gradient_descent', 'powell'][_optimizer.currentIndex]
             }
         }
 
-        con.configure(JSON.stringify(cfg))
+        con.configure(JSON.stringify(_config))
+    }
+
+    function update_config(config) {
+        _config['registration'] = config['registration']
+        reset()
     }
 }

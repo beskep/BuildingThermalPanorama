@@ -5,11 +5,16 @@ from typing import Optional
 
 from loguru import logger
 import numpy as np
+from omegaconf import DictConfig
+from omegaconf import OmegaConf
 
+from pano.misc.imageio import ImageIO as IIO
 from pano.utils import set_logger
 
 from .common.config import update_config
+from .common.pano_files import DIR
 from .common.pano_files import init_directory
+from .common.pano_files import SP
 from .common.pano_files import ThermalPanoramaFileManager
 from .mbq import QtCore
 from .mbq import QtGui
@@ -143,6 +148,9 @@ class _Window:
 
     return f(*args)
 
+  def update_config(self, config: DictConfig):
+    self._window.update_config(json.dumps(OmegaConf.to_object(config)))
+
 
 class Controller(QtCore.QObject):
   _CMD_KR = {
@@ -169,6 +177,7 @@ class Controller(QtCore.QObject):
     self._spc: Optional[SegmentationPlotController] = None
     self._ppc: Optional[PanoramaPlotController] = None
     self._dpc: Optional[DistPlotController] = None
+    self._config: Optional[DictConfig] = None
 
   @property
   def win(self) -> _Window:
@@ -212,18 +221,11 @@ class Controller(QtCore.QObject):
     for pc in (self._rpc, self._spc, self._ppc, self._dpc):
       pc.fm = self._fm
 
+    self._config = init_directory(directory=wd)
+    self.win.update_config(self._config)
+
     self.prj_update_project_tree()
     self.update_image_view()
-
-  @QtCore.Slot()
-  def prj_init_directory(self):
-    if self._wd is None:
-      return
-
-    init_directory(directory=self._wd)
-    self.prj_update_project_tree()
-    self.update_image_view()
-    self.win.popup('Success', '초기화 완료')
 
   def prj_update_project_tree(self):
     tree = tree_string(self._wd, width=40)
@@ -269,11 +271,44 @@ class Controller(QtCore.QObject):
 
   @QtCore.Slot(str)
   def configure(self, string: str):
+    assert self._config is not None
+    assert self._wd is not None
+
     config = json.loads(string)
     logger.debug(config)
 
-    assert self._wd is not None
-    update_config(directory=self._wd, config=config)
+    try:
+      separate = config['panorama']['separate']
+    except KeyError:
+      separate = None
+
+    if separate is None or self._config['panorama']['separate'] == separate:
+      # separate 설정이 변경되지 않은 경우
+      vis_blend = OmegaConf.create()  # 빈 설정
+    else:
+      self._clear_separate_results()  # seg 이후 결과 삭제
+
+      # 실화상 blend 설정 변경
+      blend_type = 'feather' if separate else 'no'
+      vis_blend = OmegaConf.from_dotlist(
+          [f'panorama.stitch.blend.VIS={blend_type}'])
+
+    self._config = update_config(self._wd, config, vis_blend)
+    self.win.update_config(self._config)  # FIXME 비효율 (이미 반영된 설정도 다시 업데이트 함)
+
+  def _clear_separate_results(self):
+    # 다음 결과 폴더 내 모든 파일 삭제
+    for d in (DIR.SEG, DIR.PANO, DIR.COR):
+      files = self._fm.glob(d, '*')
+      logger.debug('delete files in {}: {}', d,
+                   [str(x.relative_to(self._wd)) for x in files])
+
+      for f in files:
+        f.unlink()
+
+    # plot 리셋
+    for pc in (self._rpc, self._spc, self._ppc, self._dpc):
+      pc.reset()
 
   def update_image_view(self,
                         panels=('project', 'registration', 'segmentation')):
@@ -306,7 +341,8 @@ class Controller(QtCore.QObject):
   @QtCore.Slot()
   def rgst_save(self):
     assert self._rpc is not None
-    self._rpc.save()
+    self._rpc.save(panorama=self._config['panorama']['separate'])
+    self.win.popup('Success', '저장 완료', timeout=1000)
 
   @QtCore.Slot()
   def rgst_reset(self):
@@ -332,7 +368,7 @@ class Controller(QtCore.QObject):
     path = _url2path(url)
 
     try:
-      self._spc.plot(path)
+      self._spc.plot(path, separate=self._config['panorama']['separate'])
     except FileNotFoundError:
       logger.warning('File not found: {}', path)
 
@@ -394,7 +430,27 @@ class Controller(QtCore.QObject):
     process.start()
 
   @QtCore.Slot()
+  def rgst_pano_draw(self):
+    if not self._fm:
+      return
+
+    # FIXME
+    ir = self._fm.panorama_path(d=DIR.COR, sp=SP.IR)
+    if not ir.exists():
+      ir = self._fm.panorama_path(d=DIR.PANO, sp=SP.IR)
+
+    vis = self._fm.panorama_path(d=DIR.PANO, sp=SP.VIS)
+
+    if any(not x.exists() for x in (ir, vis)):
+      return
+
+    self._rpc.set_images(fixed_image=IIO.read(ir), moving_image=IIO.read(vis))
+    self._rpc.draw()
+
+  @QtCore.Slot()
   def dist_plot(self):
+    # TODO `separate` true일 때 기능 구현
+
     try:
       data = self._dpc.plot()
     except OSError as e:

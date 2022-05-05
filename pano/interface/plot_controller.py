@@ -106,6 +106,17 @@ class PlotController(QtCore.QObject):
     self.canvas.draw()
     self.app.processEvents()
 
+  def reset(self):
+    if isinstance(self.axes, Axes):
+      axs = (self.axes,)
+    elif isinstance(self.axes, np.ndarray):
+      axs = self.axes.ravel()
+    else:
+      axs = self.axes
+
+    for ax in axs:
+      ax.clear()
+
 
 class _PanoPlotController(PlotController):
 
@@ -129,6 +140,10 @@ class _PanoPlotController(PlotController):
   def draw(self):
     self._set_style()
     super().draw()
+
+  def reset(self):
+    super().reset()
+    self.draw()
 
 
 class RegistrationPlotController(_PanoPlotController):
@@ -235,14 +250,12 @@ class RegistrationPlotController(_PanoPlotController):
     self.axes[0, 1].set_yticks(ticks[0])
 
   def reset(self):
-    for ax in self.axes.ravel():
-      ax.clear()
-
     self._pnts.clear()
     self._pnts_coord.clear()
     self._registered_image = None
     self._matrix = None
-    self.draw()
+
+    super().reset()
 
   def set_images(self, fixed_image: np.ndarray, moving_image: np.ndarray):
     self.reset()
@@ -294,7 +307,7 @@ class RegistrationPlotController(_PanoPlotController):
     else:
       return
 
-    if self._registered_image is not None and self.all_points_selected():
+    if self.all_points_selected():
       self._manual_register()
 
     self.draw()
@@ -348,11 +361,8 @@ class RegistrationPlotController(_PanoPlotController):
     self._matrix = trsf.params
     self._plot_registered(matrix=trsf.inverse)
 
-  def save(self):
-    if self._registered_image is None:
-      logger.warning('저장할 정합 결과가 없습니다.')
-      return
-
+  def _save(self):
+    """개별 열/실화상 정합 결과 저장"""
     if self._matrix is None:
       logger.warning('자동 정합 결과가 이미 저장되었습니다.')
       return
@@ -365,6 +375,33 @@ class RegistrationPlotController(_PanoPlotController):
     self.fig.savefig(compare_path, dpi=300)
 
     self.update_matrices(path.stem, self._matrix)
+
+  def _save_pano(self):
+    """파노라마 정합 결과 저장"""
+    # vis
+    ImageIO.save(path=self.fm.panorama_path(d=DIR.COR, sp=SP.VIS),
+                 array=uint8_image(self._registered_image))
+
+    # seg
+    trsf = transform.ProjectiveTransform(matrix=self._matrix)
+    seg = ImageIO.read(self.fm.panorama_path(d=DIR.PANO, sp=SP.SEG))
+    seg_resized = transform.resize(seg, output_shape=self._images[0].shape[:2])
+    seg_rgst = transform.warp(image=seg_resized,
+                              inverse_map=trsf.inverse,
+                              output_shape=self._images[0].shape[:2],
+                              preserve_range=True)
+    ImageIO.save(path=self.fm.panorama_path(d=DIR.COR, sp=SP.SEG),
+                 array=uint8_image(seg_rgst))
+
+  def save(self, panorama: bool):
+    if self._registered_image is None:
+      logger.warning('저장할 정합 결과가 없습니다.')
+      return
+
+    if not panorama:
+      self._save()
+    else:
+      self._save_pano()
 
 
 class SegmentationPlotController(_PanoPlotController):
@@ -395,8 +432,8 @@ class SegmentationPlotController(_PanoPlotController):
         ax.set_title(title)
       ax.set_axis_off()
 
-  def plot(self, file: Path):
-    vis_path = self.fm.change_dir(DIR.RGST, file)
+  def plot(self, file: Path, separate: bool):
+    vis_path = self.fm.change_dir((DIR.VIS if separate else DIR.RGST), file)
     mask_path = self.fm.change_dir(DIR.SEG, file)
 
     if not (vis_path.exists() and mask_path.exists()):
@@ -430,6 +467,8 @@ class SegmentationPlotController(_PanoPlotController):
 
 class PanoramaPlotController(_PanoPlotController):
   _GRID_COUNTS = (7, 7)  # (height, width)
+
+  # TODO reset 이후 grid 나타나는 현상 해결
 
   def __init__(self, parent=None) -> None:
     super().__init__(parent=parent)
@@ -535,6 +574,9 @@ class PanoramaPlotController(_PanoPlotController):
 
     pano = ImageIO.read(pano_path).astype(np.float32)
     mask = ImageIO.read(mask_path)
+    if pano.shape[:2] != mask.shape[:2]:
+      raise ValueError('파노라마와 마스크 파일의 shape이 일치하지 않습니다.')
+
     pano[np.logical_not(mask)] = np.nan
 
     self._image = pano
@@ -551,12 +593,8 @@ class PanoramaPlotController(_PanoPlotController):
 
   def _set_ticks(self, image: np.ndarray):
     ticks = tuple(
-        np.linspace(
-            0,
-            image.shape[x],
-            num=self._GRID_COUNTS[x],
-            endpoint=True,
-        ) for x in range(2))
+        np.linspace(0, image.shape[x], num=self._GRID_COUNTS[x], endpoint=True)
+        for x in range(2))
 
     self.axes.set_xticks(ticks[1])
     self.axes.set_yticks(ticks[0])

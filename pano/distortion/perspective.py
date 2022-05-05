@@ -134,7 +134,7 @@ class VanishingPoint:
 
     return self._pos
 
-  def compute_position(self, image_shape: tuple, margin=0.1):
+  def compute_position(self, image_shape: Tuple[int, ...], margin=0.1):
     shape = np.array([image_shape[1], image_shape[0]])
     rxy = (self.xy - shape / 2.0) / shape
     hv = np.abs(rxy) > 0.5 + margin
@@ -142,7 +142,7 @@ class VanishingPoint:
     self._pos = self._POS_DICT[(hv[0], hv[1])]
 
   def __str__(self) -> str:
-    return 'coor=[{:.2f}, {:.2f}, {:.2f}] | xy=[{:.2f}, {:.2f}]'.format(
+    return 'VanishingPoint(coor=[{:.2f}, {:.2f}, {:.2f}], xy=[{:.2f}, {:.2f}])'.format(
         *self.array, *self.xy)
 
 
@@ -258,7 +258,7 @@ class Homography:
   Haffine: Optional[np.ndarray] = None
   Htranslate: Optional[np.ndarray] = None
 
-  input_shape: Optional[Tuple[int, int]] = None
+  input_shape: Optional[Tuple[int, ...]] = None
   output_shape: Optional[Tuple[int, int]] = None
 
   def available(self):
@@ -471,7 +471,8 @@ class PerspectiveCorrection:
     return A
 
   @staticmethod
-  def _compute_translate(H: np.ndarray, shape: tuple, clip_factor: float):
+  def _compute_translate(H: np.ndarray, shape: Tuple[int, ...],
+                         clip_factor: float):
     points = [
         [0, 0, shape[1], shape[1]],
         [0, shape[0], 0, shape[0]],
@@ -502,7 +503,7 @@ class PerspectiveCorrection:
 
   def compute_homography(
       self,
-      image_shape: Tuple[int, int],
+      image_shape: Tuple[int, ...],
       vp1: np.ndarray,
       vp2: np.ndarray,
   ) -> Homography:
@@ -511,7 +512,7 @@ class PerspectiveCorrection:
 
     Parameters
     ----------
-    image_shape: Tuple[int, int]
+    image_shape: Tuple[int, ...]
         대상 영상 shape
     vp1 : np.ndarray
         소실점 1
@@ -551,7 +552,7 @@ class PerspectiveCorrection:
   def _estimate_vanishing_point(
       self,
       edgelets: Edgelets,
-      image_shape: tuple,
+      image_shape: Tuple[int, ...],
       target: Optional[int] = None) -> Tuple[VanishingPoint, Edgelets]:
     """
     RANSAC을 통해 주어진 edgelet으로부터 vanishing point를 추정하고,
@@ -563,7 +564,7 @@ class PerspectiveCorrection:
     Parameters
     ----------
     edgelets : Edgelets
-    image_shape : tuple
+    image_shape : Tuple[int, ...]
     target : Optional[int]
         추정 대상 VP의 위치 (VanishingPoint의 HORIZ, VERT)
 
@@ -619,7 +620,7 @@ class PerspectiveCorrection:
   def _estimate_vanishing_points(
       self,
       edgelets: Edgelets,
-      image_shape: Tuple[int, int],
+      image_shape: Tuple[int, ...],
   ) -> Tuple[Optional[VanishingPoint], Optional[VanishingPoint]]:
     """
     두 개의 vanishing point 추정
@@ -628,7 +629,7 @@ class PerspectiveCorrection:
     ----------
     edgelets : Edgelets
         edgelets
-    image_shape : Tuple[int, int]
+    image_shape : Tuple[int, ...]
         대상 영상 shape
 
     Returns

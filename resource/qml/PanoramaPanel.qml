@@ -6,6 +6,7 @@ import QtQuick.Layouts 1.15
 import QtQuick.Window 2.15
 
 import 'Custom'
+import 'OptionPopup'
 import Backend 1.0
 
 
@@ -14,6 +15,10 @@ Pane {
     height : 720
     padding : 10
     objectName : 'panorama_panel'
+
+    PanoramaOption {
+        id : _option
+    }
 
     ColumnLayout {
         anchors.fill : parent
@@ -105,6 +110,19 @@ Pane {
                     ToolTip.visible : hovered
                     ToolTip.delay : 500
                     ToolTip.text : qsTr('수동 시점 왜곡 보정·영역 지정 취소')
+                }
+
+                ToolSeparator {}
+
+                ToolButton {
+                    text : qsTr('설정')
+                    icon : '\ue8b8'
+
+                    onReleased : _option.open()
+
+                    ToolTip.visible : hovered
+                    ToolTip.delay : 500
+                    ToolTip.text : qsTr('파노라마 설정') // XXX
                 }
             }
         }
@@ -314,5 +332,9 @@ Pane {
         _roll.value = 0
         _pitch.value = 0
         _yaw.value = 0
+    }
+
+    function update_config(config) {
+        _option.update_config(config)
     }
 }

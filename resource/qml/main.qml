@@ -5,12 +5,13 @@ import QtQuick.Dialogs 1.3
 import QtQuick.Layouts 1.15
 import QtQuick.Window 2.15
 
-import "Custom"
+import 'Custom'
 
 
 ApplicationWindow {
     id : app
     property ApplicationWindow app : app
+    property bool separate_panorama : false
 
     width : 1600
     height : 900
@@ -55,6 +56,8 @@ ApplicationWindow {
                 TabButton {
                     text : '열·실화상 정합'
                     width : parent.width
+
+                    enabled : !separate_panorama
                 }
                 TabButton {
                     text : '외피 부위 인식'
@@ -63,6 +66,12 @@ ApplicationWindow {
                 TabButton {
                     text : '파노라마 생성·보정'
                     width : parent.width
+                }
+                TabButton {
+                    text : '파노라마 정합'
+                    width : parent.width
+
+                    enabled : separate_panorama
                 }
                 TabButton {
                     text : '온도 분포'
@@ -76,7 +85,16 @@ ApplicationWindow {
 
                 StackLayout {
                     anchors.fill : parent
-                    currentIndex : tab_bar.currentIndex
+
+                    // 파노라마 정합 선택 시 registration_panel (1번) 표시
+                    currentIndex : [
+                        0,
+                        1,
+                        2,
+                        3,
+                        1,
+                        4
+                    ][tab_bar.currentIndex]
 
                     onCurrentIndexChanged : {
                         [
@@ -84,6 +102,7 @@ ApplicationWindow {
                             registration_panel,
                             segmentation_panel,
                             panorama_panel,
+                            registration_panel,
                             descriptive_panel
                         ][currentIndex].init()
                     }
@@ -93,6 +112,8 @@ ApplicationWindow {
                     }
                     RegistrationPanel {
                         id : registration_panel
+                        // 파노라마 정합 선택 시
+                        separate_panorama : separate_panorama
                     }
                     SegmentationPanel {
                         id : segmentation_panel
@@ -153,5 +174,16 @@ ApplicationWindow {
         }
 
         return null
+    }
+
+    function set_separate_panorama(value) {
+        project_panel.set_separate_panorama(value)
+    }
+
+    function update_config(config) { // TODO
+        let config_json = JSON.parse(config)
+        project_panel.update_config(config_json)
+        registration_panel.update_config(config_json)
+        panorama_panel.update_config(config_json)
     }
 }

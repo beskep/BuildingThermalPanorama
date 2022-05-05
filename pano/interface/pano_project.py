@@ -27,16 +27,6 @@ from .common.pano_files import ThermalPanoramaFileManager
 
 
 class ThermalPanorama:
-  _SP_DIR = {
-      SP.IR.value: DIR.IR,
-      SP.VIS.value: DIR.RGST,
-      SP.SEG.value: DIR.SEG,
-  }
-  _SP_KOR = {
-      SP.IR.value: '열화상',
-      SP.VIS.value: '실화상',
-      SP.SEG.value: '부위 인식',
-  }
 
   def __init__(self,
                directory: Union[str, Path],
@@ -339,12 +329,15 @@ class ThermalPanorama:
     # pylint: disable=import-outside-toplevel
     from pano.segmentation import deeplab
 
-    try:
-      files = self._fm.files(DIR.RGST)
-    except FileNotFoundError as e:
-      path = Path(e.args[0]).relative_to(self._wd)
-      msg = f'"{path}"를 찾을 수 없습니다. 열화상-실화상 정합을 먼저 시행해주세요.'
-      raise FileNotFoundError(msg) from e
+    if self._config['panorama']['separate']:
+      files = self._fm.files(DIR.VIS)
+    else:
+      try:
+        files = self._fm.files(DIR.RGST)
+      except FileNotFoundError as e:
+        path = Path(e.args[0]).relative_to(self._wd)
+        msg = f'"{path}"를 찾을 수 없습니다. 열화상-실화상 정합을 먼저 시행해주세요.'
+        raise FileNotFoundError(msg) from e
 
     try:
       model_path = self._fm.segment_model_path()
@@ -480,11 +473,11 @@ class ThermalPanorama:
   def _stitch_others(self, stitcher: stitch.Stitcher, panorama: stitch.Panorama,
                      spectrum: SP):
     try:
-      files = self._fm.files(self._SP_DIR[spectrum.value])
+      files = self._fm.files(DIR[spectrum.name])
     except FileNotFoundError as e:
-      msg = '"{}" 파일을 찾을 수 없습니다. {} 파노라마를 생성할 수 없습니다.'.format(
-          Path(e.args[0]).relative_to(self._wd), self._SP_KOR[spectrum.value])
-      raise FileNotFoundError(msg) from e
+      file = Path(e.args[0]).relative_to(self._wd)
+      raise FileNotFoundError(f'"{file}" 파일을 찾을 수 없습니다. '
+                              f'{spectrum.value} 파노라마를 생성할 수 없습니다.') from e
 
     files = [files[x] for x in panorama.indices]
     images = [IIO.read(x) for x in files]
@@ -515,23 +508,20 @@ class ThermalPanorama:
                           save_mask=False,
                           save_meta=False)
 
-  def panorama(self):
+  def _panorama_join(self):
+    sopt = self._config['panorama']['stitch']
+    stitcher = self._init_stitcher()
+
     spectrum = self._config['panorama']['target'].upper()
     if spectrum not in ('IR', 'VIS'):
       raise ValueError(spectrum)
 
-    sopt = self._config['panorama']['stitch']
-    stitcher = self._init_stitcher()
-
-    # Raw 파일 추출
-    self.extract()
-
     # 지정한 spectrum 파노라마
-    files = self._fm.files(self._SP_DIR[spectrum])
+    files = self._fm.files(DIR[spectrum])
     images = [IIO.read(x) for x in files]
 
     # 파노라마 생성
-    stitcher.set_blend_type(sopt['blend'][spectrum])
+    stitcher.blend_type = sopt['blend'][spectrum]
     pano = self._stitch(stitcher=stitcher,
                         images=images,
                         names=[x.stem for x in files],
@@ -541,13 +531,50 @@ class ThermalPanorama:
     self._save_panorama(spectrum=SP[spectrum], panorama=pano)
 
     # segmention mask 저장
-    stitcher.set_blend_type(False)
+    stitcher.blend_type = False
     self._stitch_others(stitcher=stitcher, panorama=pano, spectrum=SP.SEG)
 
     # 나머지 영상의 파노라마 생성/저장
     sp2 = 'VIS' if spectrum == 'IR' else 'IR'
-    stitcher.set_blend_type(sopt['blend'][sp2])
+    stitcher.blend_type = sopt['blend'][sp2]
     self._stitch_others(stitcher=stitcher, panorama=pano, spectrum=SP[sp2])
+
+  def _panorama_separate(self):
+    sopt = self._config['panorama']['stitch']
+    stitcher = self._init_stitcher()
+
+    # IR 파노라마
+    ir_files = self._fm.files(DIR.IR)
+    ir_images = [IIO.read(x) for x in ir_files]
+    stitcher.blend_type = sopt['blend']['IR']
+    ir_pano = self._stitch(stitcher=stitcher,
+                           images=ir_images,
+                           names=[x.stem for x in ir_files],
+                           spectrum='IR')
+    self._save_panorama(spectrum=SP.IR, panorama=ir_pano)
+
+    # VIS 파노라마
+    vis_files = self._fm.files(DIR.VIS)
+    vis_images = [IIO.read(x) for x in vis_files]
+    stitcher.blend_type = sopt['blend']['VIS']
+    vis_pano = self._stitch(stitcher=stitcher,
+                            images=vis_images,
+                            names=[x.stem for x in vis_files],
+                            spectrum='VIS')
+    self._save_panorama(spectrum=SP.VIS, panorama=vis_pano, save_mask=False)
+
+    # segmentation mask
+    stitcher.blend_type = False
+    self._stitch_others(stitcher=stitcher, panorama=vis_pano, spectrum=SP.SEG)
+
+  def panorama(self):
+    # Raw 파일 추출
+    self.extract()
+
+    if self._config['panorama']['separate']:
+      self._panorama_separate()
+    else:
+      self._panorama_join()
 
     logger.success('파노라마 생성 완료')
 
@@ -567,15 +594,14 @@ class ThermalPanorama:
     try:
       path = self._fm.panorama_path(DIR.PANO, spectrum, error=True)
     except FileNotFoundError as e:
-      raise FileNotFoundError('{} 파노라마가 존재하지 않습니다.'.format(
-          self._SP_KOR[spectrum.value])) from e
+      raise FileNotFoundError(f'{spectrum.value} 파노라마가 존재하지 않습니다.') from e
 
     pano = IIO.read(path=path)
     pano_corrected = correction.correct(pano)[0].astype(np.uint8)
     pano_limited = self.limit_size(pano_corrected)
 
     IIO.save(path=self._fm.panorama_path(DIR.COR, spectrum), array=pano_limited)
-    logger.debug('{} 파노라마 왜곡 보정 저장', self._SP_KOR[spectrum.value])
+    logger.debug('{} 파노라마 왜곡 보정 저장', spectrum.value)
 
   def correct(self):
     pc = self._init_perspective_correction()
@@ -634,8 +660,9 @@ class ThermalPanorama:
                array=tools.uint8_image(cmask))
 
     # 실화상, 부위인식 파노라마 보정
-    self._correct_others(correction=crct, spectrum=SP.VIS)
-    self._correct_others(correction=crct, spectrum=SP.SEG)
+    if not self._config['panorama']['separate']:
+      self._correct_others(correction=crct, spectrum=SP.VIS)
+      self._correct_others(correction=crct, spectrum=SP.SEG)
 
     logger.success('파노라마 왜곡 보정 완료')
 

@@ -17,6 +17,8 @@ Pane {
     padding : 10
     objectName : 'registration_panel'
 
+    property bool separate_panorama : false
+
     RegistrationOption {
         id : _option
     }
@@ -33,12 +35,16 @@ Pane {
                     icon : '\ue663'
                     onReleased : con.command('register')
 
+                    visible : !separate_panorama
+
                     ToolTip.visible : hovered
                     ToolTip.delay : 500
                     ToolTip.text : qsTr('전체 열화상·실화상 자동 정합')
                 }
 
-                ToolSeparator {}
+                ToolSeparator {
+                    visible : !separate_panorama
+                }
 
                 ToolButton {
                     id : _point
@@ -112,7 +118,7 @@ Pane {
 
                     ToolTip.visible : hovered
                     ToolTip.delay : 500
-                    ToolTip.text : qsTr('설정')
+                    ToolTip.text : qsTr('자동 열·실화상 정합 설정')
                 }
             }
         }
@@ -125,6 +131,8 @@ Pane {
                 Layout.fillHeight : true
                 Layout.preferredWidth : 300
                 padding : 5
+
+                visible : !separate_panorama
 
                 ListView {
                     id : image_view
@@ -208,10 +216,21 @@ Pane {
         }
     }
 
-    function init() {}
+    function init() {
+        con.rgst_reset();
+
+        if (separate_panorama) {
+            con.rgst_pano_draw();
+        }
+    }
 
     function update_image_view(paths) {
         image_model.clear()
         paths.forEach(path => image_model.append({'path': path}))
+    }
+
+    function update_config(config) {
+        _option.update_config(config)
+        separate_panorama = config['panorama']['separate']
     }
 }

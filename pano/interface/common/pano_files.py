@@ -45,6 +45,8 @@ from enum import Enum
 from pathlib import Path
 from typing import List, Union
 
+from omegaconf import DictConfig
+
 from pano import utils
 
 from .config import set_config
@@ -233,13 +235,24 @@ class ThermalPanoramaFileManager:
     return self.subdir(DIR.COR).joinpath(f'CorrectionProcess{FN.LS}')
 
 
-def init_directory(directory: Path):
+def init_directory(directory: Path, default=False) -> DictConfig:
   """
   Working directory 초기화.
 
   대상 directory에 RAW 폴더가 존재하지 않는 경우,
   RAW 폴더를 생성하고 영상/엑셀 파일을 옮김.
   default config 파일 저장.
+
+  Parameters
+  ----------
+  directory : Path
+      Working directory
+  default : bool
+      if `True`, copy default setting.
+
+  Returns
+  -------
+  DictConfig
   """
   raw_dir = directory.joinpath(DIR.RAW.value)
   if not raw_dir.exists():
@@ -249,4 +262,4 @@ def init_directory(directory: Path):
       if file.suffix.lower() in ('.jpg', '.xlsx', '.png'):
         file.replace(raw_dir.joinpath(file.name))
 
-  set_config(directory=directory, default=True)
+  return set_config(directory=directory, default=default)

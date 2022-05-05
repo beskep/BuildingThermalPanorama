@@ -1,6 +1,7 @@
 """영상을 stitch하고 파노라마를 생성"""
 
 from dataclasses import dataclass
+from itertools import repeat
 from typing import Callable, Iterable, List, Optional, Tuple, Union
 
 import cv2 as cv
@@ -349,20 +350,15 @@ class Stitcher:
     return self._blend_type
 
   @blend_type.setter
-  def blend_type(self, value: str):
-    value = value.lower()
-    if value not in ('multiband', 'feather', 'no'):
-      raise ValueError
-
-    self._blend_type = value
-
-  def set_blend_type(self, value: Union[bool, str]):
+  def blend_type(self, value: Union[bool, str]):
     if isinstance(value, str):
       value = value.lower()
+      if value not in ('multiband', 'feather', 'no'):
+        raise ValueError(f'invalid blend_type: "{value}"')
     else:
       value = 'feather' if value else 'no'
 
-    self.blend_type = value
+    self._blend_type = value
 
   @property
   def blend_strength(self) -> float:
@@ -372,8 +368,7 @@ class Stitcher:
   @blend_strength.setter
   def blend_strength(self, value: float):
     if not 0.0 <= value <= 1.0:
-      raise ValueError(
-          'blender strength not in [0, 1], value: {}'.format(value))
+      raise ValueError(f'blender strength not in [0, 1]: {value}')
 
     self._blend_strength = value
 
@@ -463,6 +458,10 @@ class Stitcher:
         대상 영상
     mask : Optional[np.ndarray]
         대상 영역의 마스크
+
+    Returns
+    -------
+    detail_ImageFeatures
     """
     if self.features_finder is None:
       raise ValueError('features_finder가 지정되지 않음')
@@ -496,7 +495,7 @@ class Stitcher:
     Panorama
     """
     if names is None:
-      names = ['Image {}'.format(x + 1) for x in range(images.count)]
+      names = [f'Image {x+1}' for x in range(images.count)]
 
     prep_images, prep_masks = images.preprocess()
     masks = self._merge_mask(prep_masks, masks)
@@ -712,10 +711,10 @@ class Stitcher:
 
   def _warp_images(
       self,
-      images: List[np.ndarray],
+      images: Iterable[np.ndarray],
       cameras: List[cv.detail_CameraParams],
-      masks: Optional[List[Optional[np.ndarray]]] = None,
-      names: Optional[List[str]] = None,
+      masks: Optional[Iterable[Optional[np.ndarray]]] = None,
+      names: Optional[Iterable[str]] = None,
   ) -> Tuple[List[np.ndarray], List[np.ndarray], np.ndarray, List[int]]:
     """
     대상 영상들을 Camera parameter에 따라 변형. 과도한 변형이 일어나는 경우
@@ -723,13 +722,13 @@ class Stitcher:
 
     Parameters
     ----------
-    images : List[np.ndarray]
+    images : Iterable[np.ndarray]
         대상 영상 목록.
     cameras : List[cv.detail_CameraParams]
         대상 영상의 camera parameter 목록
-    masks : Optional[List[np.ndarray]]
+    masks : Optional[Iterable[np.ndarray]]
         대상 영상의 마스크 목록.
-    names: Optional[List[str]]
+    names: Optional[Iterable[str]]
         대상 영상의 이름 목록
 
     Returns
@@ -747,21 +746,19 @@ class Stitcher:
     self.set_warper(scale=scale)
 
     if masks is None:
-      masks = [None for _ in range(len(images))]
+      masks = repeat(None)
+
+    names = repeat('') if names is None else (f' ({x})' for x in names)
 
     warped_images = []
     warped_masks = []
     rois = []
     indices = []
-    for idx, args in enumerate(zip(images, masks, cameras)):
+    for idx, args in enumerate(zip(images, masks, cameras, names)):
       try:
-        wi, wm, roi = self._warp_image(*args)
+        wi, wm, roi = self._warp_image(*args[:3])
       except cv.error:
-        msg = f'과도한 변형으로 인해 {idx+1}번 영상을 제외합니다.'
-        if names is not None:
-          msg += f' ({names[idx]})'
-
-        logger.error(msg)
+        logger.error('과도한 변형으로 인해 {}번 영상을 제외합니다.{}', idx + 1, args[3])
       else:
         warped_images.append(wi)
         warped_masks.append(wm)
@@ -834,8 +831,8 @@ class Stitcher:
       self,
       images: StitchingImages,
       cameras: List[cv.detail_CameraParams],
-      masks: Optional[List[Optional[np.ndarray]]] = None,
-      names: Optional[List[str]] = None
+      masks: Optional[Iterable[Optional[np.ndarray]]] = None,
+      names: Optional[Iterable[str]] = None
   ) -> Tuple[np.ndarray, np.ndarray, List[int]]:
     # warp each image
     warped_images, warped_masks, rois, indices = self._warp_images(

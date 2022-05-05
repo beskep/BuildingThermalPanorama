@@ -18,7 +18,7 @@ def init_project(qt: bool):
 
   if qt:
     if not is_frozen() and 'PySide2' in sys.modules:
-      import PySide2
+      import PySide2  # type: ignore
 
       pyside_dir = Path(PySide2.__file__).parent
       plugins_dir = pyside_dir.joinpath('plugins')
@@ -43,9 +43,6 @@ def init_project(qt: bool):
                 font=font_name,
                 rc={
                     'axes.edgecolor': '0.2',
-                    'grid.color': '0.8'
+                    'grid.color': '0.8',
+                    'image.cmap': 'inferno'
                 })
-
-  mpl.rcParams['font.family'] = font_name
-  mpl.rcParams['axes.unicode_minus'] = False
-  mpl.rcParams['image.cmap'] = 'inferno'

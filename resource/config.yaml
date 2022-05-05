@@ -35,6 +35,7 @@ registration:
         unsharp: false
         edge: false
 panorama:
+    separate: false
     target: IR # {"IR", "VIS"}
     stitch:
         perspective: panorama # {"panorama", "scan"}
@@ -44,8 +45,9 @@ panorama:
         warp_threshold: 20.0
         crop: true
         blend:
-            IR: true
-            VIS: false
+            # {"feather", "multiband", "no", false}
+            IR: "feather"
+            VIS: "feather"
     preprocess:
         IR:
             masking_threshold: -30.0

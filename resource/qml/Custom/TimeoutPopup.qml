@@ -8,6 +8,7 @@ Popup {
     id : _popup
 
     property var steps: 200.0;
+    property var delta: 1.0 / steps;
 
     anchors.centerIn : Overlay.overlay
     Material.elevation : 5
@@ -42,8 +43,9 @@ Popup {
             Layout.fillWidth : true
             Layout.fillHeight : true
             Layout.margins : 20
-            Layout.minimumWidth : 200
+            Layout.minimumWidth : 250
             Layout.maximumWidth : 750
+            Layout.minimumHeight : 150
             spacing : 10
 
             Label {
@@ -60,13 +62,13 @@ Popup {
                 Layout.fillWidth : true
                 Layout.fillHeight : true
 
-                font.pointSize : 12
+                font.pointSize : 14
                 wrapMode : Label.Wrap
 
                 text : _metrics.text
                 onTextChanged : {
-                    if (_metrics.width <= 200) {
-                        Layout.preferredWidth = 200
+                    if (_metrics.width <= 250) {
+                        Layout.preferredWidth = 250
                     } else {
                         Layout.preferredWidth = Math.ceil(Math.sqrt(_metrics.width * _message.height * 2))
                     }
@@ -89,7 +91,7 @@ Popup {
         running : false
         repeat : true
         onTriggered : {
-            _pb.value += 1 / steps
+            _pb.value += delta
         }
     }
 

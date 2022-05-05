@@ -39,10 +39,7 @@ def set_config(directory: Path, read_only=True, default=False) -> DictConfig:
     try:
       wd_config = OmegaConf.load(config_path)
     except YAMLError:
-      logger.error(
-          '`{}` 파일의 형식이 올바르지 않습니다. 기본 설정을 사용합니다.',
-          config_path,
-      )
+      logger.error('`{}` 파일의 형식이 올바르지 않습니다. 기본 설정을 사용합니다.', config_path)
     else:
       # 기본 설정에 working dir의 설정을 덮어씌움
       config = OmegaConf.merge(config, wd_config)
@@ -58,12 +55,15 @@ def set_config(directory: Path, read_only=True, default=False) -> DictConfig:
   return config
 
 
-def update_config(directory: Union[str, Path], config: dict):
+def update_config(directory: Union[str, Path], *configs) -> DictConfig:
   path = Path(directory).joinpath(CONFIG_FNAME)
   base = OmegaConf.load(path)
 
   # struct -> base에 없는 항목을 지정하려 하면 오류 발생
   OmegaConf.set_struct(base, True)
 
-  updated = OmegaConf.merge(base, config)
+  updated = OmegaConf.merge(base, *configs)
+  assert isinstance(updated, DictConfig)
   OmegaConf.save(updated, path)
+
+  return updated
