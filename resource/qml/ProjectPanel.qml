@@ -15,6 +15,7 @@ Pane {
     padding : 10
 
     property bool path_selected : false
+    property string _warning : ' <u>설정 변경 시 부위 인식 및 파노라마 생성 결과가 초기화됩니다.</u>'
 
     ColumnLayout {
         anchors.fill : parent
@@ -45,28 +46,42 @@ Pane {
 
                 ToolSeparator {}
 
-                ToolButton {
-                    id : _separate
-                    // TODO radio button으로 변경, 파일 삭제 경고?
-
-                    text : qsTr('열·실화상 별도 정합')
-                    icon : (checked ? '\ue834' : '\ue835')
-
+                RowLayout {
                     enabled : path_selected
-                    checkable : true
-                    Material.accent : Material.BlueGrey
 
-                    onReleased : {
-                        let config = {
-                            'panorama': {
-                                'separate': checked
-                            }
-                        }
-                        con.configure(JSON.stringify(config));
-                        app.separate_panorama = checked;
-                        app.popup('정합 설정 변경', '부위 인식 및 파노라마 생성 결과가 초기화됩니다.', 5000)
+                    Label {
+                        text : '열·실화상 파노라마 생성 방법 설정'
+                        font.weight : Font.Medium
+                    }
+                    RadioButton {
+                        Material.accent : '#ffffff'
+                        font.weight : Font.Medium
+
+                        checked : true
+                        text : '동시 생성'
+
+                        onReleased : set_separate_panorama()
+
+                        ToolTip.visible : hovered
+                        ToolTip.text : '개별 열·실화상을 정합 후 파노라마를 동시에 생성합니다.' + _warning
+                    }
+                    RadioButton {
+                        id : _separate
+
+                        Material.accent : '#ffffff'
+                        font.weight : Font.Medium
+
+                        text : '별도 생성'
+
+                        onReleased : set_separate_panorama()
+
+                        ToolTip.visible : hovered
+                        ToolTip.text : '열·실화상 파노라마를 별도로 생성하고 두 파노라마를 정합합니다.' + _warning
                     }
                 }
+
+                ToolSeparator {}
+
                 ToolButton {
                     text : qsTr('실화상 입력')
                     icon : '\ue439'
@@ -177,6 +192,17 @@ Pane {
         var parts = path.split('/')
 
         return parts[parts.length - 1]
+    }
+
+    function set_separate_panorama() {
+        let config = {
+            'panorama': {
+                'separate': _separate.checked
+            }
+        }
+        con.configure(JSON.stringify(config));
+        app.separate_panorama = _separate.checked;
+        app.popup('정합 설정 변경', '부위 인식 및 파노라마 생성 결과가 초기화됐습니다.', 5000)
     }
 
     function update_image_view(paths) {
