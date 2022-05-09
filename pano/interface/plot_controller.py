@@ -378,19 +378,26 @@ class RegistrationPlotController(_PanoPlotController):
 
   def _save_pano(self):
     """파노라마 정합 결과 저장"""
-    # vis
-    ImageIO.save(path=self.fm.panorama_path(d=DIR.COR, sp=SP.VIS),
+    # 정합 안된 기존 파일 이름 변경
+    vis = self.fm.panorama_path(d=DIR.PANO, sp=SP.VIS)
+    vis.rename(vis.with_stem(f'{vis.stem}Unregistered'))
+    seg = self.fm.panorama_path(d=DIR.PANO, sp=SP.SEG)
+    seg = seg.rename(seg.with_stem(f'{seg.stem}Unregistered'))
+
+    # vis 저장
+    ImageIO.save(path=self.fm.panorama_path(d=DIR.PANO, sp=SP.VIS),
                  array=uint8_image(self._registered_image))
 
-    # seg
+    # seg 저장
     trsf = transform.ProjectiveTransform(matrix=self._matrix)
-    seg = ImageIO.read(self.fm.panorama_path(d=DIR.PANO, sp=SP.SEG))
-    seg_resized = transform.resize(seg, output_shape=self._images[0].shape[:2])
+    seg_image = ImageIO.read(seg)
+    seg_resized = transform.resize(seg_image,
+                                   output_shape=self._images[0].shape[:2])
     seg_rgst = transform.warp(image=seg_resized,
                               inverse_map=trsf.inverse,
                               output_shape=self._images[0].shape[:2],
                               preserve_range=True)
-    ImageIO.save(path=self.fm.panorama_path(d=DIR.COR, sp=SP.SEG),
+    ImageIO.save(path=self.fm.panorama_path(d=DIR.PANO, sp=SP.SEG),
                  array=uint8_image(seg_rgst))
 
   def save(self, panorama: bool):
@@ -468,8 +475,6 @@ class SegmentationPlotController(_PanoPlotController):
 class PanoramaPlotController(_PanoPlotController):
   _GRID_COUNTS = (7, 7)  # (height, width)
 
-  # TODO reset 이후 grid 나타나는 현상 해결
-
   def __init__(self, parent=None) -> None:
     super().__init__(parent=parent)
 
@@ -522,8 +527,15 @@ class PanoramaPlotController(_PanoPlotController):
     self._cax = make_axes_gridspec(self._axes)[0]
     self._fig.tight_layout()
 
-    self._axes.set_axis_off()
-    self._cax.set_axis_off()
+    self.reset()
+
+  def reset(self):
+    self.axes.clear()
+    self.cax.clear()
+    self.axes.set_axis_off()
+    self.cax.set_axis_off()
+
+    PlotController.draw(self)  # _set_style() 실행하지 않음
 
   def home(self):
     if self._image is not None:

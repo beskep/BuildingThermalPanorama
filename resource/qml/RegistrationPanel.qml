@@ -92,7 +92,7 @@ Pane {
                 ToolButton {
                     text : qsTr('저장')
                     icon : '\ue161'
-                    onReleased : con.rgst_save()
+                    onReleased : con.rgst_save() // TODO separate panorama
 
                     ToolTip.visible : hovered
                     ToolTip.delay : 500
@@ -108,17 +108,21 @@ Pane {
                     ToolTip.text : qsTr('수동 정합 취소')
                 }
 
-                ToolSeparator {}
+                RowLayout {
+                    visible : !separate_panorama
 
-                ToolButton {
-                    text : qsTr('설정')
-                    icon : '\ue8b8'
+                    ToolSeparator {}
 
-                    onReleased : _option.open()
+                    ToolButton {
+                        text : qsTr('설정')
+                        icon : '\ue8b8'
 
-                    ToolTip.visible : hovered
-                    ToolTip.delay : 500
-                    ToolTip.text : qsTr('자동 열·실화상 정합 설정')
+                        onReleased : _option.open()
+
+                        ToolTip.visible : hovered
+                        ToolTip.delay : 500
+                        ToolTip.text : qsTr('자동 열·실화상 정합 설정')
+                    }
                 }
             }
         }

@@ -16,8 +16,16 @@ Pane {
     padding : 10
     objectName : 'panorama_panel'
 
+    // TODO 열/실/seg 파노라마 선택
+    // TODO cmap range
+
+    property bool correction_plot : false
+
     PanoramaOption {
-        id : _option
+        id : _panorama_option
+    }
+    CorrectionOption {
+        id : _correction_option
     }
 
     ColumnLayout {
@@ -28,6 +36,8 @@ Pane {
                 spacing : 0
 
                 ToolButton {
+                    visible : !correction_plot
+
                     text : qsTr('파노라마 생성')
                     icon : '\ue40b'
                     onReleased : {
@@ -39,86 +49,97 @@ Pane {
                     ToolTip.delay : 500
                     ToolTip.text : qsTr('열화상 정합을 통해 파노라마 생성')
                 }
-                ToolButton {
-                    text : qsTr('자동 보정')
-                    icon : '\ue663'
-                    onReleased : {
-                        app.pb_state(true);
-                        con.command('correct');
-                    }
 
-                    ToolTip.visible : hovered
-                    ToolTip.delay : 500
-                    ToolTip.text : qsTr('시점 왜곡 자동 보정')
-                }
+                RowLayout {
+                    visible : correction_plot
 
-                ToolSeparator {}
-
-                ToolButton {
-                    id : _manual
-                    text : qsTr('수동 보정')
-                    icon : '\ue41e'
-
-                    down : true
-                    onReleased : {
-                        down = true;
-                        _crop.down = false;
-                    }
-
-                    ToolTip.visible : hovered
-                    ToolTip.delay : 500
-                    ToolTip.text : qsTr('사용자가 지정한 각도에 따라 시점 왜곡을 수동으로 보정')
-                }
-                ToolButton {
-                    id : _crop
-                    text : qsTr('자르기')
-                    icon : '\ue3be'
-
-                    onReleased : {
-                        down = true;
-                        _manual.down = false;
-                    }
-                    onDownChanged : con.pano_crop_mode(down)
-
-                    ToolTip.visible : hovered
-                    ToolTip.delay : 500
-                    ToolTip.text : qsTr('시점 왜곡이 보정된 영상의 저장 영역을 마우스 드래그를 통해 지정')
-                }
-
-                ToolSeparator {}
-
-                ToolButton {
-                    text : qsTr('저장')
-                    icon : '\ue161'
-                    onReleased : con.pano_save_manual_correction(_roll.value, _pitch.value, _yaw.value)
-
-                    ToolTip.visible : hovered
-                    ToolTip.delay : 500
-                    ToolTip.text : qsTr('수동 시점 왜곡 보정·영역 지정 결과를 저장')
-                }
-                ToolButton {
-                    text : qsTr('취소')
-                    icon : '\ue14a'
-                    onReleased : {
-                        if (_manual.down) {
-                            reset()
-                        } else {
-                            con.pano_home()
+                    ToolButton {
+                        text : qsTr('자동 보정')
+                        icon : '\ue663'
+                        onReleased : {
+                            app.pb_state(true);
+                            con.command('correct');
                         }
+
+                        ToolTip.visible : hovered
+                        ToolTip.delay : 500
+                        ToolTip.text : qsTr('시점 왜곡 자동 보정')
                     }
 
-                    ToolTip.visible : hovered
-                    ToolTip.delay : 500
-                    ToolTip.text : qsTr('수동 시점 왜곡 보정·영역 지정 취소')
-                }
+                    ToolSeparator {}
 
-                ToolSeparator {}
+                    ToolButton {
+                        id : _manual
+                        text : qsTr('수동 보정')
+                        icon : '\ue41e'
+
+                        down : true
+                        onReleased : {
+                            down = true;
+                            _crop.down = false;
+                        }
+
+                        ToolTip.visible : hovered
+                        ToolTip.delay : 500
+                        ToolTip.text : qsTr('사용자가 지정한 각도에 따라 시점 왜곡을 수동으로 보정')
+                    }
+                    ToolButton {
+                        id : _crop
+                        text : qsTr('자르기')
+                        icon : '\ue3be'
+
+                        onReleased : {
+                            down = true;
+                            _manual.down = false;
+                        }
+                        onDownChanged : con.pano_crop_mode(down)
+
+                        ToolTip.visible : hovered
+                        ToolTip.delay : 500
+                        ToolTip.text : qsTr('시점 왜곡이 보정된 영상의 저장 영역을 마우스 드래그를 통해 지정')
+                    }
+
+                    ToolSeparator {}
+
+                    ToolButton {
+                        text : qsTr('저장')
+                        icon : '\ue161'
+                        onReleased : con.pano_save_manual_correction(_roll.value, _pitch.value, _yaw.value)
+
+                        ToolTip.visible : hovered
+                        ToolTip.delay : 500
+                        ToolTip.text : qsTr('수동 시점 왜곡 보정·영역 지정 결과를 저장')
+                    }
+                    ToolButton {
+                        text : qsTr('취소')
+                        icon : '\ue14a'
+                        onReleased : {
+                            if (_manual.down) {
+                                reset()
+                            } else {
+                                con.pano_home()
+                            }
+                        }
+
+                        ToolTip.visible : hovered
+                        ToolTip.delay : 500
+                        ToolTip.text : qsTr('수동 시점 왜곡 보정·영역 지정 취소')
+                    }
+
+                    ToolSeparator {}
+                }
 
                 ToolButton {
                     text : qsTr('설정')
                     icon : '\ue8b8'
 
-                    onReleased : _option.open()
+                    onReleased : {
+                        if (correction_plot) {
+                            _correction_option.open()
+                        } else {
+                            _panorama_option.open()
+                        }
+                    }
 
                     ToolTip.visible : hovered
                     ToolTip.delay : 500
@@ -144,6 +165,8 @@ Pane {
         }
 
         RowLayout {
+            visible : correction_plot
+
             Pane {
                 Material.elevation : 2
                 Layout.fillWidth : true
@@ -335,6 +358,7 @@ Pane {
     }
 
     function update_config(config) {
-        _option.update_config(config)
+        _panorama_option.update_config(config)
+        _correction_option.update_config(config)
     }
 }

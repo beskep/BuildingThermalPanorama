@@ -64,7 +64,7 @@ ApplicationWindow {
                     width : parent.width
                 }
                 TabButton {
-                    text : '파노라마 생성·보정'
+                    text : '파노라마 생성'
                     width : parent.width
                 }
                 TabButton {
@@ -72,6 +72,10 @@ ApplicationWindow {
                     width : parent.width
 
                     enabled : separate_panorama
+                }
+                TabButton {
+                    text : '왜곡 보정'
+                    width : parent.width
                 }
                 TabButton {
                     text : '온도 분포'
@@ -93,6 +97,7 @@ ApplicationWindow {
                         2,
                         3,
                         1,
+                        3,
                         4
                     ][tab_bar.currentIndex]
 
@@ -103,6 +108,7 @@ ApplicationWindow {
                             segmentation_panel,
                             panorama_panel,
                             registration_panel,
+                            panorama_panel,
                             descriptive_panel
                         ][currentIndex].init()
                     }
@@ -120,6 +126,8 @@ ApplicationWindow {
                     }
                     PanoramaPanel {
                         id : panorama_panel
+
+                        correction_plot : tab_bar.currentIndex === 5
                     }
                     DescriptivePanel {
                         id : descriptive_panel

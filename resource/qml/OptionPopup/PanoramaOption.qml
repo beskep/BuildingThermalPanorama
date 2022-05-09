@@ -6,9 +6,7 @@ import QtQuick.Layouts 1.15
 Popup {
     id : _popup
 
-    property var _config: {
-        'panorama': null
-    }
+    property var _config: {'panorama':null}
 
     anchors.centerIn : Overlay.overlay
     Material.elevation : 5
@@ -35,7 +33,7 @@ Popup {
                 font.pointSize : 16
                 font.weight : Font.Medium
 
-                text : '파노라마 생성·보정 설정'
+                text : '파노라마 생성 설정'
             }
 
             ColumnLayout {
@@ -48,7 +46,7 @@ Popup {
                     font.weight : Font.Medium
                     font.pointSize : 13
 
-                    text : '파노라마 생성 설정'
+                    text : '정합 설정'
                 }
 
                 GridLayout {
@@ -248,18 +246,22 @@ Popup {
     }
 
     function reset() {
+        if (! _config['panorama']) {
+            return
+        }
+
         let st = _config['panorama']['stitch']
 
         _perspective.currentIndex = ['panorama', 'scan'].indexOf(st['perspective'])
         _warp.currentIndex = ['plane', 'spherical'].indexOf(st['warp'])
-        _compose_scale.realValue = st['compose_scale']
-        _warp_threshold.realValue = st['warp_threshold']
+        _compose_scale.value = st['compose_scale'] * 100
+        _warp_threshold.value = st['warp_threshold'] * 100
 
         let prep = _config['panorama']['preprocess']
         let contrast = ['equalization', 'normalization', null]
         let denoise = ['bilateral', 'gaussian', null]
 
-        _ir_masking_threshold.realValue = prep['IR']['masking_threshold']
+        _ir_masking_threshold.value = prep['IR']['masking_threshold'] * 100
         _ir_contrast.currentIndex = contrast.indexOf(prep['IR']['contrast'])
         _ir_denoise.currentIndex = denoise.indexOf(prep['IR']['denoise'])
 
@@ -273,8 +275,8 @@ Popup {
                 'stitch': {
                     'perspective': _perspective.currentText.toLowerCase(),
                     'warp': _warp.currentText.toLowerCase(),
-                    'compose_scale': _compose_scale.realValue,
-                    'warp_threshold': _warp_threshold.realValue,
+                    'compose_scale': _compose_scale.value / 100.0,
+                    'warp_threshold': _warp_threshold.value / 100.0,
                     'blend': {
                         'IR': combo_value(_ir_blend.currentText),
                         'VIS': combo_value(_vis_blend.currentText)
@@ -284,7 +286,7 @@ Popup {
                     'IR': {
                         'contrast': combo_value(_ir_contrast.currentText),
                         'denoise': combo_value(_ir_denoise.currentText),
-                        'masking_threshold': _ir_masking_threshold.realValue
+                        'masking_threshold': _ir_masking_threshold.value / 100.0
                     },
                     'VIS': {
                         'contrast': combo_value(_vis_contrast.currentText),

@@ -271,7 +271,10 @@ class Controller(QtCore.QObject):
 
   @QtCore.Slot(str)
   def configure(self, string: str):
-    assert self._config is not None
+    if self._config is None:
+      # 프로젝트 폴더 선택 안됨
+      return
+
     assert self._wd is not None
 
     config = json.loads(string)
@@ -294,7 +297,7 @@ class Controller(QtCore.QObject):
           [f'panorama.stitch.blend.VIS={blend_type}'])
 
     self._config = update_config(self._wd, config, vis_blend)
-    self.win.update_config(self._config)  # FIXME 비효율 (이미 반영된 설정도 다시 업데이트 함)
+    self.win.update_config(self._config)  # 이미 반영된 설정도 다시 업데이트 함
 
   def _clear_separate_results(self):
     # 다음 결과 폴더 내 모든 파일 삭제
@@ -434,23 +437,19 @@ class Controller(QtCore.QObject):
     if not self._fm:
       return
 
-    # FIXME
-    ir = self._fm.panorama_path(d=DIR.COR, sp=SP.IR)
-    if not ir.exists():
-      ir = self._fm.panorama_path(d=DIR.PANO, sp=SP.IR)
-
+    ir = self._fm.panorama_path(d=DIR.PANO, sp=SP.IR)
     vis = self._fm.panorama_path(d=DIR.PANO, sp=SP.VIS)
 
     if any(not x.exists() for x in (ir, vis)):
+      self.win.popup('Warning', '파노라마 생성 결과가 없습니다.')
       return
 
+    # XXX 해상도 낮추기?
     self._rpc.set_images(fixed_image=IIO.read(ir), moving_image=IIO.read(vis))
     self._rpc.draw()
 
   @QtCore.Slot()
   def dist_plot(self):
-    # TODO `separate` true일 때 기능 구현
-
     try:
       data = self._dpc.plot()
     except OSError as e:

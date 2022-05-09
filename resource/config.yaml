@@ -45,9 +45,10 @@ panorama:
         warp_threshold: 20.0
         crop: true
         blend:
-            # {"feather", "multiband", "no", false}
+            # TODO blend strength
+            # {"feather", "multiband", "no"}
             IR: "feather"
-            VIS: "feather"
+            VIS: "no"
     preprocess:
         IR:
             masking_threshold: -30.0
@@ -79,6 +80,8 @@ distort_correction:
         clip_factor: 5
         vp_iter: 5
         erode: 50 # [iteration]
+        strict: False
+        margin: 0.1
     canny: # optional
         sigma: 3.0
         low_threshold: null

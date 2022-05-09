@@ -6,18 +6,7 @@ import QtQuick.Layouts 1.15
 Popup {
     id : _popup
 
-    property var _config: {
-        'registration': {
-            'metric': 'JointHistMI',
-            'transformation': 'Similarity',
-            'bins': 'auto',
-            'optimizer': 'gradient_descent',
-            'preprocess': {
-                'equalize_histogram': true,
-                'unsharp': false
-            }
-        }
-    }
+    property var _config: {'registration':null}
 
     anchors.centerIn : Overlay.overlay
     Material.elevation : 5
@@ -169,6 +158,9 @@ Popup {
 
     function reset() {
         let cfg = _config['registration']
+        if (! cfg) {
+            return
+        }
 
         _hist_eq.checked = cfg['preprocess']['equalize_histogram'];
         _unsharp.checked = cfg['preprocess']['unsharp'];

@@ -660,9 +660,8 @@ class ThermalPanorama:
                array=tools.uint8_image(cmask))
 
     # 실화상, 부위인식 파노라마 보정
-    if not self._config['panorama']['separate']:
-      self._correct_others(correction=crct, spectrum=SP.VIS)
-      self._correct_others(correction=crct, spectrum=SP.SEG)
+    self._correct_others(correction=crct, spectrum=SP.VIS)
+    self._correct_others(correction=crct, spectrum=SP.SEG)
 
     logger.success('파노라마 왜곡 보정 완료')
 
