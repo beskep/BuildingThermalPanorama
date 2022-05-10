@@ -509,7 +509,7 @@ class ThermalPanorama:
                           save_meta=False)
 
   def _panorama_join(self):
-    sopt = self._config['panorama']['stitch']
+    cfg = self._config['panorama']['blend']
     stitcher = self._init_stitcher()
 
     spectrum = self._config['panorama']['target'].upper()
@@ -521,7 +521,8 @@ class ThermalPanorama:
     images = [IIO.read(x) for x in files]
 
     # 파노라마 생성
-    stitcher.blend_type = sopt['blend'][spectrum]
+    stitcher.blend_type = cfg['type'][spectrum]
+    stitcher.blend_strength = cfg['strength'][spectrum]
     pano = self._stitch(stitcher=stitcher,
                         images=images,
                         names=[x.stem for x in files],
@@ -536,17 +537,19 @@ class ThermalPanorama:
 
     # 나머지 영상의 파노라마 생성/저장
     sp2 = 'VIS' if spectrum == 'IR' else 'IR'
-    stitcher.blend_type = sopt['blend'][sp2]
+    stitcher.blend_type = cfg['type'][sp2]
+    stitcher.blend_strength = cfg['strength'][sp2]
     self._stitch_others(stitcher=stitcher, panorama=pano, spectrum=SP[sp2])
 
   def _panorama_separate(self):
-    sopt = self._config['panorama']['stitch']
+    cfg = self._config['panorama']['blend']
     stitcher = self._init_stitcher()
 
     # IR 파노라마
+    stitcher.blend_type = cfg['type']['IR']
+    stitcher.blend_strength = cfg['strength']['IR']
     ir_files = self._fm.files(DIR.IR)
     ir_images = [IIO.read(x) for x in ir_files]
-    stitcher.blend_type = sopt['blend']['IR']
     ir_pano = self._stitch(stitcher=stitcher,
                            images=ir_images,
                            names=[x.stem for x in ir_files],
@@ -554,9 +557,10 @@ class ThermalPanorama:
     self._save_panorama(spectrum=SP.IR, panorama=ir_pano)
 
     # VIS 파노라마
+    stitcher.blend_type = cfg['type']['VIS']
+    stitcher.blend_strength = cfg['strength']['VIS']
     vis_files = self._fm.files(DIR.VIS)
     vis_images = [IIO.read(x) for x in vis_files]
-    stitcher.blend_type = sopt['blend']['VIS']
     vis_pano = self._stitch(stitcher=stitcher,
                             images=vis_images,
                             names=[x.stem for x in vis_files],

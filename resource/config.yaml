@@ -44,11 +44,14 @@ panorama:
         work_scale: 1.0
         warp_threshold: 20.0
         crop: true
-        blend:
-            # TODO blend strength
+    blend:
+        type:
             # {"feather", "multiband", "no"}
             IR: "feather"
             VIS: "no"
+        strength:
+            IR: 0.05
+            VIS: 0.05
     preprocess:
         IR:
             masking_threshold: -30.0

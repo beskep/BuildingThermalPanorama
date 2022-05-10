@@ -295,7 +295,7 @@ class Controller(QtCore.QObject):
       # 실화상 blend 설정 변경
       blend_type = 'feather' if separate else 'no'
       vis_blend = OmegaConf.from_dotlist(
-          [f'panorama.stitch.blend.VIS={blend_type}'])
+          [f'panorama.blend.type.VIS={blend_type}'])
 
     self._config = update_config(self._wd, config, vis_blend)
     self.win.update_config(self._config)  # 이미 반영된 설정도 다시 업데이트 함

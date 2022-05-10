@@ -81,7 +81,7 @@ Popup {
                         text : '열화상 Blend'
                     }
                     ComboBox {
-                        id : _ir_blend
+                        id : _ir_blend_type
                         Layout.fillWidth : true
 
                         model : ['Feather', 'Multiband', 'None']
@@ -92,11 +92,36 @@ Popup {
                         text : '실화상 Blend'
                     }
                     ComboBox {
-                        id : _vis_blend
+                        id : _vis_blend_type
                         Layout.fillWidth : true
 
-                        // FIXME 기본값 `no`
                         model : ['Feather', 'Multiband', 'None']
+                    }
+
+                    Label {
+                        Layout.fillWidth : true
+                        text : '열화상 Blend 강도'
+                    }
+                    FloatSpinBox {
+                        id : _ir_blend_strength
+
+                        value : 5
+                        from : 1
+                        to : 100
+                        stepSize : 1
+                    }
+
+                    Label {
+                        Layout.fillWidth : true
+                        text : '실화상 Blend 강도'
+                    }
+                    FloatSpinBox {
+                        id : _vis_blend_strength
+
+                        value : 5
+                        from : 1
+                        to : 100
+                        stepSize : 1
                     }
 
                     Label {
@@ -257,7 +282,14 @@ Popup {
         _warp.currentIndex = ['plane', 'spherical'].indexOf(st['warp'])
         _compose_scale.value = st['compose_scale'] * 100
         _warp_threshold.value = st['warp_threshold'] * 100
-        // TODO blend 설정 업데이트
+
+        let bl = _config['panorama']['blend']
+        let blend_type = ['feather', 'multiband', 'no']
+
+        _ir_blend_type.currentIndex = blend_type.indexOf(bl['type']['IR'])
+        _vis_blend_type.currentIndex = blend_type.indexOf(bl['type']['VIS'])
+        _ir_blend_strength.value = bl['strength']['IR'] * 100
+        _vis_blend_strength.value = bl['strength']['VIS'] * 100
 
         let prep = _config['panorama']['preprocess']
         let contrast = ['equalization', 'normalization', null]
@@ -271,17 +303,23 @@ Popup {
         _vis_denoise.currentIndex = denoise.indexOf(prep['VIS']['denoise'])
     }
 
-    function configure() { // FIXME wd 설정 안 된 상태에서 오류 해결
+    function configure() {
         _config = {
             'panorama': {
                 'stitch': {
                     'perspective': _perspective.currentText.toLowerCase(),
                     'warp': _warp.currentText.toLowerCase(),
                     'compose_scale': _compose_scale.value / 100.0,
-                    'warp_threshold': _warp_threshold.value / 100.0,
-                    'blend': {
-                        'IR': combo_value(_ir_blend.currentText),
-                        'VIS': combo_value(_vis_blend.currentText)
+                    'warp_threshold': _warp_threshold.value / 100.0
+                },
+                'blend': {
+                    'type': {
+                        'IR': combo_value(_ir_blend_type.currentText),
+                        'VIS': combo_value(_vis_blend_type.currentText)
+                    },
+                    'strength': {
+                        'IR': _ir_blend_strength.value / 100.0,
+                        'VIS': _vis_blend_strength.value / 100.0
                     }
                 },
                 'preprocess': {

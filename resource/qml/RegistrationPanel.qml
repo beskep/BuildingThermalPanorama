@@ -92,7 +92,7 @@ Pane {
                 ToolButton {
                     text : qsTr('저장')
                     icon : '\ue161'
-                    onReleased : con.rgst_save() // TODO separate panorama
+                    onReleased : con.rgst_save()
 
                     ToolTip.visible : hovered
                     ToolTip.delay : 500
