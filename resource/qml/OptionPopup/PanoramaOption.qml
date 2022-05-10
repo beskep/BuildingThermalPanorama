@@ -95,6 +95,7 @@ Popup {
                         id : _vis_blend
                         Layout.fillWidth : true
 
+                        // FIXME 기본값 `no`
                         model : ['Feather', 'Multiband', 'None']
                     }
 
@@ -256,6 +257,7 @@ Popup {
         _warp.currentIndex = ['plane', 'spherical'].indexOf(st['warp'])
         _compose_scale.value = st['compose_scale'] * 100
         _warp_threshold.value = st['warp_threshold'] * 100
+        // TODO blend 설정 업데이트
 
         let prep = _config['panorama']['preprocess']
         let contrast = ['equalization', 'normalization', null]

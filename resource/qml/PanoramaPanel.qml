@@ -16,7 +16,6 @@ Pane {
     padding : 10
     objectName : 'panorama_panel'
 
-    // TODO 열/실/seg 파노라마 선택
     // TODO cmap range
 
     property bool correction_plot : false
@@ -35,20 +34,49 @@ Pane {
             RowLayout {
                 spacing : 0
 
-                ToolButton {
+                RowLayout {
                     visible : !correction_plot
 
-                    text : qsTr('파노라마 생성')
-                    icon : '\ue40b'
-                    onReleased : {
-                        app.pb_state(true);
-                        con.command('panorama');
+                    ToolButton {
+                        text : qsTr('파노라마 생성')
+                        icon : '\ue40b'
+                        onReleased : {
+                            app.pb_state(true);
+                            con.command('panorama');
+                        }
+
+                        ToolTip.visible : hovered
+                        ToolTip.delay : 500
+                        ToolTip.text : qsTr('열화상 정합을 통해 파노라마 생성')
                     }
 
-                    ToolTip.visible : hovered
-                    ToolTip.delay : 500
-                    ToolTip.text : qsTr('열화상 정합을 통해 파노라마 생성')
+                    ToolSeparator {}
                 }
+
+
+                RowLayout {
+                    ToolRadioButton {
+                        id : _ir
+                        text : '열화상'
+                        checked : true
+
+                        onReleased : pano_plot()
+                    }
+                    ToolRadioButton {
+                        id : _vis
+                        text : '실화상'
+
+                        onReleased : pano_plot()
+                    }
+                    ToolRadioButton {
+                        id : _seg
+                        text : '부위 인식'
+
+                        onReleased : pano_plot()
+                    }
+                }
+
+                ToolSeparator {}
 
                 RowLayout {
                     visible : correction_plot
@@ -143,7 +171,7 @@ Pane {
 
                     ToolTip.visible : hovered
                     ToolTip.delay : 500
-                    ToolTip.text : qsTr('파노라마 설정') // XXX
+                    ToolTip.text : (correction_plot ? '시점 왜곡 보정 설정' : '파노라마 생성 설정')
                 }
             }
         }
@@ -340,11 +368,14 @@ Pane {
     }
 
     function init() {
-        con.pano_plot()
+        con.pano_plot((correction_plot ? 'COR' : 'PANO'), 'IR')
     }
 
-    function set_image(url) {
-        _image.source = url
+    function pano_plot() {
+        let sp = _ir.checked ? 'IR' : (_vis.checked ? 'VIS' : 'SEG')
+        let d = correction_plot ? 'COR' : 'PANO'
+        con.pano_plot(d, sp)
+        reset()
     }
 
     function rotate() {

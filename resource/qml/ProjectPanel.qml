@@ -50,13 +50,10 @@ Pane {
                     enabled : path_selected
 
                     Label {
-                        text : '열·실화상 파노라마 생성 방법 설정'
+                        text : '열·실화상 파노라마 생성 설정'
                         font.weight : Font.Medium
                     }
-                    RadioButton {
-                        Material.accent : '#ffffff'
-                        font.weight : Font.Medium
-
+                    ToolRadioButton {
                         checked : true
                         text : '동시 생성'
 
@@ -65,11 +62,8 @@ Pane {
                         ToolTip.visible : hovered
                         ToolTip.text : '개별 열·실화상을 정합 후 파노라마를 동시에 생성합니다.' + _warning
                     }
-                    RadioButton {
+                    ToolRadioButton {
                         id : _separate
-
-                        Material.accent : '#ffffff'
-                        font.weight : Font.Medium
 
                         text : '별도 생성'
 

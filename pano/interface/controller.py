@@ -245,7 +245,8 @@ class Controller(QtCore.QObject):
 
     def _done():
       if command in ('panorama', 'correct'):
-        self._ppc.plot(force=True)
+        self._ppc.plot(d=(DIR.PANO if command == 'panorama' else DIR.COR),
+                       sp=SP.IR)
         self.win.panel_funtion('panorama', 'reset')
       elif command == 'register':
         self._rpc.reset()
@@ -375,10 +376,10 @@ class Controller(QtCore.QObject):
     except FileNotFoundError:
       logger.warning('File not found: {}', path)
 
-  @QtCore.Slot()
-  def pano_plot(self):
+  @QtCore.Slot(str, str)
+  def pano_plot(self, d, sp):
     try:
-      self._ppc.plot(force=False)
+      self._ppc.plot(d=DIR[d], sp=SP[sp])
     except OSError:
       pass
 

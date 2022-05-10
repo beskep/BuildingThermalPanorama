@@ -482,13 +482,12 @@ class PanoramaPlotController(_PanoPlotController):
     self._prj: Optional[ImageProjection] = None
     self._toolbar: Optional[CropToolbar] = None
 
-    self._image: Optional[np.ndarray] = None
     self._dir = DIR.PANO
+    self._sp = SP.IR
     self._angles: Optional[np.ndarray] = None
     self._va = np.deg2rad(42.0)
 
     self._cmap = get_cmap('inferno')
-    self._limit = 0
     self._grid = True
 
   @property
@@ -568,72 +567,64 @@ class PanoramaPlotController(_PanoPlotController):
     else:
       self.axes.set_axis_off()
 
-  def _load_panorama(self):
-    pano_path = self.fm.panorama_path(DIR.COR, SP.IR)
-    mask_path = self.fm.panorama_path(DIR.COR, SP.MASK)
-    self._dir = DIR.COR
+  def _load_image(self, d: DIR, sp: SP):
+    path = self.fm.panorama_path(d=d, sp=sp)
+    if not path.exists() and d is DIR.COR:
+      d = DIR.PANO  # TODO 검토
+      path = self.fm.panorama_path(d=d, sp=sp, error=True)
 
-    if not pano_path.exists():
-      pano_path = self.fm.panorama_path(DIR.PANO, SP.IR)
-      mask_path = self.fm.panorama_path(DIR.PANO, SP.MASK)
-      self._dir = DIR.PANO
+    image = ImageIO.read(path)
 
-      if not pano_path.exists():
-        raise FileNotFoundError('파노라마가 생성되지 않았습니다.')
+    if sp is SP.IR:
+      image = image.astype(np.float32)
+      mask = ImageIO.read(self.fm.panorama_path(d=d, sp=SP.MASK, error=True))
+      if image.shape[:2] != mask.shape[:2]:
+        raise ValueError('파노라마와 마스크 파일의 shape이 일치하지 않습니다.')
 
-    if not mask_path.exists():
-      raise FileNotFoundError(f'파노라마 마스크 파일이 존재하지 않습니다. ({mask_path})')
+      image[np.logical_not(mask)] = np.nan
 
-    pano = ImageIO.read(pano_path).astype(np.float32)
-    mask = ImageIO.read(mask_path)
-    if pano.shape[:2] != mask.shape[:2]:
-      raise ValueError('파노라마와 마스크 파일의 shape이 일치하지 않습니다.')
+    return d, image
 
-    pano[np.logical_not(mask)] = np.nan
+  def _image_projection(self, limit=0):
+    _, image = self._load_image(d=self._dir, sp=self._sp)
 
-    self._image = pano
+    if limit:
+      image = limit_image_size(image=image, limit=limit)
 
-  def resize(self, limit: int):
-    if self._prj is not None and self._limit == limit:
-      return
+    return ImageProjection(image=image, viewing_angle=self.viewing_angle)
 
-    assert self._image is not None
-    self._limit = limit
-    self._prj = ImageProjection(image=limit_image_size(image=self._image,
-                                                       limit=limit),
-                                viewing_angle=self.viewing_angle)
-
-  def _set_ticks(self, image: np.ndarray):
+  def _set_ticks(self, shape: tuple):
     ticks = tuple(
-        np.linspace(0, image.shape[x], num=self._GRID_COUNTS[x], endpoint=True)
+        np.linspace(0, shape[x], num=self._GRID_COUNTS[x], endpoint=True)
         for x in range(2))
 
     self.axes.set_xticks(ticks[1])
     self.axes.set_yticks(ticks[0])
 
-  def plot(self, force=False):
-    if not (force or self._image is None):
-      return
-
-    self._load_panorama()
+  def plot(self, d: DIR, sp: SP):
+    self._dir, image = self._load_image(d=d, sp=sp)
+    self._sp = sp
 
     self.axes.clear()
     self.cax.clear()
+    self._prj = None
 
-    im = self.axes.imshow(self._image, cmap=self._cmap)
-    self.fig.colorbar(im, cax=self.cax, ax=self.axes)
-    self.cax.get_yaxis().labelpad = 10
-    self.cax.set_ylabel('Temperature [℃]', rotation=90)
+    im = self.axes.imshow(image, cmap=self._cmap)
 
-    self._set_ticks(self._image)
+    if sp is not SP.IR:
+      self.cax.set_axis_off()
+    else:
+      self.cax.set_axis_on()
+      self.fig.colorbar(im, cax=self.cax, ax=self.axes)
+      self.cax.get_yaxis().labelpad = 10
+      self.cax.set_ylabel('Temperature [℃]', rotation=90)
+
+    self._set_ticks(image.shape)
     self.draw()
 
   def project(self, roll=0.0, pitch=0.0, yaw=0.0, limit=9999):
-    if self._image is None:
-      return
-
-    self.resize(limit=limit)
-    assert self._prj is not None
+    if self._prj is None:
+      self._prj = self._image_projection(limit=limit)
 
     self._angles = np.deg2rad([roll, pitch, yaw])
     image = self._prj.project(*self._angles)
@@ -641,7 +632,7 @@ class PanoramaPlotController(_PanoPlotController):
     self.axes.clear()
     self.axes.imshow(image, cmap=self._cmap)
 
-    self._set_ticks(image)
+    self._set_ticks(image.shape)
     self.draw()
 
   def set_grid(self, grid):
