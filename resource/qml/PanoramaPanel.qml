@@ -43,6 +43,7 @@ Pane {
                         onReleased : {
                             app.pb_state(true);
                             con.command('panorama');
+                            _ir.checked = true;
                         }
 
                         ToolTip.visible : hovered
@@ -87,6 +88,7 @@ Pane {
                         onReleased : {
                             app.pb_state(true);
                             con.command('correct');
+                            _ir.checked = true;
                         }
 
                         ToolTip.visible : hovered

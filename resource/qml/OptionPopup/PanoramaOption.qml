@@ -78,7 +78,7 @@ Popup {
 
                     Label {
                         Layout.fillWidth : true
-                        text : '열화상 Blend'
+                        text : '열화상 Blend 종류'
                     }
                     ComboBox {
                         id : _ir_blend_type
@@ -89,7 +89,7 @@ Popup {
 
                     Label {
                         Layout.fillWidth : true
-                        text : '실화상 Blend'
+                        text : '실화상 Blend 종류'
                     }
                     ComboBox {
                         id : _vis_blend_type

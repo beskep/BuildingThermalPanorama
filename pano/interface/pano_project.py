@@ -624,6 +624,10 @@ class ThermalPanorama:
     else:
       mask = None
 
+    seg = IIO.read(self._fm.panorama_path(DIR.PANO, SP.SEG))
+    if (pano.shape[:2] != seg.shape[:2]):
+      raise ValueError('열·실화상 파노라마의 크기가 다릅니다. 파노라마 정합을 먼저 시행해주세요.')
+
     # 왜곡 보정
     try:
       crct = pc.perspective_correct(image=pano, mask=mask)
