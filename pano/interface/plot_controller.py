@@ -488,7 +488,7 @@ class PanoramaPlotController(_PanoPlotController):
     self._va = np.deg2rad(42.0)
 
     self._cmap = get_cmap('inferno')
-    self._grid = True
+    self._grid = False
 
   @property
   def cax(self) -> Axes:
@@ -526,15 +526,11 @@ class PanoramaPlotController(_PanoPlotController):
     self._cax = make_axes_gridspec(self._axes)[0]
     self._fig.tight_layout()
 
-    self.reset()
+    self._set_style()
 
   def reset(self):
     self.axes.clear()
     self.cax.clear()
-    self.axes.set_axis_off()
-    self.cax.set_axis_off()
-
-    PlotController.draw(self)  # _set_style() 실행하지 않음
 
   def home(self):
     if self._image is not None:
@@ -561,11 +557,16 @@ class PanoramaPlotController(_PanoPlotController):
     return view_lim / width_height
 
   def _set_style(self):
-    if self._grid:
+    if self.axes.has_data() and self._grid:
       self.axes.set_axis_on()
       self.axes.tick_params(axis='both', which='both', **_TICK_PARAMS)
     else:
       self.axes.set_axis_off()
+
+    if self.cax.has_data():
+      self.cax.set_axis_on()
+    else:
+      self.cax.set_axis_off()
 
   def _load_image(self, d: DIR, sp: SP):
     path = self.fm.panorama_path(d=d, sp=sp)
@@ -611,10 +612,7 @@ class PanoramaPlotController(_PanoPlotController):
 
     im = self.axes.imshow(image, cmap=self._cmap)
 
-    if sp is not SP.IR:
-      self.cax.set_axis_off()
-    else:
-      self.cax.set_axis_on()
+    if sp is SP.IR:
       self.fig.colorbar(im, cax=self.cax, ax=self.axes)
       self.cax.get_yaxis().labelpad = 10
       self.cax.set_ylabel('Temperature [℃]', rotation=90)
