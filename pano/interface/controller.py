@@ -18,11 +18,12 @@ from .common.pano_files import SP
 from .common.pano_files import ThermalPanoramaFileManager
 from .mbq import QtCore
 from .mbq import QtGui
-from .plot_controller import DistPlotController
+from .plot_controller import AnalysisPlotController
 from .plot_controller import PanoramaPlotController
 from .plot_controller import RegistrationPlotController
 from .plot_controller import save_manual_correction
 from .plot_controller import SegmentationPlotController
+from .plot_controller import WorkingDirNotSet
 from .tree import tree_string
 
 
@@ -176,7 +177,7 @@ class Controller(QtCore.QObject):
     self._rpc: Optional[RegistrationPlotController] = None
     self._spc: Optional[SegmentationPlotController] = None
     self._ppc: Optional[PanoramaPlotController] = None
-    self._dpc: Optional[DistPlotController] = None
+    self._apc: Optional[AnalysisPlotController] = None
     self._config: Optional[DictConfig] = None
 
   @property
@@ -187,14 +188,8 @@ class Controller(QtCore.QObject):
   def win(self, win: QtGui.QWindow):
     self._win = _Window(win)
 
-  def set_plot_controllers(self, rgst: RegistrationPlotController,
-                           seg: SegmentationPlotController,
-                           pano: PanoramaPlotController,
-                           dist: DistPlotController):
-    self._rpc = rgst
-    self._spc = seg
-    self._ppc = pano
-    self._dpc = dist
+  def set_plot_controllers(self, controllers):
+    self._rpc, self._spc, self._ppc, self._apc = controllers
 
   @QtCore.Slot(str)
   def log(self, message: str):
@@ -218,8 +213,11 @@ class Controller(QtCore.QObject):
     self._wd = wd
     self._fm = ThermalPanoramaFileManager(wd)
 
-    for pc in (self._rpc, self._spc, self._ppc, self._dpc):
+    for pc in (self._rpc, self._spc, self._ppc, self._apc):
       pc.fm = self._fm
+
+    self._apc.show_point_temperature = lambda x: self.win.panel_funtion(
+        'analysis', 'show_point_temperature', x)
 
     self._config = init_directory(directory=wd)
     self.win.update_config(self._config)
@@ -311,7 +309,7 @@ class Controller(QtCore.QObject):
         f.unlink()
 
     # plot 리셋
-    for pc in (self._rpc, self._spc, self._ppc, self._dpc):
+    for pc in (self._rpc, self._spc, self._ppc, self._apc):
       pc.reset()
 
   def update_image_view(self,
@@ -450,9 +448,32 @@ class Controller(QtCore.QObject):
     self._rpc.draw()
 
   @QtCore.Slot()
+  def analysis_plot(self):
+    try:
+      self._apc.plot()
+    except WorkingDirNotSet:
+      pass
+    else:
+      self.win.panel_funtion('analysis', 'set_temperature_range',
+                             *self._apc.temperature_range())
+
+  @QtCore.Slot(float, float)
+  def analysis_set_clim(self, vmin, vmax):
+    self._apc.set_clim(vmin=vmin, vmax=vmax)
+
+  @QtCore.Slot(float)
+  def analysis_correct_temperature(self, temperature):
+    try:
+      self._apc.correct_temperature(temperature)
+    except ValueError as e:
+      self.win.popup('Error', str(e))
+    else:
+      self.win.panel_funtion('analysis', 'show_point_temperature', temperature)
+
+  @QtCore.Slot()
   def dist_plot(self):
     try:
-      data = self._dpc.plot()
+      data = self._apc.plot()
     except OSError as e:
       self.win.popup('Warning', str(e))
     else:

@@ -14,6 +14,7 @@ from pano.interface.mbq import FigureCanvas
 from pano.interface.mbq import QtCore
 from pano.interface.mbq import QtGui
 from pano.interface.mbq import QtQml
+from pano.interface.plot_controller import AnalysisPlotController
 from pano.interface.plot_controller import DistPlotController
 from pano.interface.plot_controller import PanoramaPlotController
 from pano.interface.plot_controller import RegistrationPlotController
@@ -42,9 +43,9 @@ qml_path = utils.DIR.RESOURCE.joinpath('qml/main.qml')
 for p in [conf_path, qml_path]:
   p.stat()
 
-pc_names = ('registration', 'segmentation', 'panorama', 'dist')
-pc_classes = (RegistrationPlotController, SegmentationPlotController,
-              PanoramaPlotController, DistPlotController)
+PC_NAMES = ('registration', 'segmentation', 'panorama', 'analysis')
+PC_CLASSES = (RegistrationPlotController, SegmentationPlotController,
+              PanoramaPlotController, AnalysisPlotController)
 
 
 @click.command(context_settings={
@@ -83,14 +84,13 @@ def main(debug=False, loglevel=20):
   context.setContextProperty('con', controller)
 
   plot_controllers = []
-  for name, cls in zip(pc_names, pc_classes):
+  for name, cls in zip(PC_NAMES, PC_CLASSES):
     canvas = win.findChild(FigureCanvas, f'{name}_plot')
     pc = cls()
     pc.init(app, canvas)
     plot_controllers.append(pc)
 
-  # pylint: disable=no-value-for-parameter
-  controller.set_plot_controllers(*plot_controllers)
+  controller.set_plot_controllers(plot_controllers)
 
   return app.exec_()
 

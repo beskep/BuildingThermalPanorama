@@ -78,7 +78,7 @@ ApplicationWindow {
                     width : parent.width
                 }
                 TabButton {
-                    text : '온도 분포'
+                    text : '에너지 검진'
                     width : parent.width
                 }
             }
@@ -90,14 +90,13 @@ ApplicationWindow {
                 StackLayout {
                     anchors.fill : parent
 
-                    // 파노라마 정합 선택 시 registration_panel (1번) 표시
                     currentIndex : [
                         0,
                         1,
                         2,
                         3,
-                        1,
-                        3,
+                        1, // registration_panel
+                        3, // panorama_panel
                         4
                     ][tab_bar.currentIndex]
 
@@ -107,9 +106,7 @@ ApplicationWindow {
                             registration_panel,
                             segmentation_panel,
                             panorama_panel,
-                            registration_panel,
-                            panorama_panel,
-                            descriptive_panel
+                            analysis_panel
                         ][currentIndex].init()
                     }
 
@@ -129,8 +126,8 @@ ApplicationWindow {
 
                         correction_plot : tab_bar.currentIndex === 5
                     }
-                    DescriptivePanel {
-                        id : descriptive_panel
+                    AnalysisPanel {
+                        id : analysis_panel
                     }
                 }
             }
@@ -177,8 +174,8 @@ ApplicationWindow {
             return segmentation_panel
         } else if (name === 'panorama') {
             return panorama_panel
-        } else if (name === 'descriptive') {
-            return descriptive_panel
+        } else if (name === 'analysis') {
+            return analysis_panel
         }
 
         return null
@@ -188,7 +185,7 @@ ApplicationWindow {
         project_panel.set_separate_panorama(value)
     }
 
-    function update_config(config) { // TODO
+    function update_config(config) {
         let config_json = JSON.parse(config)
         project_panel.update_config(config_json)
         registration_panel.update_config(config_json)

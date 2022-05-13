@@ -8,6 +8,7 @@ from matplotlib.backend_bases import MouseEvent
 from matplotlib.cm import get_cmap
 from matplotlib.colorbar import make_axes_gridspec
 from matplotlib.figure import Figure
+from matplotlib.image import AxesImage
 from matplotlib.patches import Patch
 import numpy as np
 import seaborn as sns
@@ -198,7 +199,6 @@ class RegistrationPlotController(_PanoPlotController):
 
     self._fig = canvas.figure
     self._axes = self.fig.subplots(2, 2)
-    self._set_style()
     self._fig.tight_layout(pad=2)
 
     self.canvas.mpl_connect('button_press_event', self._on_click)
@@ -671,7 +671,6 @@ def save_manual_correction(wd, subdir, viewing_angle, angles,
     corrected = np.nan_to_num(corrected, nan=np.nanmin(corrected))
 
     path = tp.fm.panorama_path(DIR.COR, sp)
-    path = path.parent.joinpath(f'Manual{path.name}')
     if not path.parent.exists():
       path.parent.mkdir()
 
@@ -686,6 +685,131 @@ def save_manual_correction(wd, subdir, viewing_angle, angles,
 
     else:
       ImageIO.save(path=path, array=corrected.astype(np.uint8))
+
+
+class AnalysisPlotController(_PanoPlotController):
+
+  def __init__(self, parent=None) -> None:
+    super().__init__(parent=parent)
+    self._cax: Optional[Axes] = None
+    self._images: Optional[tuple[np.ndarray]] = None
+    self._axes_image: Optional[AxesImage] = None
+
+    self._point = None  # 선택 지점 PathCollection
+    self._coord = (-1, -1)  # 선택 지점 좌표 (y, x)
+    # self._point_temperature = np.nan
+
+    self.show_point_temperature = lambda x: x / 0
+
+  @property
+  def cax(self) -> Axes:
+    if self._cax is None:
+      raise ValueError('Colorbar ax not set')
+
+    return self._cax
+
+  @property
+  def images(self):
+    if self._images is None:
+      if self.fm.panorama_path(DIR.COR, SP.SEG).exists():
+        d = DIR.COR
+      else:
+        d = DIR.PANO
+
+      ir = ImageIO.read(self.fm.panorama_path(d, SP.IR)).astype(np.float32)
+      mask = ImageIO.read(self.fm.panorama_path(d, SP.MASK))
+      ir[np.logical_not(mask)] = np.nan
+
+      seg = ImageIO.read(self.fm.panorama_path(d, SP.SEG))[:, :, 0]
+      seg = SegMask.vis_to_index(seg)
+
+      self._images = (ir, seg)
+
+    return self._images
+
+  def init(self, app: QtGui.QGuiApplication, canvas: FigureCanvas):
+    self._app = app
+    self._canvas = canvas
+
+    self._fig = canvas.figure
+    self._axes = self._fig.add_subplot(111)
+    self._cax = make_axes_gridspec(self._axes)[0]
+    self._fig.tight_layout()
+    self.canvas.mpl_connect('button_press_event', self._on_click)
+
+    self.draw()
+
+  def reset(self):
+    self.axes.clear()
+    self.cax.clear()
+
+  def _set_style(self):
+    self.axes.set_axis_off()
+
+    if self.cax.has_data():
+      self.cax.set_axis_on()
+    else:
+      self.cax.set_axis_off()
+
+  def _on_click(self, event: MouseEvent):
+    ax: Axes = event.inaxes
+    if ax is not self.axes:
+      return
+
+    if self._point is not None:
+      self._point.remove()
+
+    self._point = event.inaxes.scatter(event.xdata,
+                                       event.ydata,
+                                       s=60,
+                                       c='seagreen',
+                                       marker='x')
+    self.draw()
+
+    # 화면에 지점 온도 표시
+    self._coord = (int(np.round(event.ydata)), int(np.round(event.xdata)))
+    # pt = self.images[0][int(np.round(event.ydata)), int(np.round(event.xdata))]
+    pt = self.images[0][self._coord[0], self._coord[1]]
+    self.show_point_temperature('NA' if np.isnan(pt) else f'{pt:.1f}')
+    # self._point_temperature = pt
+
+  def plot(self):
+    # TODO 열화상, 지표, seg 시각화 기능
+    self.axes.clear()
+
+    # TODO cmap 종류 설정 기능 (PanoramaPlot 마찬가지)
+    self._axes_image = self.axes.imshow(self.images[0],
+                                        cmap=get_cmap('inferno'))
+    self.fig.colorbar(self._axes_image, cax=self.cax, ax=self.axes)
+    self.cax.set_ylabel('Temperature [℃]', rotation=90)
+
+    self.draw()
+
+  def temperature_range(self):
+    return (np.floor(np.nanmin(self.images[0])).item(),
+            np.ceil(np.nanmax(self.images[0])).item())
+
+  def set_clim(self,
+               vmin: Optional[float] = None,
+               vmax: Optional[float] = None):
+    if self._axes_image is None:
+      raise ValueError
+
+    self._axes_image.set_clim(vmin, vmax)
+    self.draw()
+
+  def correct_temperature(self, temperature: float):
+    pt = self.images[0][self._coord[0], self._coord[1]]
+    if np.isnan(pt) or np.isnan(temperature):
+      raise ValueError('유효하지 않은 온도입니다.')
+
+    if self.images[1][self._coord[0], self._coord[1]] != 1:
+      raise ValueError('벽을 선택해주세요')
+
+    ir = self.images[0]
+    ir[self.images[1] == 1] += (temperature - pt)
+
+    self.plot()
 
 
 class DistPlotController(_PanoPlotController):
