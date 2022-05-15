@@ -7,7 +7,7 @@ from loguru import logger
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pano import flir
+from pano.flir import FlirExtractor
 from pano import stitch
 from pano import utils
 from pano.distortion import perspective as persp
@@ -44,10 +44,6 @@ class ThermalPanorama:
     # 제조사, Raw 파일 패턴
     self._manufacturer = self._check_manufacturer()
     self._fm.raw_pattern = self._config['file'][self._manufacturer]['IR']
-    if self._manufacturer != 'FLIR':
-      self._flir_ext = None
-    else:
-      self._flir_ext = flir.FlirExtractor()
     logger.log(init_loglevel, 'Manufacturer: {}', self._manufacturer)
 
     # 카메라 기종
@@ -109,22 +105,20 @@ class ThermalPanorama:
     return models[0]
 
   def _extract_flir_image(self, path: Path):
-    assert self._flir_ext is not None
-    ir, vis = self._flir_ext.extract_data(path)
-    meta = {'Exif': exif.get_exif(files=path.as_posix())[0]}
+    data = FlirExtractor(path.as_posix()).extract()
+    meta = {'Exif': dict(data.exif), 'raw_refl': data.raw_refl}
 
-    if self._config['file']['force_horizontal'] and (ir.shape[0] > ir.shape[1]):
+    force_horizontal = self._config['file']['force_horizontal']
+    if force_horizontal and (data.ir.shape[0] > data.ir.shape[1]):
       # 수직 영상을 수평으로 만들기 위해 90도 회전
-      if self._config['file']['force_horizontal'] == 'CCW':
-        k = 1
-      elif self._config['file']['force_horizontal'] == 'CW':
-        k = 3
-      else:
-        raise ValueError('"force_horizontal must be one of {"CW", "CCW"}')
+      try:
+        k = {'CW': 3, 'CCW': 1}[force_horizontal]
+      except IndexError as e:
+        raise ValueError('force_horizontal must be one of {"CW", "CCW"}') from e
 
       logger.debug('Rotate "{}" (k={})', path.name, k)
-      ir = np.rot90(ir, k=k, axes=(0, 1))
-      vis = np.rot90(vis, k=k, axes=(0, 1))
+      data.ir = np.rot90(data.ir, k=k, axes=(0, 1))
+      data.vis = np.rot90(data.vis, k=k, axes=(0, 1))
 
     # FLIR One로 찍은 사진은 수직으로 촬영해도 orientation 번호가
     # `1` (`Horizontal (normal)`)로 표시되어서 아래 정보가 쓸모가 없음...
@@ -132,7 +126,7 @@ class ThermalPanorama:
     # tag = exif.get_exif_tags(path.as_posix(), '-Orientation', '-n')
     # orientation = tag['Orientation']
 
-    return ir, vis, meta
+    return data.ir, data.vis, meta
 
   def _extract_testo_image(self, path: Path):
     vis_suffix = self._config['file']['testo']['VIS'].replace('*', '')

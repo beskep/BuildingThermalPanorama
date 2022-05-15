@@ -216,4 +216,4 @@ class ImageIO:
       }
       meta_path = cls.meta_path(path)
       with open(meta_path, 'w', encoding=cls.ENCODING) as f:
-        yaml.safe_dump(meta, f, indent=4, sort_keys=False)
+        yaml.safe_dump(meta, f, indent=4, sort_keys=True)

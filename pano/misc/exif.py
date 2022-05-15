@@ -13,14 +13,13 @@ if not EXIFTOOL_PATH.exists():
   raise FileNotFoundError(EXIFTOOL_PATH)
 
 
-def run_exif_tool(*args):
+def exiftool(*args) -> bytes:
   """
   ExifTool 프로그램을 통해 영상 파일의 메타 데이터 (Exif) 추출
   """
   args = (EXIFTOOL_PATH.as_posix(),) + args
-  res = check_output(args, stderr=DEVNULL)
 
-  return res
+  return check_output(args, stderr=DEVNULL)
 
 
 def get_exif(files: Union[str, List[str]],
@@ -47,16 +46,16 @@ def get_exif(files: Union[str, List[str]],
   else:
     tags = [(x if x.startswith('-') else '-' + x) for x in tags]
 
-  exifs_byte = run_exif_tool('-j', *tags, *files)
+  exifs_byte = exiftool('-j', *tags, *files)
   exifs = yaml.safe_load(exifs_byte.decode())
 
   return exifs
 
 
-def get_exif_binary(image_path: str, tag):
+def get_exif_binary(image_path: str, tag: str) -> bytes:
   """
-  Exif 정보로부터 binary 데이터 추출. FLIR 촬영 파일의 열화상, 실화상
-  정보 추출에 이용.
+  Exif 정보로부터 binary 데이터 추출.
+  FLIR 촬영 파일의 열화상, 실화상 정보 추출에 이용.
 
   Parameters
   ----------
@@ -64,7 +63,9 @@ def get_exif_binary(image_path: str, tag):
       파일 경로
   tag : str
       추출 대상 태그
-  """
-  res = run_exif_tool(tag, '-b', image_path)
 
-  return res
+  Returns
+  -------
+  bytes
+  """
+  return exiftool(tag, '-b', image_path)

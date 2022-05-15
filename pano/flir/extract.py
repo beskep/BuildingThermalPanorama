@@ -1,5 +1,8 @@
+"""deprecated"""
+
 from pathlib import Path
 from typing import Tuple
+from warnings import warn
 
 import numpy as np
 
@@ -12,6 +15,8 @@ from ._flir_image_extractor import FlirImageExtractor
 class FlirExtractor:
 
   def __init__(self, path=None, exiftool_path=None, debug=False):
+    warn('deprecated')
+
     if exiftool_path is None:
       exiftool_path = EXIFTOOL_PATH.as_posix()
 

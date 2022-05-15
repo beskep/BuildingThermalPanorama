@@ -697,7 +697,6 @@ class AnalysisPlotController(_PanoPlotController):
 
     self._point = None  # 선택 지점 PathCollection
     self._coord = (-1, -1)  # 선택 지점 좌표 (y, x)
-    # self._point_temperature = np.nan
 
     self.show_point_temperature = lambda x: x / 0
 
@@ -768,10 +767,8 @@ class AnalysisPlotController(_PanoPlotController):
 
     # 화면에 지점 온도 표시
     self._coord = (int(np.round(event.ydata)), int(np.round(event.xdata)))
-    # pt = self.images[0][int(np.round(event.ydata)), int(np.round(event.xdata))]
     pt = self.images[0][self._coord[0], self._coord[1]]
     self.show_point_temperature('NA' if np.isnan(pt) else f'{pt:.1f}')
-    # self._point_temperature = pt
 
   def plot(self):
     # TODO 열화상, 지표, seg 시각화 기능
