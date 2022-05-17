@@ -7,10 +7,10 @@ from loguru import logger
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pano.flir import FlirExtractor
 from pano import stitch
 from pano import utils
 from pano.distortion import perspective as persp
+from pano.flir import FlirExtractor
 from pano.misc import exif
 from pano.misc import tools
 from pano.misc.imageio import ImageIO as IIO
@@ -106,7 +106,7 @@ class ThermalPanorama:
 
   def _extract_flir_image(self, path: Path):
     data = FlirExtractor(path.as_posix()).extract()
-    meta = {'Exif': dict(data.exif), 'raw_refl': data.raw_refl}
+    meta = {'Exif': dict(data.exif), 'signal_reflected': data.signal_reflected}
 
     force_horizontal = self._config['file']['force_horizontal']
     if force_horizontal and (data.ir.shape[0] > data.ir.shape[1]):
@@ -213,8 +213,16 @@ class ThermalPanorama:
   def _size_limit(self):
     return self._config['file']['size_limit']
 
-  def limit_size(self, image: np.ndarray) -> np.ndarray:
-    return tools.limit_image_size(image=image, limit=self._size_limit)
+  def limit_size(self, image: np.ndarray, aa=True) -> np.ndarray:
+    if aa:
+      order = tools.Interpolation.BiCubic
+    else:
+      order = tools.Interpolation.NearestNeighbor
+
+    return tools.limit_image_size(image=image,
+                                  limit=self._size_limit,
+                                  order=order,
+                                  anti_aliasing=aa)
 
   def _init_registrator(self, shape):
     ropt: DictConfig = self._config['registration']
@@ -428,7 +436,7 @@ class ThermalPanorama:
 
     if max(panorama.panorama.shape[:2]) > self._size_limit:
       panorama.panorama = self.limit_size(panorama.panorama)
-      panorama.mask = self.limit_size(panorama.mask)
+      panorama.mask = self.limit_size(panorama.mask, aa=False)
 
     meta = None
     if save_meta:
@@ -489,12 +497,14 @@ class ThermalPanorama:
     if spectrum is SP.IR:
       pano = pano[:, :, 0]
       pano = pano.astype(np.float16)
+    elif spectrum is SP.SEG:
+      pano = tools.SegMask.index_to_vis(np.round(pano / tools.SegMask.scale))
     else:
       pano = np.round(pano).astype(np.uint8)
 
     if spectrum is SP.SEG:
       IIO.save(path=self._fm.panorama_path(DIR.PANO, spectrum),
-               array=self.limit_size(pano))
+               array=self.limit_size(pano, aa=False))
     else:
       panorama.panorama = pano
       self._save_panorama(spectrum=spectrum,
@@ -595,8 +605,18 @@ class ThermalPanorama:
       raise FileNotFoundError(f'{spectrum.value} 파노라마가 존재하지 않습니다.') from e
 
     pano = IIO.read(path=path)
-    pano_corrected = correction.correct(pano)[0].astype(np.uint8)
-    pano_limited = self.limit_size(pano_corrected)
+
+    if spectrum is SP.SEG:
+      pano = tools.SegMask.vis_to_index(pano)
+      order = tools.Interpolation.NearestNeighbor
+    else:
+      order = tools.Interpolation.BiCubic
+
+    pano_corrected = correction.correct(pano, order=order)[0].astype(np.uint8)
+    pano_limited = self.limit_size(pano_corrected, aa=(spectrum is not SP.SEG))
+
+    if spectrum is SP.SEG:
+      pano_limited = tools.SegMask.index_to_vis(pano_limited)
 
     IIO.save(path=self._fm.panorama_path(DIR.COR, spectrum), array=pano_limited)
     logger.debug('{} 파노라마 왜곡 보정 저장', spectrum.value)
@@ -657,7 +677,7 @@ class ThermalPanorama:
 
     # mask 저장
     if cmask is not None:
-      cmask = self.limit_size(cmask)
+      cmask = self.limit_size(cmask, aa=False)
       IIO.save(path=self._fm.panorama_path(DIR.COR, SP.MASK),
                array=tools.uint8_image(cmask))
 

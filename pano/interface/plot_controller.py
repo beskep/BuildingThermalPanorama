@@ -1,6 +1,6 @@
 from collections import defaultdict
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 from loguru import logger
 from matplotlib.axes import Axes
@@ -688,11 +688,12 @@ def save_manual_correction(wd, subdir, viewing_angle, angles,
 
 
 class AnalysisPlotController(_PanoPlotController):
+  # TODO 파노라마 생성/시점 보정 이후 image reset
 
   def __init__(self, parent=None) -> None:
     super().__init__(parent=parent)
     self._cax: Optional[Axes] = None
-    self._images: Optional[tuple[np.ndarray]] = None
+    self._images: Any = None
     self._axes_image: Optional[AxesImage] = None
 
     self._point = None  # 선택 지점 PathCollection
@@ -707,8 +708,11 @@ class AnalysisPlotController(_PanoPlotController):
 
     return self._cax
 
+  def remove_images(self):
+    self._images = None
+
   @property
-  def images(self):
+  def images(self) -> tuple[np.ndarray, np.ndarray]:
     if self._images is None:
       if self.fm.panorama_path(DIR.COR, SP.SEG).exists():
         d = DIR.COR
@@ -725,6 +729,10 @@ class AnalysisPlotController(_PanoPlotController):
       self._images = (ir, seg)
 
     return self._images
+
+  @property
+  def coord(self):
+    return self._coord
 
   def init(self, app: QtGui.QGuiApplication, canvas: FigureCanvas):
     self._app = app
@@ -750,6 +758,10 @@ class AnalysisPlotController(_PanoPlotController):
     else:
       self.cax.set_axis_off()
 
+  def update_ir(self, ir):
+    self._images = (ir, self._images[1])
+    self.plot()
+
   def _on_click(self, event: MouseEvent):
     ax: Axes = event.inaxes
     if ax is not self.axes:
@@ -772,7 +784,7 @@ class AnalysisPlotController(_PanoPlotController):
 
   def plot(self):
     # TODO 열화상, 지표, seg 시각화 기능
-    self.axes.clear()
+    self.reset()
 
     # TODO cmap 종류 설정 기능 (PanoramaPlot 마찬가지)
     self._axes_image = self.axes.imshow(self.images[0],
@@ -783,6 +795,7 @@ class AnalysisPlotController(_PanoPlotController):
     self.draw()
 
   def temperature_range(self):
+    # TODO 이상치 제외한 범위
     return (np.floor(np.nanmin(self.images[0])).item(),
             np.ceil(np.nanmax(self.images[0])).item())
 
@@ -794,19 +807,6 @@ class AnalysisPlotController(_PanoPlotController):
 
     self._axes_image.set_clim(vmin, vmax)
     self.draw()
-
-  def correct_temperature(self, temperature: float):
-    pt = self.images[0][self._coord[0], self._coord[1]]
-    if np.isnan(pt) or np.isnan(temperature):
-      raise ValueError('유효하지 않은 온도입니다.')
-
-    if self.images[1][self._coord[0], self._coord[1]] != 1:
-      raise ValueError('벽을 선택해주세요')
-
-    ir = self.images[0]
-    ir[self.images[1] == 1] += (temperature - pt)
-
-    self.plot()
 
 
 class DistPlotController(_PanoPlotController):

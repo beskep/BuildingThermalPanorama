@@ -161,6 +161,7 @@ Pane {
                             text : '벽'
                         }
                         TextField {
+                            id : _wall_emissivity
                             text : '0.90' // TODO 숫자 입력으로
                         }
 
@@ -168,6 +169,7 @@ Pane {
                             text : '창문'
                         }
                         TextField {
+                            id : _window_emissivity
                             text : '0.92'
                         }
                     }
@@ -175,6 +177,12 @@ Pane {
                     Button {
                         Layout.alignment : Qt.AlignRight | Qt.AlignVCenter
                         text : '적용'
+
+                        onReleased : {
+                            let ewall = parseFloat(_wall_emissivity.text);
+                            let ewindow = parseFloat(_window_emissivity.text);
+                            con.analysis_correct_emissivity(ewall, ewindow);
+                        }
                     }
                 }
 
@@ -216,7 +224,10 @@ Pane {
                         Layout.alignment : Qt.AlignRight | Qt.AlignVCenter
                         text : '보정'
 
-                        onReleased : con.analysis_correct_temperature(parseFloat(_reference_temperature.text))
+                        onReleased : {
+                            let temperature = parseFloat(_reference_temperature.text);
+                            con.analysis_correct_temperature(temperature);
+                        }
                     }
                 }
             }

@@ -11,6 +11,7 @@ from omegaconf import OmegaConf
 from pano.misc.imageio import ImageIO as IIO
 from pano.utils import set_logger
 
+from . import analysis
 from .common.config import update_config
 from .common.pano_files import DIR
 from .common.pano_files import init_directory
@@ -23,7 +24,6 @@ from .plot_controller import PanoramaPlotController
 from .plot_controller import RegistrationPlotController
 from .plot_controller import save_manual_correction
 from .plot_controller import SegmentationPlotController
-from .plot_controller import WorkingDirNotSet
 from .tree import tree_string
 
 
@@ -451,7 +451,7 @@ class Controller(QtCore.QObject):
   def analysis_plot(self):
     try:
       self._apc.plot()
-    except WorkingDirNotSet:
+    except OSError:
       pass
     else:
       self.win.panel_funtion('analysis', 'set_temperature_range',
@@ -461,14 +461,43 @@ class Controller(QtCore.QObject):
   def analysis_set_clim(self, vmin, vmax):
     self._apc.set_clim(vmin=vmin, vmax=vmax)
 
+  @QtCore.Slot(float, float)
+  def analysis_correct_emissivity(self, wall, window):
+    if np.isnan(wall) and np.isnan(window):
+      return
+
+    self._apc.remove_images()  # 기존 이미지 삭제하고 원본 이미지를 불러와서 보정
+
+    try:
+      ir, mask = self._apc.images
+    except OSError:
+      return
+
+    meta_files = list(self._fm.subdir(DIR.IR).glob('*.yaml'))
+
+    for idx, e1 in zip([1, 2], [wall, window]):
+      ir0 = np.full_like(ir, np.nan)
+      ir0[mask == idx] = ir[mask == idx]
+      ir1 = analysis.correct_emissivity(image=ir0, meta_files=meta_files, e1=e1)
+      ir[mask == idx] = ir1[mask == idx]
+
+    self._apc.update_ir(ir)
+    self.win.panel_funtion('analysis', 'set_temperature_range',
+                           *self._apc.temperature_range())
+
   @QtCore.Slot(float)
   def analysis_correct_temperature(self, temperature):
     try:
-      self._apc.correct_temperature(temperature)
+      ir = analysis.correct_temperature(*self._apc.images,
+                                        coord=self._apc.coord,
+                                        T1=temperature)
     except ValueError as e:
       self.win.popup('Error', str(e))
     else:
+      self._apc.update_ir(ir)
       self.win.panel_funtion('analysis', 'show_point_temperature', temperature)
+      self.win.panel_funtion('analysis', 'set_temperature_range',
+                             *self._apc.temperature_range())
 
   @QtCore.Slot()
   def dist_plot(self):

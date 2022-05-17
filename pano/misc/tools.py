@@ -1,6 +1,7 @@
 """기타 영상 처리 함수들"""
 
 import dataclasses as dc
+from enum import IntEnum
 from typing import List, Optional, Tuple, Union
 
 import cv2 as cv
@@ -364,7 +365,19 @@ def prep_compare_fig(images: Tuple[np.ndarray, np.ndarray],
   return fig, axes
 
 
-def limit_image_size(image: np.ndarray, limit: int) -> np.ndarray:
+class Interpolation(IntEnum):
+  NearestNeighbor = 0
+  BiLinear = 1
+  BiQuadratic = 2
+  BiCubic = 3
+  BiQuartic = 4
+  BiQuintic = 5
+
+
+def limit_image_size(image: np.ndarray,
+                     limit: int,
+                     order=Interpolation.BiCubic,
+                     anti_aliasing=True) -> np.ndarray:
   max_shape = np.max(image.shape[:2]).astype(float)
   if max_shape <= limit:
     return image
@@ -375,20 +388,21 @@ def limit_image_size(image: np.ndarray, limit: int) -> np.ndarray:
   target_shape = (int(image.shape[0] * ratio), int(image.shape[1] * ratio))
 
   resized = resize(image=image.astype(np.float32),
+                   order=order,
                    output_shape=target_shape,
                    preserve_range=True,
-                   anti_aliasing=True)
+                   anti_aliasing=anti_aliasing)
 
   return resized.astype(dtype)
 
 
 class SegMask:
-  _scale = 80
+  scale = 80
 
   @classmethod
   def index_to_vis(cls, array: np.ndarray):
-    return array.astype(np.uint8) * cls._scale
+    return array.astype(np.uint8) * cls.scale
 
   @classmethod
   def vis_to_index(cls, array: np.ndarray):
-    return (array / cls._scale).astype(np.uint8)
+    return np.round(array / cls.scale).astype(np.uint8)

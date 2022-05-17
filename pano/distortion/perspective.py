@@ -12,6 +12,7 @@ from skimage.transform import probabilistic_hough_line
 from skimage.transform import warp
 
 from pano.misc import tools
+from pano.misc.tools import Interpolation
 
 from . import rectification
 
@@ -264,7 +265,7 @@ class Homography:
   def available(self):
     return self.Htranslate is not None
 
-  def warp(self, image: np.ndarray):
+  def warp(self, image: np.ndarray, order=Interpolation.BiCubic):
     if not self.available():
       raise ValueError('Homography not set')
 
@@ -275,6 +276,7 @@ class Homography:
 
     return warp(image=image,
                 inverse_map=np.linalg.inv(self.Htranslate),
+                order=order,
                 output_shape=self.output_shape,
                 preserve_range=True)
 
@@ -294,8 +296,10 @@ class Correction:
   def success(self) -> bool:
     return self.homography.available()
 
-  def _warp_and_crop(self, image: np.ndarray) -> np.ndarray:
-    img = self.homography.warp(image=image)
+  def _warp_and_crop(self,
+                     image: np.ndarray,
+                     order=Interpolation.BiCubic) -> np.ndarray:
+    img = self.homography.warp(image=image, order=int(order))
     if self.crop_range is not None:
       img = self.crop_range.crop(img)
 
@@ -304,8 +308,8 @@ class Correction:
   def correct(
       self,
       image: np.ndarray,
-      mask: Optional[np.ndarray] = None
-  ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
+      mask: Optional[np.ndarray] = None,
+      order=Interpolation.BiCubic) -> Tuple[np.ndarray, Optional[np.ndarray]]:
     """
     저장된 왜곡 보정 결과를 통해 새 영상 보정
 
@@ -316,6 +320,8 @@ class Correction:
         보정 계수를 추측한 영상과 크기 (width, height)가 동일해야 함.
     mask : np.ndarray
         보정 대상 영상의 분석 대상 영역 mask.
+    order : Union[Interpolation, int]
+        Interpolation 방법
 
     Returns
     -------
@@ -329,12 +335,12 @@ class Correction:
     ValueError
         if image.shape[:2] != self.image.shape[:2]
     """
-    img = self._warp_and_crop(image)
+    img = self._warp_and_crop(image, order=order)
 
     if mask is None:
       msk = None
     else:
-      msk = self._warp_and_crop(mask)
+      msk = self._warp_and_crop(mask, order=Interpolation.NearestNeighbor)
       img[np.logical_not(msk)] = np.nanmin(img)
 
     return img, msk
@@ -721,7 +727,8 @@ class PerspectiveCorrection:
                                            vp1=vp1.array,
                                            vp2=vp2.array)
       if mask is not None:
-        crop_range = tools.crop_mask(mask=homography.warp(mask))[0]
+        crop_range = tools.crop_mask(
+            mask=homography.warp(mask, order=Interpolation.NearestNeighbor))[0]
 
     correction = Correction(edges=edges,
                             edgelets=edgelets,

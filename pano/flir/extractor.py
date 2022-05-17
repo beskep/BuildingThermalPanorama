@@ -46,8 +46,13 @@ class FlirExif:
     if self.RelativeHumidity > 1:
       self.RelativeHumidity /= 100
 
+  @classmethod
+  def from_dict(cls, d: dict):
+    fields = {x.name for x in dc.fields(cls)}
+    return cls(**{k: v for k, v in d.items() if k in fields})
 
-class Raw2Temperature:
+
+class IRSignal:
   ATA1 = 0.006569
   ATA2 = 0.01262
   ATB1 = -0.002276
@@ -74,65 +79,63 @@ class Raw2Temperature:
     return tau1, tau2
 
   @staticmethod
-  def _radiance_eq(meta: FlirExif, temperature: float):
+  def temp2signal(temperature, meta: FlirExif):
     eq = np.exp(meta.PlanckB / (temperature - T0))
     eq2 = meta.PlanckR2 * (eq - meta.PlanckF)
     return meta.PlanckR1 / eq2 - meta.PlanckO
 
-  @classmethod
-  def _radiance(cls, raw: np.ndarray, meta: FlirExif):
-    e = meta.Emissivity
-    IRT = meta.IRWindowTransmission
-    # emiss_wind = 1 - IRT
-    tau1, tau2 = cls._transmission(meta)
-
-    raw_refl1 = (cls._radiance_eq(meta, meta.ReflectedApparentTemperature) *
-                 (1 - e) / e)
-    # raw_refl2는 항상 0이 되어 생략
-
-    ratm = cls._radiance_eq(meta, meta.AtmosphericTemperature)
-    raw_atm1 = ratm * (1 - tau1) / (e * tau1)
-    raw_atm2 = ratm * (1 - tau2) / (e * tau1 * tau2 * IRT)
-
-    raw_wind = (cls._radiance_eq(meta, meta.IRWindowTemperature) * (1 - IRT) /
-                (e * tau1 * IRT))
-
-    raw_obj = ((raw / (e * tau1 * tau2 * IRT)) -
-               (raw_atm1 + raw_atm2 + raw_wind + raw_refl1))
-
-    return raw_obj, raw_refl1
-
   @staticmethod
-  def rawobj2temperature(raw_obj: np.ndarray, meta: FlirExif):
-    RSob = (meta.PlanckR1 / (meta.PlanckR2 * (raw_obj + meta.PlanckO)) +
-            meta.PlanckF)
+  def signal2temp(signal, meta: FlirExif):
+    rsf = (meta.PlanckR1 / (meta.PlanckR2 * (signal + meta.PlanckO)) +
+           meta.PlanckF)
 
-    mask = np.min(RSob) <= 0.0
+    mask = rsf <= 0.0
     if np.any(mask):
-      RSob[mask] = np.e
+      rsf[mask] = np.e
     else:
       mask = None
 
-    temperature = meta.PlanckB / np.log(RSob) + T0
+    temperature = meta.PlanckB / np.log(rsf) + T0
     if mask is not None:
       temperature[mask] = np.nan
 
     return temperature
 
   @classmethod
+  def _signal(cls, raw: np.ndarray, meta: FlirExif):
+    e = meta.Emissivity
+    IRT = meta.IRWindowTransmission
+    tau1, tau2 = cls._transmission(meta)
+
+    signal_reflected = (
+        cls.temp2signal(meta.ReflectedApparentTemperature, meta) * (1 - e) / e)
+
+    atms = cls.temp2signal(meta.AtmosphericTemperature, meta)
+    signal_atm1 = atms * (1 - tau1) / (e * tau1)
+    signal_atm2 = atms * (1 - tau2) / (e * tau1 * tau2 * IRT)
+
+    signal_wind = (cls.temp2signal(meta.IRWindowTemperature, meta) * (1 - IRT) /
+                   (e * tau1 * IRT))
+
+    signal_obj = ((raw / (e * tau1 * tau2 * IRT)) -
+                  (signal_atm1 + signal_atm2 + signal_wind + signal_reflected))
+
+    return signal_obj, signal_reflected
+
+  @classmethod
   def calculate(cls, raw: np.ndarray,
                 meta: FlirExif) -> tuple[np.ndarray, float]:
-    raw_obj, raw_refl = cls._radiance(raw, meta)
-    temperature = cls.rawobj2temperature(raw_obj, meta)
+    signal_obj, signal_reflected = cls._signal(raw, meta)
+    temperature = cls.signal2temp(signal_obj, meta)
 
-    return temperature, raw_refl.item()
+    return temperature, signal_reflected.item()
 
 
 @dc.dataclass
 class FlirData:
   ir: np.ndarray
   vis: np.ndarray
-  raw_refl: float  # TODO 정확한 표기
+  signal_reflected: float
   exif: dict
 
 
@@ -178,7 +181,7 @@ class FlirExtractor:
     elif self.meta.RawThermalImageType != 'TIFF':
       raise ValueError('unexpected image type')
 
-    return Raw2Temperature.calculate(raw_image, self.meta)
+    return IRSignal.calculate(raw_image, self.meta)
 
   def vis(self):
     if self.meta.RawThermalImageType == 'TIFF':
@@ -195,19 +198,18 @@ class FlirExtractor:
     return exif.get_exif(self.path)[0]
 
   def extract(self):
-    ir, refl = self.ir()
+    ir, signal_reflected = self.ir()
 
-    return FlirData(ir=ir, vis=self.vis(), raw_refl=refl, exif=self.exif())
+    return FlirData(ir=ir,
+                    vis=self.vis(),
+                    signal_reflected=signal_reflected,
+                    exif=self.exif())
 
   @staticmethod
-  def correct_emissivity(image: np.ndarray, meta: FlirExif, raw_refl: float,
-                         e0: float, e1: float):
-    RSob = np.exp(meta.PlanckB / (image - T0))
-    raw_obj0 = (meta.PlanckR1 / ((RSob - meta.PlanckF) * meta.PlanckR2) -
-                meta.PlanckO)
+  def correct_emissivity(image: np.ndarray, meta: FlirExif,
+                         signal_reflected: float, e0: float, e1: float):
+    signal_obj0 = IRSignal.temp2signal(image, meta=meta)
+    signal_obj1 = (((signal_obj0 + signal_reflected) * e0 / e1) -
+                   (signal_reflected * (e0 / (1 - e0)) * ((1 - e1) / e1)))
 
-    # TODO 검토
-    raw_obj1 = (((raw_obj0 + raw_refl) * e0 / e1) -
-                (raw_refl * (e0 / (1 - e0)) * ((1 - e1) / e1)))
-
-    return Raw2Temperature.rawobj2temperature(raw_obj1, meta)
+    return IRSignal.signal2temp(signal_obj1, meta)
