@@ -62,3 +62,15 @@ def correct_temperature(ir: np.ndarray, mask: np.ndarray, coord: tuple,
   ir[mask == 1] += (T1 - T0)
 
   return ir
+
+
+def summary(array: np.ndarray):
+  arr = array[np.logical_not(np.isnan(array))]
+
+  return {
+      'avg': np.average(arr),
+      'std': np.std(arr),
+      'q1': np.quantile(arr, 0.25),
+      'median': np.median(arr),
+      'q3': np.quantile(arr, 0.75),
+  }

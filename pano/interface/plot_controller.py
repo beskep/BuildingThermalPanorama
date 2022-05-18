@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from loguru import logger
+from matplotlib import colors
 from matplotlib.axes import Axes
 from matplotlib.backend_bases import MouseEvent
 from matplotlib.cm import get_cmap
@@ -16,6 +17,7 @@ from skimage import transform
 from skimage.exposure import equalize_hist
 
 from pano.distortion.projection import ImageProjection
+from pano.interface import analysis
 from pano.misc.cmap import apply_colormap
 from pano.misc.imageio import ImageIO
 from pano.misc.tools import limit_image_size
@@ -701,6 +703,11 @@ class AnalysisPlotController(_PanoPlotController):
 
     self.show_point_temperature = lambda x: x / 0
 
+    self._teti = (np.nan, np.nan)  # (exterior, interior temperature)
+
+    self._seg_cmap = get_cmap('Dark2')
+    self._seg_legend = None
+
   @property
   def cax(self) -> Axes:
     if self._cax is None:
@@ -734,6 +741,14 @@ class AnalysisPlotController(_PanoPlotController):
   def coord(self):
     return self._coord
 
+  @property
+  def teti(self):
+    return self._teti
+
+  @teti.setter
+  def teti(self, value):
+    self._teti = (float(value[0]), float(value[1]))
+
   def init(self, app: QtGui.QGuiApplication, canvas: FigureCanvas):
     self._app = app
     self._canvas = canvas
@@ -746,9 +761,19 @@ class AnalysisPlotController(_PanoPlotController):
 
     self.draw()
 
+  def temperature_factor(self):
+    if np.isnan(self.teti).any():
+      raise ValueError('실내외 온도가 설정되지 않았습니다.')
+
+    return (self.images[0] - self.teti[0]) / (self.teti[1] - self.teti[0])
+
   def reset(self):
     self.axes.clear()
     self.cax.clear()
+
+    if self._seg_legend is not None:
+      self._seg_legend.remove()
+      self._seg_legend = None
 
   def _set_style(self):
     self.axes.set_axis_off()
@@ -760,7 +785,6 @@ class AnalysisPlotController(_PanoPlotController):
 
   def update_ir(self, ir):
     self._images = (ir, self._images[1])
-    self.plot()
 
   def _on_click(self, event: MouseEvent):
     ax: Axes = event.inaxes
@@ -782,22 +806,66 @@ class AnalysisPlotController(_PanoPlotController):
     pt = self.images[0][self._coord[0], self._coord[1]]
     self.show_point_temperature('NA' if np.isnan(pt) else f'{pt:.1f}')
 
-  def plot(self):
-    # TODO 열화상, 지표, seg 시각화 기능
+  @staticmethod
+  def _get_cmap(factor=False, segmentation=False):
+    if segmentation:
+      name = 'gist_gray'
+    elif factor:
+      name = 'plasma'
+    else:
+      name = 'inferno'
+
+    cmap = get_cmap(name).copy()
+
+    if factor:
+      cmap.set_over('white')
+      cmap.set_under('black')
+
+    return cmap
+
+  def plot(self, factor=False, segmentation=False):
     self.reset()
 
-    # TODO cmap 종류 설정 기능 (PanoramaPlot 마찬가지)
-    self._axes_image = self.axes.imshow(self.images[0],
-                                        cmap=get_cmap('inferno'))
-    self.fig.colorbar(self._axes_image, cax=self.cax, ax=self.axes)
-    self.cax.set_ylabel('Temperature [℃]', rotation=90)
+    if factor:
+      image = self.temperature_factor()
+      norm = colors.BoundaryNorm(boundaries=np.linspace(0, 1, 11), ncolors=256)
+    else:
+      image = self.images[0]
+      norm = None
+
+    cmap = self._get_cmap(factor=factor, segmentation=segmentation)
+    self._axes_image = self.axes.imshow(image, cmap=cmap, norm=norm)
+    self.fig.colorbar(self._axes_image,
+                      cax=self.cax,
+                      ax=self.axes,
+                      extend=('both' if factor else 'neither'))
+    self.cax.set_ylabel('Temperature ' + ('Factor' if factor else '[℃]'),
+                        rotation=90)
+
+    if segmentation:
+      seg = self._seg_cmap(self.images[1]).astype(float)
+      seg[self.images[1] == 0] = np.nan
+      seg[np.isnan(self.images[0])] = np.nan
+      self.axes.imshow(seg, alpha=0.5)
+
+      patches = [
+          Patch(color=self._seg_cmap(i + 1), label=x)
+          for i, x in enumerate(['Wall', 'Window', 'etc.'])
+      ]
+      self._seg_legend = self.fig.legend(handles=patches,
+                                         ncol=len(patches),
+                                         loc='lower center')
 
     self.draw()
 
   def temperature_range(self):
-    # TODO 이상치 제외한 범위
-    return (np.floor(np.nanmin(self.images[0])).item(),
-            np.ceil(np.nanmax(self.images[0])).item())
+    mask = (self.images[1] == 1) | (self.images[1] == 2)
+    image = self.images[0][mask]
+
+    return (
+        np.floor(np.nanmin(image)).item(),
+        np.ceil(np.nanmax(image)).item(),
+    )
 
   def set_clim(self,
                vmin: Optional[float] = None,
@@ -807,6 +875,12 @@ class AnalysisPlotController(_PanoPlotController):
 
     self._axes_image.set_clim(vmin, vmax)
     self.draw()
+
+  def summary(self):
+    return {
+        'Wall': analysis.summary(self.images[0][self.images[1] == 1]),
+        'Window': analysis.summary(self.images[0][self.images[1] == 2])
+    }
 
 
 class DistPlotController(_PanoPlotController):

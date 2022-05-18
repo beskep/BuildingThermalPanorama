@@ -447,15 +447,18 @@ class Controller(QtCore.QObject):
     self._rpc.set_images(fixed_image=IIO.read(ir), moving_image=IIO.read(vis))
     self._rpc.draw()
 
-  @QtCore.Slot()
-  def analysis_plot(self):
+  @QtCore.Slot(bool, bool)
+  def analysis_plot(self, factor, segmentaion):
     try:
-      self._apc.plot()
+      self._apc.plot(factor=factor, segmentation=segmentaion)
     except OSError:
       pass
+    except ValueError as e:
+      self.win.popup('Error', str(e))
     else:
       self.win.panel_funtion('analysis', 'set_temperature_range',
                              *self._apc.temperature_range())
+      self._analysis_summary()
 
   @QtCore.Slot(float, float)
   def analysis_set_clim(self, vmin, vmax):
@@ -484,6 +487,7 @@ class Controller(QtCore.QObject):
     self._apc.update_ir(ir)
     self.win.panel_funtion('analysis', 'set_temperature_range',
                            *self._apc.temperature_range())
+    self._analysis_summary()
 
   @QtCore.Slot(float)
   def analysis_correct_temperature(self, temperature):
@@ -498,6 +502,18 @@ class Controller(QtCore.QObject):
       self.win.panel_funtion('analysis', 'show_point_temperature', temperature)
       self.win.panel_funtion('analysis', 'set_temperature_range',
                              *self._apc.temperature_range())
+      self._analysis_summary()
+
+  @QtCore.Slot(float, float)
+  def analysis_set_teti(self, te, ti):
+    self._apc.teti = (te, ti)
+
+  def _analysis_summary(self):
+    self.win.panel_funtion('analysis', 'clear_table')
+    for cls, summary in self._apc.summary().items():
+      row = {k: f'{v:.2f}' for k, v in summary.items()}
+      row['class'] = cls
+      self.win.panel_funtion('analysis', 'add_table_row', row)
 
   @QtCore.Slot()
   def dist_plot(self):
