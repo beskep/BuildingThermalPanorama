@@ -20,6 +20,7 @@ from pano.distortion.projection import ImageProjection
 from pano.interface import analysis
 from pano.misc.cmap import apply_colormap
 from pano.misc.imageio import ImageIO
+from pano.misc.tools import Interpolation
 from pano.misc.tools import limit_image_size
 from pano.misc.tools import prep_compare_images
 from pano.misc.tools import SegMask
@@ -394,10 +395,12 @@ class RegistrationPlotController(_PanoPlotController):
     trsf = transform.ProjectiveTransform(matrix=self._matrix)
     seg_image = ImageIO.read(seg)
     seg_resized = transform.resize(seg_image,
+                                   order=Interpolation.NearestNeighbor,
                                    output_shape=self._images[0].shape[:2])
     seg_rgst = transform.warp(image=seg_resized,
                               inverse_map=trsf.inverse,
                               output_shape=self._images[0].shape[:2],
+                              order=Interpolation.NearestNeighbor,
                               preserve_range=True)
     ImageIO.save(path=self.fm.panorama_path(d=DIR.PANO, sp=SP.SEG),
                  array=uint8_image(seg_rgst))

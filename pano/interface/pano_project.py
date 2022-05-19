@@ -535,15 +535,16 @@ class ThermalPanorama:
     # 저장
     self._save_panorama(spectrum=SP[spectrum], panorama=pano)
 
-    # segmention mask 저장
-    stitcher.blend_type = False
-    self._stitch_others(stitcher=stitcher, panorama=pano, spectrum=SP.SEG)
-
     # 나머지 영상의 파노라마 생성/저장
     sp2 = 'VIS' if spectrum == 'IR' else 'IR'
     stitcher.blend_type = cfg['type'][sp2]
     stitcher.blend_strength = cfg['strength'][sp2]
     self._stitch_others(stitcher=stitcher, panorama=pano, spectrum=SP[sp2])
+
+    # segmention mask 저장
+    stitcher.blend_type = False
+    stitcher.interp = stitch.Interpolation.NEAREST
+    self._stitch_others(stitcher=stitcher, panorama=pano, spectrum=SP.SEG)
 
   def _panorama_separate(self):
     cfg = self._config['panorama']['blend']
@@ -573,6 +574,7 @@ class ThermalPanorama:
 
     # segmentation mask
     stitcher.blend_type = False
+    stitcher.interp = stitch.Interpolation.NEAREST
     self._stitch_others(stitcher=stitcher, panorama=vis_pano, spectrum=SP.SEG)
 
   def panorama(self):

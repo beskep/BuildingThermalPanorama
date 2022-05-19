@@ -291,6 +291,7 @@ class DeepLabModel:
       vis_image = image
       seg_map = _resize(seg_map,
                         output_shape=image.shape[:2],
+                        order=0,
                         preserve_range=True,
                         anti_aliasing=False)
       seg_map = np.round(seg_map).astype(np.uint8)

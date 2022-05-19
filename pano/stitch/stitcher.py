@@ -1,6 +1,7 @@
 """영상을 stitch하고 파노라마를 생성"""
 
 from dataclasses import dataclass
+from enum import IntEnum
 from itertools import repeat
 from typing import Callable, Iterable, List, Optional, Tuple, Union
 
@@ -34,6 +35,16 @@ _AVAILABLE_WARPER = (
 
 class StitchError(ValueError):
   pass
+
+
+class Interpolation(IntEnum):
+  NEAREST = 0
+  LINEAR = 1
+  CUBIC = 2
+  AREA = 3
+  LANCZOS4 = 4
+  LINEAR_EXACT = 5
+  NEAREST_EXACT = 6
 
 
 @dataclass
@@ -242,6 +253,7 @@ class Stitcher:
     self._warper_type = None
     self._blend_type = 'no'
     self._blend_strength = 0.05
+    self._interp: int = cv.INTER_LANCZOS4
 
     self._compose_scale = compose_scale
     self._work_scale = work_scale
@@ -371,6 +383,14 @@ class Stitcher:
       raise ValueError(f'blender strength not in [0, 1]: {value}')
 
     self._blend_strength = value
+
+  @property
+  def interp(self):
+    return self._interp
+
+  @interp.setter
+  def interp(self, value: Union[int, Interpolation]):
+    self._interp = int(value)
 
   def set_features_matcher(self,
                            matcher='affine',
@@ -681,13 +701,13 @@ class Stitcher:
                       dsize=None,
                       fx=self._compose_scale,
                       fy=self._compose_scale,
-                      interpolation=cv.INTER_LINEAR_EXACT)
+                      interpolation=self._interp)
       if mask is not None:
         mask = cv.resize(src=mask,
                          dsize=None,
                          fx=self._compose_scale,
                          fy=self._compose_scale,
-                         interpolation=cv.INTER_LINEAR_EXACT)
+                         interpolation=cv.INTER_NEAREST)
     else:
       img = image
 
@@ -695,7 +715,7 @@ class Stitcher:
     corner, warped_image = self.warper.warp(src=img,
                                             K=kmat,
                                             R=rmat,
-                                            interp_mode=cv.INTER_LINEAR,
+                                            interp_mode=self._interp,
                                             border_mode=cv.BORDER_CONSTANT)
 
     if mask is None:
@@ -704,7 +724,7 @@ class Stitcher:
     _, warped_mask = self.warper.warp(src=mask,
                                       K=kmat,
                                       R=rmat,
-                                      interp_mode=cv.INTER_LINEAR,
+                                      interp_mode=cv.INTER_NEAREST,
                                       border_mode=cv.BORDER_CONSTANT)
 
     return warped_image, warped_mask, roi
