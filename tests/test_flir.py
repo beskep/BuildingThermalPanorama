@@ -6,7 +6,7 @@ from pano.flir.extract import FlirExtractor as DeprecatedExtractor
 from pano.utils import DIR
 
 image_dir = DIR.RESOURCE.joinpath('TestImage')
-images = ['FLIR0239.jpg']
+images = ['FLIR0239.jpg', 'IR_2020-11-10_0122.jpg']
 
 
 @pytest.mark.parametrize('image', images)
@@ -22,7 +22,7 @@ def test_flir_extractor(image):
 
   de = DeprecatedExtractor(path)
 
-  assert np.isclose(flir_data.ir, de.extract_ir()).all()
+  assert np.isclose(flir_data.ir, de.extract_ir(), rtol=0, atol=1e-4).all()
   assert np.isclose(flir_data.vis, de.extract_vis()).all()
 
 
@@ -44,7 +44,9 @@ def test_correct_emissivity(image, e0, e1):
   corrected = FlirExtractor.correct_emissivity(
       ir0, meta=extractor.meta, signal_reflected=signal_reflected, e0=e0, e1=e1)
 
-  assert np.isclose(corrected, ir1).all()
+  mask = np.isnan(corrected)
+
+  assert np.isclose(corrected[~mask], ir1[~mask], rtol=0, atol=1e-4).all()
 
 
 if __name__ == '__main__':
