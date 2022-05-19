@@ -600,7 +600,10 @@ class ThermalPanorama:
                                      correction_options=correction_opts)
     return pc
 
-  def _correct_others(self, correction: persp.Correction, spectrum: SP):
+  def _correct_others(self,
+                      correction: persp.Correction,
+                      spectrum: SP,
+                      crop_range: Optional[tools.CropRange] = None):
     try:
       path = self._fm.panorama_path(DIR.PANO, spectrum, error=True)
     except FileNotFoundError as e:
@@ -614,6 +617,9 @@ class ThermalPanorama:
     else:
       order = tools.Interpolation.BiCubic
 
+    if crop_range is not None and crop_range.cropped:
+      pano = crop_range.crop(pano)
+
     pano_corrected = correction.correct(pano, order=order)[0].astype(np.uint8)
     pano_limited = self.limit_size(pano_corrected, aa=(spectrum is not SP.SEG))
 
@@ -624,13 +630,12 @@ class ThermalPanorama:
     logger.debug('{} 파노라마 왜곡 보정 저장', spectrum.value)
 
   def correct(self):
-    pc = self._init_perspective_correction()
-
     try:
       ir_path = self._fm.panorama_path(DIR.PANO, SP.IR, error=True)
     except FileNotFoundError as e:
       raise FileNotFoundError('생성된 파노라마 파일이 없습니다.') from e
 
+    pc = self._init_perspective_correction()
     logger.trace('Init perspective correction')
 
     # 적외선 파노라마
@@ -643,6 +648,14 @@ class ThermalPanorama:
     seg = IIO.read(self._fm.panorama_path(DIR.PANO, SP.SEG))
     if (pano.shape[:2] != seg.shape[:2]):
       raise ValueError('열·실화상 파노라마의 크기가 다릅니다. 파노라마 정합을 먼저 시행해주세요.')
+
+    # wall, window 영역만 추출
+    seg = tools.SegMask.vis_to_index(seg[:, :, 0])
+    seg_mask = np.logical_and(mask, np.logical_or(seg == 1, seg == 2))
+    crop_range, _ = tools.crop_mask(seg_mask)
+    if crop_range.cropped:
+      pano = crop_range.crop(pano)
+      mask = crop_range.crop(mask)
 
     # 왜곡 보정
     try:
@@ -684,8 +697,12 @@ class ThermalPanorama:
                array=tools.uint8_image(cmask))
 
     # 실화상, 부위인식 파노라마 보정
-    self._correct_others(correction=crct, spectrum=SP.VIS)
-    self._correct_others(correction=crct, spectrum=SP.SEG)
+    self._correct_others(correction=crct,
+                         spectrum=SP.VIS,
+                         crop_range=crop_range)
+    self._correct_others(correction=crct,
+                         spectrum=SP.SEG,
+                         crop_range=crop_range)
 
     logger.success('파노라마 왜곡 보정 완료')
 
