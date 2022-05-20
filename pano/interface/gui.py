@@ -15,7 +15,6 @@ from pano.interface.mbq import QtCore
 from pano.interface.mbq import QtGui
 from pano.interface.mbq import QtQml
 from pano.interface.plot_controller import AnalysisPlotController
-from pano.interface.plot_controller import DistPlotController
 from pano.interface.plot_controller import PanoramaPlotController
 from pano.interface.plot_controller import RegistrationPlotController
 from pano.interface.plot_controller import SegmentationPlotController
