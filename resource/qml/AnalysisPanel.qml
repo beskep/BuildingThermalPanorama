@@ -19,6 +19,7 @@ Pane {
 
     property real min_temperature : 0.0
     property real max_temperature : 1.0
+    property bool flag_bt : false
 
     ColumnLayout {
         anchors.fill : parent
@@ -32,19 +33,22 @@ Pane {
                         id : _ir
                         text : '열화상'
                         checked : true
+
+                        onReleased : analysis_plot()
                     }
                     ToolRadioButton {
                         id : _factor
                         text : '지표'
 
-                        onCheckedChanged : analysis_plot()
+                        // onCheckedChanged : analysis_plot()
+                        onReleased : analysis_plot()
                     }
                 }
 
                 ToolSeparator {}
 
                 CheckBox {
-                    id : _segmentation
+                    id : _show_segmentation
 
                     font.weight : Font.Medium
                     Material.accent : Material.color(Material.primaryColor, Material.Shade800)
@@ -52,6 +56,31 @@ Pane {
                     text : '외피 부위 표시'
 
                     onReleased : analysis_plot()
+                    onCheckedChanged : {
+                        if (checked & _show_vulnerable.checked) {
+                            _show_vulnerable.checked = false
+                        }
+                    }
+                }
+
+                CheckBox {
+                    id : _show_vulnerable
+
+                    font.weight : Font.Medium
+                    Material.accent : Material.color(Material.primaryColor, Material.Shade800)
+
+                    text : '취약 부위 표시'
+
+                    onReleased : analysis_plot()
+                    onCheckedChanged : {
+                        if (checked & _show_segmentation.checked) {
+                            _show_segmentation.checked = false
+                        }
+
+                        if (checked & _ir.checked) {
+                            _factor.checked = true
+                        }
+                    }
                 }
             }
         }
@@ -330,16 +359,14 @@ Pane {
                             let te = parseFloat(_ext_temperature.text);
                             let ti = parseFloat(_int_temperature.text);
                             con.analysis_set_teti(te, ti);
-
-                            if (_factor.checked) {
-                                analysis_plot()
-                            } else {
-                                _factor.checked = true;
-                            }
+                            flag_bt = true;
 
                             highlighted = false;
+                            _factor.checked = true;
                             _ext_temperature.color = 'black';
                             _int_temperature.color = 'black';
+
+                            analysis_plot();
                         }
                     }
                 }
@@ -356,12 +383,18 @@ Pane {
                         FloatSpinBox {
                             id : _threshold
 
-                            value : 20
+                            value : 80
                             from : 0
                             to : 100
                             stepSize : 5
 
-                            onValueChanged : con.analysis_set_threshold(value / 100.0)
+                            onValueChanged : {
+                                con.analysis_set_threshold(value / 100.0);
+
+                                if (flag_bt) {
+                                    analysis_plot()
+                                }
+                            }
                         }
                     }
 
@@ -457,7 +490,7 @@ Pane {
     }
 
     function analysis_plot() {
-        con.analysis_plot(_factor.checked, _segmentation.checked)
+        con.analysis_plot(_factor.checked, _show_segmentation.checked, _show_vulnerable.checked)
     }
 
     function init() {

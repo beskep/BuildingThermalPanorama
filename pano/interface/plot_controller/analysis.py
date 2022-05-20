@@ -41,7 +41,7 @@ class AnalysisPlotController(PanoPlotController):
     self.show_point_temperature = lambda x: x / 0
 
     self._teti = (np.nan, np.nan)  # (exterior, interior temperature)
-    self._threshold = 0.2  # 취약부위 임계치
+    self._threshold = 0.8  # 취약부위 임계치
 
     self._seg_cmap = get_cmap('Dark2')
     self._seg_legend = None
@@ -157,8 +157,8 @@ class AnalysisPlotController(PanoPlotController):
     self.show_point_temperature('NA' if np.isnan(pt) else f'{pt:.1f}')
 
   @staticmethod
-  def _get_cmap(factor=False, segmentation=False):
-    if segmentation:
+  def _get_cmap(factor=False, segmentation=False, vulnerable=False):
+    if segmentation or vulnerable:
       name = 'gist_gray'
     elif factor:
       name = 'plasma'
@@ -173,17 +173,22 @@ class AnalysisPlotController(PanoPlotController):
 
     return cmap
 
-  def plot(self, factor=False, segmentation=False):
+  def plot(self, factor=False, segmentation=False, vulnerable=False):
     self.reset()
+
+    if vulnerable:
+      factor = True
 
     if factor:
       image = self.temperature_factor()
       norm = colors.BoundaryNorm(boundaries=np.linspace(0, 1, 11), ncolors=256)
     else:
-      image = self.images[0]
+      image = self.images[0].copy()
       norm = None
 
-    cmap = self._get_cmap(factor=factor, segmentation=segmentation)
+    cmap = self._get_cmap(factor=factor,
+                          segmentation=segmentation,
+                          vulnerable=vulnerable)
     self._axes_image = self.axes.imshow(image, cmap=cmap, norm=norm)
     self.fig.colorbar(self._axes_image,
                       cax=self.cax,
@@ -205,6 +210,12 @@ class AnalysisPlotController(PanoPlotController):
       self._seg_legend = self.fig.legend(handles=patches,
                                          ncol=len(patches),
                                          loc='lower center')
+
+    if vulnerable:
+      mask = (self.images[1] == 1) | (self.images[1] == 2)
+      image[~mask] = np.nan
+      image[mask & (image < self.threshold)] = np.nan  # 정상 부위 데이터 제외
+      self.axes.imshow(image, cmap='inferno', vmin=0, vmax=1)
 
     self.draw()
 
@@ -234,9 +245,9 @@ class AnalysisPlotController(PanoPlotController):
       summ['vulnerable'] = '-'
     else:
       v = _vulnerable_area_ratio(factor=factor,
-                                 vulnerable=(factor <= self.threshold),
+                                 vulnerable=(factor >= self.threshold),
                                  mask=mask)
-      summ['vulnerable'] = f'{v:.1%}'
+      summ['vulnerable'] = f'{v:.2%}'
 
     return summ
 

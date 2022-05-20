@@ -447,10 +447,12 @@ class Controller(QtCore.QObject):
     self._rpc.set_images(fixed_image=IIO.read(ir), moving_image=IIO.read(vis))
     self._rpc.draw()
 
-  @QtCore.Slot(bool, bool)
-  def analysis_plot(self, factor, segmentaion):
+  @QtCore.Slot(bool, bool, bool)
+  def analysis_plot(self, factor, segmentaion, vulnerable):
     try:
-      self._apc.plot(factor=factor, segmentation=segmentaion)
+      self._apc.plot(factor=factor,
+                     segmentation=segmentaion,
+                     vulnerable=vulnerable)
     except OSError:
       pass
     except ValueError as e:
