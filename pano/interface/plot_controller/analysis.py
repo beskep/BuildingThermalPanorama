@@ -20,6 +20,12 @@ from .plot_controller import PanoPlotController
 from .plot_controller import QtGui
 
 
+def _vulnerable_area_ratio(factor, vulnerable, mask):
+  valid = (~np.isnan(factor)) & mask
+
+  return np.sum(vulnerable & valid) / np.sum(valid)
+
+
 class AnalysisPlotController(PanoPlotController):
   # TODO 파노라마 생성/시점 보정 이후 image reset
 
@@ -35,6 +41,7 @@ class AnalysisPlotController(PanoPlotController):
     self.show_point_temperature = lambda x: x / 0
 
     self._teti = (np.nan, np.nan)  # (exterior, interior temperature)
+    self._threshold = 0.2  # 취약부위 임계치
 
     self._seg_cmap = get_cmap('Dark2')
     self._seg_legend = None
@@ -79,6 +86,18 @@ class AnalysisPlotController(PanoPlotController):
   @teti.setter
   def teti(self, value):
     self._teti = (float(value[0]), float(value[1]))
+
+  @property
+  def threshold(self):
+    return self._threshold
+
+  @threshold.setter
+  def threshold(self, value: float):
+    v = float(value)
+    if not (0 <= v <= 1):
+      raise ValueError
+
+    self._threshold = v
 
   def init(self, app: QtGui.QGuiApplication, canvas: FigureCanvas):
     self._app = app
@@ -207,8 +226,27 @@ class AnalysisPlotController(PanoPlotController):
     self._axes_image.set_clim(vmin, vmax)
     self.draw()
 
+  def _summary(self, factor, index: int):
+    mask = self.images[1] == index
+    summ = analysis.summary(self.images[0][mask])
+
+    if factor is None:
+      summ['vulnerable'] = '-'
+    else:
+      v = _vulnerable_area_ratio(factor=factor,
+                                 vulnerable=(factor <= self.threshold),
+                                 mask=mask)
+      summ['vulnerable'] = f'{v:.1%}'
+
+    return summ
+
   def summary(self):
+    try:
+      factor = self.temperature_factor()
+    except ValueError:
+      factor = None
+
     return {
-        'Wall': analysis.summary(self.images[0][self.images[1] == 1]),
-        'Window': analysis.summary(self.images[0][self.images[1] == 2])
+        'Wall': self._summary(factor, 1),
+        'Window': self._summary(factor, 2)
     }

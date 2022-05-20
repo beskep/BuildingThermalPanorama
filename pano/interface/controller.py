@@ -508,10 +508,19 @@ class Controller(QtCore.QObject):
   def analysis_set_teti(self, te, ti):
     self._apc.teti = (te, ti)
 
+  @QtCore.Slot(float)
+  def analysis_set_threshold(self, value):
+    self._apc.threshold = value
+    if not np.isnan(self._apc.teti).any():
+      self._analysis_summary()
+
   def _analysis_summary(self):
     self.win.panel_funtion('analysis', 'clear_table')
     for cls, summary in self._apc.summary().items():
-      row = {k: f'{v:.2f}' for k, v in summary.items()}
+      row = {
+          k: (v if isinstance(v, str) else f'{v:.2f}')
+          for k, v in summary.items()
+      }
       row['class'] = cls
       self.win.panel_funtion('analysis', 'add_table_row', row)
 

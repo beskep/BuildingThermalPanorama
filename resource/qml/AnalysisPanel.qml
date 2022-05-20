@@ -144,9 +144,10 @@ Pane {
             Material.elevation : 2
             Layout.fillWidth : true
 
+            // TODO 입력 패널 폭, 글자 크기, table 스크롤 수정
             RowLayout {
                 anchors.fill : parent
-                spacing : 10
+                spacing : 20
 
                 ColumnLayout {
                     Layout.fillHeight : true
@@ -345,10 +346,27 @@ Pane {
 
                 ColumnLayout {
                     spacing : 0
+                    Layout.fillWidth : true
+
+                    RowLayout {
+                        Label {
+                            text : '취약부위 임계치'
+                        }
+
+                        FloatSpinBox {
+                            id : _threshold
+
+                            value : 20
+                            from : 0
+                            to : 100
+                            stepSize : 5
+
+                            onValueChanged : con.analysis_set_threshold(value / 100.0)
+                        }
+                    }
 
                     HorizontalHeaderView {
                         syncView : table_view
-                        // Layout.fillWidth : true
 
                         model : ListModel {
                             ListElement {
@@ -369,14 +387,18 @@ Pane {
                             ListElement {
                                 name : 'Q3'
                             }
+                            ListElement {
+                                name : '취약부위<br>비율'
+                            }
                         }
                         delegate : Rectangle {
-                            implicitHeight : 40
-                            implicitWidth : 120
+                            implicitHeight : 50
+                            implicitWidth : 100
                             color : '#eeeeee'
 
                             Label {
                                 text : name
+                                horizontalAlignment : Text.AlignHCenter
                                 anchors.centerIn : parent
                             }
                         }
@@ -412,13 +434,16 @@ Pane {
                             TableModelColumn {
                                 display : 'q3'
                             }
+                            TableModelColumn {
+                                display : 'vulnerable'
+                            }
 
                             rows : []
                         }
 
                         delegate : Rectangle {
                             implicitHeight : 40
-                            implicitWidth : 120
+                            implicitWidth : 100
 
                             Label {
                                 text : display
