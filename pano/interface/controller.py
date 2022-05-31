@@ -300,6 +300,7 @@ class Controller(QtCore.QObject):
 
   def _clear_separate_results(self):
     # 다음 결과 폴더 내 모든 파일 삭제
+    # TODO 프로젝트 관련 파일만 삭제하기 (jpg, png, npy 등)
     for d in (DIR.SEG, DIR.PANO, DIR.COR):
       files = self._fm.glob(d, '*')
       logger.debug('delete files in {}: {}', d,
@@ -461,6 +462,14 @@ class Controller(QtCore.QObject):
       self.win.panel_funtion('analysis', 'set_temperature_range',
                              *self._apc.temperature_range())
       self._analysis_summary()
+
+  @QtCore.Slot()
+  def analysis_cancel_selection(self):
+    self._apc.cancel_selection()
+
+  @QtCore.Slot(bool)
+  def analysis_set_selector(self, point):
+    self._apc.set_selector(point)
 
   @QtCore.Slot(float, float)
   def analysis_set_clim(self, vmin, vmax):

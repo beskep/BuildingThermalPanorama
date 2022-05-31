@@ -2,18 +2,21 @@ from typing import Any, Optional
 
 from matplotlib import colors
 from matplotlib.axes import Axes
-from matplotlib.backend_bases import MouseEvent
 from matplotlib.cm import get_cmap
 from matplotlib.colorbar import make_axes_gridspec
 from matplotlib.image import AxesImage
 from matplotlib.patches import Patch
+from matplotlib.widgets import _SelectorWidget
+from matplotlib.widgets import PolygonSelector
 import numpy as np
+from skimage.draw import polygon2mask
 
 from pano.interface import analysis
 from pano.interface.common.pano_files import DIR
 from pano.interface.common.pano_files import SP
 from pano.interface.mbq import FigureCanvas
 from pano.misc.imageio import ImageIO
+from pano.misc.tools import crop_mask
 from pano.misc.tools import SegMask
 
 from .plot_controller import PanoPlotController
@@ -24,6 +27,26 @@ def _vulnerable_area_ratio(factor, vulnerable, mask):
   valid = (~np.isnan(factor)) & mask
 
   return np.sum(vulnerable & valid) / np.sum(valid)
+
+
+class PointSelector(_SelectorWidget):
+
+  def __init__(self, ax, onselect, markerprops: Optional[dict] = None) -> None:
+    super().__init__(ax, onselect)
+
+    self._marker = None
+    self._markerprops = markerprops or dict(s=80, c='k', marker='x', alpha=0.8)
+
+  def _release(self, event):
+    if self._marker is not None:
+      self._marker.remove()
+
+    self._marker = self.ax.scatter(event.xdata, event.ydata,
+                                   **self._markerprops)
+    self.artists = [self._marker]
+
+    coord = (int(np.round(event.ydata)), int(np.round(event.xdata)))
+    self.onselect(coord)
 
 
 class AnalysisPlotController(PanoPlotController):
@@ -37,6 +60,7 @@ class AnalysisPlotController(PanoPlotController):
 
     self._point = None  # 선택 지점 PathCollection
     self._coord = (-1, -1)  # 선택 지점 좌표 (y, x)
+    self._selector: Optional[_SelectorWidget] = None
 
     self.show_point_temperature = lambda x: x / 0
 
@@ -45,6 +69,7 @@ class AnalysisPlotController(PanoPlotController):
 
     self._seg_cmap = get_cmap('Dark2')
     self._seg_legend = None
+    self._plot_setting = (False, False, False)
 
   @property
   def cax(self) -> Axes:
@@ -107,9 +132,35 @@ class AnalysisPlotController(PanoPlotController):
     self._axes = self._fig.add_subplot(111)
     self._cax = make_axes_gridspec(self._axes)[0]
     self._fig.tight_layout()
-    self.canvas.mpl_connect('button_press_event', self._on_click)
 
     self.draw()
+
+  def set_selector(self, point: Optional[bool] = None):
+    if self._fm is None:
+      self._selector = None
+      return
+
+    if self._selector is not None:
+      self._selector.disconnect_events()
+      for artist in self._selector.artists:
+        artist.remove()
+
+    if point is None:
+      point = isinstance(self._selector, PointSelector)
+
+    if point:
+      self._selector = PointSelector(self.axes, self._on_point_select)
+    else:
+      self._selector = PolygonSelector(self.axes, self._on_polygon_select)
+
+    self.draw()
+
+  def cancel_selection(self):
+    if isinstance(self._selector, PolygonSelector):
+      self.remove_images()
+
+    self.set_selector()
+    self.plot(*self._plot_setting)
 
   def temperature_factor(self):
     if np.isnan(self.teti).any():
@@ -125,6 +176,8 @@ class AnalysisPlotController(PanoPlotController):
       self._seg_legend.remove()
       self._seg_legend = None
 
+    self.set_selector()
+
   def _set_style(self):
     self.axes.set_axis_off()
 
@@ -136,25 +189,27 @@ class AnalysisPlotController(PanoPlotController):
   def update_ir(self, ir):
     self._images = (ir, self._images[1])
 
-  def _on_click(self, event: MouseEvent):
-    ax: Axes = event.inaxes
-    if ax is not self.axes:
-      return
-
-    if self._point is not None:
-      self._point.remove()
-
-    self._point = event.inaxes.scatter(event.xdata,
-                                       event.ydata,
-                                       s=60,
-                                       c='seagreen',
-                                       marker='x')
+  def _on_point_select(self, coord):
     self.draw()
 
     # 화면에 지점 온도 표시
-    self._coord = (int(np.round(event.ydata)), int(np.round(event.xdata)))
-    pt = self.images[0][self._coord[0], self._coord[1]]
+    self._coord = coord
+    pt = self.images[0][coord[0], coord[1]]
     self.show_point_temperature('NA' if np.isnan(pt) else f'{pt:.1f}')
+
+  def _on_polygon_select(self, vertices):
+    polygon = polygon2mask(image_shape=self.images[1].shape,
+                           polygon=np.flip(vertices, 1))
+
+    cr, cp = crop_mask(mask=polygon, morphology_open=False)
+
+    ir = cr.crop(self.images[0])
+    mask = cr.crop(self.images[1])
+    ir[~cp] = np.nan
+    mask[~cp] = False
+
+    self._images = (ir, mask)
+    self.plot(*self._plot_setting)
 
   @staticmethod
   def _get_cmap(factor=False, segmentation=False, vulnerable=False):
@@ -174,10 +229,8 @@ class AnalysisPlotController(PanoPlotController):
     return cmap
 
   def plot(self, factor=False, segmentation=False, vulnerable=False):
-    self.reset()
-
-    if vulnerable:
-      factor = True
+    factor = factor or vulnerable
+    self._plot_setting = (factor, segmentation, vulnerable)
 
     if factor:
       image = self.temperature_factor()
@@ -189,6 +242,8 @@ class AnalysisPlotController(PanoPlotController):
     cmap = self._get_cmap(factor=factor,
                           segmentation=segmentation,
                           vulnerable=vulnerable)
+
+    self.reset()
     self._axes_image = self.axes.imshow(image, cmap=cmap, norm=norm)
     self.fig.colorbar(self._axes_image,
                       cax=self.cax,
@@ -217,6 +272,7 @@ class AnalysisPlotController(PanoPlotController):
       image[mask & (image < self.threshold)] = np.nan  # 정상 부위 데이터 제외
       self.axes.imshow(image, cmap='inferno', vmin=0, vmax=1)
 
+    self.set_selector()
     self.draw()
 
   def temperature_range(self):

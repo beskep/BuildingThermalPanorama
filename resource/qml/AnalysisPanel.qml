@@ -40,7 +40,6 @@ Pane {
                         id : _factor
                         text : '지표'
 
-                        // onCheckedChanged : analysis_plot()
                         onReleased : analysis_plot()
                     }
                 }
@@ -81,6 +80,39 @@ Pane {
                             _factor.checked = true
                         }
                     }
+                }
+
+                ToolSeparator {}
+
+                ToolButton {
+                    id : _polygon_select
+                    text : '영역 선택'
+                    icon : '\ueb39'
+
+                    down : true
+                    onReleased : {
+                        down = true;
+                        _point_select.down = false;
+                    }
+                }
+                ToolButton {
+                    id : _point_select
+                    text : '지점 선택'
+                    icon : '\ue55c'
+
+                    onReleased : {
+                        down = true;
+                        _polygon_select.down = false;
+                    }
+                    onDownChanged : {
+                        con.analysis_set_selector(down)
+                    }
+                }
+                ToolButton {
+                    text : '선택 취소'
+                    icon : '\ue14a'
+
+                    onReleased : con.analysis_cancel_selection()
                 }
             }
         }

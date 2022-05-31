@@ -81,7 +81,7 @@ class PlotController(QtCore.QObject):
     self.draw()
 
   def draw(self):
-    self.canvas.draw()
+    self.canvas.draw_idle()
     self.app.processEvents()
 
   def reset(self):
