@@ -20,6 +20,7 @@ Pane {
     property real min_temperature : 0.0
     property real max_temperature : 1.0
     property bool flag_bt : false
+    property int mode_height : 36
 
     ColumnLayout {
         anchors.fill : parent
@@ -28,62 +29,6 @@ Pane {
             spacing : 0
 
             RowLayout {
-                RowLayout {
-                    ToolRadioButton {
-                        id : _ir
-                        text : '열화상'
-                        checked : true
-
-                        onReleased : analysis_plot()
-                    }
-                    ToolRadioButton {
-                        id : _factor
-                        text : '지표'
-
-                        onReleased : analysis_plot()
-                    }
-                }
-
-                ToolSeparator {}
-
-                CheckBox {
-                    id : _show_segmentation
-
-                    font.weight : Font.Medium
-                    Material.accent : Material.color(Material.primaryColor, Material.Shade800)
-
-                    text : '외피 부위 표시'
-
-                    onReleased : analysis_plot()
-                    onCheckedChanged : {
-                        if (checked & _show_vulnerable.checked) {
-                            _show_vulnerable.checked = false
-                        }
-                    }
-                }
-
-                CheckBox {
-                    id : _show_vulnerable
-
-                    font.weight : Font.Medium
-                    Material.accent : Material.color(Material.primaryColor, Material.Shade800)
-
-                    text : '취약 부위 표시'
-
-                    onReleased : analysis_plot()
-                    onCheckedChanged : {
-                        if (checked & _show_segmentation.checked) {
-                            _show_segmentation.checked = false
-                        }
-
-                        if (checked & _ir.checked) {
-                            _factor.checked = true
-                        }
-                    }
-                }
-
-                ToolSeparator {}
-
                 ToolButton {
                     id : _polygon_select
                     text : '영역 선택'
@@ -108,11 +53,19 @@ Pane {
                         con.analysis_set_selector(down)
                     }
                 }
+
+                ToolSeparator {}
+
                 ToolButton {
                     text : '선택 취소'
                     icon : '\ue14a'
 
                     onReleased : con.analysis_cancel_selection()
+                }
+                ToolButton {
+                    text : qsTr('저장')
+                    icon : '\ue161'
+                    // TODO
                 }
             }
         }
@@ -132,7 +85,72 @@ Pane {
                     Layout.fillWidth : true
                     dpi_ratio : Screen.devicePixelRatio
                 }
+
+                Pane {
+                    Material.elevation : 1
+                    anchors.left : parent.left
+                    anchors.bottom : parent.bottom
+                    padding : 0
+
+                    RowLayout {
+                        Layout.alignment : Qt.AlignLeft | Qt.AlignVCenter
+
+                        RadioButton {
+                            Layout.preferredHeight : mode_height
+
+                            id : _ir
+                            text : '열화상'
+                            checked : true
+
+                            onReleased : analysis_plot()
+                        }
+                        RadioButton {
+                            Layout.preferredHeight : mode_height
+                            id : _factor
+                            text : '지표'
+
+                            onReleased : analysis_plot()
+                        }
+
+                        ToolSeparator {
+                            color : '#9e9e9e'
+                        }
+
+                        CheckBox {
+                            Layout.preferredHeight : mode_height
+                            id : _show_segmentation
+
+                            text : '외피 부위 표시'
+
+                            onReleased : analysis_plot()
+                            onCheckedChanged : {
+                                if (checked & _show_vulnerable.checked) {
+                                    _show_vulnerable.checked = false
+                                }
+                            }
+                        }
+
+                        CheckBox {
+                            Layout.preferredHeight : mode_height
+                            id : _show_vulnerable
+
+                            text : '취약 부위 표시'
+
+                            onReleased : analysis_plot()
+                            onCheckedChanged : {
+                                if (checked & _show_segmentation.checked) {
+                                    _show_segmentation.checked = false
+                                }
+
+                                if (checked & _ir.checked) {
+                                    _factor.checked = true
+                                }
+                            }
+                        }
+                    }
+                }
             }
+
 
             Pane {
                 Material.elevation : 2
