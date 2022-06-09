@@ -140,8 +140,9 @@ class CropRange:
 
   def crop(self, image: np.ndarray, strict=True):
     if image.shape[:2] != self.image_shape[:2]:
-      msg = 'CropRange image shape {} != Input image shape {}'.format(
-          self.image_shape[:2], image.shape[:2])
+      msg = (f'CropRange image shape {self.image_shape[:2]} '
+             f'!= Input image shape {image.shape[:2]}')
+
       if strict:
         raise ValueError(msg)
 
@@ -205,6 +206,7 @@ def gray_image(image: np.ndarray) -> np.ndarray:
   Parameters
   ----------
   image : np.ndarray
+      target image
 
   Returns
   -------
@@ -388,7 +390,7 @@ def limit_image_size(image: np.ndarray,
   target_shape = (int(image.shape[0] * ratio), int(image.shape[1] * ratio))
 
   resized = resize(image=image.astype(np.float32),
-                   order=order,
+                   order=int(order),
                    output_shape=target_shape,
                    preserve_range=True,
                    anti_aliasing=anti_aliasing)

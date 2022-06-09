@@ -140,7 +140,9 @@ class PanoramaPlotController(PanoPlotController):
     _, image = self._load_image(d=self._dir, sp=self._sp)
 
     if limit:
-      image = limit_image_size(image=image, limit=limit)
+      # order=1 (bilinear interpolation)이 아니면
+      # nan이 포함된 영상 크기 변환에 오류가 발생하는 듯
+      image = limit_image_size(image=image, limit=limit, order=1)
 
     return ImageProjection(image=image, viewing_angle=self.viewing_angle)
 
@@ -193,6 +195,7 @@ class PanoramaPlotController(PanoPlotController):
 
 def save_manual_correction(wd, subdir, viewing_angle, angles,
                            crop_range: Optional[np.ndarray]):
+  # FIXME 영상 시점 어긋나는 문제
   tp = ThermalPanorama(wd, init_loglevel='TRACE')
   ir_pano = ImageIO.read(tp.fm.panorama_path(subdir, SP.IR))
   prj = ImageProjection(ir_pano, viewing_angle=viewing_angle)
@@ -234,3 +237,5 @@ def save_manual_correction(wd, subdir, viewing_angle, angles,
       # colormap 버전
       ImageIO.save(path=tp.fm.color_path(path),
                    array=apply_colormap(image=corrected, cmap=tp.cmap))
+
+  tp.save_multilayer_panorama()

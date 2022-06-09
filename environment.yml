@@ -8,9 +8,10 @@ dependencies:
     # UI
     - pip
     - pip:
-        - PyQt5>=5.15 # or
-        # - PySide2>=5.15
-        # - matplotlib-backend-qtquick
+          - webp
+          - PyQt5>=5.15 # or
+          # - PySide2>=5.15
+          # - matplotlib-backend-qtquick
     # data analysis
     - numpy
     - nomkl
@@ -28,8 +29,8 @@ dependencies:
     - rich
     - click
     - omegaconf
-    - cx_freeze
-    - pdoc3
+    - cx_freeze<6.8
+    - pywin32
     # dev
     - pytest
     - pylint

@@ -179,7 +179,7 @@ def predict(model_path: str,
     names = [f'Image {x+1}' for x in range(len(images))]
 
   for image, fname in track(zip(images, names)):
-    pil_image = PIL.ImageImage.fromarray(image)
+    pil_image = PILImage.fromarray(image)
 
     resized_image, seg_map = model.run(pil_image)
     fig, seg_image = vis_segmentation(resized_image,
@@ -187,10 +187,10 @@ def predict(model_path: str,
                                       show=False,
                                       cmap=cmap)
 
-    mask = PIL.ImageImage.fromarray(seg_map)
+    mask = PILImage.fromarray(seg_map)
     mask.save(outpug_dir.joinpath(fname + '_mask').with_suffix('.png'))
 
-    seg_pil = PIL.ImageImage.fromarray(seg_image)
+    seg_pil = PILImage.fromarray(seg_image)
     seg_pil.save(outpug_dir.joinpath(fname + '_vis').with_suffix('.png'))
 
     fig.savefig(outpug_dir.joinpath(fname + '_fig').with_suffix('.png'))

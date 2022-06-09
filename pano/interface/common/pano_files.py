@@ -18,7 +18,7 @@ ProjectDir
 ├── 01 Registration
 │   ├── transform_matrix.npz
 │   ├── file01.png
-│   ├── file01_compare.png
+│   ├── file01_compare.jpg
 │   ⁝
 ├── 02 Segmentation
 │   ├── file01.png

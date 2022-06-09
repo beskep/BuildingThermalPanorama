@@ -30,6 +30,23 @@ Pane {
 
             RowLayout {
                 ToolButton {
+                    id : _load_mask
+                    text : '불러오기'
+                    icon : '\ue2c4'
+
+                    onReleased : {
+                        _show_segmentation.checked = true;
+                        con.analysis_read_multilayer();
+                    }
+
+                    ToolTip.visible : hovered
+                    ToolTip.delay : 500
+                    ToolTip.text : qsTr('수동 수정한 부위 인식 결과를 불러옵니다.')
+                }
+
+                ToolSeparator {}
+
+                ToolButton {
                     id : _polygon_select
                     text : '영역 선택'
                     icon : '\ueb39'
@@ -223,7 +240,6 @@ Pane {
             Material.elevation : 2
             Layout.fillWidth : true
 
-            // TODO 입력 패널 폭, 글자 크기, table 스크롤 수정
             RowLayout {
                 anchors.fill : parent
                 spacing : 20

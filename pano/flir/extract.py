@@ -20,7 +20,6 @@ class FlirExtractor:
     if exiftool_path is None:
       exiftool_path = EXIFTOOL_PATH.as_posix()
 
-    # TODO: extractor 새로 만들기 / Atmospheric 변수 Exif 추출해서 적용
     self._extractor = FlirImageExtractor(exiftool_path=exiftool_path,
                                          is_debug=debug)
 

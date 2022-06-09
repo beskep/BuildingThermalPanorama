@@ -30,13 +30,22 @@ def build():
       'rich.logging',
       'rich.progress',
       'rich',
+      'scipy.integrate.lsoda',
+      'scipy.integrate.vode',
+      'scipy.integrate',
+      'scipy.optimize.nonlin',
+      'scipy.optimize.zeros',
+      'scipy.optimize',
       'scipy.spatial.transform._rotation_groups',
       'seaborn.cm',
       'SimpleITK',
       'skimage.feature._orb_descriptor_positions',
+      'skimage.filters._unsharp_mask',
+      'skimage.filters.edges',
       'skimage.io._plugins.pil_plugin',
       'skimage',
       'tensorflow',
+      'webp',
   ]
   excludes = ['locket', 'mypy', 'PySide2', 'tkinter']
   zip_include_packages = []
@@ -54,7 +63,8 @@ def build():
           'includes': includes,
           'zip_include_packages': zip_include_packages,
           'excludes': excludes,
-          'optimize': 1
+          'optimize': 1,
+          'silent_level': 1
       }
   }
 
@@ -67,7 +77,8 @@ def build():
         version='0.1',
         description='ThermalPanorama',
         options=options,
-        executables=executables)
+        executables=executables,
+        packages=[])
 
 
 if __name__ == '__main__':

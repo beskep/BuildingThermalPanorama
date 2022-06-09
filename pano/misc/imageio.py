@@ -1,13 +1,15 @@
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 from warnings import warn
 
 import numpy as np
 import pandas as pd
 import PIL.Image
+from skimage.color import rgb2hsv
 from skimage.exposure import rescale_intensity
 from skimage.io import imread
 from skimage.io import imsave
+import webp
 import yaml
 
 from pano.utils import StrPath
@@ -19,9 +21,11 @@ from .tools import uint16_image
 class ImageIO:
   META_SUFFIX = '_meta'
   META_EXT = '.yaml'
+
   CSV_EXT = '.csv'
   NPY_EXT = '.npy'
   XLSX_EXT = '.xlsx'
+  WEBP_EXT = '.webp'
 
   ENCODING = 'UTF-8-SIG'
   DELIMITER = ','
@@ -38,8 +42,8 @@ class ImageIO:
     Parameters
     ----------
     path : Union[str, Path]
-        대상 파일 경로. `.npy`, `.csv`, `.xlsx` 및 `.png` 등 영상 확장자 지정 가능
-        (`skimage.io.imread` 참조).
+        대상 파일 경로. `.npy`, `.csv`, `.xlsx`, `.webp` 및
+        `.png` 등 영상 확장자 지정 가능 (`skimage.io.imread` 참조).
 
     Returns
     -------
@@ -59,8 +63,11 @@ class ImageIO:
     elif path.suffix == cls.CSV_EXT:
       image = np.loadtxt(fname=path.as_posix(), delimiter=cls.DELIMITER)
     elif path.suffix == cls.XLSX_EXT:
-      image = pd.read_excel(path.as_posix(), na_values='---')
-      image = np.array(image)
+      df = pd.read_excel(path.as_posix(), na_values='---')
+      image = np.array(df)
+    elif path.suffix == cls.WEBP_EXT:
+      pil_image = webp.load_image(path.as_posix())
+      image = np.array(pil_image)
     else:
       image = imread(fname=path.as_posix())
 
@@ -133,6 +140,9 @@ class ImageIO:
       np.save(file=path.as_posix(), arr=array)
     elif path.suffix == cls.CSV_EXT:
       np.savetxt(fname=path.as_posix(), X=array, delimiter=cls.DELIMITER)
+    elif path.suffix == cls.WEBP_EXT:
+      image = PIL.Image.fromarray(array)
+      webp.save_image(img=image, file_path=path.as_posix(), lossless=True)
     else:
       imsave(fname=path.as_posix(), arr=array, check_contrast=check_contrast)
 
@@ -217,3 +227,34 @@ class ImageIO:
       meta_path = cls.meta_path(path)
       with open(meta_path, 'w', encoding=cls.ENCODING) as f:
         yaml.safe_dump(meta, f, indent=4, sort_keys=True)
+
+
+def save_webp_images(*images: Union[str, Path], path: str):
+  webp.save_images(imgs=[PIL.Image.open(x) for x in images],
+                   file_path=path,
+                   fps=1,
+                   lossless=True)
+
+
+def _mask_image(image: PIL.Image.Image):
+  rgba = np.array(image)
+  hsv = rgb2hsv(rgba[:, :, :-1])
+
+  # saturation이 모두 0.1 미만인 경우 gray scale 영상으로 판단
+  # yuv로 변환 시 다음으로 판단 가능 (u, v 모두 0)
+  # `np.isclose(0.0, yuv[:, :, 1:], rtol=0, atol=1e-2).all()`
+  if not np.isclose(0.0, hsv[:, :, 1], rtol=0, atol=0.1).all():
+    return None
+
+  # y는 0~1로 표준화됨 -> 3를 곱해서 index로 변환
+  return np.round(hsv[:, :, 2] * 3).astype(np.uint8)
+
+
+def load_webp_mask(path: str):
+  pil_images = webp.load_images(path)
+  images = [_mask_image(x) for x in pil_images]
+
+  if (count := sum(1 for x in images if x is not None)) != 1:
+    raise ValueError(f'대상 파일에 gray scale 영상이 {count}개 존재합니다.', count)
+
+  return next(x for x in images if x is not None)

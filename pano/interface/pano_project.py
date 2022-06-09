@@ -14,6 +14,7 @@ from pano.flir import FlirExtractor
 from pano.misc import exif
 from pano.misc import tools
 from pano.misc.imageio import ImageIO as IIO
+from pano.misc.imageio import save_webp_images
 import pano.registration.registrator.simpleitk as rsitk
 
 from .common.cmap import apply_colormap
@@ -277,11 +278,11 @@ class ThermalPanorama:
     IIO.save(path=path, array=tools.uint8_image(rgst_color_img))
 
     # 비교 영상
-    compare_path = path.with_name(f'{path.stem}{FN.RGST_AUTO}{path.suffix}')
+    compare_path = path.with_name(f'{path.stem}{FN.RGST_AUTO}.jpg')
     compare_fig, _ = tools.prep_compare_fig(
         images=(fri.prep_image(), mri.registered_prep_image()),
         titles=('열화상', '실화상', '비교 (Checkerboard)', '비교 (Difference)'))
-    compare_fig.savefig(compare_path.joinpath(), dpi=200)
+    compare_fig.savefig(compare_path, dpi=200)
     plt.close(compare_fig)
 
     return mri.matrix
@@ -704,7 +705,18 @@ class ThermalPanorama:
                          spectrum=SP.SEG,
                          crop_range=crop_range)
 
+    self.save_multilayer_panorama()
+
     logger.success('파노라마 왜곡 보정 완료')
+
+  def save_multilayer_panorama(self):
+    images = [
+        self._fm.panorama_path(DIR.COR, x, error=True)
+        for x in [SP.IR, SP.VIS, SP.SEG]
+    ]
+    images[0] = self._fm.color_path(images[0])
+    path = self.fm.subdir(DIR.COR).joinpath('Panorama.webp')
+    save_webp_images(*images, path=path)
 
   def run(self):
     logger.info('Start extracting')

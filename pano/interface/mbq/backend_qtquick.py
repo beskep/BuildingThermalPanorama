@@ -7,10 +7,14 @@ from matplotlib.backend_bases import FigureCanvasBase
 from matplotlib.backend_bases import MouseButton
 from matplotlib.backend_bases import NavigationToolbar2
 from matplotlib.backends.backend_qt5 import cursord
-from matplotlib.backends.backend_qt5 import MODIFIER_KEYS
 from matplotlib.backends.backend_qt5 import SPECIAL_KEYS
 from matplotlib.backends.backend_qt5 import TimerQT
 from matplotlib.figure import Figure
+
+try:
+  from matplotlib.backends.backend_qt5 import MODIFIER_KEYS
+except ImportError:
+  from matplotlib.backends.backend_qt import _MODIFIER_KEYS as MODIFIER_KEYS
 
 from .qt_compat import QT_API
 from .qt_compat import QT_API_PYSIDE2

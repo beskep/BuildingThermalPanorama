@@ -190,6 +190,7 @@ class Controller(QtCore.QObject):
 
   def set_plot_controllers(self, controllers):
     self._rpc, self._spc, self._ppc, self._apc = controllers
+    self._apc.summarize = self._analysis_summarize
 
   @QtCore.Slot(str)
   def log(self, message: str):
@@ -461,7 +462,14 @@ class Controller(QtCore.QObject):
     else:
       self.win.panel_funtion('analysis', 'set_temperature_range',
                              *self._apc.temperature_range())
-      self._analysis_summary()
+      self._analysis_summarize()
+
+  @QtCore.Slot()
+  def analysis_read_multilayer(self):
+    try:
+      self._apc.read_multilayer()
+    except (OSError, ValueError) as e:
+      self.win.popup('Error', str(e))
 
   @QtCore.Slot()
   def analysis_cancel_selection(self):
@@ -498,7 +506,6 @@ class Controller(QtCore.QObject):
     self._apc.update_ir(ir)
     self.win.panel_funtion('analysis', 'set_temperature_range',
                            *self._apc.temperature_range())
-    self._analysis_summary()
 
   @QtCore.Slot(float)
   def analysis_correct_temperature(self, temperature):
@@ -513,7 +520,6 @@ class Controller(QtCore.QObject):
       self.win.panel_funtion('analysis', 'show_point_temperature', temperature)
       self.win.panel_funtion('analysis', 'set_temperature_range',
                              *self._apc.temperature_range())
-      self._analysis_summary()
 
   @QtCore.Slot(float, float)
   def analysis_set_teti(self, te, ti):
@@ -523,9 +529,9 @@ class Controller(QtCore.QObject):
   def analysis_set_threshold(self, value):
     self._apc.threshold = value
     if not np.isnan(self._apc.teti).any():
-      self._analysis_summary()
+      self._analysis_summarize()
 
-  def _analysis_summary(self):
+  def _analysis_summarize(self):
     self.win.panel_funtion('analysis', 'clear_table')
     for cls, summary in self._apc.summary().items():
       row = {

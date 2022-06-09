@@ -53,5 +53,16 @@ class TestImageIO:
       self.read_image(directory=temp_dir)
 
 
+def test_webp():
+  image = np.random.randint(low=0, high=255, size=(2, 2, 3)).astype(np.uint8)
+
+  with TemporaryDirectory() as temp_dir:
+    path = Path(temp_dir).joinpath('test.webp')
+    ImageIO.save(path=path, array=image)
+    image_ = ImageIO.read(path=path)[:, :, :3]
+
+  assert image_ == pytest.approx(image)
+
+
 if __name__ == '__main__':
-  pytest.main(['-v', '-k', 'test_tools'])
+  pytest.main(['-v', '-k', 'test_imageio'])

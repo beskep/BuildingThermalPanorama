@@ -16,6 +16,7 @@ from pano.interface.common.pano_files import DIR
 from pano.interface.common.pano_files import SP
 from pano.interface.mbq import FigureCanvas
 from pano.misc.imageio import ImageIO
+from pano.misc.imageio import load_webp_mask
 from pano.misc.tools import crop_mask
 from pano.misc.tools import SegMask
 
@@ -37,13 +38,20 @@ class PointSelector(_SelectorWidget):
     self._marker = None
     self._markerprops = markerprops or dict(s=80, c='k', marker='x', alpha=0.8)
 
+  @property
+  def artists(self):
+    artists = getattr(self, '_handles_artists', ())
+    if self._marker is not None:
+      artists += (self._marker,)
+
+    return artists
+
   def _release(self, event):
     if self._marker is not None:
       self._marker.remove()
 
     self._marker = self.ax.scatter(event.xdata, event.ydata,
                                    **self._markerprops)
-    self.artists = [self._marker]
 
     coord = (int(np.round(event.ydata)), int(np.round(event.xdata)))
     self.onselect(coord)
@@ -61,11 +69,13 @@ class AnalysisPlotController(PanoPlotController):
     self._point = None  # 선택 지점 PathCollection
     self._coord = (-1, -1)  # 선택 지점 좌표 (y, x)
     self._selector: Optional[_SelectorWidget] = None
+    self._multilayer = False
 
     self.show_point_temperature = lambda x: x / 0
+    self.summarize = lambda: 1 / 0
 
     self._teti = (np.nan, np.nan)  # (exterior, interior temperature)
-    self._threshold = 0.8  # 취약부위 임계치
+    self._threshold = 0.8  # 초기 취약부위 임계치
 
     self._seg_cmap = get_cmap('Dark2')
     self._seg_legend = None
@@ -81,22 +91,37 @@ class AnalysisPlotController(PanoPlotController):
   def remove_images(self):
     self._images = None
 
+  def _read_image(self, sp):
+    return ImageIO.read(self.fm.panorama_path(DIR.COR, sp))
+
+  def _read_images(self):
+    ir = self._read_image(SP.IR).astype(np.float32)
+    mask = self._read_image(SP.MASK)
+    ir[np.logical_not(mask)] = np.nan
+
+    if self._multilayer:
+      path = self.fm.subdir(DIR.COR).joinpath('Panorama.webp')
+
+      try:
+        seg = load_webp_mask(path.as_posix())
+      except ValueError as e:
+        msg = '수동 수정 결과 인식 불가. 대상 파일에 부위 인식 레이어 (흑백)가 '
+        if e.args[1] == 0:
+          msg += '존재하지 않습니다.'
+        else:
+          msg += '두 개 이상 존재합니다.'
+
+        raise ValueError(msg) from e
+    else:
+      seg = self._read_image(SP.SEG)[:, :, 0]
+      seg = SegMask.vis_to_index(seg)
+
+    return ir, seg
+
   @property
   def images(self) -> tuple[np.ndarray, np.ndarray]:
     if self._images is None:
-      if self.fm.panorama_path(DIR.COR, SP.SEG).exists():
-        d = DIR.COR
-      else:
-        d = DIR.PANO
-
-      ir = ImageIO.read(self.fm.panorama_path(d, SP.IR)).astype(np.float32)
-      mask = ImageIO.read(self.fm.panorama_path(d, SP.MASK))
-      ir[np.logical_not(mask)] = np.nan
-
-      seg = ImageIO.read(self.fm.panorama_path(d, SP.SEG))[:, :, 0]
-      seg = SegMask.vis_to_index(seg)
-
-      self._images = (ir, seg)
+      self._images = self._read_images()
 
     return self._images
 
@@ -134,6 +159,13 @@ class AnalysisPlotController(PanoPlotController):
     self._fig.tight_layout()
 
     self.draw()
+
+  def read_multilayer(self):
+    self._multilayer = True
+    self._images = None  # multilayer로부터 다시 읽기
+    self.plot(factor=self._plot_setting[0],
+              segmentation=True,
+              vulnerable=self._plot_setting[2])
 
   def set_selector(self, point: Optional[bool] = None):
     if self._fm is None:
@@ -264,7 +296,7 @@ class AnalysisPlotController(PanoPlotController):
       ]
       self._seg_legend = self.fig.legend(handles=patches,
                                          ncol=len(patches),
-                                         loc='lower center')
+                                         loc='lower right')
 
     if vulnerable:
       mask = (self.images[1] == 1) | (self.images[1] == 2)
@@ -274,6 +306,7 @@ class AnalysisPlotController(PanoPlotController):
 
     self.set_selector()
     self.draw()
+    self.summarize()
 
   def temperature_range(self):
     mask = (self.images[1] == 1) | (self.images[1] == 2)

@@ -16,8 +16,6 @@ Pane {
     padding : 10
     objectName : 'panorama_panel'
 
-    // TODO cmap range
-
     property bool correction_plot : false
 
     PanoramaOption {
