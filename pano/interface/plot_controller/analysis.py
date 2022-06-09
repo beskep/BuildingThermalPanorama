@@ -198,7 +198,8 @@ class AnalysisPlotController(PanoPlotController):
     if np.isnan(self.teti).any():
       raise ValueError('실내외 온도가 설정되지 않았습니다.')
 
-    return (self.images[0] - self.teti[0]) / (self.teti[1] - self.teti[0])
+    return np.absolute(
+        (self.images[0] - self.teti[0]) / (self.teti[1] - self.teti[0]))
 
   def reset(self):
     self.axes.clear()
