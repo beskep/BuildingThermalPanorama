@@ -81,6 +81,7 @@ class PanoramaPlotController(PanoPlotController):
   def reset(self):
     self.axes.clear()
     self.cax.clear()
+    self.draw()
 
   def home(self):
     if self._image is not None:
@@ -121,7 +122,7 @@ class PanoramaPlotController(PanoPlotController):
   def _load_image(self, d: DIR, sp: SP):
     path = self.fm.panorama_path(d=d, sp=sp)
     if not path.exists() and d is DIR.COR:
-      d = DIR.PANO  # TODO 검토
+      d = DIR.PANO
       path = self.fm.panorama_path(d=d, sp=sp, error=True)
 
     image = ImageIO.read(path)

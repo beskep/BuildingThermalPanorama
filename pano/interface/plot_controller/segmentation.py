@@ -46,7 +46,7 @@ class SegmentationPlotController(PanoPlotController):
     mask_path = self.fm.change_dir(DIR.SEG, file)
 
     if not (vis_path.exists() and mask_path.exists()):
-      return
+      raise FileNotFoundError(file)
 
     vis = ImageIO.read(vis_path)
     mask_vis = ImageIO.read(mask_path)

@@ -54,7 +54,7 @@ Popup {
                 GridLayout {
                     Layout.fillWidth : true
                     columns : 4
-                    columnSpacing : 20 // TODO 두 column 사이 간격
+                    columnSpacing : 20
 
                     Label {
                         Layout.fillWidth : true
@@ -154,7 +154,6 @@ Popup {
                         stepSize : 100
                         decimals : 1
                     }
-
                 }
             }
 

@@ -82,7 +82,7 @@ Pane {
 
                     enabled : _separate.checked
 
-                    // onReleased : // TODO
+                    onReleased : file_dialog.open()
 
                     ToolTip.visible : hovered
                     ToolTip.delay : 500
@@ -157,6 +157,7 @@ Pane {
                             Text {
                                 text : file_name(path)
                                 font.family : 'Fira Code'
+                                font.pointSize: 11
                                 anchors.horizontalCenter : parent.horizontalCenter
                             }
                         }
@@ -173,6 +174,22 @@ Pane {
             var path = folder.toString().replace('file:///', '');
             con.prj_select_working_dir(path);
             path_selected = true;
+        }
+    }
+
+    FileDialog {
+        id : file_dialog
+
+        nameFilters : ['All files (*)']
+        fileMode : FileDialog.OpenFiles
+
+        onAccepted : {
+            let str = '';
+            for (var idx = 0; idx < files.length; ++ idx) {
+                str += (files[idx].replace('file:///', '') + ';')
+            }
+
+            con.prj_select_vis_images(str);
         }
     }
 

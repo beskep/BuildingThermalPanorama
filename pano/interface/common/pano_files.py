@@ -43,9 +43,12 @@ ProjectDir
 
 from enum import Enum
 from pathlib import Path
+from shutil import copy2
 from typing import List, Union
 
+from loguru import logger
 from omegaconf import DictConfig
+from toolz.itertoolz import peek
 
 from pano import utils
 
@@ -126,16 +129,19 @@ class ThermalPanoramaFileManager:
 
     return self.glob(d=DIR.RAW, pattern=self._raw_pattern)
 
-  def files(self, d: Union[str, DIR]) -> List[Path]:
+  def files(self, d: Union[str, DIR], error=True) -> List[Path]:
     """
     프로젝트 경로 내 각 경로 중 수치 정보를 담고 있는 파일 목록.
-    Raw 파일 목록과 대응하는 파일이 하나라도 존재하지 않으면 오류 발생.
+    `error`가 `True`이고 Raw 파일 목록과 대응하는 파일이
+    하나라도 존재하지 않으면 오류 발생.
 
     Parameters
     ----------
     d : Union[str, DIR]
         대상 directory.
         {RAW, IR, VIS, RGST, SEG}.
+    error : bool
+        `True`이면 대상 폴더에 Raw 파일 목록과 일치하지 않는 경우 오류 발생
 
     Returns
     -------
@@ -164,9 +170,17 @@ class ThermalPanoramaFileManager:
     ext = FN.NPY if d is DIR.IR else FN.LL
     files = [subdir.joinpath(f'{x.stem}{ext}') for x in raw_files]
 
-    for file in files:
-      if not file.exists():
-        raise FileNotFoundError(file)
+    if error:
+      for file in files:
+        file.stat()
+    elif d in (DIR.VIS, DIR.SEG) and any(not x.exists() for x in files):
+      # 다른 실화상을 입력한 경우, VIS/SEG 폴더에 존재하는 영상 목록 반환
+      exts = {'.png'} if d is DIR.SEG else {'.png', '.jpg', '.webp'}
+      files = list(x for x in subdir.glob('*')
+                   if x.is_file() and x.suffix.lower() in exts)
+
+    if not files:
+      raise FileNotFoundError(f'no file in {subdir}', subdir)
 
     return files
 
@@ -255,11 +269,42 @@ def init_directory(directory: Path, default=False) -> DictConfig:
   DictConfig
   """
   raw_dir = directory.joinpath(DIR.RAW.value)
-  if not raw_dir.exists():
-    raw_dir.mkdir()
+  exts = {'.jpg', '.xlsx', '.png'}
 
-    for file in directory.iterdir():
-      if file.suffix.lower() in ('.jpg', '.xlsx', '.png'):
-        file.replace(raw_dir.joinpath(file.name))
+  if not raw_dir.exists():
+    files = (x for x in directory.glob('*')
+             if x.is_file() and x.suffix.lower() in exts)
+
+    try:
+      _, files = peek(files)
+    except StopIteration:
+      # pylint: disable=raise-missing-from
+      raise FileNotFoundError('영상 파일이 발견되지 않았습니다.', directory.as_posix())
+
+    raw_dir.mkdir()
+    for file in files:
+      file.replace(raw_dir.joinpath(file.name))
 
   return set_config(directory=directory, default=default)
+
+
+def replace_vis_images(fm: ThermalPanoramaFileManager, files: str):
+  # 이미 추출된 실화상을 IR 폴더로 옮김
+  ir_dir = fm.subdir(DIR.IR)
+  for path in fm.files(DIR.VIS, error=False):
+    logger.debug('replace "{}" to IR', path)
+    path.replace(ir_dir.joinpath(f'{path.stem}_vis{path.suffix}'))
+
+  # 새 실화상 파일 VIS 폴더에 복사
+  vis_dir = fm.subdir(DIR.VIS)
+  paths = (Path(x) for x in files.strip(';').split(';'))
+
+  try:
+    _, paths = peek(paths)
+  except StopIteration:
+    # pylint: disable=raise-missing-from
+    raise FileNotFoundError('선택된 파일이 없습니다.')
+
+  for path in paths:
+    logger.info('copy "{}" to VIS', path)
+    copy2(path, vis_dir)

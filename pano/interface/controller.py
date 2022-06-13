@@ -15,6 +15,7 @@ from . import analysis
 from .common.config import update_config
 from .common.pano_files import DIR
 from .common.pano_files import init_directory
+from .common.pano_files import replace_vis_images
 from .common.pano_files import SP
 from .common.pano_files import ThermalPanoramaFileManager
 from .mbq import QtCore
@@ -211,6 +212,12 @@ class Controller(QtCore.QObject):
     if not wd.exists():
       raise FileNotFoundError(wd)
 
+    try:
+      self._config = init_directory(directory=wd)
+    except FileNotFoundError as e:
+      self.win.popup('Error', f'{e.args[0]}\n({e.args[1]})')
+      return
+
     self._wd = wd
     self._fm = ThermalPanoramaFileManager(wd)
 
@@ -220,7 +227,6 @@ class Controller(QtCore.QObject):
     self._apc.show_point_temperature = lambda x: self.win.panel_funtion(
         'analysis', 'show_point_temperature', x)
 
-    self._config = init_directory(directory=wd)
     self.win.update_config(self._config)
 
     self.prj_update_project_tree()
@@ -229,6 +235,21 @@ class Controller(QtCore.QObject):
   def prj_update_project_tree(self):
     tree = tree_string(self._wd, width=40)
     self.win.panel_funtion('project', 'update_project_tree', tree)
+
+  @QtCore.Slot(str)
+  def prj_select_vis_images(self, files: str):
+    assert self._fm is not None
+
+    if not self._fm.subdir(DIR.VIS).exists():
+      self.win.popup('Warning', '열·실화상 데이터를 먼저 추출해주세요.', 5000)
+      return
+
+    try:
+      replace_vis_images(fm=self._fm, files=files)
+    except OSError as e:
+      self.win.popup('Error', str(e))
+
+    self.update_image_view()
 
   @QtCore.Slot(str)
   def command(self, command: str):
@@ -300,12 +321,14 @@ class Controller(QtCore.QObject):
     self.win.update_config(self._config)  # 이미 반영된 설정도 다시 업데이트 함
 
   def _clear_separate_results(self):
-    # 다음 결과 폴더 내 모든 파일 삭제
-    # TODO 프로젝트 관련 파일만 삭제하기 (jpg, png, npy 등)
+    # 다음 결과 폴더 내 관련 파일 삭제
+    exts = {'.npy', '.jpg', '.png', '.webp'}
     for d in (DIR.SEG, DIR.PANO, DIR.COR):
-      files = self._fm.glob(d, '*')
-      logger.debug('delete files in {}: {}', d,
-                   [str(x.relative_to(self._wd)) for x in files])
+      files = [
+          x for x in self._fm.glob(d, '*')
+          if x.is_file() and x.suffix.lower() in exts
+      ]
+      logger.debug('delete files in {}: {}', d, [x.name for x in files])
 
       for f in files:
         f.unlink()
@@ -320,15 +343,19 @@ class Controller(QtCore.QObject):
       logger.warning('Directory not set')
       return
 
-    files = self._fm.raw_files()
-    if not files:
-      # logger.warning('No raw files')
+    raw_files = [_path2url(x) for x in self._fm.raw_files()]
+    if not raw_files:
+      logger.debug('no files')
       return
 
-    # TODO testo .xlsx 파일
+    try:
+      vis_files = [_path2url(x) for x in self._fm.files(DIR.VIS, error=False)]
+    except FileNotFoundError:
+      vis_files = raw_files
+
     for panel in panels:
-      self.win.panel_funtion(panel, 'update_image_view',
-                             [_path2url(x) for x in files])
+      files = vis_files if panel == 'segmentation' else raw_files
+      self.win.panel_funtion(panel, 'update_image_view', files)
 
   @QtCore.Slot(str)
   def rgst_plot(self, url):
@@ -374,6 +401,7 @@ class Controller(QtCore.QObject):
     try:
       self._spc.plot(path, separate=self._config['panorama']['separate'])
     except FileNotFoundError:
+      self.win.popup('Error', '부위 인식 결과가 없습니다.')
       logger.warning('File not found: {}', path)
 
   @QtCore.Slot(str, str)

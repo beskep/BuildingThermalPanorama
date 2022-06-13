@@ -188,7 +188,7 @@ class ThermalPanorama:
   def extract(self):
     try:
       self._fm.files(DIR.IR)
-      self._fm.files(DIR.VIS)
+      self._fm.subdir(DIR.VIS).stat()
     except FileNotFoundError:
       self._fm.subdir(DIR.IR, mkdir=True)
       self._fm.subdir(DIR.VIS, mkdir=True)
@@ -200,7 +200,7 @@ class ThermalPanorama:
   def extract_generator(self):
     try:
       self._fm.files(DIR.IR)
-      self._fm.files(DIR.VIS)
+      self._fm.subdir(DIR.VIS).stat()
     except FileNotFoundError:
       self._fm.subdir(DIR.IR, mkdir=True)
       self._fm.subdir(DIR.VIS, mkdir=True)
@@ -333,7 +333,7 @@ class ThermalPanorama:
     from pano.segmentation import deeplab
 
     if self._config['panorama']['separate']:
-      files = self._fm.files(DIR.VIS)
+      files = self._fm.files(DIR.VIS, error=False)
     else:
       try:
         files = self._fm.files(DIR.RGST)
@@ -474,13 +474,12 @@ class ThermalPanorama:
                  array=tools.uint8_image(panorama.mask))
 
   def _stitch_others(self, stitcher: stitch.Stitcher, panorama: stitch.Panorama,
-                     spectrum: SP):
+                     sp: SP):
     try:
-      files = self._fm.files(DIR[spectrum.name])
+      files = self._fm.files(DIR[sp.name], error=(sp is SP.IR))
     except FileNotFoundError as e:
-      file = Path(e.args[0]).relative_to(self._wd)
-      raise FileNotFoundError(f'"{file}" 파일을 찾을 수 없습니다. '
-                              f'{spectrum.value} 파노라마를 생성할 수 없습니다.') from e
+      raise FileNotFoundError('대상 파일을 찾을 수 없습니다. '
+                              f'{sp.value} 파노라마를 생성할 수 없습니다.') from e
 
     files = [files[x] for x in panorama.indices]
     images = [IIO.read(x) for x in files]
@@ -495,20 +494,20 @@ class ThermalPanorama:
     if panorama.crop_range:
       pano = panorama.crop_range.crop(pano, strict=False)
 
-    if spectrum is SP.IR:
+    if sp is SP.IR:
       pano = pano[:, :, 0]
       pano = pano.astype(np.float16)
-    elif spectrum is SP.SEG:
+    elif sp is SP.SEG:
       pano = tools.SegMask.index_to_vis(np.round(pano / tools.SegMask.scale))
     else:
       pano = np.round(pano).astype(np.uint8)
 
-    if spectrum is SP.SEG:
-      IIO.save(path=self._fm.panorama_path(DIR.PANO, spectrum),
+    if sp is SP.SEG:
+      IIO.save(path=self._fm.panorama_path(DIR.PANO, sp),
                array=self.limit_size(pano, aa=False))
     else:
       panorama.panorama = pano
-      self._save_panorama(spectrum=spectrum,
+      self._save_panorama(spectrum=sp,
                           panorama=panorama,
                           save_mask=False,
                           save_meta=False)
@@ -540,12 +539,12 @@ class ThermalPanorama:
     sp2 = 'VIS' if spectrum == 'IR' else 'IR'
     stitcher.blend_type = cfg['type'][sp2]
     stitcher.blend_strength = cfg['strength'][sp2]
-    self._stitch_others(stitcher=stitcher, panorama=pano, spectrum=SP[sp2])
+    self._stitch_others(stitcher=stitcher, panorama=pano, sp=SP[sp2])
 
     # segmention mask 저장
     stitcher.blend_type = False
     stitcher.interp = stitch.Interpolation.NEAREST
-    self._stitch_others(stitcher=stitcher, panorama=pano, spectrum=SP.SEG)
+    self._stitch_others(stitcher=stitcher, panorama=pano, sp=SP.SEG)
 
   def _panorama_separate(self):
     cfg = self._config['panorama']['blend']
@@ -565,7 +564,7 @@ class ThermalPanorama:
     # VIS 파노라마
     stitcher.blend_type = cfg['type']['VIS']
     stitcher.blend_strength = cfg['strength']['VIS']
-    vis_files = self._fm.files(DIR.VIS)
+    vis_files = self._fm.files(DIR.VIS, error=False)
     vis_images = [IIO.read(x) for x in vis_files]
     vis_pano = self._stitch(stitcher=stitcher,
                             images=vis_images,
@@ -576,7 +575,7 @@ class ThermalPanorama:
     # segmentation mask
     stitcher.blend_type = False
     stitcher.interp = stitch.Interpolation.NEAREST
-    self._stitch_others(stitcher=stitcher, panorama=vis_pano, spectrum=SP.SEG)
+    self._stitch_others(stitcher=stitcher, panorama=vis_pano, sp=SP.SEG)
 
   def panorama(self):
     # Raw 파일 추출

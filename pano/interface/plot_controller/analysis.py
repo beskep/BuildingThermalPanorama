@@ -58,7 +58,6 @@ class PointSelector(_SelectorWidget):
 
 
 class AnalysisPlotController(PanoPlotController):
-  # TODO 파노라마 생성/시점 보정 이후 image reset
 
   def __init__(self, parent=None) -> None:
     super().__init__(parent=parent)
@@ -210,6 +209,7 @@ class AnalysisPlotController(PanoPlotController):
       self._seg_legend = None
 
     self.set_selector()
+    self.draw()
 
   def _set_style(self):
     self.axes.set_axis_off()
@@ -266,6 +266,8 @@ class AnalysisPlotController(PanoPlotController):
     self._plot_setting = (factor, segmentation, vulnerable)
 
     if factor:
+      # FIXME factor를 변경할 때마다 cax의 높이가 축소됨 (extend 설정 때문으로 추정)
+      # https://matplotlib.org/stable/tutorials/intermediate/tight_layout_guide.html
       image = self.temperature_factor()
       norm = colors.BoundaryNorm(boundaries=np.linspace(0, 1, 11), ncolors=256)
     else:
@@ -300,6 +302,7 @@ class AnalysisPlotController(PanoPlotController):
                                          loc='lower right')
 
     if vulnerable:
+      # TODO 벽 부위만 판단 옵션
       mask = (self.images[1] == 1) | (self.images[1] == 2)
       image[~mask] = np.nan
       image[mask & (image < self.threshold)] = np.nan  # 정상 부위 데이터 제외
