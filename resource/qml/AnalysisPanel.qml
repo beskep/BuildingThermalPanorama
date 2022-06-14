@@ -128,6 +128,13 @@ Pane {
 
                             onReleased : analysis_plot()
                         }
+                        RadioButton {
+                            Layout.preferredHeight : mode_height
+                            id : _dist
+                            text : '분포'
+
+                            onReleased : analysis_plot()
+                        }
 
                         ToolSeparator {
                             color : '#9e9e9e'
@@ -556,7 +563,11 @@ Pane {
     }
 
     function analysis_plot() {
-        con.analysis_plot(_factor.checked, _show_segmentation.checked, _show_vulnerable.checked)
+        con.analysis_plot( //
+            _factor.checked, //
+            _show_segmentation.checked, //
+            _show_vulnerable.checked, //
+            _dist.checked)
     }
 
     function init() {

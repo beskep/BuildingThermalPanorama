@@ -59,6 +59,8 @@ def _producer(queue: mp.Queue, directory, command: str, loglevel: int):
     queue.put(f'{type(e).__name__}: {e}')
     return
 
+  logger.info('Run {} command', command)
+
   try:
     fn = getattr(tp, f'{command}_generator', None)
     if fn is not None:
@@ -336,6 +338,7 @@ class Controller(QtCore.QObject):
     # plot 리셋
     for pc in (self._rpc, self._spc, self._ppc, self._apc):
       pc.reset()
+      pc.draw()
 
   def update_image_view(self,
                         panels=('project', 'registration', 'segmentation')):
@@ -477,12 +480,13 @@ class Controller(QtCore.QObject):
     self._rpc.set_images(fixed_image=IIO.read(ir), moving_image=IIO.read(vis))
     self._rpc.draw()
 
-  @QtCore.Slot(bool, bool, bool)
-  def analysis_plot(self, factor, segmentaion, vulnerable):
+  @QtCore.Slot(bool, bool, bool, bool)
+  def analysis_plot(self, factor, segmentaion, vulnerable, distribution):
     try:
       self._apc.plot(factor=factor,
                      segmentation=segmentaion,
-                     vulnerable=vulnerable)
+                     vulnerable=vulnerable,
+                     distribution=distribution)
     except OSError:
       pass
     except ValueError as e:

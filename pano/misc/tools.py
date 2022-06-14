@@ -408,3 +408,14 @@ class SegMask:
   @classmethod
   def vis_to_index(cls, array: np.ndarray):
     return np.round(array / cls.scale).astype(np.uint8)
+
+
+def reject_outliers(data: np.ndarray, m=1.5):
+  data = data[~np.isnan(data)]
+  q1, q3 = np.quantile(data, q=(0.25, 0.75))
+  iqr = q3 - q1
+
+  lower = q1 - m * iqr
+  upper = q3 + m * iqr
+
+  return data[(lower <= data) & (data <= upper)]

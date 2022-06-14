@@ -1,14 +1,15 @@
 from typing import Any, Optional
 
-from matplotlib import colors
 from matplotlib.axes import Axes
 from matplotlib.cm import get_cmap
 from matplotlib.colorbar import make_axes_gridspec
+from matplotlib.colors import BoundaryNorm
 from matplotlib.image import AxesImage
 from matplotlib.patches import Patch
 from matplotlib.widgets import _SelectorWidget
 from matplotlib.widgets import PolygonSelector
 import numpy as np
+import seaborn as sns
 from skimage.draw import polygon2mask
 
 from pano.interface import analysis
@@ -18,16 +19,59 @@ from pano.interface.mbq import FigureCanvas
 from pano.misc.imageio import ImageIO
 from pano.misc.imageio import load_webp_mask
 from pano.misc.tools import crop_mask
+from pano.misc.tools import reject_outliers
 from pano.misc.tools import SegMask
 
 from .plot_controller import PanoPlotController
 from .plot_controller import QtGui
 
 
+def _axes(fig):
+  ax = fig.add_subplot(111)
+  cax = make_axes_gridspec(ax)[0]
+  return ax, cax
+
+
+def _read_image(fm, sp):
+  return ImageIO.read(fm.panorama_path(DIR.COR, sp))
+
+
+def _get_cmap(factor=False, segmentation=False, vulnerable=False):
+  if segmentation or vulnerable:
+    name = 'gist_gray'
+  elif factor:
+    name = 'plasma'
+  else:
+    name = 'inferno'
+
+  cmap = get_cmap(name).copy()
+
+  if factor:
+    cmap.set_over('white')
+    cmap.set_under('black')
+
+  return cmap
+
+
 def _vulnerable_area_ratio(factor, vulnerable, mask):
   valid = (~np.isnan(factor)) & mask
 
   return np.sum(vulnerable & valid) / np.sum(valid)
+
+
+def _summary(images, threshold, factor, index: int):
+  mask = images[1] == index
+  summ = analysis.summary(images[0][mask])
+
+  if factor is None:
+    summ['vulnerable'] = '-'
+  else:
+    v = _vulnerable_area_ratio(factor=factor,
+                               vulnerable=(factor >= threshold),
+                               mask=mask)
+    summ['vulnerable'] = f'{v:.2%}'
+
+  return summ
 
 
 class PointSelector(_SelectorWidget):
@@ -78,7 +122,7 @@ class AnalysisPlotController(PanoPlotController):
 
     self._seg_cmap = get_cmap('Dark2')
     self._seg_legend = None
-    self._plot_setting = (False, False, False)
+    self._plot_setting = (False, False, False, False)
 
   @property
   def cax(self) -> Axes:
@@ -90,30 +134,23 @@ class AnalysisPlotController(PanoPlotController):
   def remove_images(self):
     self._images = None
 
-  def _read_image(self, sp):
-    return ImageIO.read(self.fm.panorama_path(DIR.COR, sp))
-
   def _read_images(self):
-    ir = self._read_image(SP.IR).astype(np.float32)
-    mask = self._read_image(SP.MASK)
+    ir = _read_image(self.fm, SP.IR).astype(np.float32)
+    mask = _read_image(self.fm, SP.MASK)
     ir[np.logical_not(mask)] = np.nan
 
-    if self._multilayer:
+    if not self._multilayer:
+      seg = _read_image(self.fm, SP.SEG)[:, :, 0]
+      seg = SegMask.vis_to_index(seg)
+    else:
       path = self.fm.subdir(DIR.COR).joinpath('Panorama.webp')
 
       try:
         seg = load_webp_mask(path.as_posix())
       except ValueError as e:
         msg = '수동 수정 결과 인식 불가. 대상 파일에 부위 인식 레이어 (흑백)가 '
-        if e.args[1] == 0:
-          msg += '존재하지 않습니다.'
-        else:
-          msg += '두 개 이상 존재합니다.'
-
+        msg += ('존재하지 않습니다.' if e.args[1] == 0 else '두 개 이상 존재합니다.')
         raise ValueError(msg) from e
-    else:
-      seg = self._read_image(SP.SEG)[:, :, 0]
-      seg = SegMask.vis_to_index(seg)
 
     return ir, seg
 
@@ -153,29 +190,34 @@ class AnalysisPlotController(PanoPlotController):
     self._canvas = canvas
 
     self._fig = canvas.figure
-    self._axes = self._fig.add_subplot(111)
-    self._cax = make_axes_gridspec(self._axes)[0]
-    self._fig.tight_layout()
+    self._axes, self._cax = _axes(self.fig)
 
     self.draw()
 
   def read_multilayer(self):
     self._multilayer = True
     self._images = None  # multilayer로부터 다시 읽기
-    self.plot(factor=self._plot_setting[0],
-              segmentation=True,
-              vulnerable=self._plot_setting[2])
 
-  def set_selector(self, point: Optional[bool] = None):
+    ps = list(self._plot_setting)
+    ps[1] = True
+    self.plot(*ps)
+
+  def set_selector(self, point: Optional[bool] = None, remove=False):
     if self._fm is None:
       self._selector = None
       return
 
+    # 기존 selector 삭제
     if self._selector is not None:
       self._selector.disconnect_events()
       for artist in self._selector.artists:
         artist.remove()
 
+    if remove:
+      self._selector = None
+      return
+
+    # 새 selector 생성
     if point is None:
       point = isinstance(self._selector, PointSelector)
 
@@ -201,18 +243,23 @@ class AnalysisPlotController(PanoPlotController):
         (self.images[0] - self.teti[0]) / (self.teti[1] - self.teti[0]))
 
   def reset(self):
-    self.axes.clear()
-    self.cax.clear()
+    self.axes.remove()
+    self.cax.remove()
+    self._axes, self._cax = _axes(self.fig)
 
     if self._seg_legend is not None:
       self._seg_legend.remove()
       self._seg_legend = None
 
     self.set_selector()
-    self.draw()
 
   def _set_style(self):
-    self.axes.set_axis_off()
+    if self._plot_setting[-1]:
+      self.axes.set_axis_on()  # histogram
+      self.fig.tight_layout(pad=3)
+    else:
+      self.axes.set_axis_off()  # image
+      self.fig.tight_layout(pad=2)
 
     if self.cax.has_data():
       self.cax.set_axis_on()
@@ -244,42 +291,24 @@ class AnalysisPlotController(PanoPlotController):
     self._images = (ir, mask)
     self.plot(*self._plot_setting)
 
-  @staticmethod
-  def _get_cmap(factor=False, segmentation=False, vulnerable=False):
-    if segmentation or vulnerable:
-      name = 'gist_gray'
-    elif factor:
-      name = 'plasma'
-    else:
-      name = 'inferno'
-
-    cmap = get_cmap(name).copy()
-
-    if factor:
-      cmap.set_over('white')
-      cmap.set_under('black')
-
-    return cmap
-
-  def plot(self, factor=False, segmentation=False, vulnerable=False):
+  def _plot_image(self, factor=False, segmentation=False, vulnerable=False):
     factor = factor or vulnerable
-    self._plot_setting = (factor, segmentation, vulnerable)
 
     if factor:
       # FIXME factor를 변경할 때마다 cax의 높이가 축소됨 (extend 설정 때문으로 추정)
       # https://matplotlib.org/stable/tutorials/intermediate/tight_layout_guide.html
       image = self.temperature_factor()
-      norm = colors.BoundaryNorm(boundaries=np.linspace(0, 1, 11), ncolors=256)
+      norm = BoundaryNorm(boundaries=np.linspace(0, 1, 11), ncolors=256)
     else:
       image = self.images[0].copy()
       norm = None
 
-    cmap = self._get_cmap(factor=factor,
-                          segmentation=segmentation,
-                          vulnerable=vulnerable)
-
-    self.reset()
+    cmap = _get_cmap(factor=factor,
+                     segmentation=segmentation,
+                     vulnerable=vulnerable)
     self._axes_image = self.axes.imshow(image, cmap=cmap, norm=norm)
+
+    self.cax.set_visible(True)
     self.fig.colorbar(self._axes_image,
                       cax=self.cax,
                       ax=self.axes,
@@ -308,7 +337,42 @@ class AnalysisPlotController(PanoPlotController):
       image[mask & (image < self.threshold)] = np.nan  # 정상 부위 데이터 제외
       self.axes.imshow(image, cmap='inferno', vmin=0, vmax=1)
 
-    self.set_selector()
+  def _plot_distribution(self):
+    self.cax.set_visible(False)
+
+    image, mask = self.images
+    data = {'Wall': image[mask == 1], 'Window': image[mask == 2]}
+    data = {k: reject_outliers(v, m=2.0) for k, v in data.items()}
+    data_range = (min(np.min(x) for x in data.values()),
+                  max(np.max(x) for x in data.values()))
+
+    sns.histplot(data=data,
+                 stat='probability',
+                 element='step',
+                 binwidth=0.2,
+                 ax=self.axes)
+    self.axes.set_xlim(*data_range)
+    self.axes.set_xlabel('Temperature [℃]')
+
+  def plot(self,
+           factor=False,
+           segmentation=False,
+           vulnerable=False,
+           distribution=False):
+    factor = factor or vulnerable
+    self._plot_setting = (factor, segmentation, vulnerable, distribution)
+
+    self.reset()
+
+    if distribution:
+      self._plot_distribution()
+      self.set_selector(remove=True)
+    else:
+      self._plot_image(factor=factor,
+                       segmentation=segmentation,
+                       vulnerable=vulnerable)
+      self.set_selector()
+
     self.draw()
     self.summarize()
 
@@ -330,20 +394,6 @@ class AnalysisPlotController(PanoPlotController):
     self._axes_image.set_clim(vmin, vmax)
     self.draw()
 
-  def _summary(self, factor, index: int):
-    mask = self.images[1] == index
-    summ = analysis.summary(self.images[0][mask])
-
-    if factor is None:
-      summ['vulnerable'] = '-'
-    else:
-      v = _vulnerable_area_ratio(factor=factor,
-                                 vulnerable=(factor >= self.threshold),
-                                 mask=mask)
-      summ['vulnerable'] = f'{v:.2%}'
-
-    return summ
-
   def summary(self):
     try:
       factor = self.temperature_factor()
@@ -351,6 +401,6 @@ class AnalysisPlotController(PanoPlotController):
       factor = None
 
     return {
-        'Wall': self._summary(factor, 1),
-        'Window': self._summary(factor, 2)
+        'Wall': _summary(self.images, self.threshold, factor, index=1),
+        'Window': _summary(self.images, self.threshold, factor, index=2)
     }
