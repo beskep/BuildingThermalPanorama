@@ -482,11 +482,13 @@ class Controller(QtCore.QObject):
 
   @QtCore.Slot(bool, bool, bool, bool)
   def analysis_plot(self, factor, segmentaion, vulnerable, distribution):
+    self._apc.setting.factor = factor
+    self._apc.setting.segmentation = segmentaion
+    self._apc.setting.vulnerable = vulnerable
+    self._apc.setting.distribution = distribution
+
     try:
-      self._apc.plot(factor=factor,
-                     segmentation=segmentaion,
-                     vulnerable=vulnerable,
-                     distribution=distribution)
+      self._apc.plot()
     except OSError:
       pass
     except ValueError as e:
@@ -495,6 +497,12 @@ class Controller(QtCore.QObject):
       self.win.panel_funtion('analysis', 'set_temperature_range',
                              *self._apc.images.temperature_range())
       self._analysis_summarize()
+
+  @QtCore.Slot(bool)
+  def analysis_window_vulnerable(self, value):
+    if self._apc.setting.window_vulnerable ^ value:
+      self._apc.setting.window_vulnerable = value
+      self._apc.plot()
 
   @QtCore.Slot()
   def analysis_read_multilayer(self):
@@ -520,7 +528,7 @@ class Controller(QtCore.QObject):
     if np.isnan(wall) and np.isnan(window):
       return
 
-    self._apc.images.read_images()  # 기존 이미지 삭제하고 원본 이미지를 불러와서 보정
+    self._apc.images.reset_images()  # 기존 이미지 삭제, 원본 이미지를 불러와서 보정
 
     try:
       ir, seg = self._apc.images.ir, self._apc.images.seg
@@ -558,17 +566,16 @@ class Controller(QtCore.QObject):
 
   @QtCore.Slot(float, float)
   def analysis_set_teti(self, te, ti):
-    self._apc.teti = (te, ti)
+    self._apc.images.teti = (te, ti)
 
   @QtCore.Slot(float)
   def analysis_set_threshold(self, value):
-    self._apc.threshold = value
-    if not np.isnan(self._apc.teti).any():
-      self._analysis_summarize()
+    self._apc.images.threshold = value
+    self._analysis_summarize()
 
   def _analysis_summarize(self):
     self.win.panel_funtion('analysis', 'clear_table')
-    for cls, summary in self._apc.summary().items():
+    for cls, summary in self._apc.images.summarize().items():
       row = {
           k: (v if isinstance(v, str) else f'{v:.2f}')
           for k, v in summary.items()

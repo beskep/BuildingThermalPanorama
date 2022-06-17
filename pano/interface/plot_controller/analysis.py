@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Any, Optional
 
 from matplotlib.axes import Axes
@@ -25,6 +26,8 @@ from pano.misc.tools import SegMask
 
 from .plot_controller import PanoPlotController
 from .plot_controller import QtGui
+
+SEG_CMAP = get_cmap('Dark2')
 
 
 def _axes(fig):
@@ -54,6 +57,27 @@ def _get_cmap(factor=False, segmentation=False, vulnerable=False):
   return cmap
 
 
+def _vulnerable_area_ratio(factor, vulnerable, mask):
+  valid = (~np.isnan(factor)) & mask
+
+  return np.sum(vulnerable & valid) / np.sum(valid)
+
+
+def _summarize(ir, seg, threshold, factor, index: int):
+  mask = seg == index
+  summ = analysis.summary(ir[mask])
+
+  if factor is None:
+    summ['vulnerable'] = '-'
+  else:
+    v = _vulnerable_area_ratio(factor=factor,
+                               vulnerable=(factor >= threshold),
+                               mask=mask)
+    summ['vulnerable'] = f'{v:.2%}'
+
+  return summ
+
+
 class Images:
 
   def __init__(self, fm: ThermalPanoramaFileManager) -> None:
@@ -62,8 +86,10 @@ class Images:
     self._ir: Optional[np.ndarray] = None  # IR image
     self._seg: Optional[np.ndarray] = None  # segmentation mask
 
+    self._teti = (np.nan, np.nan)  # (exterior, interior temperature)
+    self._threshold = 0.8  # 초기 취약부위 임계치
     self._multilayer = False
-    self._k = 2.0  # IQR 이상치 제거 변수
+    self.k = 2.0  # IQR 이상치 제거 변수
 
   @property
   def multilayer(self):
@@ -79,12 +105,24 @@ class Images:
     self._multilayer = value
 
   @property
-  def k(self):
-    return self._k
+  def teti(self):
+    return self._teti
 
-  @k.setter
-  def k(self, value: float):
-    self._k = float(value)
+  @teti.setter
+  def teti(self, value):
+    self._teti = (float(value[0]), float(value[1]))
+
+  @property
+  def threshold(self):
+    return self._threshold
+
+  @threshold.setter
+  def threshold(self, value: float):
+    v = float(value)
+    if not (0.0 <= v <= 1.0):
+      raise ValueError
+
+    self._threshold = v
 
   def _read_ir(self):
     ir = _read_image(self._fm, SP.IR).astype(np.float32)
@@ -109,9 +147,9 @@ class Images:
 
     self._seg = seg
 
-  def read_images(self):
-    self._read_ir()
-    self._read_seg()
+  def reset_images(self):
+    self._ir = None
+    self._seg = None
 
   @property
   def ir(self):
@@ -143,6 +181,24 @@ class Images:
         np.ceil(np.nanmax(data)).item(),
     )
 
+  def temperature_factor(self):
+    if np.isnan(self.teti).any():
+      raise ValueError('실내외 온도가 설정되지 않았습니다.')
+
+    return np.absolute((self.ir - self.teti[0]) / (self.teti[1] - self.teti[0]))
+
+  def vulnerable_area(self, window=True):
+    if window:
+      mask = np.isin(self.seg, [1, 2])
+    else:
+      mask = self.seg == 1
+
+    factor = self.temperature_factor()
+    factor[~mask] = np.nan
+    factor[mask & (factor < self.threshold)] = np.nan  # 정상 부위 데이터 제외
+
+    return factor
+
   def on_polygon_select(self, vertices):
     polygon = polygon2mask(image_shape=self.seg.shape,
                            polygon=np.flip(vertices, 1))
@@ -157,26 +213,16 @@ class Images:
     seg[~cp] = False
     self._seg = seg
 
+  def summarize(self):
+    try:
+      factor = self.temperature_factor()
+    except ValueError:
+      factor = None
 
-def _vulnerable_area_ratio(factor, vulnerable, mask):
-  valid = (~np.isnan(factor)) & mask
-
-  return np.sum(vulnerable & valid) / np.sum(valid)
-
-
-def _summary(images: Images, threshold, factor, index: int):
-  mask = images.seg == index
-  summ = analysis.summary(images.ir[mask])
-
-  if factor is None:
-    summ['vulnerable'] = '-'
-  else:
-    v = _vulnerable_area_ratio(factor=factor,
-                               vulnerable=(factor >= threshold),
-                               mask=mask)
-    summ['vulnerable'] = f'{v:.2%}'
-
-  return summ
+    return {
+        'Wall': _summarize(self.ir, self.seg, self.threshold, factor, index=1),
+        'Window': _summarize(self.ir, self.seg, self.threshold, factor, index=2)
+    }
 
 
 class PointSelector(_SelectorWidget):
@@ -206,6 +252,21 @@ class PointSelector(_SelectorWidget):
     self.onselect(coord)
 
 
+@dataclass
+class PlotSetting:
+  factor: bool = False
+  segmentation: bool = False
+  vulnerable: bool = False
+  distribution: bool = False
+  window_vulnerable: bool = True  # 창문 취약부위를 plot에 표시할지 여부
+
+  def update(self):
+    self.factor = self.factor or self.vulnerable
+
+  def __post_init__(self):
+    self.update()
+
+
 class AnalysisPlotController(PanoPlotController):
 
   def __init__(self, parent=None) -> None:
@@ -214,19 +275,14 @@ class AnalysisPlotController(PanoPlotController):
     self._axes_image: Optional[AxesImage] = None
 
     self._images: Any = None
-    self._point = None  # 선택 지점 PathCollection
+    self._setting = PlotSetting()
+
     self._coord = (-1, -1)  # 선택 지점 좌표 (y, x)
     self._selector: Optional[_SelectorWidget] = None
+    self._seg_legend = None
 
     self.show_point_temperature = lambda x: x / 0
     self.summarize = lambda: 1 / 0
-
-    self._teti = (np.nan, np.nan)  # (exterior, interior temperature)
-    self._threshold = 0.8  # 초기 취약부위 임계치
-
-    self._seg_cmap = get_cmap('Dark2')
-    self._seg_legend = None
-    self._plot_setting = (False, False, False, False)
 
   @property
   def cax(self) -> Axes:
@@ -242,28 +298,12 @@ class AnalysisPlotController(PanoPlotController):
     return self._images
 
   @property
+  def setting(self):
+    return self._setting
+
+  @property
   def coord(self):
     return self._coord
-
-  @property
-  def teti(self):
-    return self._teti
-
-  @teti.setter
-  def teti(self, value):
-    self._teti = (float(value[0]), float(value[1]))
-
-  @property
-  def threshold(self):
-    return self._threshold
-
-  @threshold.setter
-  def threshold(self, value: float):
-    v = float(value)
-    if not (0 <= v <= 1):
-      raise ValueError
-
-    self._threshold = v
 
   def init(self, app: QtGui.QGuiApplication, canvas: FigureCanvas):
     self._app = app
@@ -276,10 +316,8 @@ class AnalysisPlotController(PanoPlotController):
 
   def read_multilayer(self):
     self.images.multilayer = True
-
-    ps = list(self._plot_setting)
-    ps[1] = True  # multilayer = True
-    self.plot(*ps)
+    self._setting.segmentation = True
+    self.plot()
 
   def set_selector(self, point: Optional[bool] = None, remove=False):
     if self._fm is None:
@@ -309,17 +347,10 @@ class AnalysisPlotController(PanoPlotController):
 
   def cancel_selection(self):
     if isinstance(self._selector, PolygonSelector):
-      self.images.read_images()
+      self.images.reset_images()
 
     self.set_selector()
-    self.plot(*self._plot_setting)
-
-  def temperature_factor(self):
-    if np.isnan(self.teti).any():
-      raise ValueError('실내외 온도가 설정되지 않았습니다.')
-
-    return np.absolute(
-        (self.images.ir - self.teti[0]) / (self.teti[1] - self.teti[0]))
+    self.plot()
 
   def reset(self):
     self.axes.remove()
@@ -333,7 +364,7 @@ class AnalysisPlotController(PanoPlotController):
     self.set_selector()
 
   def _set_style(self):
-    if self._plot_setting[-1]:
+    if self._setting.distribution:
       self.axes.set_axis_on()  # histogram
       self.fig.tight_layout(pad=3)
     else:
@@ -355,7 +386,7 @@ class AnalysisPlotController(PanoPlotController):
 
   def _on_polygon_select(self, vertices):
     self.images.on_polygon_select(vertices=vertices)
-    self.plot(*self._plot_setting)
+    self.plot()
 
   def _plot_image(self, factor=False, segmentation=False, vulnerable=False):
     factor = factor or vulnerable
@@ -363,7 +394,7 @@ class AnalysisPlotController(PanoPlotController):
     if factor:
       # FIXME factor를 변경할 때마다 cax의 높이가 축소됨 (extend 설정 때문으로 추정)
       # https://matplotlib.org/stable/tutorials/intermediate/tight_layout_guide.html
-      image = self.temperature_factor()
+      image = self.images.temperature_factor()
       norm = BoundaryNorm(boundaries=np.linspace(0, 1, 11), ncolors=256)
     else:
       image = self.images.ir
@@ -383,13 +414,13 @@ class AnalysisPlotController(PanoPlotController):
                         rotation=90)
 
     if segmentation:
-      seg = self._seg_cmap(self.images.seg).astype(float)
+      seg = SEG_CMAP(self.images.seg).astype(float)
       seg[self.images.seg == 0] = np.nan
       seg[np.isnan(self.images.ir)] = np.nan
       self.axes.imshow(seg, alpha=0.5)
 
       patches = [
-          Patch(color=self._seg_cmap(i + 1), label=x)
+          Patch(color=SEG_CMAP(i + 1), label=x)
           for i, x in enumerate(['Wall', 'Window', 'etc.'])
       ]
       self._seg_legend = self.fig.legend(handles=patches,
@@ -397,11 +428,8 @@ class AnalysisPlotController(PanoPlotController):
                                          loc='lower right')
 
     if vulnerable:
-      # TODO 벽 부위만 판단 옵션
-      mask = np.isin(self.images.seg, [1, 2])
-      image[~mask] = np.nan
-      image[mask & (image < self.threshold)] = np.nan  # 정상 부위 데이터 제외
-      self.axes.imshow(image, cmap='inferno', vmin=0, vmax=1)
+      va = self.images.vulnerable_area(window=self.setting.window_vulnerable)
+      self.axes.imshow(va, cmap='inferno', vmin=0, vmax=1)
 
   def _plot_distribution(self):
     self.cax.set_visible(False)
@@ -425,23 +453,17 @@ class AnalysisPlotController(PanoPlotController):
     self.axes.set_xlim(*data_range)
     self.axes.set_xlabel('Temperature [℃]')
 
-  def plot(self,
-           factor=False,
-           segmentation=False,
-           vulnerable=False,
-           distribution=False):
-    factor = factor or vulnerable
-    self._plot_setting = (factor, segmentation, vulnerable, distribution)
-
+  def plot(self):
     self.reset()
 
-    if distribution:
+    self.setting.update()
+    if self.setting.distribution:
       self._plot_distribution()
       self.set_selector(remove=True)
     else:
-      self._plot_image(factor=factor,
-                       segmentation=segmentation,
-                       vulnerable=vulnerable)
+      self._plot_image(factor=self.setting.factor,
+                       segmentation=self.setting.segmentation,
+                       vulnerable=self.setting.vulnerable)
       self.set_selector()
 
     self.draw()
@@ -455,14 +477,3 @@ class AnalysisPlotController(PanoPlotController):
 
     self._axes_image.set_clim(vmin, vmax)
     self.draw()
-
-  def summary(self):
-    try:
-      factor = self.temperature_factor()
-    except ValueError:
-      factor = None
-
-    return {
-        'Wall': _summary(self.images, self.threshold, factor, index=1),
-        'Window': _summary(self.images, self.threshold, factor, index=2)
-    }

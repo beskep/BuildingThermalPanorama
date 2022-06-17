@@ -158,7 +158,7 @@ Pane {
                             Layout.preferredHeight : mode_height
                             id : _show_vulnerable
 
-                            text : '취약 부위 표시'
+                            text : '취약부위 표시'
 
                             onReleased : analysis_plot()
                             onCheckedChanged : {
@@ -170,6 +170,15 @@ Pane {
                                     _factor.checked = true
                                 }
                             }
+                        }
+
+                        CheckBox {
+                            Layout.preferredHeight : mode_height
+
+                            text : '창문 취약부위 표시'
+
+                            checked : true
+                            onCheckedChanged : con.analysis_window_vulnerable(checked)
                         }
                     }
                 }
