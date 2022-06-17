@@ -493,7 +493,7 @@ class Controller(QtCore.QObject):
       self.win.popup('Error', str(e))
     else:
       self.win.panel_funtion('analysis', 'set_temperature_range',
-                             *self._apc.temperature_range())
+                             *self._apc.images.temperature_range())
       self._analysis_summarize()
 
   @QtCore.Slot()
@@ -520,10 +520,10 @@ class Controller(QtCore.QObject):
     if np.isnan(wall) and np.isnan(window):
       return
 
-    self._apc.remove_images()  # 기존 이미지 삭제하고 원본 이미지를 불러와서 보정
+    self._apc.images.read_images()  # 기존 이미지 삭제하고 원본 이미지를 불러와서 보정
 
     try:
-      ir, mask = self._apc.images
+      ir, seg = self._apc.images.ir, self._apc.images.seg
     except OSError:
       return
 
@@ -531,27 +531,30 @@ class Controller(QtCore.QObject):
 
     for idx, e1 in zip([1, 2], [wall, window]):
       ir0 = np.full_like(ir, np.nan)
-      ir0[mask == idx] = ir[mask == idx]
-      ir1 = analysis.correct_emissivity(image=ir0, meta_files=meta_files, e1=e1)
-      ir[mask == idx] = ir1[mask == idx]
+      mask = seg == idx
 
-    self._apc.update_ir(ir)
+      ir0[mask] = ir[mask]
+      ir1 = analysis.correct_emissivity(image=ir0, meta_files=meta_files, e1=e1)
+      ir[mask] = ir1[mask]
+
+    self._apc.images.ir = ir
     self.win.panel_funtion('analysis', 'set_temperature_range',
-                           *self._apc.temperature_range())
+                           *self._apc.images.temperature_range())
 
   @QtCore.Slot(float)
   def analysis_correct_temperature(self, temperature):
     try:
-      ir = analysis.correct_temperature(*self._apc.images,
+      ir = analysis.correct_temperature(ir=self._apc.images.ir,
+                                        mask=self._apc.images.seg,
                                         coord=self._apc.coord,
                                         T1=temperature)
     except ValueError as e:
       self.win.popup('Error', str(e))
     else:
-      self._apc.update_ir(ir)
+      self._apc.images.ir = ir
       self.win.panel_funtion('analysis', 'show_point_temperature', temperature)
       self.win.panel_funtion('analysis', 'set_temperature_range',
-                             *self._apc.temperature_range())
+                             *self._apc.images.temperature_range())
 
   @QtCore.Slot(float, float)
   def analysis_set_teti(self, te, ti):

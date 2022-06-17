@@ -410,12 +410,21 @@ class SegMask:
     return np.round(array / cls.scale).astype(np.uint8)
 
 
-def reject_outliers(data: np.ndarray, m=1.5):
-  data = data[~np.isnan(data)]
-  q1, q3 = np.quantile(data, q=(0.25, 0.75))
-  iqr = q3 - q1
+class OutlierArray:
 
-  lower = q1 - m * iqr
-  upper = q3 + m * iqr
+  def __init__(self, data: np.ndarray, k=1.5) -> None:
+    q1, q3 = np.quantile(data[~np.isnan(data)], q=(0.25, 0.75))
+    iqr = q3 - q1
 
-  return data[(lower <= data) & (data <= upper)]
+    self.lower = q1 - k * iqr
+    self.upper = q3 + k * iqr
+    self.data = data
+
+  def mask(self, data: Optional[np.ndarray] = None) -> np.ndarray:
+    d = self.data if data is None else data
+    return (d < self.lower) | (self.upper < d)
+
+  def reject_outliers(self, data: Optional[np.ndarray] = None) -> np.ndarray:
+    d = self.data if data is None else data
+    d = d[~np.isnan(d)]
+    return d[~self.mask(d)]
