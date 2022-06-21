@@ -25,6 +25,7 @@ from .plot_controller import PanoramaPlotController
 from .plot_controller import RegistrationPlotController
 from .plot_controller import save_manual_correction
 from .plot_controller import SegmentationPlotController
+from .plot_controller.plot_controller import WorkingDirNotSet
 from .tree import tree_string
 
 
@@ -582,6 +583,16 @@ class Controller(QtCore.QObject):
       }
       row['class'] = cls
       self.win.panel_funtion('analysis', 'add_table_row', row)
+
+  @QtCore.Slot()
+  def analysis_save(self):
+    try:
+      self._apc.images.save()
+      # TODO 분석 결과 save
+    except WorkingDirNotSet:
+      pass
+    else:
+      self.win.popup('Success', '저장 완료')
 
   @QtCore.Slot()
   def dist_plot(self):

@@ -82,7 +82,8 @@ Pane {
                 ToolButton {
                     text : qsTr('저장')
                     icon : '\ue161'
-                    // TODO
+
+                    onReleased : con.analysis_save()
                 }
             }
         }

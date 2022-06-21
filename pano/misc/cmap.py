@@ -117,7 +117,7 @@ class FLIRColormap(ListedColormap):
     return instance
 
 
-def apply_colormap(image: np.ndarray, cmap: Colormap) -> np.ndarray:
+def apply_colormap(image: np.ndarray, cmap: Colormap, na=False) -> np.ndarray:
   """
   대상 영상에 지정한 colormap을 적용한 영상 반환.
   Normalize ([0, 1]) -> cmap() -> rescale to uint8
@@ -128,14 +128,25 @@ def apply_colormap(image: np.ndarray, cmap: Colormap) -> np.ndarray:
       대상 영상
   cmap : Colormap
       Colormap
+  na : bool
+      `True`면 NA가 존재하는 영상 처리
 
   Returns
   -------
   np.ndarray
       Colormap을 적용한 영상
   """
+  if not na:
+    mask = None
+  else:
+    mask = np.isnan(image)
+    image[mask] = np.nanmin(image)
+
   norm_image = tools.normalize_image(image=image)
   color_image = cmap(norm_image)
   uint8_image = tools.uint8_image(color_image)
+
+  if mask is not None:
+    image[mask] = 0
 
   return uint8_image

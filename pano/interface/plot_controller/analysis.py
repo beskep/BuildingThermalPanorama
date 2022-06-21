@@ -18,9 +18,11 @@ from pano.interface.common.pano_files import DIR
 from pano.interface.common.pano_files import SP
 from pano.interface.common.pano_files import ThermalPanoramaFileManager
 from pano.interface.mbq import FigureCanvas
+from pano.misc.cmap import apply_colormap
 from pano.misc.imageio import ImageIO
 from pano.misc.imageio import load_webp_mask
 from pano.misc.tools import crop_mask
+from pano.misc.tools import CropRange
 from pano.misc.tools import OutlierArray
 from pano.misc.tools import SegMask
 
@@ -89,6 +91,8 @@ class Images:
     self._teti = (np.nan, np.nan)  # (exterior, interior temperature)
     self._threshold = 0.8  # 초기 취약부위 임계치
     self._multilayer = False
+    self._crop: Optional[tuple[CropRange, np.ndarray]] = None
+
     self.k = 2.0  # IQR 이상치 제거 변수
 
   @property
@@ -150,6 +154,7 @@ class Images:
   def reset_images(self):
     self._ir = None
     self._seg = None
+    self._crop = None
 
   @property
   def ir(self):
@@ -202,16 +207,15 @@ class Images:
   def on_polygon_select(self, vertices):
     polygon = polygon2mask(image_shape=self.seg.shape,
                            polygon=np.flip(vertices, 1))
-
     cr, cp = crop_mask(mask=polygon, morphology_open=False)
 
-    ir = cr.crop(self.ir)
-    ir[~cp] = np.nan
-    self._ir = ir
+    self._ir = cr.crop(self.ir)
+    self._ir[~cp] = np.nan
 
-    seg = cr.crop(self.seg)
-    seg[~cp] = False
-    self._seg = seg
+    self._seg = cr.crop(self.seg)
+    self._seg[~cp] = False
+
+    self._crop = (cr, cp)
 
   def summarize(self):
     try:
@@ -223,6 +227,28 @@ class Images:
         'Wall': _summarize(self.ir, self.seg, self.threshold, factor, index=1),
         'Window': _summarize(self.ir, self.seg, self.threshold, factor, index=2)
     }
+
+  def _path(self, sp):
+    return self._fm.panorama_path(DIR.ANLY, sp, error=False)
+
+  def save(self):
+    self._fm.subdir(DIR.ANLY, mkdir=True)
+    ImageIO.save(self._path(SP.SEG), SegMask.index_to_vis(self.seg))
+
+    irp = self._path(SP.IR)
+    ImageIO.save(irp, self.ir)
+    ImageIO.save(self._fm.color_path(irp),
+                 apply_colormap(self.ir, cmap=_get_cmap(), na=True))
+
+    # TODO temperature factor 저장
+
+    if self._crop is not None:
+      cr, cm = self._crop
+      for sp in [SP.VIS, SP.MASK]:
+        img = ImageIO.read(self._fm.panorama_path(DIR.COR, sp))
+        img = cr.crop(img)
+        img[~cm] = 0
+        ImageIO.save(self._path(sp), img)
 
 
 class PointSelector(_SelectorWidget):

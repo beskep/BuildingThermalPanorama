@@ -66,6 +66,7 @@ class DIR(Enum):
   SEG = '02 Segmentation'
   PANO = '03 Panorama'
   COR = '04 Correction'
+  ANLY = '05 Analysis'
 
 
 class FN:
