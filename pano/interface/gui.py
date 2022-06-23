@@ -14,10 +14,13 @@ from pano.interface.mbq import FigureCanvas
 from pano.interface.mbq import QtCore
 from pano.interface.mbq import QtGui
 from pano.interface.mbq import QtQml
-from pano.interface.plot_controller import AnalysisPlotController
-from pano.interface.plot_controller import PanoramaPlotController
-from pano.interface.plot_controller import RegistrationPlotController
-from pano.interface.plot_controller import SegmentationPlotController
+# from pano.interface.plot_controller import AnalysisPlotController
+# from pano.interface.plot_controller import OutputPlotController
+# from pano.interface.plot_controller import PanoramaPlotController
+from pano.interface.plot_controller import PlotControllers
+
+# from pano.interface.plot_controller import RegistrationPlotController
+# from pano.interface.plot_controller import SegmentationPlotController
 
 init_project(qt=True)
 
@@ -36,15 +39,11 @@ def _qt_message_handler(mode, context, message):
   logger.log(level, message)
 
 
-conf_path = utils.DIR.RESOURCE.joinpath('qtquickcontrols2.conf')
-qml_path = utils.DIR.RESOURCE.joinpath('qml/main.qml')
+CONF_PATH = utils.DIR.RESOURCE.joinpath('qtquickcontrols2.conf')
+QML_PATH = utils.DIR.RESOURCE.joinpath('qml/main.qml')
 
-for p in [conf_path, qml_path]:
+for p in [CONF_PATH, QML_PATH]:
   p.stat()
-
-PC_NAMES = ('registration', 'segmentation', 'panorama', 'analysis')
-PC_CLASSES = (RegistrationPlotController, SegmentationPlotController,
-              PanoramaPlotController, AnalysisPlotController)
 
 
 @click.command(context_settings={
@@ -64,16 +63,16 @@ def main(debug=False, loglevel=20):
 
   QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
   QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
-  os.environ['QT_QUICK_CONTROLS_CONF'] = conf_path.as_posix()
+  os.environ['QT_QUICK_CONTROLS_CONF'] = CONF_PATH.as_posix()
 
   QtQml.qmlRegisterType(FigureCanvas, 'Backend', 1, 0, 'FigureCanvas')
 
   app = QtGui.QGuiApplication(sys.argv)
-  engine = QtQml.QQmlApplicationEngine(qml_path.as_posix())
+  engine = QtQml.QQmlApplicationEngine(QML_PATH.as_posix())
 
   root_objects = engine.rootObjects()
   if not root_objects:
-    logger.critical('Failed to load QML {}', qml_path)
+    logger.critical('Failed to load QML {}', QML_PATH)
     return -1
 
   win: QtGui.QWindow = root_objects[0]
@@ -82,14 +81,14 @@ def main(debug=False, loglevel=20):
   context = engine.rootContext()
   context.setContextProperty('con', controller)
 
-  plot_controllers = []
-  for name, cls in zip(PC_NAMES, PC_CLASSES):
+  pcs = {}
+  for name, cls in PlotControllers.classes():
     canvas = win.findChild(FigureCanvas, f'{name}_plot')
     pc = cls()
     pc.init(app, canvas)
-    plot_controllers.append(pc)
+    pcs[name] = pc
 
-  controller.set_plot_controllers(plot_controllers)
+  controller.set_plot_controllers(pcs)
 
   return app.exec_()
 

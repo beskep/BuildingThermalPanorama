@@ -338,9 +338,8 @@ class ThermalPanorama:
       try:
         files = self._fm.files(DIR.RGST)
       except FileNotFoundError as e:
-        path = Path(e.args[0]).relative_to(self._wd)
-        msg = f'"{path}"를 찾을 수 없습니다. 열화상-실화상 정합을 먼저 시행해주세요.'
-        raise FileNotFoundError(msg) from e
+        raise FileNotFoundError(
+            '대상 경로를 찾을 수 없습니다. 열화상-실화상 정합을 먼저 시행해주세요.') from e
 
     try:
       model_path = self._fm.segment_model_path()

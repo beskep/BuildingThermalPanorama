@@ -1,7 +1,7 @@
 import json
 import multiprocessing as mp
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 from loguru import logger
 import numpy as np
@@ -20,12 +20,9 @@ from .common.pano_files import SP
 from .common.pano_files import ThermalPanoramaFileManager
 from .mbq import QtCore
 from .mbq import QtGui
-from .plot_controller import AnalysisPlotController
-from .plot_controller import PanoramaPlotController
-from .plot_controller import RegistrationPlotController
+from .plot_controller import PlotControllers
 from .plot_controller import save_manual_correction
-from .plot_controller import SegmentationPlotController
-from .plot_controller.plot_controller import WorkingDirNotSet
+from .plot_controller import WorkingDirNotSet
 from .tree import tree_string
 
 
@@ -70,7 +67,7 @@ def _producer(queue: mp.Queue, directory, command: str, loglevel: int):
     else:
       fn = getattr(tp, command)
       queue.put(fn())
-  except (ValueError, RuntimeError, IOError) as e:
+  except (ValueError, RuntimeError, OSError) as e:
     logger.exception(e)
     queue.put(f'{type(e).__name__}: {e}')
 
@@ -178,10 +175,7 @@ class Controller(QtCore.QObject):
 
     self._wd: Optional[Path] = None
     self._fm: Optional[ThermalPanoramaFileManager] = None
-    self._rpc: Optional[RegistrationPlotController] = None
-    self._spc: Optional[SegmentationPlotController] = None
-    self._ppc: Optional[PanoramaPlotController] = None
-    self._apc: Optional[AnalysisPlotController] = None
+    self._pc: Any = None
     self._config: Optional[DictConfig] = None
 
   @property
@@ -192,9 +186,13 @@ class Controller(QtCore.QObject):
   def win(self, win: QtGui.QWindow):
     self._win = _Window(win)
 
-  def set_plot_controllers(self, controllers):
-    self._rpc, self._spc, self._ppc, self._apc = controllers
-    self._apc.summarize = self._analysis_summarize
+  @property
+  def pc(self) -> PlotControllers:
+    return self._pc
+
+  def set_plot_controllers(self, controllers: dict):
+    self._pc = PlotControllers(**controllers)
+    self._pc.analysis.summarize = self._analysis_summarize
 
   @QtCore.Slot(str)
   def log(self, message: str):
@@ -224,10 +222,9 @@ class Controller(QtCore.QObject):
     self._wd = wd
     self._fm = ThermalPanoramaFileManager(wd)
 
-    for pc in (self._rpc, self._spc, self._ppc, self._apc):
-      pc.fm = self._fm
-
-    self._apc.show_point_temperature = lambda x: self.win.panel_funtion(
+    for controller in self.pc.controllers():
+      controller.fm = self._fm
+    self.pc.analysis.show_point_temperature = lambda x: self.win.panel_funtion(
         'analysis', 'show_point_temperature', x)
 
     self.win.update_config(self._config)
@@ -268,12 +265,12 @@ class Controller(QtCore.QObject):
 
     def _done():
       if command in ('panorama', 'correct'):
-        self._ppc.plot(d=(DIR.PANO if command == 'panorama' else DIR.COR),
-                       sp=SP.IR)
+        self.pc.panorama.plot(
+            d=(DIR.PANO if command == 'panorama' else DIR.COR), sp=SP.IR)
         self.win.panel_funtion('panorama', 'reset')
       elif command == 'register':
-        self._rpc.reset()
-        self._rpc.reset_matrices()
+        self.pc.registration.reset()
+        self.pc.registration.reset_matrices()
 
       self.win.popup('Success', f'{cmd_kr} 완료')
       self.win.pb_state(False)
@@ -337,7 +334,7 @@ class Controller(QtCore.QObject):
         f.unlink()
 
     # plot 리셋
-    for pc in (self._rpc, self._spc, self._ppc, self._apc):
+    for pc in self.pc.controllers():
       pc.reset()
       pc.draw()
 
@@ -364,46 +361,43 @@ class Controller(QtCore.QObject):
   @QtCore.Slot(str)
   def rgst_plot(self, url):
     assert self._wd is not None
-    assert self._rpc is not None
     path = _url2path(url)
 
     try:
-      self._rpc.plot(path)
+      self.pc.registration.plot(path)
     except FileNotFoundError:
       logger.warning('Data not extracted: {}', path)
       self.win.popup('Error', f'파일 {path.name}의 데이터가 추출되지 않았습니다.')
 
   @QtCore.Slot()
   def rgst_save(self):
-    assert self._rpc is not None
-    self._rpc.save(panorama=self._config['panorama']['separate'])
+    self.pc.registration.save(panorama=self._config['panorama']['separate'])
     self.win.popup('Success', '저장 완료', timeout=1000)
 
   @QtCore.Slot()
   def rgst_reset(self):
-    assert self._rpc is not None
-    self._rpc.reset()
+    self.pc.registration.reset()
 
   @QtCore.Slot(bool)
   def rgst_set_grid(self, grid):
-    self._rpc.set_grid(grid)
+    self.pc.registration.set_grid(grid)
 
   @QtCore.Slot()
   def rgst_home(self):
-    self._rpc.home()
+    self.pc.registration.home()
 
   @QtCore.Slot(bool)
   def rgst_zoom(self, value):
-    self._rpc.zoom(value)
+    self.pc.registration.zoom(value)
 
   @QtCore.Slot(str)
   def seg_plot(self, url):
     assert self._wd is not None
-    assert self._spc is not None
     path = _url2path(url)
 
     try:
-      self._spc.plot(path, separate=self._config['panorama']['separate'])
+      self.pc.segmentation.plot(path,
+                                separate=self._config['panorama']['separate'])
     except FileNotFoundError:
       self.win.popup('Error', '부위 인식 결과가 없습니다.')
       logger.warning('File not found: {}', path)
@@ -411,17 +405,17 @@ class Controller(QtCore.QObject):
   @QtCore.Slot(str, str)
   def pano_plot(self, d, sp):
     try:
-      self._ppc.plot(d=DIR[d], sp=SP[sp])
-    except OSError:
-      pass
+      self.pc.panorama.plot(d=DIR[d], sp=SP[sp])
+    except FileNotFoundError as e:
+      logger.debug(str(e))
 
   @QtCore.Slot(float, float, float, int)
   def pano_rotate(self, roll, pitch, yaw, limit):
-    self._ppc.project(roll=roll, pitch=pitch, yaw=yaw, limit=limit)
+    self.pc.panorama.project(roll=roll, pitch=pitch, yaw=yaw, limit=limit)
 
   @QtCore.Slot(bool)
   def pano_set_grid(self, grid):
-    self._ppc.set_grid(grid)
+    self.pc.panorama.set_grid(grid)
 
   @QtCore.Slot(str)
   def pano_set_viewing_angle(self, value):
@@ -430,16 +424,16 @@ class Controller(QtCore.QObject):
     except ValueError:
       pass
     else:
-      self._ppc.viewing_angle = angle
+      self.pc.panorama.viewing_angle = angle
       logger.debug('Viewing angle: {}', angle)
 
   @QtCore.Slot()
   def pano_home(self):
-    self._ppc.home()
+    self.pc.panorama.home()
 
   @QtCore.Slot(bool)
   def pano_crop_mode(self, value):
-    self._ppc.crop_mode(value)
+    self.pc.panorama.crop_mode(value)
 
   @QtCore.Slot(float, float, float)
   def pano_save_manual_correction(self, roll, pitch, yaw):
@@ -460,8 +454,9 @@ class Controller(QtCore.QObject):
     self._consumer.done.connect(_done)
     self._consumer.start()
 
-    args = (queue, self._wd.as_posix(), self._ppc.subdir,
-            self._ppc.viewing_angle, (roll, pitch, yaw), self._ppc.crop_range())
+    pano = self.pc.panorama
+    args = (queue, self._wd.as_posix(), pano.subdir, pano.viewing_angle,
+            (roll, pitch, yaw), pano.crop_range())
     process = mp.Process(name='save', target=_save_manual_correction, args=args)
     process.start()
 
@@ -478,62 +473,64 @@ class Controller(QtCore.QObject):
       return
 
     # XXX 해상도 낮추기?
-    self._rpc.set_images(fixed_image=IIO.read(ir), moving_image=IIO.read(vis))
-    self._rpc.draw()
+    self.pc.registration.set_images(fixed_image=IIO.read(ir),
+                                    moving_image=IIO.read(vis))
+    self.pc.registration.draw()
 
   @QtCore.Slot(bool, bool, bool, bool)
   def analysis_plot(self, factor, segmentaion, vulnerable, distribution):
-    self._apc.setting.factor = factor
-    self._apc.setting.segmentation = segmentaion
-    self._apc.setting.vulnerable = vulnerable
-    self._apc.setting.distribution = distribution
+    self.pc.analysis.setting.factor = factor
+    self.pc.analysis.setting.segmentation = segmentaion
+    self.pc.analysis.setting.vulnerable = vulnerable
+    self.pc.analysis.setting.distribution = distribution
 
     try:
-      self._apc.plot()
-    except OSError:
-      pass
+      self.pc.analysis.plot()
+    except (WorkingDirNotSet, FileNotFoundError) as e:
+      logger.debug(str(e))
     except ValueError as e:
       self.win.popup('Error', str(e))
     else:
       self.win.panel_funtion('analysis', 'set_temperature_range',
-                             *self._apc.images.temperature_range())
+                             *self.pc.analysis.images.temperature_range())
       self._analysis_summarize()
 
   @QtCore.Slot(bool)
   def analysis_window_vulnerable(self, value):
-    if self._apc.setting.window_vulnerable ^ value:
-      self._apc.setting.window_vulnerable = value
-      self._apc.plot()
+    if self.pc.analysis.setting.window_vulnerable ^ value:
+      self.pc.analysis.setting.window_vulnerable = value
+      self.pc.analysis.plot()
 
   @QtCore.Slot()
   def analysis_read_multilayer(self):
     try:
-      self._apc.read_multilayer()
+      self.pc.analysis.read_multilayer()
     except (OSError, ValueError) as e:
       self.win.popup('Error', str(e))
 
   @QtCore.Slot()
   def analysis_cancel_selection(self):
-    self._apc.cancel_selection()
+    self.pc.analysis.cancel_selection()
 
   @QtCore.Slot(bool)
   def analysis_set_selector(self, point):
-    self._apc.set_selector(point)
+    self.pc.analysis.set_selector(point)
 
   @QtCore.Slot(float, float)
   def analysis_set_clim(self, vmin, vmax):
-    self._apc.set_clim(vmin=vmin, vmax=vmax)
+    self.pc.analysis.set_clim(vmin=vmin, vmax=vmax)
 
   @QtCore.Slot(float, float)
   def analysis_correct_emissivity(self, wall, window):
     if np.isnan(wall) and np.isnan(window):
       return
 
-    self._apc.images.reset_images()  # 기존 이미지 삭제, 원본 이미지를 불러와서 보정
+    self.pc.analysis.images.reset_images()  # 기존 이미지 삭제, 원본 이미지를 불러와서 보정
 
     try:
-      ir, seg = self._apc.images.ir, self._apc.images.seg
-    except OSError:
+      images = self.pc.analysis.images
+      ir, seg = images.ir, images.seg
+    except WorkingDirNotSet:
       return
 
     meta_files = list(self._fm.subdir(DIR.IR).glob('*.yaml'))
@@ -546,37 +543,37 @@ class Controller(QtCore.QObject):
       ir1 = analysis.correct_emissivity(image=ir0, meta_files=meta_files, e1=e1)
       ir[mask] = ir1[mask]
 
-    self._apc.images.ir = ir
+    self.pc.analysis.images.ir = ir
     self.win.panel_funtion('analysis', 'set_temperature_range',
-                           *self._apc.images.temperature_range())
+                           *self.pc.analysis.images.temperature_range())
 
   @QtCore.Slot(float)
   def analysis_correct_temperature(self, temperature):
     try:
-      ir = analysis.correct_temperature(ir=self._apc.images.ir,
-                                        mask=self._apc.images.seg,
-                                        coord=self._apc.coord,
+      ir = analysis.correct_temperature(ir=self.pc.analysis.images.ir,
+                                        mask=self.pc.analysis.images.seg,
+                                        coord=self.pc.analysis.coord,
                                         T1=temperature)
     except ValueError as e:
       self.win.popup('Error', str(e))
     else:
-      self._apc.images.ir = ir
+      self.pc.analysis.images.ir = ir
       self.win.panel_funtion('analysis', 'show_point_temperature', temperature)
       self.win.panel_funtion('analysis', 'set_temperature_range',
-                             *self._apc.images.temperature_range())
+                             *self.pc.analysis.images.temperature_range())
 
   @QtCore.Slot(float, float)
   def analysis_set_teti(self, te, ti):
-    self._apc.images.teti = (te, ti)
+    self.pc.analysis.images.teti = (te, ti)
 
   @QtCore.Slot(float)
   def analysis_set_threshold(self, value):
-    self._apc.images.threshold = value
+    self.pc.analysis.images.threshold = value
     self._analysis_summarize()
 
   def _analysis_summarize(self):
     self.win.panel_funtion('analysis', 'clear_table')
-    for cls, summary in self._apc.images.summarize().items():
+    for cls, summary in self.pc.analysis.images.summarize().items():
       row = {
           k: (v if isinstance(v, str) else f'{v:.2f}')
           for k, v in summary.items()
@@ -587,23 +584,9 @@ class Controller(QtCore.QObject):
   @QtCore.Slot()
   def analysis_save(self):
     try:
-      self._apc.images.save()
+      self.pc.analysis.images.save()
       # TODO 분석 결과 save
-    except WorkingDirNotSet:
-      pass
+    except WorkingDirNotSet as e:
+      logger.debug(str(e))
     else:
       self.win.popup('Success', '저장 완료')
-
-  @QtCore.Slot()
-  def dist_plot(self):
-    try:
-      data = self._apc.plot()
-    except OSError as e:
-      self.win.popup('Warning', str(e))
-    else:
-      self.win.panel_funtion('descriptive', 'clear_table')
-
-      for class_ in ('Wall', 'Window'):
-        row = {key: f'{value:.2f}' for key, value in data[class_].items()}
-        row['class'] = class_
-        self.win.panel_funtion('descriptive', 'add_table_row', row)
