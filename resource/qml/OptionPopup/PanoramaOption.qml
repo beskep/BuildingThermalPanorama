@@ -40,7 +40,6 @@ Popup {
 
             ColumnLayout {
                 spacing : 0
-                // TODO ToolTip
 
                 Label {
                     Layout.fillWidth : true

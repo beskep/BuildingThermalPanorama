@@ -251,6 +251,10 @@ class ThermalPanoramaFileManager:
     return self.subdir(DIR.COR).joinpath(f'CorrectionProcess{FN.LS}')
 
 
+class ImageNotFoundError(FileNotFoundError):
+  pass
+
+
 def init_directory(directory: Path, default=False) -> DictConfig:
   """
   Working directory 초기화.
@@ -281,7 +285,7 @@ def init_directory(directory: Path, default=False) -> DictConfig:
       _, files = peek(files)
     except StopIteration:
       # pylint: disable=raise-missing-from
-      raise FileNotFoundError('영상 파일이 발견되지 않았습니다.', directory.as_posix())
+      raise ImageNotFoundError('영상 파일이 발견되지 않았습니다.', directory.as_posix())
 
     raw_dir.mkdir()
     for file in files:

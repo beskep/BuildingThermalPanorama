@@ -111,75 +111,83 @@ Pane {
                     padding : 0
 
                     RowLayout {
-                        Layout.alignment : Qt.AlignLeft | Qt.AlignVCenter
+                        RowLayout {
+                            visible : _expand_button.expanded
 
-                        RadioButton {
-                            Layout.preferredHeight : mode_height
+                            RadioButton {
+                                Layout.preferredHeight : mode_height
 
-                            id : _ir
-                            text : '열화상'
-                            checked : true
+                                id : _ir
+                                text : '열화상'
+                                checked : true
 
-                            onReleased : analysis_plot()
-                        }
-                        RadioButton {
-                            Layout.preferredHeight : mode_height
-                            id : _factor
-                            text : '지표'
+                                onReleased : analysis_plot()
+                            }
+                            RadioButton {
+                                Layout.preferredHeight : mode_height
+                                id : _factor
+                                text : '지표'
 
-                            onReleased : analysis_plot()
-                        }
-                        RadioButton {
-                            Layout.preferredHeight : mode_height
-                            id : _dist
-                            text : '분포'
+                                onReleased : analysis_plot()
+                            }
+                            RadioButton {
+                                Layout.preferredHeight : mode_height
+                                id : _dist
+                                text : '분포'
 
-                            onReleased : analysis_plot()
-                        }
+                                onReleased : analysis_plot()
+                            }
 
-                        ToolSeparator {
-                            color : '#9e9e9e'
-                        }
+                            ToolSeparator {
+                                color : '#9e9e9e'
+                            }
 
-                        CheckBox {
-                            Layout.preferredHeight : mode_height
-                            id : _show_segmentation
+                            CheckBox {
+                                Layout.preferredHeight : mode_height
+                                id : _show_segmentation
 
-                            text : '외피 부위 표시'
+                                text : '외피 부위 표시'
 
-                            onReleased : analysis_plot()
-                            onCheckedChanged : {
-                                if (checked & _show_vulnerable.checked) {
-                                    _show_vulnerable.checked = false
+                                onReleased : analysis_plot()
+                                onCheckedChanged : {
+                                    if (checked & _show_vulnerable.checked) {
+                                        _show_vulnerable.checked = false
+                                    }
+                                }
+                            }
+
+                            CheckBox {
+                                Layout.preferredHeight : mode_height
+                                id : _show_vulnerable
+
+                                text : '취약부위 표시'
+
+                                onReleased : analysis_plot()
+                                onCheckedChanged : {
+                                    if (checked & _show_segmentation.checked) {
+                                        _show_segmentation.checked = false
+                                    }
+
+                                    if (checked & _ir.checked) {
+                                        _factor.checked = true
+                                    }
+                                }
+                            }
+
+                            CheckBox {
+                                Layout.preferredHeight : mode_height
+
+                                text : '창문 취약부위 표시'
+
+                                checked : true
+                                onCheckedChanged : {
+                                    con.analysis_window_vulnerable(checked)
                                 }
                             }
                         }
 
-                        CheckBox {
-                            Layout.preferredHeight : mode_height
-                            id : _show_vulnerable
-
-                            text : '취약부위 표시'
-
-                            onReleased : analysis_plot()
-                            onCheckedChanged : {
-                                if (checked & _show_segmentation.checked) {
-                                    _show_segmentation.checked = false
-                                }
-
-                                if (checked & _ir.checked) {
-                                    _factor.checked = true
-                                }
-                            }
-                        }
-
-                        CheckBox {
-                            Layout.preferredHeight : mode_height
-
-                            text : '창문 취약부위 표시'
-
-                            checked : true
-                            onCheckedChanged : con.analysis_window_vulnerable(checked)
+                        ExpandButton {
+                            id : _expand_button
                         }
                     }
                 }
@@ -247,7 +255,8 @@ Pane {
                         Layout.alignment : Qt.AlignHCenter | Qt.AlignVCenter
 
                         enabled : _ir.checked
-                        onReleased : con.analysis_set_clim(_slider.first.value, _slider.second.value)
+                        onReleased : con.analysis_set_clim( //
+                            _slider.first.value, _slider.second.value)
                     }
                 }
             }

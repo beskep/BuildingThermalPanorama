@@ -14,6 +14,7 @@ from pano.utils import set_logger
 from . import analysis
 from .common.config import update_config
 from .common.pano_files import DIR
+from .common.pano_files import ImageNotFoundError
 from .common.pano_files import init_directory
 from .common.pano_files import replace_vis_images
 from .common.pano_files import SP
@@ -79,7 +80,7 @@ def _save_manual_correction(queue: mp.Queue, wd: str, subdir: str,
                             crop_range: Optional[np.ndarray]):
   try:
     save_manual_correction(wd, subdir, viewing_angle, angles, crop_range)
-  except (ValueError, RuntimeError, IOError) as e:
+  except (ValueError, RuntimeError, OSError) as e:
     logger.exception(e)
     queue.put(f'{type(e).__name__}: {e}')
 
@@ -215,7 +216,7 @@ class Controller(QtCore.QObject):
 
     try:
       self._config = init_directory(directory=wd)
-    except FileNotFoundError as e:
+    except ImageNotFoundError as e:
       self.win.popup('Error', f'{e.args[0]}\n({e.args[1]})')
       return
 
@@ -299,7 +300,7 @@ class Controller(QtCore.QObject):
     assert self._wd is not None
 
     config = json.loads(string)
-    logger.debug(config)
+    logger.debug('config: {}', config)
 
     configs = self._configure(self._config, config)
     self._config = update_config(self._wd, *configs)
@@ -416,6 +417,8 @@ class Controller(QtCore.QObject):
   def pano_plot(self, d, sp):
     try:
       self.pc.panorama.plot(d=DIR[d], sp=SP[sp])
+    except WorkingDirNotSet:
+      pass
     except FileNotFoundError as e:
       logger.debug(str(e))
 
@@ -496,7 +499,9 @@ class Controller(QtCore.QObject):
 
     try:
       self.pc.analysis.plot()
-    except (WorkingDirNotSet, FileNotFoundError) as e:
+    except WorkingDirNotSet:
+      pass
+    except FileNotFoundError as e:
       logger.debug(str(e))
     except ValueError as e:
       self.win.popup('Error', str(e))
@@ -597,7 +602,7 @@ class Controller(QtCore.QObject):
       self.pc.analysis.images.save()
       # TODO 분석 결과 save
     except WorkingDirNotSet as e:
-      logger.debug(str(e))
+      pass
     else:
       self.win.popup('Success', '저장 완료')
 
@@ -608,8 +613,9 @@ class Controller(QtCore.QObject):
 
     try:
       self.pc.output.plot()
-    except (WorkingDirNotSet, FileNotFoundError) as e:
-      # TODO 에러 핸들 (다른 패널도)
+    except WorkingDirNotSet:
+      pass
+    except FileNotFoundError as e:
       logger.debug(str(e))
 
   @QtCore.Slot()
@@ -618,7 +624,7 @@ class Controller(QtCore.QObject):
       self.pc.output.lines.clear_lines()
       self.pc.output.draw()
     except WorkingDirNotSet as e:
-      logger.debug(str(e))
+      pass
 
   @QtCore.Slot()
   def output_estimate_edgelets(self):

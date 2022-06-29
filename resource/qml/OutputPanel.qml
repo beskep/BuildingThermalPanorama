@@ -87,42 +87,48 @@ Pane {
                 padding : 0
 
                 RowLayout {
-                    Layout.alignment : Qt.AlignLeft | Qt.AlignVCenter
+                    RowLayout {
+                        visible : _expand_button.expanded
 
-                    RadioButton {
-                        Layout.preferredHeight : mode_height
-                        id : _image_ir
-                        text : '열화상'
-                        checked : true
-                        onReleased : output_plot()
-                    }
-                    RadioButton {
-                        Layout.preferredHeight : mode_height
-                        id : _image_edges
-                        text : '윤곽선'
-                        onReleased : output_plot()
-                    }
-                    RadioButton {
-                        Layout.preferredHeight : mode_height
-                        id : _image_vis
-                        text : '실화상'
-                        onReleased : output_plot()
-                    }
-                    RadioButton {
-                        Layout.preferredHeight : mode_height
-                        id : _image_seg
-                        text : '외피 부위'
-                        onReleased : output_plot()
+                        RadioButton {
+                            Layout.preferredHeight : mode_height
+                            id : _image_ir
+                            text : '열화상'
+                            checked : true
+                            onReleased : output_plot()
+                        }
+                        RadioButton {
+                            Layout.preferredHeight : mode_height
+                            id : _image_edges
+                            text : '윤곽선'
+                            onReleased : output_plot()
+                        }
+                        RadioButton {
+                            Layout.preferredHeight : mode_height
+                            id : _image_vis
+                            text : '실화상'
+                            onReleased : output_plot()
+                        }
+                        RadioButton {
+                            Layout.preferredHeight : mode_height
+                            id : _image_seg
+                            text : '외피 부위'
+                            onReleased : output_plot()
+                        }
+
+                        ToolSeparator {
+                            color : '#9e9e9e'
+                        }
+
+                        CheckBox {
+                            Layout.preferredHeight : mode_height
+                            text : '선분 연장'
+                            onCheckedChanged : con.output_extend_lines(checked)
+                        }
                     }
 
-                    ToolSeparator {
-                        color : '#9e9e9e'
-                    }
-
-                    CheckBox {
-                        Layout.preferredHeight : mode_height
-                        text : '선분 연장'
-                        onCheckedChanged : con.output_extend_lines(checked)
+                    ExpandButton {
+                        id : _expand_button
                     }
                 }
             }

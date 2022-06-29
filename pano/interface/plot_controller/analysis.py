@@ -389,6 +389,7 @@ class AnalysisPlotController(PanoPlotController):
       self._seg_legend = None
 
     self.set_selector()
+    self._set_style()
 
   def _set_style(self):
     if self._setting.distribution:

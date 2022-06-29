@@ -33,28 +33,6 @@ Pane {
                 spacing : 0
 
                 RowLayout {
-                    // TODO 레이아웃 통일
-                    visible : !correction_plot
-
-                    ToolButton {
-                        text : qsTr('파노라마 생성')
-                        icon : '\ue40b'
-                        onReleased : {
-                            app.pb_state(true);
-                            con.command('panorama');
-                            _ir.checked = true;
-                        }
-
-                        ToolTip.visible : hovered
-                        ToolTip.delay : 500
-                        ToolTip.text : qsTr('열화상 정합을 통해 파노라마 생성')
-                    }
-
-                    ToolSeparator {}
-                }
-
-
-                RowLayout {
                     ToolRadioButton {
                         id : _ir
                         text : '열화상'
@@ -77,6 +55,24 @@ Pane {
                 }
 
                 ToolSeparator {}
+
+                RowLayout {
+                    visible : !correction_plot
+
+                    ToolButton {
+                        text : qsTr('파노라마 생성')
+                        icon : '\ue40b'
+                        onReleased : {
+                            app.pb_state(true);
+                            con.command('panorama');
+                            _ir.checked = true;
+                        }
+
+                        ToolTip.visible : hovered
+                        ToolTip.delay : 500
+                        ToolTip.text : qsTr('열화상 정합을 통해 파노라마 생성')
+                    }
+                }
 
                 RowLayout {
                     visible : correction_plot

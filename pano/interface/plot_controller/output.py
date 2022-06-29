@@ -300,21 +300,21 @@ class Images:
   @property
   def edges(self) -> np.ndarray:
     if self._edges is None:
-      self._edges = edge.image2edges(self.ir,
+      self._edges = edge.image2edges(self.ir.copy(),
                                      mask=self.read(SP.MASK),
                                      canny_option=self.canny_option)
     return self._edges
 
   def edgelets(self) -> Edgelets:
     edgelets = edge.edge2edgelets(self.edges, self.hough_option)
-    print(self.hough_option.theta)
+    opt = self.edgelet_option
 
     # 가까운 edgelet 중 길이가 더 긴 것 선택
-    opt = self.edgelet_option
     edgelets = _suppress_edgelets(edgelets,
                                   distance_threshold=opt.distance_threshold,
                                   angle_threshold=opt.angle_threshold)
 
+    # 최대 n개 선택
     if edgelets.count > opt.max_count:
       edgelets = edgelets[:opt.max_count]
 
