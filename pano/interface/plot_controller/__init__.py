@@ -2,6 +2,7 @@ import dataclasses as dc
 from typing import Generator
 
 from .analysis import AnalysisPlotController
+from .output import OutputPlotController
 from .panorama import PanoramaPlotController
 from .panorama import save_manual_correction
 from .plot_controller import PanoPlotController
@@ -16,6 +17,7 @@ class PlotControllers:
   segmentation: SegmentationPlotController
   panorama: PanoramaPlotController
   analysis: AnalysisPlotController
+  output: OutputPlotController
 
   @classmethod
   def classes(cls):

@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from shutil import copy2
 from typing import Any, Optional
 
 from matplotlib.axes import Axes
@@ -18,13 +19,10 @@ from pano.interface.common.pano_files import DIR
 from pano.interface.common.pano_files import SP
 from pano.interface.common.pano_files import ThermalPanoramaFileManager
 from pano.interface.mbq import FigureCanvas
+from pano.misc import tools
 from pano.misc.cmap import apply_colormap
 from pano.misc.imageio import ImageIO
 from pano.misc.imageio import load_webp_mask
-from pano.misc.tools import crop_mask
-from pano.misc.tools import CropRange
-from pano.misc.tools import OutlierArray
-from pano.misc.tools import SegMask
 
 from .plot_controller import PanoPlotController
 from .plot_controller import QtGui
@@ -91,7 +89,7 @@ class Images:
     self._teti = (np.nan, np.nan)  # (exterior, interior temperature)
     self._threshold = 0.8  # 초기 취약부위 임계치
     self._multilayer = False
-    self._crop: Optional[tuple[CropRange, np.ndarray]] = None
+    self._crop: Optional[tuple[tools.CropRange, np.ndarray]] = None
 
     self.k = 2.0  # IQR 이상치 제거 변수
 
@@ -138,7 +136,7 @@ class Images:
   def _read_seg(self):
     if not self._multilayer:
       seg = _read_image(self._fm, SP.SEG)[:, :, 0]
-      seg = SegMask.vis_to_index(seg)
+      seg = tools.SegMask.vis_to_index(seg)
     else:
       path = self._fm.subdir(DIR.COR).joinpath('Panorama.webp')
 
@@ -179,7 +177,7 @@ class Images:
 
   def temperature_range(self):
     mask = np.isin(self.seg, [1, 2])
-    data = OutlierArray(self.ir[mask], self.k).reject_outliers()
+    data = tools.OutlierArray(self.ir[mask], self.k).reject_outliers()
 
     return (
         np.floor(np.nanmin(data)).item(),
@@ -207,7 +205,7 @@ class Images:
   def on_polygon_select(self, vertices):
     polygon = polygon2mask(image_shape=self.seg.shape,
                            polygon=np.flip(vertices, 1))
-    cr, cp = crop_mask(mask=polygon, morphology_open=False)
+    cr, cp = tools.crop_mask(mask=polygon, morphology_open=False)
 
     self._ir = cr.crop(self.ir)
     self._ir[~cp] = np.nan
@@ -233,7 +231,7 @@ class Images:
 
   def save(self):
     self._fm.subdir(DIR.ANLY, mkdir=True)
-    ImageIO.save(self._path(SP.SEG), SegMask.index_to_vis(self.seg))
+    ImageIO.save(self._path(SP.SEG), tools.SegMask.index_to_vis(self.seg))
 
     irp = self._path(SP.IR)
     ImageIO.save(irp, self.ir)
@@ -249,6 +247,9 @@ class Images:
         img = cr.crop(img)
         img[~cm] = 0
         ImageIO.save(self._path(sp), img)
+    else:
+      copy2(self._fm.panorama_path(DIR.COR, SP.VIS), self._fm.subdir(DIR.ANLY))
+      copy2(self._fm.panorama_path(DIR.COR, SP.MASK), self._fm.subdir(DIR.ANLY))
 
 
 class PointSelector(_SelectorWidget):
@@ -465,7 +466,7 @@ class AnalysisPlotController(PanoPlotController):
         'Window': self.images.ir[self.images.seg == 2]
     }
     data = {
-        k: OutlierArray(v, k=self.images.k).reject_outliers()
+        k: tools.OutlierArray(v, k=self.images.k).reject_outliers()
         for k, v in data.items()
     }
     data_range = (min(np.min(x) for x in data.values()),

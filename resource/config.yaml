@@ -94,3 +94,17 @@ distort_correction:
         threshold: 10
         line_length: 10
         line_gap: 5
+output:
+    canny:
+        sigma: 2.0
+        low_threshold: null
+        high_threshold: null
+        use_quantiles: false
+    hough:
+        threshold: 10
+        line_length: 50
+        line_gap: 10
+    edgelet:
+        max_count: 10
+        distance_threshold: 10
+        angle_threshold: 5

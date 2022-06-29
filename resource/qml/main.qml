@@ -81,6 +81,10 @@ ApplicationWindow {
                     text : '에너지 검진'
                     width : parent.width
                 }
+                TabButton {
+                    text : '결과 출력'
+                    width : parent.width
+                }
             }
 
             Page {
@@ -97,7 +101,8 @@ ApplicationWindow {
                         3,
                         1, // registration_panel
                         3, // panorama_panel
-                        4
+                        4,
+                        5
                     ][tab_bar.currentIndex]
 
                     onCurrentIndexChanged : {
@@ -106,7 +111,8 @@ ApplicationWindow {
                             registration_panel,
                             segmentation_panel,
                             panorama_panel,
-                            analysis_panel
+                            analysis_panel,
+                            output_panel
                         ][currentIndex].init()
                     }
 
@@ -128,6 +134,9 @@ ApplicationWindow {
                     }
                     AnalysisPanel {
                         id : analysis_panel
+                    }
+                    OutputPanel {
+                        id : output_panel
                     }
                 }
             }
@@ -187,8 +196,10 @@ ApplicationWindow {
 
     function update_config(config) {
         let config_json = JSON.parse(config)
+
         project_panel.update_config(config_json)
         registration_panel.update_config(config_json)
         panorama_panel.update_config(config_json)
+        output_panel.update_config(config_json)
     }
 }

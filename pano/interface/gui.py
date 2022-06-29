@@ -14,13 +14,7 @@ from pano.interface.mbq import FigureCanvas
 from pano.interface.mbq import QtCore
 from pano.interface.mbq import QtGui
 from pano.interface.mbq import QtQml
-# from pano.interface.plot_controller import AnalysisPlotController
-# from pano.interface.plot_controller import OutputPlotController
-# from pano.interface.plot_controller import PanoramaPlotController
 from pano.interface.plot_controller import PlotControllers
-
-# from pano.interface.plot_controller import RegistrationPlotController
-# from pano.interface.plot_controller import SegmentationPlotController
 
 init_project(qt=True)
 

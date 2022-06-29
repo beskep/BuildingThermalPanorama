@@ -301,12 +301,17 @@ class Controller(QtCore.QObject):
     config = json.loads(string)
     logger.debug(config)
 
+    configs = self._configure(self._config, config)
+    self._config = update_config(self._wd, *configs)
+    self.win.update_config(self._config)  # 이미 반영된 설정도 다시 업데이트 함
+
+  def _configure(self, config0, config1):
     try:
-      separate = config['panorama']['separate']
+      separate = config1['panorama']['separate']
     except KeyError:
       separate = None
 
-    if separate is None or self._config['panorama']['separate'] == separate:
+    if separate is None or config0['panorama']['separate'] == separate:
       # separate 설정이 변경되지 않은 경우
       vis_blend = OmegaConf.create()  # 빈 설정
     else:
@@ -317,8 +322,13 @@ class Controller(QtCore.QObject):
       vis_blend = OmegaConf.from_dotlist(
           [f'panorama.blend.type.VIS={blend_type}'])
 
-    self._config = update_config(self._wd, config, vis_blend)
-    self.win.update_config(self._config)  # 이미 반영된 설정도 다시 업데이트 함
+    if 'output' in config1:
+      self.pc.output.images.canny_option = config1['output']['canny']
+      self.pc.output.images.hough_option = config1['output']['hough']
+      self.pc.output.images.edgelet_option = config1['output']['edgelet']
+      self.output_plot()
+
+    return config1, vis_blend
 
   def _clear_separate_results(self):
     # 다음 결과 폴더 내 관련 파일 삭제
@@ -590,3 +600,35 @@ class Controller(QtCore.QObject):
       logger.debug(str(e))
     else:
       self.win.popup('Success', '저장 완료')
+
+  @QtCore.Slot(str)
+  def output_plot(self, image=None):
+    if image:
+      self.pc.output.setting.image = image
+
+    try:
+      self.pc.output.plot()
+    except (WorkingDirNotSet, FileNotFoundError) as e:
+      # TODO 에러 핸들 (다른 패널도)
+      logger.debug(str(e))
+
+  @QtCore.Slot()
+  def output_clear_lines(self):
+    try:
+      self.pc.output.lines.clear_lines()
+      self.pc.output.draw()
+    except WorkingDirNotSet as e:
+      logger.debug(str(e))
+
+  @QtCore.Slot()
+  def output_estimate_edgelets(self):
+    try:
+      self.pc.output.estimate_edgelets()
+    except WorkingDirNotSet:
+      pass
+    except FileNotFoundError as e:
+      self.win.popup('Error', str(e))
+
+  @QtCore.Slot(bool)
+  def output_extend_lines(self, value):
+    self.pc.output.lines.extend = value

@@ -6,12 +6,14 @@ from typing import Optional, Tuple
 from loguru import logger
 import matplotlib.pyplot as plt
 import numpy as np
-from skimage.exposure.exposure import equalize_hist
-from skimage.feature import canny
-from skimage.transform import probabilistic_hough_line
 from skimage.transform import warp
 
 from pano.misc import tools
+from pano.misc.edgelet import CannyOptions
+from pano.misc.edgelet import edge_preprocess
+from pano.misc.edgelet import Edgelets
+from pano.misc.edgelet import HoughOptions
+from pano.misc.edgelet import image2edgelets
 from pano.misc.tools import Interpolation
 
 from . import rectification
@@ -19,25 +21,6 @@ from . import rectification
 
 class NotEnoughEdgelets(ValueError):
   pass
-
-
-@dc.dataclass
-class CannyOptions:
-  """`skimage.feature.canny` 옵션"""
-  sigma: float = 1.0
-  low_threshold: Optional[float] = None
-  high_threshold: Optional[float] = None
-  use_quantiles: bool = False
-
-
-@dc.dataclass
-class HoughOptions:
-  """`skimage.transform.probabilistic_hough_line` 옵션"""
-  threshold: int = 10
-  line_length: int = 50
-  line_gap: int = 10
-  theta: Optional[np.ndarray] = None
-  seed: Optional[int] = None
 
 
 @dc.dataclass
@@ -63,39 +46,6 @@ class CorrectionOptions:
   margin: float = 0.1
 
 
-@dc.dataclass
-class Edgelets:
-  """
-  Parameters
-  ----------
-  locations : np.ndarray
-      선분 중심 좌표. (count, 2).
-  directions : np.ndarray
-      선분 방향 벡터. Normalize 안함. (count, 2).
-  strength : np.ndarray
-      선분 길이. (count,).
-  """
-  locations: np.ndarray
-  directions: np.ndarray
-  strengths: np.ndarray
-
-  count: int = dc.field(init=False)
-
-  def __post_init__(self):
-    count = self.locations.shape[0]
-
-    for var, ndim in zip(['locations', 'directions', 'strengths'], [2, 2, 1]):
-      arr: np.ndarray = getattr(self, var)
-      dim = (count, 2) if ndim == 2 else (count,)
-      if arr.shape != dim:
-        raise ValueError('Invalid {} shape {}'.format(var, arr.shape))
-
-    self.count = count
-
-  def as_tuple(self):
-    return (self.locations, self.directions, self.strengths)
-
-
 class VanishingPoint:
   INSIDE = 0
   HORIZ = 1
@@ -114,7 +64,7 @@ class VanishingPoint:
 
   def __init__(self, array: np.ndarray) -> None:
     if array.shape != (3,):
-      raise ValueError('Invalid vanishing point shape {}'.format(array.shape))
+      raise ValueError(f'Invalid vanishing point shape {array.shape}')
 
     self._array = array
     self._xy = np.divide(self.array[:2], self._array[2])
@@ -143,86 +93,20 @@ class VanishingPoint:
     self._pos = self._POS_DICT[(hv[0], hv[1])]
 
   def __str__(self) -> str:
-    return 'VanishingPoint(coor=[{:.2f}, {:.2f}, {:.2f}], xy=[{:.2f}, {:.2f}])'.format(
-        *self.array, *self.xy)
-
-
-def preprocess(image: np.ndarray) -> np.ndarray:
-  """전처리 (회색 변환 및 히스토그램 평활화)"""
-  gray = tools.gray_image(image=image)
-  preprocessed = equalize_hist(image=gray)
-
-  return preprocessed
+    arr = np.array2string(self.array.ravel(), precision=2, separator=',')
+    xy = np.array2string(self.xy.ravel(), precision=2, separator=',')
+    return f'VanishingPoint(coor={arr}, xy={xy})'
 
 
 class _Rectify:
   """rectification warpper"""
 
   @staticmethod
-  def compute_edgelets(
-      image: np.ndarray,
-      mask: Optional[np.ndarray] = None,
-      canny_options: Optional[CannyOptions] = None,
-      hough_options: Optional[HoughOptions] = None,
-  ) -> Tuple[Edgelets, np.ndarray]:
-    """
-    영상의 edgelet 추출. `canny`을 통해 edge 추출 후,
-    `probabilistic_hough_line`을 통해 계산한 선분의 중심 위치, 방향, 강도 (길이) 반환.
-
-    Parameters
-    ----------
-    image : np.ndarray
-        대상 영상. 2차원 흑백 영상이어야 함.
-    mask : Optional[np.ndarray]
-        edgelet을 인식할 영상 영역. dtype: bool
-    canny_options : Optional[CannyOptions]
-        `skimage.feature.canny` 옵션
-    hough_options : Optional[HoughOptions]
-        `skimage.transform.probabilistic_hough_line` 옵션
-
-    Returns
-    -------
-    edgelets : Edgelets
-    edges : np.ndarray
-        `canny` 알고리즘을 통해 추출한 edge 영상
-
-    Raises
-    ------
-    ValueError
-        if image.ndim != 2
-    """
-    if image.ndim != 2:
-      raise ValueError('image.ndim != 2')
-
-    if canny_options is None:
-      canny_options = CannyOptions()
-    if hough_options is None:
-      hough_options = HoughOptions()
-
-    edges = canny(image=tools.normalize_image(image),
-                  mask=mask,
-                  **dc.asdict(canny_options))
-
-    lines = probabilistic_hough_line(edges, **dc.asdict(hough_options))
-    lines = np.array(lines)
-
-    locations = np.average(lines, axis=1)
-    directions = lines[:, 1, :] - lines[:, 0, :]
-    strengths = np.linalg.norm(directions, ord=2, axis=1)
-    directions = np.divide(directions, strengths.reshape([-1, 1]))
-
-    edgelets = Edgelets(locations=locations,
-                        directions=directions,
-                        strengths=strengths)
-
-    return edgelets, edges
-
-  @staticmethod
   def ransac_vanishing_point(edgelets: Edgelets,
                              num_ransac_iter=2000,
                              threshold_inlier=5.0) -> VanishingPoint:
     vp_array = rectification.ransac_vanishing_point(
-        edgelets=edgelets.as_tuple(),
+        edgelets=edgelets.astuple(),
         num_ransac_iter=num_ransac_iter,
         threshold_inlier=threshold_inlier)
     vp = VanishingPoint(array=vp_array)
@@ -233,7 +117,7 @@ class _Rectify:
   def compute_votes(vp: VanishingPoint,
                     edgelets: Edgelets,
                     threshold_inlier=10.0) -> np.ndarray:
-    return rectification.compute_votes(edgelets=edgelets.as_tuple(),
+    return rectification.compute_votes(edgelets=edgelets.astuple(),
                                        model=vp.array,
                                        threshold_inlier=threshold_inlier)
 
@@ -266,13 +150,12 @@ class Homography:
     return self.Htranslate is not None
 
   def warp(self, image: np.ndarray, order=Interpolation.BiCubic):
-    if not self.available():
+    if self.Htranslate is None:
       raise ValueError('Homography not set')
 
     if image.shape[:2] != self.input_shape:
-      raise ValueError('입력한 영상의 해상도 {}가 '
-                       '시점 왜곡을 추정한 영상의 해상도 {}와 다릅니다.'.format(
-                           image.shape[:2], self.input_shape))
+      raise ValueError(f'입력한 영상의 해상도 {image.shape[:2]}가 '
+                       f'시점 왜곡을 추정한 영상의 해상도 {self.input_shape}와 다릅니다.')
 
     return warp(image=image,
                 inverse_map=np.linalg.inv(self.Htranslate),
@@ -365,7 +248,7 @@ class Correction:
 
     # preprocessed image
     axes[0, 0].set_title('Preped Image')
-    axes[0, 0].imshow(preprocess(image))
+    axes[0, 0].imshow(edge_preprocess(image))
 
     # edges (canny)
     axes[0, 1].set_title('Edges')
@@ -706,13 +589,10 @@ class PerspectiveCorrection:
         edge_mask = tools.erode(edge_mask.astype(np.uint8),
                                 iterations=self._opt.erode).astype(bool)
 
-    preped = preprocess(image=image)
-
-    edgelets, edges = _Rectify.compute_edgelets(
-        image=preped,
-        mask=edge_mask,
-        canny_options=self._canny_options,
-        hough_options=self._hough_options)
+    edgelets, edges = image2edgelets(image=image,
+                                     mask=edge_mask,
+                                     canny_option=self._canny_options,
+                                     hough_option=self._hough_options)
 
     vp1, vp2 = self._estimate_vanishing_points(edgelets=edgelets,
                                                image_shape=image.shape[:2])

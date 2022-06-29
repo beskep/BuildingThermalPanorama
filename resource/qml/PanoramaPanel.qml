@@ -33,6 +33,7 @@ Pane {
                 spacing : 0
 
                 RowLayout {
+                    // TODO 레이아웃 통일
                     visible : !correction_plot
 
                     ToolButton {
