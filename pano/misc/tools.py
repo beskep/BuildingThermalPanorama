@@ -400,6 +400,10 @@ def limit_image_size(image: np.ndarray,
 
 class SegMask:
   scale = 80
+  BG = 0
+  WALL = 1
+  WINDOW = 2
+  ETC = 3
 
   @classmethod
   def index_to_vis(cls, array: np.ndarray):

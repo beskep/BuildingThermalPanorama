@@ -99,7 +99,7 @@ Popup {
 
                     Label {
                         Layout.fillWidth : true
-                        text : '윤곽선 최소 간격 [pixel]'
+                        text : '윤곽선 공백 허용치 [pixel]'
                     }
                     SpinBox {
                         id : _hough_line_gap

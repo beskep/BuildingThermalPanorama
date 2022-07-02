@@ -5,6 +5,7 @@ from matplotlib.image import AxesImage
 from matplotlib.lines import Line2D
 from matplotlib.widgets import _SelectorWidget
 import numpy as np
+from skimage.draw import line as draw_line
 
 from pano.interface.common.pano_files import DIR
 from pano.interface.common.pano_files import SP
@@ -15,6 +16,7 @@ from pano.misc.edgelet import CannyOptions
 from pano.misc.edgelet import Edgelets
 from pano.misc.edgelet import HoughOptions
 from pano.misc.imageio import ImageIO as IIO
+from pano.misc.tools import SegMask
 
 from .plot_controller import PanoPlotController
 from .plot_controller import QtGui
@@ -50,6 +52,27 @@ def _suppress_edgelets(edgelets: Edgelets,
   return edgelets
 
 
+def _edgelets_between_edgelets(edgelets: Edgelets, weight=0.5):
+  # 영상 수직 방향 좌표 정렬
+  argsort = np.argsort(edgelets.locations[:, 1])
+  e = edgelets[argsort]
+
+  # 수직 방향 인접한 edgelet의 위치 평균. weight가 낮을수록 아래 edgelet과 가까움
+  locations = np.average([e.locations[:-1, :], e.locations[1:, :]],
+                         axis=0,
+                         weights=(weight, 1 - weight))
+
+  # 수직 방향 인접한 edgelet의 방향 평균
+  directions = np.average([e.directions[:-1, :], e.directions[1:, :]], axis=0)
+
+  # strength (길이)는 1로 고정
+  strengths = np.ones(edgelets.count - 1)
+
+  return Edgelets(locations=locations,
+                  directions=directions,
+                  strengths=strengths)
+
+
 def extend_lines(n: Any, p: Any, xlim: Any, ylim: Any) -> tuple[tuple, tuple]:
   """
   주어진 선 `dot(n, (X-p))=0`을 x, y 범위가 xlim, ylim인
@@ -76,12 +99,13 @@ def extend_lines(n: Any, p: Any, xlim: Any, ylim: Any) -> tuple[tuple, tuple]:
   x0, x1 = xlim
   y0, y1 = ylim
 
-  points = [
-      (x0, py - np.divide(nx * (x0 - px), ny)),  # x=x0 선과 만나는 지점
-      (x1, py - np.divide(nx * (x1 - px), ny)),  # x=x1 선과 만나는 지점
-      (px - np.divide(ny * (y0 - py), nx), y0),  # y=y0 선과 만나는 지점
-      (px - np.divide(ny * (y1 - py), nx), y1),  # y=y1 선과 만나는 지점
-  ]
+  with np.errstate(divide='ignore'):
+    points = [
+        (x0, py - np.divide(nx * (x0 - px), ny)),  # x=x0 선과 만나는 지점
+        (x1, py - np.divide(nx * (x1 - px), ny)),  # x=x1 선과 만나는 지점
+        (px - np.divide(ny * (y0 - py), nx), y0),  # y=y0 선과 만나는 지점
+        (px - np.divide(ny * (y1 - py), nx), y1),  # y=y1 선과 만나는 지점
+    ]
   argsort = np.argsort([x[0] for x in points])
 
   return points[argsort[1]], points[argsort[2]]  # x좌표가 중간인 두 점 반환
@@ -89,19 +113,22 @@ def extend_lines(n: Any, p: Any, xlim: Any, ylim: Any) -> tuple[tuple, tuple]:
 
 class LinesSelector(_SelectorWidget):
   DIST_THOLD = 10
+  PROPS = dict(alpha=0.6,
+               animated=False,
+               color='k',
+               label='Floor Edgelet',
+               linestyle='-',
+               marker='D')
+  PROPS_FIXED = PROPS | dict(
+      alpha=0.8, color='steelblue', label='Window Edgelet')
 
   def __init__(self, ax, useblit=False, update=None) -> None:
     super().__init__(ax, onselect=lambda *args, **kwargs: None, useblit=useblit)
 
-    self._props = dict(alpha=0.6,
-                       animated=False,
-                       color='k',
-                       label='_nolegend_',
-                       linestyle='-',
-                       marker='D')
-    self._extend = False
-
     self._lines: list[Line2D] = []
+    self._fixed_lines: list[Line2D] = []  # 마우스로 수정 불가능한 선
+
+    self._extend = False
     self._current_line: Optional[Line2D] = None  # 마우스 클릭으로 생성 중인 line
     self._active_index = (-1, -1)  # line index, point index
 
@@ -122,24 +149,41 @@ class LinesSelector(_SelectorWidget):
       self.extend_lines()
     self._update()
 
-  def make_line(self, xs=None, ys=None):
+  def make_line(self, xs=None, ys=None, editable=True):
     xs = xs if xs is not None else [np.nan]
     ys = ys if ys is not None else [np.nan]
-    line = Line2D(xs, ys, **self._props)
+    props = self.PROPS if editable else self.PROPS_FIXED
+
+    line = Line2D(xs, ys, **props)
     self.ax.add_line(line)
-    self._lines.append(line)
+
+    if editable:
+      self._lines.append(line)
+    else:
+      self._fixed_lines.append(line)
 
     return line
 
   def clear_lines(self):
-    for line in self._lines:
+    for line in self._lines + self._fixed_lines:
       line.remove()
 
     self._lines = []
+    self._fixed_lines = []
 
-  def add_lines(self, xs_arr: np.ndarray, ys_arr: np.ndarray):
+  def add_lines(self, xs_arr: np.ndarray, ys_arr: np.ndarray, editable=True):
     for xs, ys in zip(xs_arr, ys_arr):
-      self.make_line(xs, ys)
+      self.make_line(xs, ys, editable)
+
+  def add_edgelets(self, edgelets: Edgelets, editable=True):
+    half = edgelets.strengths.reshape([-1, 1]) / 2.0
+    pt1 = edgelets.locations - edgelets.directions * half  # [[x1, y1], ...]
+    pt2 = edgelets.locations + edgelets.directions * half  # [[x2, y2], ...]
+
+    xs = np.hstack([pt1[:, [0]], pt2[:, [0]]])  # [[x1, x2], ...]
+    ys = np.hstack([pt1[:, [1]], pt2[:, [1]]])  # [[y1, y2], ...]
+
+    self.add_lines(xs, ys, editable=editable)
 
   def closest(self, xdata, ydata):
     # 클릭한 지점의 화면 좌표
@@ -167,10 +211,9 @@ class LinesSelector(_SelectorWidget):
     else:
       self._active_index = (-1, -1)
 
-    self.update()
-
   def _onmove(self, event):
-    if self._current_line is not None or self._active_index[0] < 0:
+    if (event.button != 1 or self._current_line is not None or
+        self._active_index[0] < 0 or not self._lines):
       return
 
     line = self._lines[self._active_index[0]]
@@ -203,10 +246,17 @@ class LinesSelector(_SelectorWidget):
       self._current_line = None
 
   def _release(self, event):
-    if self._active_index[0] < 0:
-      self._new_point(event)
-    else:
-      self._active_index = (-1, -1)
+    active = self._active_index[0]
+    if event.button == 1:
+      # left click -> 새 line 생성 혹은 active_index 초기화
+      if active < 0:
+        self._new_point(event)
+      else:
+        self._active_index = (-1, -1)
+    elif event.button == 3 and active >= 0:
+      # right click -> 가장 가까운 선 삭제
+      self._lines[active].remove()
+      self._lines.pop(active)
 
     self.update()
 
@@ -224,9 +274,36 @@ class LinesSelector(_SelectorWidget):
       line.set_xdata([pt1[0], pt2[0]])
       line.set_ydata([pt1[1], pt2[1]])
 
+  def remove_window_line(self, mask: np.ndarray, threshold=0.05):
+
+    def clip(c: float, axis=0):
+      # 영상 내 shape 범위로 clip하고 int 형식으로 변환
+      return int(np.clip(c, 0, mask.shape[axis] - 1))
+
+    lines = []
+    for line in self._lines:
+      xs, ys = line.get_data()
+
+      # edgelet이 지나는 좌표
+      lxs, lys = draw_line(r0=clip(ys[0], 1),
+                           c0=clip(xs[0], 0),
+                           r1=clip(ys[1], 1),
+                           c1=clip(xs[1], 0))
+
+      if np.average(mask[lxs, lys]) >= threshold:
+        line.remove()
+      else:
+        lines.append(line)
+
+    self._lines = lines
+
 
 @dataclass
 class EdgeletsOption:
+  segmentation: bool = True  # True면 열화상이 아닌 segmentation mask로부터 추정
+  window_threshold: float = 0.05
+  slab_position: float = 0.5
+
   max_count: int = 10
   distance_threshold: float = 10.0  # pixel
   angle_threshold: float = 5  # deg
@@ -241,10 +318,8 @@ class Images:
     self._edges: Any = None
 
     self._edgelet_option = EdgeletsOption()
-    self._canny_option = edge.CannyOptions(sigma=2.0)
-    self._hough_option = edge.HoughOptions(threshold=10,
-                                           line_gap=10,
-                                           theta=self._theta())
+    self._canny_option = edge.CannyOptions()
+    self._hough_option = edge.HoughOptions(theta=self._theta())
 
   def _theta(self):
     # 수평선과 각도 오차가 허용치 이내인 edgelet만 추출하기 위한 HoughOption theta
@@ -300,7 +375,12 @@ class Images:
   @property
   def edges(self) -> np.ndarray:
     if self._edges is None:
-      self._edges = edge.image2edges(self.ir.copy(),
+      if self.edgelet_option.segmentation:
+        image = self.read(SP.SEG)
+      else:
+        image = self.ir.copy()
+
+      self._edges = edge.image2edges(image=image,
                                      mask=self.read(SP.MASK),
                                      canny_option=self.canny_option)
     return self._edges
@@ -334,6 +414,7 @@ class OutputPlotController(PanoPlotController):
 
     self._images: Optional[Images] = None
     self._axes_image: Optional[AxesImage] = None
+    self._legend = None
 
     self._lines: Optional[LinesSelector] = None
     self._setting = PlotSetting()
@@ -372,6 +453,15 @@ class OutputPlotController(PanoPlotController):
     if self._axes_image is not None:
       self._axes_image.remove()
 
+    seg = self.images.edgelet_option.segmentation
+    if seg and self._legend is None:
+      l1 = Line2D([], [], **self.lines.PROPS)
+      l2 = Line2D([], [], **self.lines.PROPS_FIXED)
+      self._legend = self.fig.legend(handles=[l1, l2])
+    if not seg and self._legend is not None:
+      self._legend.remove()
+      self._legend = None
+
     it = self.setting.image
     cmap = 'inferno' if it == 'ir' else 'gist_gray'
 
@@ -390,16 +480,19 @@ class OutputPlotController(PanoPlotController):
     self.draw()
 
   def estimate_edgelets(self):
-    self._lines.clear_lines()
-
+    opt = self.images.edgelet_option
     edgelets = self.images.edgelets()
-    edgelets.sort()
 
-    half = edgelets.strengths.reshape([-1, 1]) / 2.0
-    pt1 = edgelets.locations - edgelets.directions * half  # [[x1, y1], ...]
-    pt2 = edgelets.locations + edgelets.directions * half  # [[x2, y2], ...]
-    xs = np.hstack([pt1[:, [0]], pt2[:, [0]]])  # [[x1, x2], ...]
-    ys = np.hstack([pt1[:, [1]], pt2[:, [1]]])  # [[y1, y2], ...]
+    self.lines.clear_lines()
+    self.lines.add_edgelets(edgelets=edgelets, editable=(not opt.segmentation))
 
-    self._lines.add_lines(xs, ys)
+    if opt.segmentation:
+      edgelets2 = _edgelets_between_edgelets(edgelets, weight=opt.slab_position)
+      self.lines.add_edgelets(edgelets=edgelets2, editable=True)
+      self.lines.extend_lines()
+
+      seg = SegMask.vis_to_index(self.images.read(SP.SEG))
+      self.lines.remove_window_line(mask=(seg == SegMask.WINDOW),
+                                    threshold=opt.window_threshold)
+
     self.draw()

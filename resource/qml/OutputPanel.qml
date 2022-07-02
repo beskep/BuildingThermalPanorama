@@ -151,7 +151,8 @@ Pane {
     }
 
     function init() {
-        output_plot()
+        _option.configure();
+        output_plot();
     }
 
     function update_config(config) {
