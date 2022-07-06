@@ -106,7 +106,7 @@ output:
         line_gap: 25
     edgelet:
         segmentation: true
-        window_threshold: 0.05
+        window_threshold: 0.5
         slab_position: 0.5
         max_count: 10
         distance_threshold: 10

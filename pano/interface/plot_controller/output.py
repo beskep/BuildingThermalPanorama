@@ -54,13 +54,18 @@ def _suppress_edgelets(edgelets: Edgelets,
 
 def _edgelets_between_edgelets(edgelets: Edgelets, weight=0.5):
   # 영상 수직 방향 좌표 정렬
-  argsort = np.argsort(edgelets.locations[:, 1])
-  e = edgelets[argsort]
+  e = edgelets[np.argsort(edgelets.locations[:, 1])]
+  e.normalize()
 
   # 수직 방향 인접한 edgelet의 위치 평균. weight가 낮을수록 아래 edgelet과 가까움
   locations = np.average([e.locations[:-1, :], e.locations[1:, :]],
                          axis=0,
                          weights=(weight, 1 - weight))
+
+  # 왼쪽 방향 벡터에 -1 곱하기
+  is_right = e.directions[:, 0] > 0
+  if not np.all(is_right):
+    e.directions *= np.where(is_right, 1, -1).reshape([-1, 1])
 
   # 수직 방향 인접한 edgelet의 방향 평균
   directions = np.average([e.directions[:-1, :], e.directions[1:, :]], axis=0)
@@ -274,11 +279,11 @@ class LinesSelector(_SelectorWidget):
       line.set_xdata([pt1[0], pt2[0]])
       line.set_ydata([pt1[1], pt2[1]])
 
-  def remove_window_line(self, mask: np.ndarray, threshold=0.05):
+  def remove_window_line(self, seg: np.ndarray, threshold: float):
 
     def clip(c: float, axis=0):
       # 영상 내 shape 범위로 clip하고 int 형식으로 변환
-      return int(np.clip(c, 0, mask.shape[axis] - 1))
+      return int(np.clip(c, 0, seg.shape[axis] - 1))
 
     lines = []
     for line in self._lines:
@@ -290,7 +295,11 @@ class LinesSelector(_SelectorWidget):
                            r1=clip(ys[1], 1),
                            c1=clip(xs[1], 0))
 
-      if np.average(mask[lxs, lys]) >= threshold:
+      pixels = seg[lxs, lys]
+      wall = np.sum(pixels == SegMask.WALL)
+      window = np.sum(pixels == SegMask.WINDOW)
+
+      if window >= threshold * (wall + window):
         line.remove()
       else:
         lines.append(line)
@@ -492,7 +501,6 @@ class OutputPlotController(PanoPlotController):
       self.lines.extend_lines()
 
       seg = SegMask.vis_to_index(self.images.read(SP.SEG))
-      self.lines.remove_window_line(mask=(seg == SegMask.WINDOW),
-                                    threshold=opt.window_threshold)
+      self.lines.remove_window_line(seg=seg, threshold=opt.window_threshold)
 
     self.draw()

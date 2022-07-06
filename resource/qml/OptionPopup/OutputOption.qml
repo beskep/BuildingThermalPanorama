@@ -156,10 +156,10 @@ Popup {
                         Layout.fillWidth : true
                         enabled : _edgelet_seg.checked
 
-                        value : 5
+                        value : 50
                         from : 0
                         to : 100
-                        stepSize : 1
+                        stepSize : 5
                     }
 
                     Label {
