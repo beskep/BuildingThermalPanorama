@@ -1,21 +1,23 @@
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Literal, Optional, Union
 
 from matplotlib.image import AxesImage
 from matplotlib.lines import Line2D
 from matplotlib.widgets import _SelectorWidget
 import numpy as np
-from skimage.draw import line as draw_line
+from skimage import draw
+from skimage.color import label2rgb
+from toolz.itertoolz import sliding_window
 
 from pano.interface.common.pano_files import DIR
 from pano.interface.common.pano_files import SP
 from pano.interface.common.pano_files import ThermalPanoramaFileManager
 from pano.interface.mbq import FigureCanvas
 from pano.misc import edgelet as edge
-from pano.misc.edgelet import CannyOptions
 from pano.misc.edgelet import Edgelets
-from pano.misc.edgelet import HoughOptions
 from pano.misc.imageio import ImageIO as IIO
+from pano.misc.tools import normalize_image
 from pano.misc.tools import SegMask
 
 from .plot_controller import PanoPlotController
@@ -114,6 +116,85 @@ def extend_lines(n: Any, p: Any, xlim: Any, ylim: Any) -> tuple[tuple, tuple]:
   argsort = np.argsort([x[0] for x in points])
 
   return points[argsort[1]], points[argsort[2]]  # x좌표가 중간인 두 점 반환
+
+
+def _segment_mask(storey_mask: np.ndarray, num: int):
+  points = np.linspace(0, storey_mask.shape[1], num=(num + 1), endpoint=True)
+
+  for idx1, idx2 in sliding_window(2, np.round(points)):
+    mask = storey_mask.copy()
+    mask[:, :int(idx1)] = False
+    mask[:, int(idx2):] = False
+
+    yield mask
+
+
+def _segments(ir: np.ndarray, coords: np.ndarray,
+              num: int) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+  """
+  층별로 `num`개의 조각에 대해 온도 평균, 표준편차 계산
+
+  Parameters
+  ----------
+  ir : np.ndarray
+      열화상
+  coords : np.ndarray
+      각 층 구분선 좌표. `LinesSelector.coordinates()`로 계산.
+
+      **수직방향으로 정렬되어 있어야 함.**
+  num : int
+      분할 개수
+
+  Returns
+  -------
+  tuple[np.ndarray, np.ndarray, np.ndarray]
+      average, stddev, label
+  """
+  assert np.all(coords[:, 0, 0] < coords[:, 1, 0])  # x1 < x2
+
+  avg, std = [], []
+  label_image = np.zeros_like(ir)
+  for line1, line2 in sliding_window(2, range(coords.shape[0])):
+    label = line1 % 2
+
+    # [[x1, y1], [x2, y2], ...]
+    polygon = np.array([
+        coords[line1][0],
+        coords[line2][0],
+        coords[line2][1],
+        coords[line1][1],
+    ])
+    polygon = np.flip(polygon, axis=1)  # [[y1, x1], [y2, x2], ...]
+
+    # 한 층에 해당하는 영역 mask
+    storey_mask = draw.polygon2mask(image_shape=ir.shape, polygon=polygon)
+
+    # 수직 선으로 `num`개 분할한 조각의 평균, 표준편차 계산
+    savg, sstd = [], []
+    for mask in _segment_mask(storey_mask=storey_mask, num=num):
+      irseg = ir[mask]
+      savg.append(np.nanmean(irseg))
+      sstd.append(np.nanstd(irseg))
+
+      label_image[mask] = label
+      label = 0 if label else 1
+
+    avg.append(savg)
+    std.append(sstd)
+
+  return np.array(avg), np.array(std), label_image
+
+
+def _save_segments(subdir: Path, fname: str, ir: np.ndarray, coords: np.ndarray,
+                   num: int):
+  avg, std, label = _segments(ir=ir, coords=coords, num=num)
+
+  IIO.save(path=subdir.joinpath(f'{fname}-Average.csv'), array=avg)
+  IIO.save(path=subdir.joinpath(f'{fname}-StdDev.csv'), array=std)
+
+  ir[np.isnan(ir)] = np.nanmin(ir)
+  IIO.save(path=subdir.joinpath(f'{fname}-Label.png'),
+           array=label2rgb(label, image=normalize_image(ir)))
 
 
 class LinesSelector(_SelectorWidget):
@@ -283,14 +364,14 @@ class LinesSelector(_SelectorWidget):
 
     def clip(c: float, axis=0):
       # 영상 내 shape 범위로 clip하고 int 형식으로 변환
-      return int(np.clip(c, 0, seg.shape[axis] - 1))
+      return int(np.clip(c, a_min=0, a_max=(seg.shape[axis] - 1)))
 
     lines = []
     for line in self._lines:
       xs, ys = line.get_data()
 
       # edgelet이 지나는 좌표
-      lxs, lys = draw_line(r0=clip(ys[0], 1),
+      lxs, lys = draw.line(r0=clip(ys[0], 1),
                            c0=clip(xs[0], 0),
                            r1=clip(ys[1], 1),
                            c1=clip(xs[1], 0))
@@ -306,12 +387,35 @@ class LinesSelector(_SelectorWidget):
 
     self._lines = lines
 
+  def coordinates(self, xmax: int, ymax: int):
+    if not self._lines:
+      raise ValueError('추정한 층 구분선이 없습니다.')
+
+    # Line2D.get_data():
+    #   [[x1, x2],
+    #    [y1, y2]]
+    # coords:
+    #   [[[x1, y1],
+    #     [x2, y2]],
+    #    ...       ]
+    coords = [np.array(l.get_data()).T for l in self._lines]
+
+    # 세로 방향 정렬
+    argsort = np.argsort([np.average(x[:, 1]) for x in coords])
+    coords = [coords[x] for x in argsort]
+
+    coords.insert(0, np.array([[0, 0], [xmax, 0]]))  # 영상 위 경계 (y=0)
+    coords.append(np.array([[0, ymax], [xmax, ymax]]))  # 영상 아래 경계 (y=ymax)
+
+    return np.array(coords)
+
 
 @dataclass
 class EdgeletsOption:
   segmentation: bool = True  # True면 열화상이 아닌 segmentation mask로부터 추정
   window_threshold: float = 0.05
   slab_position: float = 0.5
+  segments_count: int = 20  # 저장 시 각 층의 분할 개수
 
   max_count: int = 10
   distance_threshold: float = 10.0  # pixel
@@ -325,6 +429,7 @@ class Images:
 
     self._ir: Any = None
     self._edges: Any = None
+    self._seg: Any = None
 
     self._edgelet_option = EdgeletsOption()
     self._canny_option = edge.CannyOptions()
@@ -348,13 +453,19 @@ class Images:
     return self._ir
 
   @property
+  def seg(self) -> np.ndarray:
+    if self._seg is None:
+      self._seg = SegMask.vis_to_index(self.read(SP.SEG)).astype(float)
+    return self._seg
+
+  @property
   def canny_option(self):
     return self._canny_option
 
   @canny_option.setter
   def canny_option(self, value: Union[dict, edge.CannyOptions]):
-    if not isinstance(value, CannyOptions):
-      value = CannyOptions(**value)
+    if not isinstance(value, edge.CannyOptions):
+      value = edge.CannyOptions(**value)
 
     self._canny_option = value
     self._edges = None
@@ -365,8 +476,8 @@ class Images:
 
   @hough_option.setter
   def hough_option(self, value: Union[dict, edge.HoughOptions]):
-    if not isinstance(value, HoughOptions):
-      value = HoughOptions(**value)
+    if not isinstance(value, edge.HoughOptions):
+      value = edge.HoughOptions(**value)
     value.theta = self._theta()
     self._hough_option = value
 
@@ -385,11 +496,11 @@ class Images:
   def edges(self) -> np.ndarray:
     if self._edges is None:
       if self.edgelet_option.segmentation:
-        image = self.read(SP.SEG)
+        image = self.seg
       else:
-        image = self.ir.copy()
+        image = self.ir
 
-      self._edges = edge.image2edges(image=image,
+      self._edges = edge.image2edges(image=image.copy(),
                                      mask=self.read(SP.MASK),
                                      canny_option=self.canny_option)
     return self._edges
@@ -458,6 +569,11 @@ class OutputPlotController(PanoPlotController):
   def setting(self):
     return self._setting
 
+  def configure(self, config):
+    self.images.canny_option = config['canny']
+    self.images.hough_option = config['hough']
+    self.images.edgelet_option = config['edgelet']
+
   def plot(self):
     if self._axes_image is not None:
       self._axes_image.remove()
@@ -481,7 +597,7 @@ class OutputPlotController(PanoPlotController):
     elif it == 'vis':
       image = self.images.read(SP.VIS)
     elif it == 'seg':
-      image = self.images.read(SP.SEG)
+      image = self.images.seg
     else:
       raise ValueError(it)
 
@@ -500,7 +616,35 @@ class OutputPlotController(PanoPlotController):
       self.lines.add_edgelets(edgelets=edgelets2, editable=True)
       self.lines.extend_lines()
 
-      seg = SegMask.vis_to_index(self.images.read(SP.SEG))
-      self.lines.remove_window_line(seg=seg, threshold=opt.window_threshold)
+      self.lines.remove_window_line(seg=self.images.seg,
+                                    threshold=opt.window_threshold)
+
+    self.draw()
+
+  def save(self):
+    subdir = self.fm.subdir(DIR.OUT, mkdir=True)
+    self.fig.savefig(subdir.joinpath('Edgelets.jpg'), dpi=200)
+
+    self.lines.extend_lines()
+    coords = self.lines.coordinates(xmax=self.images.ir.shape[1],
+                                    ymax=self.images.ir.shape[0])
+    num = self.images.edgelet_option.segments_count
+
+    wall = self.images.ir.copy()
+    wall[self.images.seg != SegMask.WALL] = np.nan
+    _save_segments(subdir=subdir,
+                   fname='Wall Temperature',
+                   ir=wall,
+                   coords=coords,
+                   num=num)
+
+    building = self.images.ir.copy()
+    mask = np.isin(self.images.seg, [SegMask.WALL, SegMask.WINDOW])
+    building[~mask] = np.nan
+    _save_segments(subdir=subdir,
+                   fname='Building Temperature',
+                   ir=building,
+                   coords=coords,
+                   num=num)
 
     self.draw()

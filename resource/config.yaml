@@ -108,6 +108,7 @@ output:
         segmentation: true
         window_threshold: 0.5
         slab_position: 0.5
+        segments_count: 20
         max_count: 10
         distance_threshold: 10
         angle_threshold: 5

@@ -324,9 +324,7 @@ class Controller(QtCore.QObject):
           [f'panorama.blend.type.VIS={blend_type}'])
 
     if 'output' in config1:
-      self.pc.output.images.canny_option = config1['output']['canny']
-      self.pc.output.images.hough_option = config1['output']['hough']
-      self.pc.output.images.edgelet_option = config1['output']['edgelet']
+      self.pc.output.configure(config1['output'])
       self.output_plot()
 
     return config1, vis_blend
@@ -638,3 +636,14 @@ class Controller(QtCore.QObject):
   @QtCore.Slot(bool)
   def output_extend_lines(self, value):
     self.pc.output.lines.extend = value
+
+  @QtCore.Slot()
+  def output_save(self):
+    try:
+      self.pc.output.save()
+    except WorkingDirNotSet:
+      pass
+    except (OSError, ValueError) as e:
+      self.win.popup('Error', str(e))
+    else:
+      self.win.popup('Success', '저장 완료')

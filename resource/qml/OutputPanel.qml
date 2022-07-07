@@ -47,13 +47,10 @@ Pane {
                 }
 
                 ToolButton {
-                    text : '도움말'
-                    icon : '\ue88e'
+                    text : '저장'
+                    icon : '\ue161'
 
-                    ToolTip.visible : hovered
-                    ToolTip.text : ( //
-                            '좌클릭: 구분선 추가 또는 수정\n' + //
-                            '우클릭: 구분선 삭제')
+                    onReleased : con.output_save()
                 }
 
                 ToolButton {
@@ -61,6 +58,17 @@ Pane {
                     icon : '\ue8b8'
 
                     onReleased : _option.open()
+                }
+
+                ToolButton {
+                    text : '도움말'
+                    icon : '\ue88e'
+
+                    ToolTip.visible : hovered
+                    ToolTip.text : ( //
+                            '자동 추정: 영상 윤곽선으로부터 층 구분선 추정\n' + //
+                            '마우스 좌클릭: 구분선 추가 또는 수정\n' + //
+                            '마우스 우클릭: 구분선 삭제')
                 }
             }
         }

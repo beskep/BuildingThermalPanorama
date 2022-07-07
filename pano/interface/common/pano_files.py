@@ -38,6 +38,12 @@ ProjectDir
 │   ├── PanoramaMask.png
 │   ├── PanoramaSegmentation.png
 │   └── PanoramaVIS.jpg
+├── 05 Analysis
+│   ├── PanoramaIR.npy
+│   ⁝
+├── 06 Output
+│   ├── Edgelets.jpg
+│   ⁝
 └── config.yaml
 """
 
@@ -67,6 +73,7 @@ class DIR(Enum):
   PANO = '03 Panorama'
   COR = '04 Correction'
   ANLY = '05 Analysis'
+  OUT = '06 Output'
 
 
 class FN:

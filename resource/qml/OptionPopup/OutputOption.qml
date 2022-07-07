@@ -38,191 +38,227 @@ Popup {
                 text : '자동 층 인식 및 저장 설정'
             }
 
-            ColumnLayout {
-                spacing : 0
+            RowLayout {
+                spacing : 20
 
-                Label {
-                    Layout.fillWidth : true
-
-                    font.weight : Font.Medium
-                    font.pointSize : 13
-
-                    text : '윤곽선 변환'
-                }
-
-                GridLayout {
-                    Layout.fillWidth : true
-                    columns : 2
+                ColumnLayout {
+                    Layout.alignment : Qt.AlignLeft | Qt.AlignTop
+                    spacing : 0
 
                     Label {
                         Layout.fillWidth : true
-                        text : 'Canny 필터 표준편차'
+
+                        font.weight : Font.Medium
+                        font.pointSize : 13
+
+                        text : '윤곽선 변환'
                     }
-                    FloatSpinBox {
-                        id : _canny_sigma
+
+                    GridLayout {
                         Layout.fillWidth : true
+                        columns : 2
 
-                        value : 300
-                        from : 10
-                        to : 10000
-                        stepSize : 20
-                        decimals : 1
-                    }
-
-                    Label {
-                        Layout.fillWidth : true
-                        text : 'Hough 윤곽선 검출 임계값'
-                    }
-                    SpinBox {
-                        id : _hough_threshold
-                        Layout.fillWidth : true
-
-                        value : 10
-                        from : 1
-                        to : 1000
-                        stepSize : 1
-                    }
-
-                    Label {
-                        Layout.fillWidth : true
-                        text : '윤곽선 최소 길이 [pixel]'
-                    }
-                    SpinBox {
-                        id : _hough_line_length
-                        Layout.fillWidth : true
-
-                        value : 25
-                        from : 1
-                        to : 1000
-                        stepSize : 5
-                    }
-
-                    Label {
-                        Layout.fillWidth : true
-                        text : '윤곽선 공백 허용치 [pixel]'
-                    }
-                    SpinBox {
-                        id : _hough_line_gap
-                        Layout.fillWidth : true
-
-                        value : 10
-                        from : 1
-                        to : 1000
-                        stepSize : 5
-                    }
-                }
-            }
-
-            ColumnLayout {
-                spacing : 0
-
-                Label {
-                    Layout.fillWidth : true
-
-                    font.weight : Font.Medium
-                    font.pointSize : 13
-
-                    text : '윤곽선 인식'
-                }
-
-                GridLayout {
-                    Layout.fillWidth : true
-                    columns : 2
-
-                    Label {
-                        Layout.fillWidth : true
-                        text : '인식 대상'
-                    }
-                    RowLayout {
-                        RadioButton {
-                            id : _edgelet_seg
+                        Label {
                             Layout.fillWidth : true
-                            checked : true
-                            text : '외피부위'
+                            text : 'Canny 필터 표준편차'
                         }
-                        RadioButton {
-                            id : _edgelet_ir
+                        FloatSpinBox {
+                            id : _canny_sigma
                             Layout.fillWidth : true
-                            text : '열화상'
+
+                            value : 300
+                            from : 10
+                            to : 10000
+                            stepSize : 20
+                            decimals : 1
+                        }
+
+                        Label {
+                            Layout.fillWidth : true
+                            text : 'Hough 윤곽선 검출 임계값'
+                        }
+                        SpinBox {
+                            id : _hough_threshold
+                            Layout.fillWidth : true
+
+                            value : 10
+                            from : 1
+                            to : 1000
+                            stepSize : 1
+                        }
+
+                        Label {
+                            Layout.fillWidth : true
+                            text : '윤곽선 최소 길이 [pixel]'
+                        }
+                        SpinBox {
+                            id : _hough_line_length
+                            Layout.fillWidth : true
+
+                            value : 25
+                            from : 1
+                            to : 1000
+                            stepSize : 5
+                        }
+
+                        Label {
+                            Layout.fillWidth : true
+                            text : '윤곽선 공백 허용치 [pixel]'
+                        }
+                        SpinBox {
+                            id : _hough_line_gap
+                            Layout.fillWidth : true
+
+                            value : 10
+                            from : 1
+                            to : 1000
+                            stepSize : 5
                         }
                     }
 
-                    Label {
-                        Layout.fillWidth : true
-                        text : '창문 임계치 [%]'
-                    }
-                    SpinBox {
-                        id : _edgelet_window_threshold
-                        Layout.fillWidth : true
-                        enabled : _edgelet_seg.checked
-
-                        value : 50
-                        from : 0
-                        to : 100
-                        stepSize : 5
+                    Rectangle {
+                        height : 20
                     }
 
                     Label {
                         Layout.fillWidth : true
-                        text : '슬라브 상대적 위치'
-                    }
-                    SpinBox {
-                        id : _edgelet_slab_position
-                        Layout.fillWidth : true
-                        enabled : _edgelet_seg.checked
 
-                        value : 50
-                        from : 0
-                        to : 100
-                        stepSize : 5
+                        font.weight : Font.Medium
+                        font.pointSize : 13
+
+                        text : '저장'
                     }
+
+                    GridLayout {
+                        Layout.fillWidth : true
+                        columns : 2
+
+                        Label {
+                            Layout.fillWidth : true
+                            text : '분할 개수'
+                        }
+                        SpinBox {
+                            id : _edgelet_segments_count
+                            Layout.fillWidth : true
+
+                            value : 20
+                            from : 0
+                            to : 1000
+                            stepSize : 5
+                        }
+                    }
+                }
+
+                ColumnLayout {
+                    Layout.alignment : Qt.AlignLeft | Qt.AlignTop
+                    spacing : 0
 
                     Label {
                         Layout.fillWidth : true
-                        text : '최대 선정 개수'
-                    }
-                    SpinBox {
-                        id : _edgelet_max_count
-                        Layout.fillWidth : true
 
-                        value : 10
-                        from : 1
-                        to : 100
-                        stepSize : 1
+                        font.weight : Font.Medium
+                        font.pointSize : 13
+
+                        text : '윤곽선 인식'
                     }
 
-                    Label {
+                    GridLayout {
                         Layout.fillWidth : true
-                        text : '거리 한계 [pixel]'
-                    }
-                    SpinBox {
-                        id : _edgelet_distance
-                        Layout.fillWidth : true
+                        columns : 2
 
-                        value : 10
-                        from : 1
-                        to : 100
-                        stepSize : 1
-                    }
+                        Label {
+                            Layout.fillWidth : true
+                            text : '인식 대상'
+                        }
+                        RowLayout {
+                            RadioButton {
+                                id : _edgelet_seg
+                                Layout.fillWidth : true
+                                checked : true
+                                text : '외피부위'
+                            }
+                            RadioButton {
+                                id : _edgelet_ir
+                                Layout.fillWidth : true
+                                text : '열화상'
+                            }
+                        }
+
+                        Label {
+                            Layout.fillWidth : true
+                            text : '창문 임계치 [%]'
+                        }
+                        SpinBox {
+                            id : _edgelet_window_threshold
+                            Layout.fillWidth : true
+                            enabled : _edgelet_seg.checked
+
+                            value : 50
+                            from : 0
+                            to : 100
+                            stepSize : 5
+                        }
+
+                        Label {
+                            Layout.fillWidth : true
+                            text : '슬라브 상대적 위치'
+                        }
+                        SpinBox {
+                            id : _edgelet_slab_position
+                            Layout.fillWidth : true
+                            enabled : _edgelet_seg.checked
+
+                            value : 50
+                            from : 0
+                            to : 100
+                            stepSize : 5
+                        }
+
+                        Label {
+                            Layout.fillWidth : true
+                            text : '최대 선정 개수'
+                        }
+                        SpinBox {
+                            id : _edgelet_max_count
+                            Layout.fillWidth : true
+
+                            value : 10
+                            from : 1
+                            to : 100
+                            stepSize : 1
+                        }
+
+                        Label {
+                            Layout.fillWidth : true
+                            text : '거리 한계 [pixel]'
+                        }
+                        SpinBox {
+                            id : _edgelet_distance
+                            Layout.fillWidth : true
+
+                            value : 10
+                            from : 1
+                            to : 100
+                            stepSize : 1
+                        }
 
 
-                    Label {
-                        Layout.fillWidth : true
-                        text : '각도 한계 [degree]'
-                    }
-                    SpinBox {
-                        id : _edgelet_angle
-                        Layout.fillWidth : true
+                        Label {
+                            Layout.fillWidth : true
+                            text : '각도 한계 [degree]'
+                        }
+                        SpinBox {
+                            id : _edgelet_angle
+                            Layout.fillWidth : true
 
-                        value : 5
-                        from : 1
-                        to : 90
-                        stepSize : 1
+                            value : 5
+                            from : 1
+                            to : 90
+                            stepSize : 1
+                        }
                     }
                 }
             }
-
-            // TODO 저장 설정
 
             RowLayout {
                 Layout.alignment : Qt.AlignRight | Qt.AlignBottom
@@ -267,6 +303,7 @@ Popup {
         }
         _edgelet_window_threshold.value = cfg['edgelet']['window_threshold'] * 100
         _edgelet_slab_position.value = cfg['edgelet']['slab_position'] * 100
+        _edgelet_segments_count.value = cfg['edgelet']['segments_count']
 
         _edgelet_max_count.value = cfg['edgelet']['max_count']
         _edgelet_distance.value = cfg['edgelet']['distance_threshold']
@@ -288,6 +325,7 @@ Popup {
                     'segmentation': _edgelet_seg.checked,
                     'window_threshold': _edgelet_window_threshold.value / 100.0,
                     'slab_position': _edgelet_slab_position.value / 100.0,
+                    'segments_count': _edgelet_segments_count.value,
                     'max_count': _edgelet_max_count.value,
                     'distance_threshold': _edgelet_distance.value,
                     'angle_threshold': _edgelet_angle.value

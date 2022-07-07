@@ -58,14 +58,15 @@ class ImageIO:
     if not path.exists():
       raise FileNotFoundError(path)
 
-    if path.suffix == cls.NPY_EXT:
+    suffix = path.suffix.lower()
+    if suffix == cls.NPY_EXT:
       image = np.load(file=path.as_posix())
-    elif path.suffix == cls.CSV_EXT:
+    elif suffix == cls.CSV_EXT:
       image = np.loadtxt(fname=path.as_posix(), delimiter=cls.DELIMITER)
-    elif path.suffix == cls.XLSX_EXT:
+    elif suffix == cls.XLSX_EXT:
       df = pd.read_excel(path.as_posix(), na_values='---')
       image = np.array(df)
-    elif path.suffix == cls.WEBP_EXT:
+    elif suffix == cls.WEBP_EXT:
       pil_image = webp.load_image(path.as_posix())
       image = np.array(pil_image)
     else:
@@ -105,7 +106,7 @@ class ImageIO:
     else:
       meta = None
 
-    if scale and path.suffix not in ('.csv', '.npy'):
+    if scale and path.suffix.lower() not in ('.csv', '.npy'):
       if meta is None:
         warn(f'메타 정보 파일 ({meta_path.name})이 존재하지 않습니다. '
              f'영상의 밝기 범위를 변경하지 않습니다.')
@@ -136,11 +137,12 @@ class ImageIO:
         `True`인 경우, 영상 파일 확장자 저장 시 영상의 대비가 너무 낮으면 경고.
     """
     path = Path(path).resolve()
-    if path.suffix == cls.NPY_EXT:
+    suffix = path.suffix.lower()
+    if suffix == cls.NPY_EXT:
       np.save(file=path.as_posix(), arr=array)
-    elif path.suffix == cls.CSV_EXT:
+    elif suffix == cls.CSV_EXT:
       np.savetxt(fname=path.as_posix(), X=array, delimiter=cls.DELIMITER)
-    elif path.suffix == cls.WEBP_EXT:
+    elif suffix == cls.WEBP_EXT:
       image = PIL.Image.fromarray(array)
       webp.save_image(img=image, file_path=path.as_posix(), lossless=True)
     else:
