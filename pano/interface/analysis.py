@@ -52,7 +52,6 @@ def correct_emissivity(image: np.ndarray,
 
 def correct_temperature(ir: np.ndarray, mask: np.ndarray, coord: tuple,
                         T1: float):
-  # FIXME 보정 이후 온도 범위 체크
   T0 = ir[coord[0], coord[1]]
   if np.isnan(T0) or np.isnan(T1):
     raise ValueError('유효하지 않은 온도입니다.')
@@ -60,9 +59,10 @@ def correct_temperature(ir: np.ndarray, mask: np.ndarray, coord: tuple,
   if mask[coord[0], coord[1]] != 1:
     raise ValueError('벽을 선택해주세요')
 
-  ir[mask == 1] += (T1 - T0)
+  delta = T1 - T0
+  ir[mask == 1] += delta
 
-  return ir
+  return ir, delta
 
 
 def summary(array: np.ndarray):

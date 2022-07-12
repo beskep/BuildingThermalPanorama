@@ -1,0 +1,118 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Report</title>
+    <link rel="stylesheet" href="https://stackedit.io/style.css" />
+  </head>
+
+  <body class="stackedit">
+    <div class="stackedit__html">
+      <h1 id="열화상-파노라마를-통한-건물-에너지-검진-결과">
+        열화상 파노라마를 통한 건물 에너지 검진 결과
+      </h1>
+      <h2 id="파노라마">파노라마</h2>
+
+      <table>
+        <tbody>
+          <tr>
+            <td>
+              <img src="PanoramaIR_color.png" alt="description" />
+            </td>
+            <td>
+              <img src="PanoramaVIS.jpg" alt="description" />
+            </td>
+          </tr>
+        </tbody>
+        <tbody>
+          <tr>
+            <td>
+              <img src="PanoramaMask.png" alt="description" />
+            </td>
+            <td>
+              <img src="PanoramaSegmentation.png" alt="description" />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <h2 id="온도-분포">온도 분포</h2>
+      <h3 id="온도-보정-인자">온도 보정 인자</h3>
+
+      <table>
+        <thead>
+          <tr>
+            <th align="center">벽 방사율</th>
+            <th align="center">창문 방사율</th>
+            <th align="center">지점 온도 보정</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td align="center">{e_wall}</td>
+            <td align="center">{e_window}</td>
+            <td align="center">{delta_temperature}℃</td>
+          </tr>
+        </tbody>
+      </table>
+      <h3 id="온도-분포-1">온도 분포</h3>
+      <p>
+        <img src="TemperatureDistribution.png" alt="description" />
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th align="center">외피부위</th>
+            <th align="center">평균</th>
+            <th align="center">표준편차</th>
+            <th align="center">Q₁</th>
+            <th align="center">중위수</th>
+            <th align="center">Q₃</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td align="center">벽</td>
+            <td align="center">{avg_wall}</td>
+            <td align="center">{std_wall}</td>
+            <td align="center">{q1_wall}</td>
+            <td align="center">{median_wall}</td>
+            <td align="center">{q3_wall}</td>
+          </tr>
+          <tr>
+            <td align="center">창문</td>
+            <td align="center">{avg_window}</td>
+            <td align="center">{std_window}</td>
+            <td align="center">{q1_window}</td>
+            <td align="center">{median_window}</td>
+            <td align="center">{q3_window}</td>
+          </tr>
+        </tbody>
+      </table>
+      <h2 id="취약부위-검진-결과">취약부위 검진 결과</h2>
+      <p>
+        <img src="VulnerableArea.png" alt="description" />
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th align="center">외부 온도</th>
+            <th align="center">내부 온도</th>
+            <th align="center">벽 취약부위 비율</th>
+            <th align="center">창문 취약부위 비율</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td align="center">{exterior_temperature}℃</td>
+            <td align="center">{interior_temperature}℃</td>
+            <td align="center">{vulnerable_wall}</td>
+            <td align="center">{vulnerable_window}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </body>
+</html>

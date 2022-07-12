@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+import dataclasses as dc
 from shutil import copy2
 from typing import Any, Optional
 
@@ -14,6 +14,7 @@ import numpy as np
 import seaborn as sns
 from skimage.draw import polygon2mask
 
+from pano import utils
 from pano.interface import analysis
 from pano.interface.common.pano_files import DIR
 from pano.interface.common.pano_files import SP
@@ -238,8 +239,6 @@ class Images:
     ImageIO.save(self._fm.color_path(irp),
                  apply_colormap(self.ir, cmap=_get_cmap(), na=True))
 
-    # TODO temperature factor 저장
-
     if self._crop is not None:
       cr, cm = self._crop
       for sp in [SP.VIS, SP.MASK]:
@@ -279,7 +278,7 @@ class PointSelector(_SelectorWidget):
     self.onselect(coord)
 
 
-@dataclass
+@dc.dataclass
 class PlotSetting:
   factor: bool = False
   segmentation: bool = False
@@ -292,6 +291,19 @@ class PlotSetting:
 
   def __post_init__(self):
     self.update()
+
+
+@dc.dataclass
+class CorrectionParams:
+  e_wall: float = np.nan
+  e_window: float = np.nan
+  delta_temperature: float = np.nan
+
+  def asdict(self):
+    return {
+        k: ('-' if np.isnan(v) else f'{v:.2f}')
+        for k, v in dc.asdict(self).items()
+    }
 
 
 class AnalysisPlotController(PanoPlotController):
@@ -310,6 +322,7 @@ class AnalysisPlotController(PanoPlotController):
 
     self.show_point_temperature = lambda x: x / 0
     self.summarize = lambda: 1 / 0
+    self.correction_params = CorrectionParams()
 
   @property
   def cax(self) -> Axes:
@@ -505,3 +518,49 @@ class AnalysisPlotController(PanoPlotController):
 
     self._axes_image.set_clim(vmin, vmax)
     self.draw()
+
+  def save(self):
+    subdir = self._fm.subdir(DIR.ANLY, mkdir=True)
+    distribution = self.setting.distribution
+
+    # distribution
+    self.reset()
+    self.setting.distribution = True
+    self._plot_distribution()
+    self._set_style()
+    self.fig.savefig(subdir.joinpath('TemperatureDistribution.png'), dpi=200)
+    self.setting.distribution = distribution
+
+    # factor
+    self.reset()
+    self._plot_image(factor=True)
+    self._set_style()
+    self.fig.savefig(subdir.joinpath('TemperatureFactor.png'), dpi=200)
+
+    # vulnerable area
+    self.reset()
+    self._plot_image(vulnerable=True)
+    self._set_style()
+    self.fig.savefig(subdir.joinpath('VulnerableArea.png'), dpi=200)
+
+    self.plot()
+
+  def save_report(self):
+    src = utils.DIR.RESOURCE.joinpath('Report.html')
+    dst = self.fm.subdir(DIR.ANLY).joinpath('Report.html')
+
+    summ = self.images.summarize()
+    summ_wall = {f'{k}_wall': v for k, v in summ['Wall'].items()}
+    summ_window = {f'{k}_window': v for k, v in summ['Window'].items()}
+    summ_all = {
+        k: (v if isinstance(v, str) else f'{v:.2f}℃')
+        for k, v in (summ_wall | summ_window).items()
+    }
+
+    fmt = dict(exterior_temperature=self.images.teti[0],
+               interior_temperature=self.images.teti[1],
+               **self.correction_params.asdict(),
+               **summ_all)
+
+    txt = src.read_text(encoding='utf-8')
+    dst.write_text(data=txt.format_map(fmt), encoding='utf-8')

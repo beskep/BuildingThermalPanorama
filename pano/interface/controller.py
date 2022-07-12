@@ -538,11 +538,11 @@ class Controller(QtCore.QObject):
     if np.isnan(wall) and np.isnan(window):
       return
 
-    self.pc.analysis.images.reset_images()  # 기존 이미지 삭제, 원본 이미지를 불러와서 보정
-
     try:
-      images = self.pc.analysis.images
-      ir, seg = images.ir, images.seg
+      # 기존 이미지 삭제, 원본 이미지를 불러와서 보정
+      self.pc.analysis.images.reset_images()
+      ir = self.pc.analysis.images.ir
+      seg = self.pc.analysis.images.seg
     except WorkingDirNotSet:
       return
 
@@ -557,20 +557,25 @@ class Controller(QtCore.QObject):
       ir[mask] = ir1[mask]
 
     self.pc.analysis.images.ir = ir
+    self.pc.analysis.correction_params.e_wall = wall
+    self.pc.analysis.correction_params.e_window = window
+
     self.win.panel_funtion('analysis', 'set_temperature_range',
                            *self.pc.analysis.images.temperature_range())
 
   @QtCore.Slot(float)
   def analysis_correct_temperature(self, temperature):
     try:
-      ir = analysis.correct_temperature(ir=self.pc.analysis.images.ir,
-                                        mask=self.pc.analysis.images.seg,
-                                        coord=self.pc.analysis.coord,
-                                        T1=temperature)
+      ir, delta = analysis.correct_temperature(ir=self.pc.analysis.images.ir,
+                                               mask=self.pc.analysis.images.seg,
+                                               coord=self.pc.analysis.coord,
+                                               T1=temperature)
     except ValueError as e:
       self.win.popup('Error', str(e))
     else:
       self.pc.analysis.images.ir = ir
+      self.pc.analysis.correction_params.delta_temperature = delta
+
       self.win.panel_funtion('analysis', 'show_point_temperature', temperature)
       self.win.panel_funtion('analysis', 'set_temperature_range',
                              *self.pc.analysis.images.temperature_range())
@@ -598,9 +603,13 @@ class Controller(QtCore.QObject):
   def analysis_save(self):
     try:
       self.pc.analysis.images.save()
-      # TODO 분석 결과 save
-    except WorkingDirNotSet as e:
+      self.pc.analysis.save()
+      self.pc.analysis.save_report()
+    except WorkingDirNotSet:
       pass
+    except ValueError as e:
+      self.win.popup('Error', f'{e} 지표 및 분포 정보를 저장하지 못했습니다.')
+      self.pc.analysis.plot()
     else:
       self.win.popup('Success', '저장 완료')
 
