@@ -60,7 +60,7 @@ def set_logger(level: Union[int, str] = 20):
     try:
       level = levels[level.upper()]
     except KeyError as e:
-      raise KeyError('`{}` not in {}'.format(level, set(levels.keys()))) from e
+      raise KeyError(f'`{level}` not in {list(levels.keys())}') from e
 
   if getattr(logger, 'lvl', -1) != level:
     logger.remove()

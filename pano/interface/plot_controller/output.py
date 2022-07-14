@@ -113,9 +113,10 @@ def extend_lines(n: Any, p: Any, xlim: Any, ylim: Any) -> tuple[tuple, tuple]:
         (px - np.divide(ny * (y0 - py), nx), y0),  # y=y0 선과 만나는 지점
         (px - np.divide(ny * (y1 - py), nx), y1),  # y=y1 선과 만나는 지점
     ]
-  argsort = np.argsort([x[0] for x in points])
 
-  return points[argsort[1]], points[argsort[2]]  # x좌표가 중간인 두 점 반환
+  points = sorted(points, key=lambda x: x[0])
+
+  return points[1], points[2]  # x좌표가 중간인 두 점 반환
 
 
 def _segment_mask(storey_mask: np.ndarray, num: int):
@@ -154,17 +155,11 @@ def _segments(ir: np.ndarray, coords: np.ndarray,
 
   avg, std = [], []
   label_image = np.zeros_like(ir)
-  for line1, line2 in sliding_window(2, range(coords.shape[0])):
-    label = line1 % 2
+  for idx, (l1, l2) in enumerate(sliding_window(2, coords)):
+    label = idx % 2
 
-    # [[x1, y1], [x2, y2], ...]
-    polygon = np.array([
-        coords[line1][0],
-        coords[line2][0],
-        coords[line2][1],
-        coords[line1][1],
-    ])
-    polygon = np.flip(polygon, axis=1)  # [[y1, x1], [y2, x2], ...]
+    polygon = np.array([l1[0], l2[0], l2[1], l1[1]]) # [[x, y], ...]
+    polygon = np.flip(polygon, axis=1)  # [[y, x], ...]
 
     # 한 층에 해당하는 영역 mask
     storey_mask = draw.polygon2mask(image_shape=ir.shape, polygon=polygon)
