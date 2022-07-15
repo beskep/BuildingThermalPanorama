@@ -153,31 +153,36 @@ def _segments(ir: np.ndarray, coords: np.ndarray,
   """
   assert np.all(coords[:, 0, 0] < coords[:, 1, 0])  # x1 < x2
 
-  avg, std = [], []
+  stats = []
   label_image = np.zeros_like(ir)
   for idx, (l1, l2) in enumerate(sliding_window(2, coords)):
     label = idx % 2
 
-    polygon = np.array([l1[0], l2[0], l2[1], l1[1]]) # [[x, y], ...]
+    # XXX 오류 발생 시
+    # 1. ConvexHull로 선이 교차하는 문제 해결
+    # 2. 대각선 (영상 수직/수평 경계를 모두 지나는 선) 때문에 발생하는 공백 구역 제거
+    polygon = np.array([l1[0], l2[0], l2[1], l1[1]])  # [[x, y], ...]
     polygon = np.flip(polygon, axis=1)  # [[y, x], ...]
 
     # 한 층에 해당하는 영역 mask
     storey_mask = draw.polygon2mask(image_shape=ir.shape, polygon=polygon)
 
     # 수직 선으로 `num`개 분할한 조각의 평균, 표준편차 계산
-    savg, sstd = [], []
+    ss = []
     for mask in _segment_mask(storey_mask=storey_mask, num=num):
-      irseg = ir[mask]
-      savg.append(np.nanmean(irseg))
-      sstd.append(np.nanstd(irseg))
+      irm = ir[mask]
+      if np.all(np.isnan(irm)):
+        ss.append([np.nan, np.nan])
+      else:
+        ss.append([np.nanmean(irm), np.nanstd(irm)])
 
       label_image[mask] = label
       label = 0 if label else 1
 
-    avg.append(savg)
-    std.append(sstd)
+    stats.append(ss)
 
-  return np.array(avg), np.array(std), label_image
+  stats_arr = np.array(stats)
+  return stats_arr[:, :, 0], stats_arr[:, :, 1], label_image
 
 
 def _save_segments(subdir: Path, fname: str, ir: np.ndarray, coords: np.ndarray,
