@@ -56,11 +56,12 @@ def correct_temperature(ir: np.ndarray, mask: np.ndarray, coord: tuple,
   if np.isnan(T0) or np.isnan(T1):
     raise ValueError('유효하지 않은 온도입니다.')
 
-  if mask[coord[0], coord[1]] != 1:
-    raise ValueError('벽을 선택해주세요')
+  index = mask[coord[0], coord[1]]
+  if index not in [1, 2]:
+    raise ValueError('벽 또는 창문을 선택해주세요')
 
   delta = T1 - T0
-  ir[mask == 1] += delta
+  ir[mask == index] += delta
 
   return ir, delta
 

@@ -152,7 +152,7 @@ def vis_segmentation(image: Union[np.ndarray, PILImage],
 
 def predict(model_path: str,
             images: List[np.ndarray],
-            outpug_dir: Path,
+            output: Path,
             cmap='Dark2',
             names: Optional[List[str]] = None):
   """
@@ -164,7 +164,7 @@ def predict(model_path: str,
       학습한 DeepLabV3+ 모델의 frozen graph 경로.
   images : List[np.ndarray]
       영상 목록
-  outpug_dir : Path
+  output : Path
       결과 저장 경로
   cmap : str, optional
       Colormap, by default 'Dark2'
@@ -178,8 +178,8 @@ def predict(model_path: str,
   if names is None:
     names = [f'Image {x+1}' for x in range(len(images))]
 
-  for image, fname in track(zip(images, names)):
-    pil_image = PILImage.fromarray(image)
+  for image, fname in track(zip(images, names), total=len(images)):
+    pil_image = PIL.Image.fromarray(image)
 
     resized_image, seg_map = model.run(pil_image)
     fig, seg_image = vis_segmentation(resized_image,
@@ -187,13 +187,13 @@ def predict(model_path: str,
                                       show=False,
                                       cmap=cmap)
 
-    mask = PILImage.fromarray(seg_map)
-    mask.save(outpug_dir.joinpath(fname + '_mask').with_suffix('.png'))
+    mask = PIL.Image.fromarray(seg_map)
+    mask.save(output.joinpath(fname + '_mask').with_suffix('.png'))
 
-    seg_pil = PILImage.fromarray(seg_image)
-    seg_pil.save(outpug_dir.joinpath(fname + '_vis').with_suffix('.png'))
+    seg_pil = PIL.Image.fromarray(seg_image)
+    seg_pil.save(output.joinpath(fname + '_vis').with_suffix('.png'))
 
-    fig.savefig(outpug_dir.joinpath(fname + '_fig').with_suffix('.png'))
+    fig.savefig(output.joinpath(fname + '_fig').with_suffix('.png'))
     plt.close(fig)
 
 

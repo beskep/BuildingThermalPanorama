@@ -82,7 +82,7 @@ ApplicationWindow {
                     width : parent.width
                 }
                 TabButton {
-                    text : '결과 출력'
+                    text : 'GIS 연동'
                     width : parent.width
                 }
             }
