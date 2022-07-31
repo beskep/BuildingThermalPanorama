@@ -41,7 +41,7 @@ Pane {
 
                     ToolTip.visible : hovered
                     ToolTip.delay : 500
-                    ToolTip.text : qsTr('수동 수정한 부위 인식 결과를 불러옵니다.')
+                    ToolTip.text : qsTr('수동 수정한 부위 인식 결과 불러오기')
                 }
 
                 ToolSeparator {}
@@ -56,6 +56,10 @@ Pane {
                         down = true;
                         _point_select.down = false;
                     }
+
+                    ToolTip.visible : hovered
+                    ToolTip.delay : 500
+                    ToolTip.text : qsTr('분석 영역을 다각형 형태로 선택')
                 }
                 ToolButton {
                     id : _point_select
@@ -69,6 +73,10 @@ Pane {
                     onDownChanged : {
                         con.analysis_set_selector(down)
                     }
+
+                    ToolTip.visible : hovered
+                    ToolTip.delay : 500
+                    ToolTip.text : qsTr('온도 보정을 위한 실측 지점 선택')
                 }
 
                 ToolSeparator {}
@@ -78,12 +86,20 @@ Pane {
                     icon : '\ue14a'
 
                     onReleased : con.analysis_cancel_selection()
+
+                    ToolTip.visible : hovered
+                    ToolTip.delay : 500
+                    ToolTip.text : qsTr('영역 선택 취소')
                 }
                 ToolButton {
                     text : qsTr('저장')
                     icon : '\ue161'
 
                     onReleased : con.analysis_save()
+
+                    ToolTip.visible : hovered
+                    ToolTip.delay : 500
+                    ToolTip.text : qsTr('온도 분포 및 취약 부위 분석 결과 저장')
                 }
             }
         }
@@ -257,6 +273,10 @@ Pane {
                         enabled : _ir.checked
                         onReleased : con.analysis_set_clim( //
                             _slider.first.value, _slider.second.value)
+
+                        ToolTip.visible : hovered
+                        ToolTip.delay : 500
+                        ToolTip.text : qsTr('열화상 파노라마의 온도 표시 범위 조정')
                     }
                 }
             }

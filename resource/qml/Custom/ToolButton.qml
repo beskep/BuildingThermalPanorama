@@ -8,13 +8,17 @@ import QtQuick.Layouts 1.15
 T.ToolButton {
     id : control
 
-    implicitWidth : Math.max(background ? background.implicitWidth : 0, contentItem.implicitWidth + leftPadding + rightPadding)
-    implicitHeight : Math.max(background ? background.implicitHeight : 0, contentItem.implicitHeight + topPadding + bottomPadding)
+    implicitWidth : Math.max( //
+        background ? background.implicitWidth : 0, //
+        contentItem.implicitWidth + leftPadding + rightPadding)
+    implicitHeight : Math.max( //
+        background ? background.implicitHeight : 0, //
+        contentItem.implicitHeight + topPadding + bottomPadding)
     baselineOffset : contentItem.y + contentItem.baselineOffset
 
     padding : 4
-    leftPadding: 15
-    rightPadding: 15
+    leftPadding : 15
+    rightPadding : 15
 
     property alias icon : _icon.text
 

@@ -3,11 +3,17 @@ import QtQuick.Templates 2.12 as T
 import QtQuick.Controls.Material 2.12
 import QtQuick.Controls.Material.impl 2.12
 
+
 T.RadioButton {
     id : control
 
-    implicitWidth : Math.max(implicitBackgroundWidth + leftInset + rightInset, implicitContentWidth + leftPadding + rightPadding)
-    implicitHeight : Math.max(implicitBackgroundHeight + topInset + bottomInset, implicitContentHeight + topPadding + bottomPadding, implicitIndicatorHeight + topPadding + bottomPadding)
+    implicitWidth : Math.max( //
+        implicitBackgroundWidth + leftInset + rightInset, //
+        implicitContentWidth + leftPadding + rightPadding)
+    implicitHeight : Math.max( //
+        implicitBackgroundHeight + topInset + bottomInset, //
+        implicitContentHeight + topPadding + bottomPadding, //
+        implicitIndicatorHeight + topPadding + bottomPadding)
 
     spacing : 8
     padding : 8

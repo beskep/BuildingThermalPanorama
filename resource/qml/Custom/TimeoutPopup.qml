@@ -70,7 +70,8 @@ Popup {
                     if (_metrics.width <= 250) {
                         Layout.preferredWidth = 250
                     } else {
-                        Layout.preferredWidth = Math.ceil(Math.sqrt(_metrics.width * _message.height * 2))
+                        Layout.preferredWidth = Math.ceil( //
+                            Math.sqrt(_metrics.width * _message.height * 2))
                     }
                 }
             }

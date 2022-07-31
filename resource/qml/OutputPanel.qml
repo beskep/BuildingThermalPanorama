@@ -36,6 +36,10 @@ Pane {
                     icon : '\ue663'
 
                     onReleased : con.output_estimate_edgelets()
+
+                    ToolTip.visible : hovered
+                    ToolTip.delay : 500
+                    ToolTip.text : qsTr('층 구분선 자동 추정')
                 }
 
                 ToolButton {
@@ -44,6 +48,10 @@ Pane {
                     icon : '\ue872'
 
                     onReleased : con.output_clear_lines()
+
+                    ToolTip.visible : hovered
+                    ToolTip.delay : 500
+                    ToolTip.text : qsTr('층 구분선 전체 삭제')
                 }
 
                 ToolButton {
@@ -51,6 +59,10 @@ Pane {
                     icon : '\ue161'
 
                     onReleased : con.output_save()
+
+                    ToolTip.visible : hovered
+                    ToolTip.delay : 500
+                    ToolTip.text : qsTr('GIS 연동을 위한 층별 온도 데이터 저장')
                 }
 
                 ToolButton {
@@ -132,6 +144,10 @@ Pane {
                             Layout.preferredHeight : mode_height
                             text : '선분 연장'
                             onCheckedChanged : con.output_extend_lines(checked)
+
+                            ToolTip.visible : hovered
+                            ToolTip.delay : 500
+                            ToolTip.text : qsTr('영상 전체 범위로 구분선 자동 연장')
                         }
                     }
 

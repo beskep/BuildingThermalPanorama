@@ -6,8 +6,12 @@ import QtQuick.Controls.Material 2.2
 T.ToolSeparator {
     id : control
 
-    implicitWidth : Math.max(background ? background.implicitWidth : 0, contentItem.implicitWidth + leftPadding + rightPadding)
-    implicitHeight : Math.max(background ? background.implicitHeight : 0, contentItem.implicitHeight + topPadding + bottomPadding)
+    implicitWidth : Math.max( //
+        background ? background.implicitWidth : 0, //
+        contentItem.implicitWidth + leftPadding + rightPadding)
+    implicitHeight : Math.max( //
+        background ? background.implicitHeight : 0, //
+        contentItem.implicitHeight + topPadding + bottomPadding)
 
     property alias color : _rectangle.color
 

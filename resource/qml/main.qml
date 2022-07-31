@@ -52,6 +52,10 @@ ApplicationWindow {
                 TabButton {
                     text : '프로젝트 설정'
                     width : parent.width
+
+                    ToolTip.visible : hovered
+                    ToolTip.delay : 200
+                    ToolTip.text : '프로젝트 경로 설정 및 파일 추출'
                 }
                 TabButton {
                     text : '열·실화상 정합'
