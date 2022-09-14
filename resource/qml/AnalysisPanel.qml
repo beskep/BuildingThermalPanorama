@@ -120,6 +120,7 @@ Pane {
                     dpi_ratio : Screen.devicePixelRatio
                 }
 
+                // plot 종류 선택
                 Pane {
                     Material.elevation : 1
                     anchors.left : parent.left
@@ -209,7 +210,7 @@ Pane {
                 }
             }
 
-
+            // 온도 range slider
             Pane {
                 Material.elevation : 2
                 Layout.fillHeight : true
@@ -282,6 +283,7 @@ Pane {
             }
         }
 
+        // 하단 옵션 패널
         Pane {
             Material.elevation : 2
             Layout.fillWidth : true

@@ -202,7 +202,7 @@ def save_manual_correction(wd, subdir, viewing_angle, angles,
   prj = ImageProjection(ir_pano, viewing_angle=viewing_angle)
   angles = np.deg2rad(angles)
 
-  for sp in SP:
+  for sp in [SP.IR, SP.VIS, SP.SEG, SP.MASK]:
     if sp is SP.IR:
       image = ir_pano
     else:
