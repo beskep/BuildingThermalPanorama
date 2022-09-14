@@ -5,6 +5,7 @@ from os import PathLike
 from pathlib import Path
 import sys
 from typing import Optional, Union
+import winsound
 
 from loguru import logger
 from rich.console import Console
@@ -116,3 +117,9 @@ def ptrack(sequence,
                            transient=transient,
                            **kwargs):
     yield (idx + 1) / total, value
+
+
+def play_sound(ok=True):
+  if hasattr(winsound, 'MessageBeep'):
+    t = winsound.MB_OK if ok else winsound.MB_ICONHAND
+    winsound.MessageBeep(t)

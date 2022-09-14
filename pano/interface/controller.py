@@ -8,8 +8,8 @@ import numpy as np
 from omegaconf import DictConfig
 from omegaconf import OmegaConf
 
+from pano import utils
 from pano.misc.imageio import ImageIO as IIO
-from pano.utils import set_logger
 
 from . import analysis
 from .common.config import update_config
@@ -47,7 +47,7 @@ def _url2path(url: str):
 
 
 def _producer(queue: mp.Queue, directory, command: str, loglevel: int):
-  set_logger(loglevel)
+  utils.set_logger(loglevel)
 
   # pylint: disable=import-outside-toplevel
   from .pano_project import ThermalPanorama
@@ -138,7 +138,11 @@ class _Window:
   def popup(self, title: str, message: str, timeout=2000):
     logger.debug('[Popup] {}: {}', title, message)
     self._window.popup(title, message, timeout)
-    if title.lower() != 'error':
+
+    ok = title.lower() != 'error'
+    utils.play_sound(ok=ok)
+
+    if ok:
       msg = message.replace('\n', ' ')
       self._window.status_message(f'[{title}] {msg}')
 
@@ -418,7 +422,7 @@ class Controller(QtCore.QObject):
     except WorkingDirNotSet:
       pass
     except FileNotFoundError as e:
-      logger.debug(str(e))
+      logger.debug('FileNotFound: "{}"', e)
 
   @QtCore.Slot(float, float, float, int)
   def pano_rotate(self, roll, pitch, yaw, limit):
@@ -500,7 +504,7 @@ class Controller(QtCore.QObject):
     except WorkingDirNotSet:
       pass
     except FileNotFoundError as e:
-      logger.debug(str(e))
+      logger.debug('FileNotFound: "{}"', e)
     except ValueError as e:
       self.win.popup('Error', str(e))
     else:
@@ -623,7 +627,7 @@ class Controller(QtCore.QObject):
     except WorkingDirNotSet:
       pass
     except FileNotFoundError as e:
-      logger.debug(str(e))
+      logger.debug('FileNotFound: "{}"', e)
 
   @QtCore.Slot()
   def output_clear_lines(self):
