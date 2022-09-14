@@ -14,7 +14,7 @@ from pano.interface.common.pano_files import FN
 from pano.interface.common.pano_files import SP
 from pano.interface.mbq import FigureCanvas
 from pano.interface.mbq import NavigationToolbar2QtQuick as NavToolbar
-from pano.misc.imageio import ImageIO
+from pano.misc.imageio import ImageIO as IIO
 from pano.misc.tools import Interpolation
 from pano.misc.tools import prep_compare_images
 from pano.misc.tools import uint8_image
@@ -22,6 +22,14 @@ from pano.misc.tools import uint8_image
 from .plot_controller import PanoPlotController
 from .plot_controller import QtGui
 from .plot_controller import TICK_PARAMS
+
+
+def _rename_file(p0: Path, p1: Path):
+  if p1.exists():
+    logger.debug('unlink existing file "{}"', p1)
+    p1.unlink()
+
+  p0.rename(p1)
 
 
 class RegistrationPlotController(PanoPlotController):
@@ -151,10 +159,8 @@ class RegistrationPlotController(PanoPlotController):
   def plot(self, file: Path):
     self._file = file
 
-    ir_path = self.fm.change_dir(DIR.IR, file)
-    vis_path = self.fm.change_dir(DIR.VIS, file)
-    ir = ImageIO.read(ir_path)
-    vis = ImageIO.read(vis_path)
+    ir = IIO.read(self.fm.change_dir(DIR.IR, file))
+    vis = IIO.read(self.fm.change_dir(DIR.VIS, file))
 
     self.set_images(ir, vis)
 
@@ -246,7 +252,7 @@ class RegistrationPlotController(PanoPlotController):
 
     assert self._file is not None
     path = self.fm.change_dir(DIR.RGST, self._file)
-    ImageIO.save(path=path, array=uint8_image(self._registered_image))
+    IIO.save(path=path, array=uint8_image(self._registered_image))
 
     compare_path = path.with_name(f'{path.stem}{FN.RGST_MANUAL}{path.suffix}')
     self.fig.savefig(compare_path, dpi=300)
@@ -255,29 +261,30 @@ class RegistrationPlotController(PanoPlotController):
 
   def _save_pano(self):
     """파노라마 정합 결과 저장"""
-    # 정합 안된 기존 파일 이름 변경
     vis = self.fm.panorama_path(d=DIR.PANO, sp=SP.VIS)
-    vis.rename(vis.with_stem(f'{vis.stem}Unregistered'))
+    vis_unrgst = vis.with_stem(f'{vis.stem}Unregistered')
     seg = self.fm.panorama_path(d=DIR.PANO, sp=SP.SEG)
-    seg = seg.rename(seg.with_stem(f'{seg.stem}Unregistered'))
+    seg_unrgst = seg.with_stem(f'{seg.stem}Unregistered')
+
+    # 정합 안된 기존 파일 이름 변경
+    _rename_file(vis, vis_unrgst)
+    _rename_file(seg, seg_unrgst)
 
     # vis 저장
-    ImageIO.save(path=self.fm.panorama_path(d=DIR.PANO, sp=SP.VIS),
-                 array=uint8_image(self._registered_image))
+    IIO.save(path=vis, array=uint8_image(self._registered_image))
 
     # seg 저장
+    shape = self._images[0].shape[:2]
     trsf = transform.ProjectiveTransform(matrix=self._matrix)
-    seg_image = ImageIO.read(seg)
-    seg_resized = transform.resize(seg_image,
+    seg_resized = transform.resize(IIO.read(seg_unrgst),
                                    order=Interpolation.NearestNeighbor,
-                                   output_shape=self._images[0].shape[:2])
+                                   output_shape=shape)
     seg_rgst = transform.warp(image=seg_resized,
                               inverse_map=trsf.inverse,
-                              output_shape=self._images[0].shape[:2],
+                              output_shape=shape,
                               order=Interpolation.NearestNeighbor,
                               preserve_range=True)
-    ImageIO.save(path=self.fm.panorama_path(d=DIR.PANO, sp=SP.SEG),
-                 array=uint8_image(seg_rgst))
+    IIO.save(path=seg, array=uint8_image(seg_rgst))
 
   def save(self, panorama: bool):
     if self._registered_image is None:
