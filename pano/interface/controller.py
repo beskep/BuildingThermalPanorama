@@ -87,6 +87,20 @@ def _save_manual_correction(queue: mp.Queue, wd: str, subdir: str,
   queue.put(1.0)
 
 
+def _segments(flag_count: bool, seg_count: int, seg_length: float,
+              building_width: float) -> int:
+  if flag_count:
+    segments = seg_count
+  elif np.isnan(building_width):
+    raise ValueError('건물 폭을 설정하지 않았습니다.')
+  else:
+    segments = int(building_width / seg_length)
+    if segments < 1:
+      raise ValueError('분할 길이 또는 건물 폭이 잘못 설정되었습니다.')
+
+  return segments
+
+
 class _Consumer(QtCore.QThread):
   update = QtCore.Signal(float)  # 진행률 [0, 1] 업데이트
   done = QtCore.Signal()  # 작업 종료 signal (진행률 >= 1.0)
@@ -252,6 +266,7 @@ class Controller(QtCore.QObject):
     try:
       replace_vis_images(fm=self._fm, files=files)
     except OSError as e:
+      logger.catch(e)
       self.win.popup('Error', str(e))
 
     self.update_image_view()
@@ -506,6 +521,7 @@ class Controller(QtCore.QObject):
     except FileNotFoundError as e:
       logger.debug('FileNotFound: "{}"', e)
     except ValueError as e:
+      logger.catch(e)
       self.win.popup('Error', str(e))
     else:
       self.win.panel_funtion('analysis', 'set_temperature_range',
@@ -523,6 +539,7 @@ class Controller(QtCore.QObject):
     try:
       self.pc.analysis.read_multilayer()
     except (OSError, ValueError) as e:
+      logger.catch(e)
       self.win.popup('Error', str(e))
 
   @QtCore.Slot()
@@ -575,6 +592,7 @@ class Controller(QtCore.QObject):
                                                coord=self.pc.analysis.coord,
                                                T1=temperature)
     except ValueError as e:
+      logger.catch(e)
       self.win.popup('Error', str(e))
     else:
       self.pc.analysis.images.ir = ir
@@ -612,6 +630,7 @@ class Controller(QtCore.QObject):
     except WorkingDirNotSet:
       pass
     except ValueError as e:
+      logger.catch(e)
       self.win.popup('Error', f'{e} 지표 및 분포 정보를 저장하지 못했습니다.')
       self.pc.analysis.plot()
     else:
@@ -634,7 +653,7 @@ class Controller(QtCore.QObject):
     try:
       self.pc.output.lines.clear_lines()
       self.pc.output.draw()
-    except WorkingDirNotSet as e:
+    except WorkingDirNotSet:
       pass
 
   @QtCore.Slot()
@@ -650,13 +669,31 @@ class Controller(QtCore.QObject):
   def output_extend_lines(self, value):
     self.pc.output.lines.extend = value
 
-  @QtCore.Slot()
-  def output_save(self):
+  @QtCore.Slot(bool, int, float, float)
+  def output_save(self, flag_count, seg_count, seg_length, building_width):
     try:
-      self.pc.output.save()
+      segments = _segments(flag_count=flag_count,
+                           seg_count=seg_count,
+                           seg_length=seg_length,
+                           building_width=building_width)
+    except ValueError as e:
+      logger.catch(e)
+      self.win.popup('Error', str(e))
+      segments = None
+
+    logger.debug(
+        'flag_count={} | count={} | length={} | width={} | segments={}',
+        flag_count, seg_count, seg_length, building_width, segments)
+
+    if not segments:
+      return
+
+    try:
+      self.pc.output.save(segments)
     except WorkingDirNotSet:
       pass
     except (OSError, ValueError) as e:
+      logger.catch(e)
       self.win.popup('Error', str(e))
     else:
       self.win.popup('Success', '저장 완료')

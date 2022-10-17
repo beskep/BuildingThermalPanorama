@@ -1,16 +1,24 @@
 """추출해둔 FLIR 컬러맵, 또는 `matplotlib` 컬러맵 설정"""
 
+from typing import Union
+
 from loguru import logger
 from matplotlib.cm import get_cmap
 from matplotlib.colors import Colormap
 from matplotlib.colors import ListedColormap
+import numpy as np
 
 from pano.misc.cmap import apply_colormap
 from pano.misc.cmap import FLIRColormap
 from pano.utils import DIR
 
-DEFAULT_COLORMAP = 'inferno'
-COLORMAP_PATH = DIR.RESOURCE.joinpath('iron_colormap_rgb.txt')
+__all__ = [
+    'apply_colormap', 'get_iron_colormap', 'get_mpl_colormap',
+    'get_thermal_colormap', 'save_colormap'
+]
+
+DEFAULT_CMAP = 'inferno'
+_CMAP_PATH = DIR.RESOURCE.joinpath('iron_colormap_rgb.txt')
 
 
 def get_iron_colormap() -> ListedColormap:
@@ -28,12 +36,10 @@ def get_iron_colormap() -> ListedColormap:
   FileNotFoundError
       파일이 존재하지 않는 경우
   """
-  if not COLORMAP_PATH.exists():
-    raise FileNotFoundError(f'컬러맵 파일이 존재하지 않습니다. ({COLORMAP_PATH})')
+  if not _CMAP_PATH.exists():
+    raise FileNotFoundError(f'컬러맵 파일이 존재하지 않습니다. ({_CMAP_PATH})')
 
-  cmap = FLIRColormap.from_uint8_text_file(path=COLORMAP_PATH)
-
-  return cmap
+  return FLIRColormap.from_uint8_text_file(path=_CMAP_PATH)
 
 
 def get_mpl_colormap(name: str) -> Colormap:
@@ -57,9 +63,9 @@ def get_mpl_colormap(name: str) -> Colormap:
     logger.warning(
         '`{}`은/는 올바른 컬러맵 이름이 아닙니다. {}를 대신 적용합니다.',
         name,
-        DEFAULT_COLORMAP,
+        DEFAULT_CMAP,
     )
-    cmap = get_cmap(DEFAULT_COLORMAP)
+    cmap = get_cmap(DEFAULT_CMAP)
 
   return cmap
 
@@ -85,8 +91,20 @@ def get_thermal_colormap(name='iron') -> Colormap:
       cmap = get_iron_colormap()
     except FileNotFoundError as e:
       logger.warning(e)
-      cmap = get_mpl_colormap(DEFAULT_COLORMAP)
+      cmap = get_mpl_colormap(DEFAULT_CMAP)
   else:
     cmap = get_mpl_colormap(name=name)
 
   return cmap
+
+
+def save_colormap(path, cmap: Union[str, Colormap] = 'iron', num=101):
+  if isinstance(cmap, str):
+    cmap = get_thermal_colormap(cmap)
+
+  with open(path, 'w', encoding='utf-8') as f:
+    f.write('value,r,g,b\n')
+
+    for value in np.linspace(0.0, 1.0, num=num, endpoint=True):
+      rgb = cmap(value)
+      f.write(f'{value},{rgb[0]},{rgb[1]},{rgb[2]}\n')

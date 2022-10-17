@@ -35,7 +35,7 @@ Popup {
                 font.pointSize : 16
                 font.weight : Font.Medium
 
-                text : '자동 층 인식 및 저장 설정'
+                text : '자동 층 인식 설정'
             }
 
             RowLayout {
@@ -111,38 +111,6 @@ Popup {
 
                             value : 10
                             from : 1
-                            to : 1000
-                            stepSize : 5
-                        }
-                    }
-
-                    Rectangle {
-                        height : 20
-                    }
-
-                    Label {
-                        Layout.fillWidth : true
-
-                        font.weight : Font.Medium
-                        font.pointSize : 13
-
-                        text : '저장'
-                    }
-
-                    GridLayout {
-                        Layout.fillWidth : true
-                        columns : 2
-
-                        Label {
-                            Layout.fillWidth : true
-                            text : '분할 개수'
-                        }
-                        SpinBox {
-                            id : _edgelet_segments_count
-                            Layout.fillWidth : true
-
-                            value : 20
-                            from : 0
                             to : 1000
                             stepSize : 5
                         }
@@ -303,7 +271,6 @@ Popup {
         }
         _edgelet_window_threshold.value = cfg['edgelet']['window_threshold'] * 100
         _edgelet_slab_position.value = cfg['edgelet']['slab_position'] * 100
-        _edgelet_segments_count.value = cfg['edgelet']['segments_count']
 
         _edgelet_max_count.value = cfg['edgelet']['max_count']
         _edgelet_distance.value = cfg['edgelet']['distance_threshold']
@@ -325,7 +292,6 @@ Popup {
                     'segmentation': _edgelet_seg.checked,
                     'window_threshold': _edgelet_window_threshold.value / 100.0,
                     'slab_position': _edgelet_slab_position.value / 100.0,
-                    'segments_count': _edgelet_segments_count.value,
                     'max_count': _edgelet_max_count.value,
                     'distance_threshold': _edgelet_distance.value,
                     'angle_threshold': _edgelet_angle.value

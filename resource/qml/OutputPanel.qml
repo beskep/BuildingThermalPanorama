@@ -58,7 +58,7 @@ Pane {
                     text : '저장'
                     icon : '\ue161'
 
-                    onReleased : con.output_save()
+                    onReleased : save_output()
 
                     ToolTip.visible : hovered
                     ToolTip.delay : 500
@@ -100,6 +100,7 @@ Pane {
                 dpi_ratio : Screen.devicePixelRatio
             }
 
+            // plot 종류 선택
             Pane {
                 Material.elevation : 1
                 anchors.left : parent.left
@@ -157,6 +158,94 @@ Pane {
                 }
             }
         }
+
+        // 하단 옵션 패널
+        Pane {
+            Material.elevation : 2
+            Layout.fillWidth : true
+
+            ColumnLayout {
+                ButtonGroup {
+                    id : _split_group
+                }
+
+                RowLayout {
+                    spacing : 25
+                    ColumnLayout {
+                        RadioButton {
+                            id : _split_count
+
+                            ButtonGroup.group : _split_group
+                            font.weight : Font.Medium
+                            text : '분할 개수 설정'
+
+                            checked : true
+                        }
+
+                        RowLayout {
+                            enabled : _split_count.checked
+
+                            Label {
+                                text : '분할 개수'
+                            }
+                            SpinBox {
+                                id : _segments_count
+
+                                value : 20
+                            }
+                        }
+                    }
+                    ColumnLayout {
+                        RadioButton {
+                            id : _split_length
+
+                            ButtonGroup.group : _split_group
+                            font.weight : Font.Medium
+                            text : '분할 길이 설정'
+                        }
+
+                        RowLayout {
+                            spacing : 25
+                            enabled : _split_length.checked
+
+                            RowLayout {
+                                Label {
+                                    text : '분할 길이'
+                                }
+                                TextField {
+                                    id : _segements_length
+
+                                    validator : DoubleValidator {}
+                                    horizontalAlignment : TextInput.AlignRight
+
+                                    text : '0.05'
+                                }
+                                Label {
+                                    text : 'm'
+                                }
+                            }
+
+                            RowLayout {
+                                Label {
+                                    text : '건물 폭'
+                                }
+                                TextField {
+                                    id : _building_width
+
+                                    validator : DoubleValidator {}
+                                    horizontalAlignment : TextInput.AlignRight
+
+                                    text : ''
+                                }
+                                Label {
+                                    text : 'm'
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     function output_plot() {
@@ -181,5 +270,13 @@ Pane {
 
     function update_config(config) {
         _option.update_config(config)
+    }
+
+    function save_output() {
+        con.output_save( //
+            _split_count.checked, //
+            _segments_count.value, //
+            parseFloat(_segements_length.text), //
+            parseFloat(_building_width.text))
     }
 }

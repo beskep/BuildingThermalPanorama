@@ -1,15 +1,17 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Literal, Optional, Union
+from typing import Any, Callable, Iterable, Literal, Optional, Union
 
 from matplotlib.image import AxesImage
 from matplotlib.lines import Line2D
 from matplotlib.widgets import _SelectorWidget
 import numpy as np
+from numpy.typing import NDArray
 from skimage import draw
 from skimage.color import label2rgb
 from toolz.itertoolz import sliding_window
 
+from pano.interface.common.cmap import save_colormap
 from pano.interface.common.pano_files import DIR
 from pano.interface.common.pano_files import SP
 from pano.interface.common.pano_files import ThermalPanoramaFileManager
@@ -130,71 +132,108 @@ def _segment_mask(storey_mask: np.ndarray, num: int):
     yield mask
 
 
-def _segments(ir: np.ndarray, coords: np.ndarray,
-              num: int) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-  """
-  층별로 `num`개의 조각에 대해 온도 평균, 표준편차 계산
+class SegmentsSummary:
 
-  Parameters
-  ----------
-  ir : np.ndarray
-      열화상
-  coords : np.ndarray
-      각 층 구분선 좌표. `LinesSelector.coordinates()`로 계산.
+  def __init__(self,
+               functions: Optional[Iterable[Callable]] = None,
+               names: Optional[Iterable[str]] = None) -> None:
+    if functions is None:
+      functions = (np.nanmean, np.nanmedian, np.nanmin, np.nanmax)
+    if names is None:
+      names = ('avg', 'median', 'min', 'max')
 
-      **수직방향으로 정렬되어 있어야 함.**
-  num : int
-      분할 개수
+    self._fns = tuple(functions)
+    self._names = tuple(names)
 
-  Returns
-  -------
-  tuple[np.ndarray, np.ndarray, np.ndarray]
-      average, stddev, label
-  """
-  assert np.all(coords[:, 0, 0] < coords[:, 1, 0])  # x1 < x2
+    if len(self._fns) != len(self._names):
+      raise ValueError('요약 함수와 이름의 개수가 불일치함')
 
-  stats = []
-  label_image = np.zeros_like(ir)
-  for idx, (l1, l2) in enumerate(sliding_window(2, coords)):
-    label = idx % 2
+    self._len = len(self._fns)
 
+  @staticmethod
+  def _mask(lines: tuple[NDArray, NDArray], image_shape: tuple[int, int]):
     # XXX 오류 발생 시
     # 1. ConvexHull로 선이 교차하는 문제 해결
     # 2. 대각선 (영상 수직/수평 경계를 모두 지나는 선) 때문에 발생하는 공백 구역 제거
+    l1, l2 = lines
     polygon = np.array([l1[0], l2[0], l2[1], l1[1]])  # [[x, y], ...]
     polygon = np.flip(polygon, axis=1)  # [[y, x], ...]
 
     # 한 층에 해당하는 영역 mask
-    storey_mask = draw.polygon2mask(image_shape=ir.shape, polygon=polygon)
+    return draw.polygon2mask(image_shape=image_shape, polygon=polygon)
 
-    # 수직 선으로 `num`개 분할한 조각의 평균, 표준편차 계산
-    ss = []
-    for mask in _segment_mask(storey_mask=storey_mask, num=num):
-      irm = ir[mask]
-      if np.all(np.isnan(irm)):
-        ss.append([np.nan, np.nan])
-      else:
-        ss.append([np.nanmean(irm), np.nanstd(irm)])
+  def __call__(
+      self,
+      arr: NDArray,
+      coords: NDArray,
+      num: int,
+  ) -> tuple[dict[str, NDArray], NDArray]:
+    """
+    층별로 `num`개의 조각에 대해 `__init__`에서 지정한 stat 계산
 
-      label_image[mask] = label
-      label = 0 if label else 1
+    Parameters
+    ----------
+    arr : NDArray
+        대상 array
+    coords : NDArray
+        각 층 구분선 좌표. `LinesSelector.coordinates()`로 계산.
 
-    stats.append(ss)
+        **수직방향으로 정렬되어 있어야 함.**
+    num : int
+        분할 개수
 
-  stats_arr = np.array(stats)
-  return stats_arr[:, :, 0], stats_arr[:, :, 1], label_image
+    Returns
+    -------
+    stats_dict : dict[str, NDArray]
+        {name: stat}
+    label : NDArray
+        label image
+    """
+    assert np.all(coords[:, 0, 0] < coords[:, 1, 0])  # x1 < x2
+
+    stats = []
+    label = np.zeros_like(arr, dtype=int)  # segments 구분 시각화
+    for idx, lines in enumerate(sliding_window(2, coords)):
+      mask = self._mask(lines=lines, image_shape=(arr.shape[0], arr.shape[1]))
+
+      # 수직 선으로 `num`개 분할한 조각의 stat 계산
+      ss = []
+      li = idx % 2
+      for m in _segment_mask(storey_mask=mask, num=num):
+        marr = arr[m]
+
+        if np.all(np.isnan(marr)):
+          ss.append([np.nan] * len(self._fns))
+        else:
+          ss.append([fn(marr) for fn in self._fns])
+
+        label[m] = li
+        li = 0 if li else 1
+
+      stats.append(ss)
+
+    stats_arr = np.array(stats)
+    stats_dict = {n: stats_arr[:, :, i] for i, n in enumerate(self._names)}
+
+    return stats_dict, label
 
 
-def _save_segments(subdir: Path, fname: str, ir: np.ndarray, coords: np.ndarray,
-                   num: int):
-  avg, std, label = _segments(ir=ir, coords=coords, num=num)
+def _save_segments(subdir: Path,
+                   fname: str,
+                   arr: np.ndarray,
+                   coords: np.ndarray,
+                   num: int,
+                   label_thold=50):
+  seg_summ = SegmentsSummary()
+  stats, label = seg_summ(arr=arr, coords=coords, num=num)
 
-  IIO.save(path=subdir.joinpath(f'{fname}-Average.csv'), array=avg)
-  IIO.save(path=subdir.joinpath(f'{fname}-StdDev.csv'), array=std)
+  for k, v in stats.items():
+    IIO.save(path=subdir.joinpath(f'{fname}-{k.title()}.csv'), array=v)
 
-  ir[np.isnan(ir)] = np.nanmin(ir)
-  IIO.save(path=subdir.joinpath(f'{fname}-Label.png'),
-           array=label2rgb(label, image=normalize_image(ir)))
+  if num <= label_thold:
+    arr[np.isnan(arr)] = np.nanmin(arr)
+    IIO.save(path=subdir.joinpath(f'{fname}-Label.png'),
+             array=label2rgb(label, image=normalize_image(arr)))
 
 
 class LinesSelector(_SelectorWidget):
@@ -415,7 +454,6 @@ class EdgeletsOption:
   segmentation: bool = True  # True면 열화상이 아닌 segmentation mask로부터 추정
   window_threshold: float = 0.05
   slab_position: float = 0.5
-  segments_count: int = 20  # 저장 시 각 층의 분할 개수
 
   max_count: int = 10
   distance_threshold: float = 10.0  # pixel
@@ -621,30 +659,47 @@ class OutputPlotController(PanoPlotController):
 
     self.draw()
 
-  def save(self):
+  def save(self, segments=20):
     subdir = self.fm.subdir(DIR.OUT, mkdir=True)
-    self.fig.savefig(subdir.joinpath('Edgelets.jpg'), dpi=200)
+
+    # 열화상 (온도 행렬)
+    ir = self.images.ir
+    IIO.save(subdir.joinpath('Temperature.csv'), np.round(ir, 2))
+
+    # 층 구분 이미지
+    self.fig.savefig(subdir.joinpath('Edgelets.jpg'), dpi=150)
 
     self.lines.extend_lines()
-    coords = self.lines.coordinates(xmax=self.images.ir.shape[1],
-                                    ymax=self.images.ir.shape[0])
-    num = self.images.edgelet_option.segments_count
+    coords = self.lines.coordinates(xmax=ir.shape[1], ymax=ir.shape[0])
 
-    wall = self.images.ir.copy()
+    # 벽 온도
+    wall = ir.copy()
     wall[self.images.seg != SegMask.WALL] = np.nan
     _save_segments(subdir=subdir,
-                   fname='Wall Temperature',
-                   ir=wall,
+                   fname='TemperatureWall',
+                   arr=wall,
                    coords=coords,
-                   num=num)
+                   num=segments)
 
-    building = self.images.ir.copy()
+    # 벽+창문 온도
+    building = ir.copy()
     mask = np.isin(self.images.seg, [SegMask.WALL, SegMask.WINDOW])
     building[~mask] = np.nan
     _save_segments(subdir=subdir,
-                   fname='Building Temperature',
-                   ir=building,
+                   fname='TemperatureBuilding',
+                   arr=building,
                    coords=coords,
-                   num=num)
+                   num=segments)
+
+    # 벽+창문 factor
+    factor = IIO.read(self.fm.panorama_path(DIR.ANLY, SP.TF))
+    _save_segments(subdir=subdir,
+                   fname=SP.TF.value,
+                   arr=factor,
+                   coords=coords,
+                   num=segments)
+
+    # 컬러맵
+    save_colormap(path=subdir.joinpath('colormap.csv'))
 
     self.draw()

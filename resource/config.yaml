@@ -93,7 +93,7 @@ distort_correction:
     hough: # optional
         threshold: 10
         line_length: 10
-        line_gap: 10
+        line_gap: 5
 output:
     canny:
         sigma: 2.0
@@ -108,7 +108,6 @@ output:
         segmentation: true
         window_threshold: 0.5
         slab_position: 0.5
-        segments_count: 20
         max_count: 10
         distance_threshold: 10
         angle_threshold: 5

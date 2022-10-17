@@ -159,7 +159,7 @@ class Images:
   def ir(self):
     if self._ir is None:
       self._read_ir()
-    return self._ir
+    return self._ir.copy()
 
   @ir.setter
   def ir(self, value: np.ndarray):
@@ -234,11 +234,19 @@ class Images:
     self._fm.subdir(DIR.ANLY, mkdir=True)
     ImageIO.save(self._path(SP.SEG), tools.SegMask.index_to_vis(self.seg))
 
+    # IR
     irp = self._path(SP.IR)
     ImageIO.save(irp, self.ir)
     ImageIO.save(self._fm.color_path(irp),
                  apply_colormap(self.ir, cmap=_get_cmap(), na=True))
 
+    # temperature factor
+    try:
+      ImageIO.save(self._path(SP.TF), self.temperature_factor())
+    except ValueError:
+      pass
+
+    # VIS, mask
     if self._crop is not None:
       cr, cm = self._crop
       for sp in [SP.VIS, SP.MASK]:
@@ -535,7 +543,7 @@ class AnalysisPlotController(PanoPlotController):
     self.reset()
     self._plot_image(factor=True)
     self._set_style()
-    self.fig.savefig(subdir.joinpath('TemperatureFactor.png'), dpi=200)
+    self.fig.savefig(subdir.joinpath(f'{SP.TF.value}.png'), dpi=200)
 
     # vulnerable area
     self.reset()

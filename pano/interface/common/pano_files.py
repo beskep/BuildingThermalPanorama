@@ -96,6 +96,7 @@ class SP(Enum):
   VIS = 'VIS'
   SEG = 'Segmentation'
   MASK = 'Mask'
+  TF = 'TemperatureFactor'
 
 
 def _dir(d: Union[str, DIR]) -> DIR:
@@ -106,6 +107,13 @@ def _dir(d: Union[str, DIR]) -> DIR:
 
 
 class ThermalPanoramaFileManager:
+  SP_EXT = {
+      SP.IR: FN.NPY,
+      SP.VIS: FN.LS,
+      SP.SEG: FN.LL,
+      SP.MASK: FN.LL,
+      SP.TF: FN.NPY
+  }
 
   def __init__(self, directory, raw_pattern='*.jpg') -> None:
     self._wd = Path(directory)
@@ -246,8 +254,9 @@ class ThermalPanoramaFileManager:
 
   def panorama_path(self, d: DIR, sp: SP, error=False):
     subdir = self.subdir(d)
-    ext = {SP.IR: FN.NPY, SP.VIS: FN.LS, SP.SEG: FN.LL, SP.MASK: FN.LL}[sp]
-    path = subdir.joinpath(f'Panorama{sp.value}{ext}')
+    prefix = '' if sp is SP.TF else 'Panorama'
+    ext = self.SP_EXT[sp]
+    path = subdir.joinpath(f'{prefix}{sp.value}{ext}')
 
     if error and not path.exists():
       raise FileNotFoundError(path)
