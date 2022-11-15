@@ -266,7 +266,7 @@ class Controller(QtCore.QObject):
     try:
       replace_vis_images(fm=self._fm, files=files)
     except OSError as e:
-      logger.catch(e)
+      logger.catch(e)  # type: ignore
       self.win.popup('Error', str(e))
 
     self.update_image_view()

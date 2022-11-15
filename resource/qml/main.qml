@@ -24,10 +24,10 @@ ApplicationWindow {
     }
     FontLoader {
         id : sans
-        source : '../font/NotoSansCJKkr-DemiLight.otf'
+        source : '../font/SourceHanSansKR-Normal.otf'
     }
     FontLoader {
-        source : '../font/NotoSansCJKkr-Medium.otf'
+        source : '../font/SourceHanSansKR-Medium.otf'
     }
     FontLoader {
         id : icon

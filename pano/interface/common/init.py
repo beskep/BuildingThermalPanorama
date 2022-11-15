@@ -45,9 +45,8 @@ def init_project(qt: bool):
 
     mpl.use('Qt5Agg')
 
-  # TODO 본고딕
-  font_name = 'Noto Sans CJK KR'
-  font_path = DIR.RESOURCE.joinpath('font/NotoSansCJKkr-DemiLight.otf')
+  font_name = 'Source Han Sans KR'
+  font_path = DIR.RESOURCE.joinpath('font/SourceHanSansKR-Normal.otf')
   assert font_path.exists(), font_path
 
   fe = fm.FontEntry(fname=font_path.as_posix(), name=font_name)

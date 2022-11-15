@@ -9,7 +9,7 @@ from typing import Optional, Union
 try:
   import winsound
 except ImportError:
-  winsound = None
+  winsound = None  # type: ignore
 
 from loguru import logger
 from rich.console import Console
@@ -124,7 +124,6 @@ def ptrack(sequence,
 
 
 def play_sound(ok=True):
-  # TODO 모듈 교체 (pygame?)
   if hasattr(winsound, 'MessageBeep'):
     t = winsound.MB_OK if ok else winsound.MB_ICONHAND
     winsound.MessageBeep(t)
