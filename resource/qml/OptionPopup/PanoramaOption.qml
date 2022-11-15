@@ -278,6 +278,7 @@ Popup {
 
         let st = _config['panorama']['stitch']
 
+        // TODO {id}.model.indexOf({value})로 바꾸기
         _perspective.currentIndex = ['panorama', 'scan'].indexOf(st['perspective'])
         _warp.currentIndex = ['plane', 'spherical'].indexOf(st['warp'])
         _compose_scale.value = st['compose_scale'] * 100

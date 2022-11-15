@@ -2,16 +2,35 @@ import os
 from pathlib import Path
 import sys
 
-import matplotlib as mpl
-import seaborn as sns
-import skimage.io
-
 from pano.utils import DIR
 from pano.utils import is_frozen
 
 
+def is_ascii(s: str):
+  return all(ord(c) < 128 for c in s)
+
+
+def ascii_tempdir():
+  tmp = ['TEMP', 'TMP']
+  if all(is_ascii(os.environ[x]) for x in tmp):
+    return
+
+  tmpdir = Path('C:\\Temp')
+  if not tmpdir.exists():
+    tmpdir.mkdir()
+
+  for t in tmp:
+    os.environ[t] = str(tmpdir)
+
+
 def init_project(qt: bool):
+  ascii_tempdir()
+
   # pylint: disable=import-outside-toplevel
+  import matplotlib as mpl
+  import matplotlib.font_manager as fm
+  import seaborn as sns
+  import skimage.io
 
   os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
   skimage.io.use_plugin('pil')
@@ -21,16 +40,12 @@ def init_project(qt: bool):
       import PySide2  # type: ignore
 
       pyside_dir = Path(PySide2.__file__).parent
-      plugins_dir = pyside_dir.joinpath('plugins')
-      qml_dir = pyside_dir.joinpath('qml')
-
-      os.environ['QT_PLUGIN_PATH'] = plugins_dir.as_posix()
-      os.environ['QML2_IMPORT_PATH'] = qml_dir.as_posix()
+      os.environ['QT_PLUGIN_PATH'] = str(pyside_dir / 'plugins')
+      os.environ['QML2_IMPORT_PATH'] = str(pyside_dir / 'qml')
 
     mpl.use('Qt5Agg')
 
-  import matplotlib.font_manager as fm
-
+  # TODO 본고딕
   font_name = 'Noto Sans CJK KR'
   font_path = DIR.RESOURCE.joinpath('font/NotoSansCJKkr-DemiLight.otf')
   assert font_path.exists(), font_path

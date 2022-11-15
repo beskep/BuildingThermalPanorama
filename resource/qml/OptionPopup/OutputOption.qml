@@ -169,7 +169,7 @@ Popup {
 
                         Label {
                             Layout.fillWidth : true
-                            text : '슬라브 상대적 위치'
+                            text : '슬라브 상대 위치 [%]'
                         }
                         SpinBox {
                             id : _edgelet_slab_position
