@@ -124,9 +124,9 @@ cython_debug/
 # Project
 .vscode
 .idea
-resource/DeepLabV3
 resource/TestImage
 resource/font
+*.onnx
 *.exe
 *.bat
 .*.py

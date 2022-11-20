@@ -60,8 +60,7 @@ from pano import utils
 
 from .config import set_config
 
-MODEL_PATH = utils.DIR.RESOURCE.joinpath(
-    'DeepLabV3/frozen_inference_graph_20210927.pb')
+MODEL_PATH = utils.DIR.RESOURCE / 'DeepLabV3PlusResNet50.onnx'
 
 
 class DIR(Enum):

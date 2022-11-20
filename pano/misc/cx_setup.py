@@ -7,6 +7,7 @@ from cx_Freeze import Executable
 from cx_Freeze import setup
 
 from pano.utils import DIR
+from pano.utils import play_sound
 
 
 def build():
@@ -23,6 +24,7 @@ def build():
       'loguru',
       'matplotlib',
       'omegaconf',
+      'onnxruntime',
       'pdb',
       'PIL',
       'pydoc',
@@ -44,7 +46,6 @@ def build():
       'skimage.filters.edges',
       'skimage.io._plugins.pil_plugin',
       'skimage',
-      'tensorflow',
       'webp',
   ]
   excludes = ['locket', 'mypy', 'PySide2', 'tkinter']
@@ -83,3 +84,4 @@ def build():
 
 if __name__ == '__main__':
   build()
+  play_sound()

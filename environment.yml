@@ -22,14 +22,14 @@ dependencies:
     # image
     - opencv
     - scikit-image
-    - tensorflow
+    - onnxruntime
     - simpleitk
     # misc
     - loguru
     - rich
     - click
     - omegaconf
-    - cx_freeze<6.8
+    - cx_freeze
     - pywin32
     # dev
     - pytest
