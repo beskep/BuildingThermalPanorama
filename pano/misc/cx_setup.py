@@ -48,7 +48,7 @@ def build():
       'skimage',
       'webp',
   ]
-  excludes = ['locket', 'mypy', 'PySide2', 'tkinter']
+  excludes = ['locket', 'mypy', 'PySide2', 'tkinter', 'resource']
   zip_include_packages = []
 
   bins = ['ITK']

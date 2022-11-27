@@ -18,7 +18,7 @@ class PanoramaPreprocess:
 
   def __init__(self,
                is_numeric: bool,
-               fillna: Optional[float] = 0.0,
+               fillna: float = 0.0,
                mask_threshold: Optional[float] = -30.0,
                contrast: Optional[str] = 'equalization',
                denoise: Optional[str] = 'bilateral'):
@@ -29,7 +29,7 @@ class PanoramaPreprocess:
         전처리 대상 영상의 픽셀값이 물리적 의미가 있는지 (실화상인지) 여부.
         `True`인 경우, `mask_threshold` 적용.
 
-    fillna : Optional[float]
+    fillna : float
         nan이 존재하는 경우 채워넣을 값.
 
     mask_threshold : Optional[float], optional
@@ -124,6 +124,7 @@ class PanoramaPreprocess:
     Parameters
     ----------
     image : np.ndarray
+        대상 영상
 
     Returns
     -------

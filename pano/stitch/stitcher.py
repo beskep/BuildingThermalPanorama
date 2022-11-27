@@ -13,7 +13,7 @@ from skimage.exposure import rescale_intensity
 from pano.misc.tools import crop_mask
 from pano.misc.tools import CropRange
 
-_AVAILABLE_WARPER = (
+_AVAILABLE_WARPER = {
     'affine',
     'compressedPlaneA1.5B1',
     'compressedPlaneA2B1',
@@ -30,7 +30,7 @@ _AVAILABLE_WARPER = (
     'spherical',
     'stereographic',
     'transverseMercator',
-)
+}
 
 
 class StitchError(ValueError):
@@ -447,10 +447,6 @@ class Stitcher:
   def set_warper(self, scale):
     self._warper = cv.PyRotationWarper(type=self.warper_type, scale=scale)
 
-  @staticmethod
-  def available_warper_types():
-    return _AVAILABLE_WARPER[:]
-
   def set_mode(self, mode: str):
     """파노라마 생성 모드 ({`'pano'`, `'scan'`}) 및 모드별 적절한 알고리즘 설정."""
     if mode.startswith('pano'):
@@ -817,7 +813,7 @@ class Stitcher:
     dst_size = cv.detail.resultRoi(corners=corners, images=images)
 
     # blend width 계산, blender type 결정
-    blend_width = (np.sqrt(dst_size[2] * dst_size[3]) * self._blend_strength)
+    blend_width = (np.sqrt(dst_size[2] * dst_size[3]) * self.blend_strength)
     blend_type = 'no' if blend_width < 1 else self.blend_type
     logger.trace('Blend type: {}', blend_type.title())
 
