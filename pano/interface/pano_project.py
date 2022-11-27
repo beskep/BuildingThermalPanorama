@@ -6,6 +6,7 @@ from typing import List, Optional, Union
 from loguru import logger
 import matplotlib.pyplot as plt
 import numpy as np
+from omegaconf import OmegaConf
 
 from pano import stitch
 from pano import utils
@@ -21,9 +22,10 @@ from pano.segmentation.onnx import SmpModel
 from .common.cmap import apply_colormap
 from .common.cmap import get_thermal_colormap
 from .common.config import DictConfig
-from .common.config import set_config
+from .common.config import update_config
 from .common.pano_files import DIR
 from .common.pano_files import FN
+from .common.pano_files import init_directory
 from .common.pano_files import SP
 from .common.pano_files import ThermalPanoramaFileManager
 
@@ -40,7 +42,7 @@ class ThermalPanorama:
       raise FileNotFoundError(wd)
 
     self._wd = wd
-    self._config = set_config(directory=wd, default=default_config)
+    self._config = init_directory(directory=wd, default=default_config)
     self._fm = ThermalPanoramaFileManager(directory=wd)
 
     # 제조사, Raw 파일 패턴
@@ -63,6 +65,12 @@ class ThermalPanorama:
   @property
   def cmap(self):
     return self._cmap
+
+  def update_config(self, config: Union[utils.StrPath, dict, DictConfig]):
+    if isinstance(config, (str, Path)):
+      config = OmegaConf.load(config)
+
+    self._config = update_config(self._wd, config)
 
   def _check_manufacturer(self) -> str:
     fopt: DictConfig = self._config['file']
@@ -551,27 +559,37 @@ class ThermalPanorama:
     stitcher.blend_strength = cfg['strength']['IR']
     ir_files = self._fm.files(DIR.IR)
     ir_images = [IIO.read(x) for x in ir_files]
-    ir_pano = self._stitch(stitcher=stitcher,
-                           images=ir_images,
-                           names=[x.stem for x in ir_files],
-                           spectrum='IR')
-    self._save_panorama(spectrum=SP.IR, panorama=ir_pano)
+
+    try:
+      ir_pano = self._stitch(stitcher=stitcher,
+                             images=ir_images,
+                             names=[x.stem for x in ir_files],
+                             spectrum='IR')
+    except (ValueError, RuntimeError) as e:
+      logger.exception(e)
+    else:
+      self._save_panorama(spectrum=SP.IR, panorama=ir_pano)
 
     # VIS 파노라마
     stitcher.blend_type = cfg['type']['VIS']
     stitcher.blend_strength = cfg['strength']['VIS']
     vis_files = self._fm.files(DIR.VIS, error=False)
     vis_images = [IIO.read(x) for x in vis_files]
-    vis_pano = self._stitch(stitcher=stitcher,
-                            images=vis_images,
-                            names=[x.stem for x in vis_files],
-                            spectrum='VIS')
-    self._save_panorama(spectrum=SP.VIS, panorama=vis_pano, save_mask=False)
 
-    # segmentation mask
-    stitcher.blend_type = False
-    stitcher.interp = stitch.Interpolation.NEAREST
-    self._stitch_others(stitcher=stitcher, panorama=vis_pano, sp=SP.SEG)
+    try:
+      vis_pano = self._stitch(stitcher=stitcher,
+                              images=vis_images,
+                              names=[x.stem for x in vis_files],
+                              spectrum='VIS')
+    except (ValueError, RuntimeError) as e:
+      logger.exception(e)
+    else:
+      self._save_panorama(spectrum=SP.VIS, panorama=vis_pano, save_mask=False)
+
+      # segmentation mask
+      stitcher.blend_type = False
+      stitcher.interp = stitch.Interpolation.NEAREST
+      self._stitch_others(stitcher=stitcher, panorama=vis_pano, sp=SP.SEG)
 
   def panorama(self):
     # Raw 파일 추출
@@ -714,11 +732,14 @@ class ThermalPanorama:
     save_webp_images(*images, path=path)
 
   def run(self):
+    separate = self._config['panorama']['separate']
+
     logger.info('Start extracting')
     self.extract()
 
-    logger.info('Start registering')
-    self.register()
+    if not separate:
+      logger.info('Start registering')
+      self.register()
 
     logger.info('Start segmenting')
     self.segment()
@@ -726,5 +747,6 @@ class ThermalPanorama:
     logger.info('Start panorama stitching')
     self.panorama()
 
-    logger.info('Start distortion correction')
-    self.correct()
+    if not separate:
+      logger.info('Start distortion correction')
+      self.correct()

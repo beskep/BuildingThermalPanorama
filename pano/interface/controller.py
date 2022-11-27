@@ -1,7 +1,7 @@
 import json
 import multiprocessing as mp
 from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 
 from loguru import logger
 import numpy as np
@@ -194,7 +194,7 @@ class Controller(QtCore.QObject):
 
     self._wd: Optional[Path] = None
     self._fm: Optional[ThermalPanoramaFileManager] = None
-    self._pc: Any = None
+    self._pc = PlotControllers(None, None, None, None, None)  # type: ignore
     self._config: Optional[DictConfig] = None
 
   @property
@@ -266,7 +266,7 @@ class Controller(QtCore.QObject):
     try:
       replace_vis_images(fm=self._fm, files=files)
     except OSError as e:
-      logger.catch(e)  # type: ignore
+      logger.exception(e)
       self.win.popup('Error', str(e))
 
     self.update_image_view()
@@ -521,7 +521,7 @@ class Controller(QtCore.QObject):
     except FileNotFoundError as e:
       logger.debug('FileNotFound: "{}"', e)
     except ValueError as e:
-      logger.catch(e)
+      logger.exception(e)
       self.win.popup('Error', str(e))
     else:
       self.win.panel_funtion('analysis', 'set_temperature_range',
@@ -539,7 +539,7 @@ class Controller(QtCore.QObject):
     try:
       self.pc.analysis.read_multilayer()
     except (OSError, ValueError) as e:
-      logger.catch(e)
+      logger.exception(e)
       self.win.popup('Error', str(e))
 
   @QtCore.Slot()
@@ -592,7 +592,7 @@ class Controller(QtCore.QObject):
                                                coord=self.pc.analysis.coord,
                                                T1=temperature)
     except ValueError as e:
-      logger.catch(e)
+      logger.exception(e)
       self.win.popup('Error', str(e))
     else:
       self.pc.analysis.images.ir = ir
@@ -630,7 +630,7 @@ class Controller(QtCore.QObject):
     except WorkingDirNotSet:
       pass
     except ValueError as e:
-      logger.catch(e)
+      logger.exception(e)
       self.win.popup('Error', f'{e} 지표 및 분포 정보를 저장하지 못했습니다.')
       self.pc.analysis.plot()
     else:
@@ -677,7 +677,7 @@ class Controller(QtCore.QObject):
                            seg_length=seg_length,
                            building_width=building_width)
     except ValueError as e:
-      logger.catch(e)
+      logger.exception(e)
       self.win.popup('Error', str(e))
       segments = None
 
@@ -693,7 +693,7 @@ class Controller(QtCore.QObject):
     except WorkingDirNotSet:
       pass
     except (OSError, ValueError) as e:
-      logger.catch(e)
+      logger.exception(e)
       self.win.popup('Error', str(e))
     else:
       self.win.popup('Success', '저장 완료')
