@@ -159,7 +159,7 @@ class Images:
   def ir(self):
     if self._ir is None:
       self._read_ir()
-    return self._ir.copy()
+    return self._ir.copy()  # type: ignore
 
   @ir.setter
   def ir(self, value: np.ndarray):
@@ -209,10 +209,10 @@ class Images:
     cr, cp = tools.crop_mask(mask=polygon, morphology_open=False)
 
     self._ir = cr.crop(self.ir)
-    self._ir[~cp] = np.nan
+    self._ir[~cp] = np.nan  # type: ignore
 
     self._seg = cr.crop(self.seg)
-    self._seg[~cp] = False
+    self._seg[~cp] = False  # type: ignore
 
     self._crop = (cr, cp)
 
@@ -528,7 +528,7 @@ class AnalysisPlotController(PanoPlotController):
     self.draw()
 
   def save(self):
-    subdir = self._fm.subdir(DIR.ANLY, mkdir=True)
+    subdir = self.fm.subdir(DIR.ANLY, mkdir=True)
     distribution = self.setting.distribution
 
     # distribution

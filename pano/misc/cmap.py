@@ -8,8 +8,8 @@ from matplotlib.colors import Colormap
 from matplotlib.colors import ListedColormap
 import numpy as np
 
-from . import exif
-from . import tools
+from pano.misc import exif
+from pano.misc import tools
 
 
 def extract_flir_colormap(image_path: str,
@@ -29,7 +29,7 @@ def extract_flir_colormap(image_path: str,
   """
   color_space = color_space.lower()
   if color_space not in {'rgb', 'ycrcb'}:
-    raise ValueError('{} not in {{"rgb", "ycrcb"}}'.format(color_space))
+    raise ValueError(f'{color_space} not in {{"rgb", "ycrcb"}}')
 
   palette = exif.get_exif_binary(image_path=image_path, tag='-Palette')
   palette_array = np.array(list(palette)).reshape([1, -1, 3]).astype(np.uint8)
@@ -87,11 +87,9 @@ class FLIRColormap(ListedColormap):
     -------
     ListedColormap
     """
-    colors = exif.get_exif_binary(image_path=path, tag='-Palette')
-    colors = np.array(list(colors)).astype('uint8')
-    instance = cls.from_uint8_colors(colors=colors, color_space='ycrcb')
-
-    return instance
+    palette = exif.get_exif_binary(image_path=path, tag='-Palette')
+    colors = np.array(list(palette)).astype(np.uint8)
+    return cls.from_uint8_colors(colors=colors, color_space='ycrcb')
 
   @classmethod
   def from_uint8_text_file(cls,
@@ -112,9 +110,7 @@ class FLIRColormap(ListedColormap):
     ListedColormap
     """
     colors = np.loadtxt(path)
-    instance = cls.from_uint8_colors(colors=colors, color_space=color_space)
-
-    return instance
+    return cls.from_uint8_colors(colors=colors, color_space=color_space)
 
 
 def apply_colormap(image: np.ndarray, cmap: Colormap, na=False) -> np.ndarray:

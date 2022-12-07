@@ -12,7 +12,7 @@ from skimage.io import imsave
 
 
 def draw_mask(shape, rows, cols):
-  mask = np.zeros(shape=shape, dtype=np.int)
+  mask = np.zeros(shape=shape, dtype=int)
   rr, cc = draw_polygon(r=rows, c=cols)
   mask[rr, cc] = 1
 
@@ -81,7 +81,7 @@ class VIAProject:
 
       ra = region['region_attributes'][self._attr_name]
       if not any(x in ra for x in self._attr_ids):
-        warn('file {}: attribute 지정 안됨'.format(fname))
+        warn(f'file {fname}: attribute 지정 안됨')
         continue
 
       for x in self._attr_ids:
@@ -122,6 +122,6 @@ class VIAProject:
                        cols=rshape['all_points_x'])
       mask = mask.astype('uint8') * 255
 
-      path = save_dir.joinpath('{}_{}_{}'.format(
-          fname.stem, rclass, class_count[rclass])).with_suffix('.png')
+      path = save_dir.joinpath(
+          f'{fname.stem}_{rclass}_{class_count[rclass]}').with_suffix('.png')
       imsave(fname=path.as_posix(), arr=mask, check_contrast=False)

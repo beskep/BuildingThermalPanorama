@@ -9,6 +9,8 @@ import yaml
 
 from .imageio import ImageIO
 
+_ENC = 'UTF-8'
+
 
 def _detect_chessboard(file: Path, save_dir: Path, img_size, pattern_size,
                        criteria):
@@ -59,7 +61,7 @@ def _calibrate_camera(object_points, image_points, image_size, save_dir: Path):
       'rvecs': np.array(rvecs).tolist(),
       'tvecs': np.array(tvecs).tolist(),
   }
-  with open(save_dir.joinpath('parameters.yaml'), 'w') as f:
+  with open(save_dir.joinpath('parameters.yaml'), 'w', encoding=_ENC) as f:
     yaml.dump(res_dict, stream=f)
 
   np.savez(file=save_dir.joinpath('parameters'),
@@ -140,7 +142,7 @@ class CameraCalibration:
       self._matrix = npz_file['matrix']
       self._dist_coeff = npz_file['dist_coeff']
     elif ext in ['.yaml', '.yml']:
-      with open(params_path, 'r') as f:
+      with open(params_path, 'r', encoding=_ENC) as f:
         params = yaml.safe_load(f)
 
       self._img_size = tuple(params['image_size'])

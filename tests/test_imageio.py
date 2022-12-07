@@ -36,6 +36,7 @@ class TestImageIO:
     img_npy, meta = ImageIO.read_with_meta(path.with_suffix('.npy'),
                                            scale=False)
     assert self.arr == pytest.approx(img_npy)
+    assert meta is not None
 
     meta_ = meta.copy()
     meta_['range'] = {'min': 0.0, 'max': 10.0}

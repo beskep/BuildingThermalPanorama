@@ -85,6 +85,7 @@ class PanoramaPlotController(PanoPlotController):
 
   def home(self):
     if self.axes.has_data():
+      assert self._toolbar is not None
       self._toolbar.home()
 
   def crop_mode(self, value: bool):

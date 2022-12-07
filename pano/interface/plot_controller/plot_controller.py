@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 from typing import Optional
 
 from matplotlib.axes import Axes
@@ -86,7 +87,7 @@ class PlotController(QtCore.QObject):
 
   def reset(self):
     if isinstance(self.axes, Axes):
-      axs = (self.axes,)
+      axs: Iterable = (self.axes,)
     elif isinstance(self.axes, np.ndarray):
       axs = self.axes.ravel()
     else:

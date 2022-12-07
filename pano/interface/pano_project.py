@@ -657,7 +657,7 @@ class ThermalPanorama:
     if self._config['distort_correction']['apply_mask']:
       mask = IIO.read(self._fm.panorama_path(DIR.PANO, SP.MASK)).astype(bool)
     else:
-      mask = None
+      mask = np.ones_like(pano).astype(bool)
 
     seg = IIO.read(self._fm.panorama_path(DIR.PANO, SP.SEG))
     if (pano.shape[:2] != seg.shape[:2]):

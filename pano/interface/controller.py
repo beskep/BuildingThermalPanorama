@@ -43,7 +43,7 @@ def _path2url(path):
 
 
 def _url2path(url: str):
-  return Path(url.replace('file:///', ''))
+  return Path(url.removeprefix('file:///'))
 
 
 def _producer(queue: mp.Queue, directory, command: str, loglevel: int):
@@ -209,6 +209,13 @@ class Controller(QtCore.QObject):
   def pc(self) -> PlotControllers:
     return self._pc
 
+  @property
+  def fm(self) -> ThermalPanoramaFileManager:
+    if self._fm is None:
+      raise ValueError('ThermalPanoramaFileManager not set')
+
+    return self._fm
+
   def set_plot_controllers(self, controllers: dict):
     self._pc = PlotControllers(**controllers)
     self._pc.analysis.summarize = self._analysis_summarize
@@ -257,14 +264,12 @@ class Controller(QtCore.QObject):
 
   @QtCore.Slot(str)
   def prj_select_vis_images(self, files: str):
-    assert self._fm is not None
-
-    if not self._fm.subdir(DIR.VIS).exists():
+    if not self.fm.subdir(DIR.VIS).exists():
       self.win.popup('Warning', '열·실화상 데이터를 먼저 추출해주세요.', 5000)
       return
 
     try:
-      replace_vis_images(fm=self._fm, files=files)
+      replace_vis_images(fm=self.fm, files=files)
     except OSError as e:
       logger.exception(e)
       self.win.popup('Error', str(e))
@@ -353,7 +358,7 @@ class Controller(QtCore.QObject):
     exts = {'.npy', '.jpg', '.png', '.webp'}
     for d in (DIR.SEG, DIR.PANO, DIR.COR):
       files = [
-          x for x in self._fm.glob(d, '*')
+          x for x in self.fm.glob(d, '*')
           if x.is_file() and x.suffix.lower() in exts
       ]
       logger.debug('delete files in {}: {}', d, [x.name for x in files])
@@ -368,17 +373,13 @@ class Controller(QtCore.QObject):
 
   def update_image_view(self,
                         panels=('project', 'registration', 'segmentation')):
-    if self._fm is None:
-      logger.warning('Directory not set')
-      return
-
-    raw_files = [_path2url(x) for x in self._fm.raw_files()]
+    raw_files = [_path2url(x) for x in self.fm.raw_files()]
     if not raw_files:
       logger.debug('no files')
       return
 
     try:
-      vis_files = [_path2url(x) for x in self._fm.files(DIR.VIS, error=False)]
+      vis_files = [_path2url(x) for x in self.fm.files(DIR.VIS, error=False)]
     except FileNotFoundError:
       vis_files = raw_files
 
@@ -399,6 +400,7 @@ class Controller(QtCore.QObject):
 
   @QtCore.Slot()
   def rgst_save(self):
+    assert self._config is not None
     self.pc.registration.save(panorama=self._config['panorama']['separate'])
     self.win.popup('Success', '저장 완료', timeout=1000)
 
@@ -421,6 +423,7 @@ class Controller(QtCore.QObject):
   @QtCore.Slot(str)
   def seg_plot(self, url):
     assert self._wd is not None
+    assert self._config is not None
     path = _url2path(url)
 
     try:
@@ -485,6 +488,7 @@ class Controller(QtCore.QObject):
     self._consumer.start()
 
     pano = self.pc.panorama
+    assert self._wd is not None
     args = (queue, self._wd.as_posix(), pano.subdir, pano.viewing_angle,
             (roll, pitch, yaw), pano.crop_range())
     process = mp.Process(name='save', target=_save_manual_correction, args=args)
@@ -495,8 +499,8 @@ class Controller(QtCore.QObject):
     if not self._fm:
       return
 
-    ir = self._fm.panorama_path(d=DIR.PANO, sp=SP.IR)
-    vis = self._fm.panorama_path(d=DIR.PANO, sp=SP.VIS)
+    ir = self.fm.panorama_path(d=DIR.PANO, sp=SP.IR)
+    vis = self.fm.panorama_path(d=DIR.PANO, sp=SP.VIS)
 
     if any(not x.exists() for x in (ir, vis)):
       self.win.popup('Warning', '파노라마 생성 결과가 없습니다.')
@@ -567,7 +571,7 @@ class Controller(QtCore.QObject):
     except WorkingDirNotSet:
       return
 
-    meta_files = list(self._fm.subdir(DIR.IR).glob('*.yaml'))
+    meta_files = list(self.fm.subdir(DIR.IR).glob('*.yaml'))
 
     for idx, e1 in zip([1, 2], [wall, window]):
       ir0 = np.full_like(ir, np.nan)

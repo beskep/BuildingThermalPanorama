@@ -352,10 +352,10 @@ class LinesSelector(_SelectorWidget):
 
   def _new_point(self, event):
     new_line = self._current_line is None
-
     if new_line:
       self._current_line = self.make_line()
 
+    assert self._current_line is not None
     xs, ys = self._current_line.get_data()
     if new_line:
       xs[0] = event.xdata
