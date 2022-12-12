@@ -33,11 +33,7 @@ disable = [
     'missing-class-docstring',
     'missing-function-docstring',
     'missing-module-docstring',
-    'missing-raises-doc',
-    'missing-return-doc',
-    'protected-access',
     'redefined-outer-name',
-    'superfluous-parens',
     'too-few-public-methods',
     'too-many-arguments',
     'trailing-whitespace',
@@ -49,6 +45,9 @@ disable = [
 
 [tool.mypy]
 disable_error_code = ['var-annotated', 'import']
+check_untyped_defs = true
+warn_unused_ignores = true
+warn_unused_configs = true
 
 [tool.pytest.ini_options]
 addopts = '-v'

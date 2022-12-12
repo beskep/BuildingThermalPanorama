@@ -63,7 +63,7 @@ panorama:
                 sigmaSpace: 10
             gaussian_args: # optional
                 ksize: [5, 5]
-                sigmaX: 0
+                sigmaX: 5
         VIS:
             masking_threshold: null
             contrast: normalization # {"equalization", "normalization", null}
@@ -74,7 +74,7 @@ panorama:
                 sigmaSpace: 10
             gaussian_args: # optional
                 ksize: [5, 5]
-                sigmaX: 0
+                sigmaX: 5
 distort_correction:
     apply_mask: true
     correction:
