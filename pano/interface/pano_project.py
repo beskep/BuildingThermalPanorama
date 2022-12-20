@@ -660,7 +660,7 @@ class ThermalPanorama:
       mask = np.ones_like(pano).astype(bool)
 
     seg = IIO.read(self._fm.panorama_path(DIR.PANO, SP.SEG))
-    if (pano.shape[:2] != seg.shape[:2]):
+    if pano.shape[:2] != seg.shape[:2]:
       raise ValueError('열·실화상 파노라마의 크기가 다릅니다. 파노라마 정합을 먼저 시행해주세요.')
 
     # wall, window 영역만 추출

@@ -192,8 +192,8 @@ class ThermalPanoramaFileManager:
     elif d in (DIR.VIS, DIR.SEG) and any(not x.exists() for x in files):
       # 다른 실화상을 입력한 경우, VIS/SEG 폴더에 존재하는 영상 목록 반환
       exts = {'.png'} if d is DIR.SEG else {'.png', '.jpg', '.webp'}
-      files = list(x for x in subdir.glob('*')
-                   if x.is_file() and x.suffix.lower() in exts)
+      files = list(x for x in subdir.glob('*') if x.is_file() and
+                   x.suffix.lower() in exts and not x.name.endswith('_fig.png'))
 
     if not files:
       raise FileNotFoundError(f'no file in {subdir}', subdir)
