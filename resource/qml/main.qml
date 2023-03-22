@@ -16,7 +16,7 @@ ApplicationWindow {
     width : 1600
     height : 900
     visible : true
-    title : qsTr('건물 에너지 검진을 위한 열화상 파노라마 영상처리 프로그램')
+    title : '열화상 하자 자동 판정 솔루션'
 
     FontLoader {
         id : mono
@@ -152,6 +152,17 @@ ApplicationWindow {
             indeterminate : false
             value : 1.0
         }
+    }
+
+    Image {
+        source : '../EGSolutionsLogoKR.svg'
+        sourceSize.width : tab_bar.width - 10
+
+        anchors.left : parent.left
+        anchors.leftMargin : 5
+
+        anchors.bottom : parent.bottom
+        anchors.bottomMargin : 10
     }
 
     TimeoutPopup {

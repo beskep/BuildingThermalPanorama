@@ -23,7 +23,7 @@ Pane {
             font.pointSize : 11
             color : "#212121"
 
-            text : '건물 에너지 검진을 위한 열화상 파노라마 영상처리 프로그램'
+            text : '열화상 하자 자동 판정 솔루션'
         }
 
         Label {
