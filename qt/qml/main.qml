@@ -1,7 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Controls.Material 2.15
-import QtQuick.Dialogs 1.3
 import QtQuick.Layouts 1.15
 import QtQuick.Window 2.15
 
@@ -12,6 +11,7 @@ ApplicationWindow {
     id : app
     property ApplicationWindow app : app
     property bool separate_panorama : false
+    property string fd : '../../resource/font/'
 
     width : 1600
     height : 900
@@ -20,18 +20,18 @@ ApplicationWindow {
 
     FontLoader {
         id : mono
-        source : '../font/FiraCode-Regular.ttf'
+        source : `${fd}FiraCode-Regular.ttf`
     }
     FontLoader {
         id : sans
-        source : '../font/SourceHanSansKR-Normal.otf'
+        source : `${fd}SourceHanSansKR-Normal.otf`
     }
     FontLoader {
-        source : '../font/SourceHanSansKR-Medium.otf'
+        source : `${fd}SourceHanSansKR-Medium.otf`
     }
     FontLoader {
         id : icon
-        source : '../font/MaterialIcons-Regular.ttf'
+        source : `${fd}MaterialIcons-Regular.ttf`
     }
 
     ColumnLayout {
@@ -179,19 +179,20 @@ ApplicationWindow {
     }
 
     function get_panel(name) {
-        if (name === 'project') {
-            return project_panel
-        } else if (name === 'registration') {
-            return registration_panel
-        } else if (name === 'segmentation') {
-            return segmentation_panel
-        } else if (name === 'panorama') {
-            return panorama_panel
-        } else if (name === 'analysis') {
-            return analysis_panel
+        switch (name) {
+            case 'project':
+                return project_panel
+            case 'registration':
+                return registration_panel
+            case 'segmentation':
+                return segmentation_panel
+            case 'panorama':
+                return panorama_panel
+            case 'analysis':
+                return analysis_panel
+            default:
+                return null
         }
-
-        return null
     }
 
     function set_separate_panorama(value) {

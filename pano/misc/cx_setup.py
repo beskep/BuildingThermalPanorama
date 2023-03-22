@@ -12,11 +12,12 @@ from pano.utils import play_sound
 
 def build():
   resources = [
-      x.relative_to(DIR.ROOT).as_posix()
+      str(x.relative_to(DIR.ROOT))
       for x in DIR.RESOURCE.iterdir()
       if not x.name.lower().startswith('test')
   ]
   include_files = [(x, x) for x in resources]
+  include_files.append(('qt', 'qt'))
 
   includes = [
       'click',

@@ -278,7 +278,8 @@ Popup {
 
         let st = _config['panorama']['stitch']
 
-        // TODO {id}.model.indexOf({value})로 바꾸기
+        // XXX 대소문자 문제로 {id}.model.indexOf({value}) 대신 array 직접 지정
+        // 문제 발생 시, config.yaml의 옵션을 GUI 표기와 통일
         _perspective.currentIndex = ['panorama', 'scan'].indexOf(st['perspective'])
         _warp.currentIndex = ['plane', 'spherical'].indexOf(st['warp'])
         _compose_scale.value = st['compose_scale'] * 100
