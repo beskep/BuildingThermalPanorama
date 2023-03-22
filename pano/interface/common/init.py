@@ -37,7 +37,7 @@ def init_project(qt: bool):
 
   if qt:
     if not is_frozen() and 'PySide2' in sys.modules:
-      import PySide2  # type: ignore
+      import PySide2
 
       pyside_dir = Path(PySide2.__file__).parent
       os.environ['QT_PLUGIN_PATH'] = str(pyside_dir / 'plugins')

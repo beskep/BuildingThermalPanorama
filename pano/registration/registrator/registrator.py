@@ -55,6 +55,7 @@ class RegistrationPreprocess:
     self._edge = edge
 
   def parameters(self):
+    value: Union[bool, tuple[bool, bool]]
     for name, value in zip(['eqhist', 'unsharp'],
                            [self._eqhist, self._unsharp]):
       if isinstance(value, tuple) and value[0] == value[1]:
@@ -234,6 +235,7 @@ class RegisteringImage:
     if self._shape is not None and self._shape != image.shape[:2]:
       raise ValueError('shape error')
 
+    assert self._trsf_mtx is not None
     trsf_image = warp(image, inverse_map=inv(self._trsf_mtx))
 
     return trsf_image
@@ -309,6 +311,7 @@ class BaseRegistrator(abc.ABC):
         Fixed image
     moving_image : np.ndarray
         Moving image
+    **kwargs: dict, optional
 
     Returns
     -------
@@ -332,8 +335,9 @@ class BaseRegistrator(abc.ABC):
                            shape=fixed_image.shape,
                            preprocess=preprocess.moving_preprocess)
 
-    rgst_prep_image, register, matrix = self.register(
-        fixed_image=fri.prep_image(), moving_image=mri.prep_image(), **kwargs)
+    _, register, matrix = self.register(fixed_image=fri.prep_image(),
+                                        moving_image=mri.prep_image(),
+                                        **kwargs)
     mri.set_registration(transform_matrix=matrix, transform_function=register)
 
     return fri, mri
