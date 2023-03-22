@@ -24,7 +24,11 @@ T.RadioButton {
     Material.foreground : checked ? '#ffffff' : Material.hintTextColor
 
     indicator : RadioIndicator {
-        x : text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
+        x : (text ? //
+                (control.mirrored ? //
+            control.width - width - control.rightPadding : //
+            control.leftPadding) : //
+            control.leftPadding + (control.availableWidth - width) / 2)
         y : control.topPadding + (control.availableHeight - height) / 2
         control : control
 

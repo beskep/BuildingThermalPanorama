@@ -36,14 +36,11 @@ def _qt_message_handler(mode, context, message):
 
 
 class Files:
-  CONF = utils.DIR.RESOURCE / 'qtquickcontrols2.conf'
-  QML = utils.DIR.RESOURCE / 'qml/main.qml'
+  CONF = utils.DIR.QT / 'qtquickcontrols2.conf'
+  QML = utils.DIR.QT / 'qml/main.qml'
 
 
 def _init(debug, loglevel, qmh):
-  Files.CONF.stat()
-  Files.QML.stat()
-
   loglevel = min(loglevel, (10 if debug else 20))
   utils.set_logger(loglevel)
 
@@ -55,7 +52,7 @@ def _init(debug, loglevel, qmh):
 
   QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
   QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
-  os.environ['QT_QUICK_CONTROLS_CONF'] = Files.CONF.as_posix()
+  os.environ['QT_QUICK_CONTROLS_CONF'] = str(Files.CONF)
 
 
 @click.command(context_settings={
@@ -64,15 +61,14 @@ def _init(debug, loglevel, qmh):
 })
 @click.option('-d', '--debug', is_flag=True)
 @click.option('-l', '--loglevel', default=20)
-@click.option('--qmh/--no-qmh', default=True)
-def main(debug=False, loglevel=20, qmh=False):
+def main(debug=False, loglevel=20):
   freeze_support()
-  _init(debug=debug, loglevel=loglevel, qmh=qmh)
+  _init(debug=debug, loglevel=loglevel, qmh=loglevel < 10)
 
   QtQml.qmlRegisterType(FigureCanvas, 'Backend', 1, 0, 'FigureCanvas')
 
   app = QtGui.QGuiApplication(sys.argv)
-  engine = QtQml.QQmlApplicationEngine(Files.QML.as_posix())
+  engine = QtQml.QQmlApplicationEngine(str(Files.QML))
 
   try:
     win: QtGui.QWindow = engine.rootObjects()[0]

@@ -31,8 +31,8 @@ T.ToolButton {
             font.family : 'Material Icons'
             font.pointSize : _text.font.pixelSize
             color : (!control.enabled ? control.Material.hintTextColor : //
-                    (control.checked || control.highlighted) ? control.Material.accent : //
-                    '#fff')
+                    (control.checked || control.highlighted) ? //
+                control.Material.accent : '#fff')
             elide : Text.ElideRight
             horizontalAlignment : Text.AlignHCenter
             verticalAlignment : Text.AlignVCenter
@@ -42,8 +42,8 @@ T.ToolButton {
             text : control.text
             font : control.font
             color : (!control.enabled ? control.Material.hintTextColor : //
-                    (control.checked || control.highlighted) ? control.Material.accent : //
-                    '#fff')
+                    (control.checked || control.highlighted) ? //
+                control.Material.accent : '#fff')
             elide : Text.ElideRight
             horizontalAlignment : Text.AlignHCenter
             verticalAlignment : Text.AlignVCenter

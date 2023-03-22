@@ -28,8 +28,9 @@ class DIR:
   else:
     ROOT = Path(__file__).parents[1].resolve()
 
-  SRC = ROOT.joinpath('pano')
-  RESOURCE = ROOT.joinpath('resource')
+  SRC = ROOT / 'pano'
+  RESOURCE = ROOT / 'resource'
+  QT = ROOT / 'qt'
 
 
 class _Handler(RichHandler):

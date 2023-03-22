@@ -320,7 +320,7 @@ Pane {
                                 }
                                 CheckBox {
                                     checkState : Qt.Unchecked
-                                    onCheckStateChanged : con.pano_set_grid(checkState == Qt.Checked)
+                                    onCheckStateChanged : con.pano_set_grid(checkState === Qt.Checked)
                                 }
 
                                 Rectangle {

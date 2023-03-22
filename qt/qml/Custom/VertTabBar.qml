@@ -11,11 +11,6 @@ import QtQuick.Templates 2.12 as T
 T.TabBar {
     id : control
 
-    // implicitWidth : Math.max(background ? background.implicitWidth : 0,
-    //                          contentWidth + leftPadding + rightPadding)
-    // implicitHeight : Math.max(background ? background.implicitHeight : 0,
-    //                           contentHeight + topPadding + bottomPadding)
-
     spacing : 1
     contentHeight : 40
 

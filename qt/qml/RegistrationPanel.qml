@@ -212,7 +212,7 @@ Pane {
                         CheckBox {
                             padding : 0
                             checkState : Qt.Unchecked
-                            onCheckStateChanged : con.rgst_set_grid(checkState == Qt.Checked)
+                            onCheckStateChanged : con.rgst_set_grid(checkState === Qt.Checked)
                         }
                     }
                 }

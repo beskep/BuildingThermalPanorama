@@ -21,11 +21,5 @@ Slider {
         width : control.availableWidth
         height : implicitHeight
         color : Material.color(control.Material.accentColor, Material.Shade100)
-
-        // Rectangle {
-        //     width : control.visualPosition * parent.width
-        //     height : parent.height
-        //     color : control.Material.accentColor
-        // }
     }
 }
