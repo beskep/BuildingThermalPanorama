@@ -247,7 +247,7 @@ class MutualInformation:
     px = np.sum(pxy, axis=0)
     py = np.sum(pxy, axis=1).reshape([-1, 1])
 
-    pxy_pxpy = np.divide(pxy, px * py, out=np.ones_like(pxy), where=(pxy != 0))
+    pxy_pxpy = np.divide(pxy, px * py, out=np.ones_like(pxy), where=pxy != 0)
     mmi = np.sum(pxy * np.log2(pxy_pxpy)) / np.log2(self.base)
 
     return mmi
@@ -266,10 +266,10 @@ class MutualInformation:
     axes[1].imshow(self.image2, cmap='gray')
     axes[2].matshow(self.joint_hist)
 
-    axes[0].set_title('Image 1 | entropy: {:.3f}'.format(self.image1_entropy))
-    axes[1].set_title('Image 2 | entropy: {:.3f}'.format(self.image2_entropy))
-    axes[2].set_title('Entropy: {:.3f} | MI: {:.3f}'.format(
-        self.joint_entropy, self.mutual_information))
+    axes[0].set_title(f'Image 1 | entropy: {self.image1_entropy:.3f}')
+    axes[1].set_title(f'Image 2 | entropy: {self.image2_entropy:.3f}')
+    axes[2].set_title(f'Entropy: {self.joint_entropy:.3f} | '
+                      f'MI: {self.mutual_information:.3f}')
 
     return fig, axes
 

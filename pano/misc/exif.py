@@ -2,7 +2,7 @@
 
 from subprocess import check_output
 from subprocess import DEVNULL
-from typing import List, Optional, Union
+from typing import Iterable, List, Optional, Union
 
 import yaml
 
@@ -23,7 +23,7 @@ def exiftool(*args) -> bytes:
 
 
 def get_exif(files: Union[str, List[str]],
-             tags: Optional[List[str]] = None) -> List[dict]:
+             tags: Optional[Iterable[str]] = None) -> List[dict]:
   """
   촬영 파일로부터 Exif tag 추출
 

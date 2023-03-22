@@ -190,6 +190,8 @@ class SITKRegistrator(BaseRegistrator):
       logger.warning('초기 scale이 설정되지 않았습니다. 정합 결과가 부정확할 수 있습니다.')
       scale = 1.0
 
+    trsf: sitk.Transform
+
     # 초기 scale 설정
     if transformation is Transformation.Similarity:
       # params: (scale, angle, translation0, translation1)
@@ -346,10 +348,10 @@ class SITKRegistrator(BaseRegistrator):
         Fixed image (정합의 기준이 되는 고정된 영상)
     moving_image : np.ndarray
         Moving image (정합을 위해 변환하는 영상)
-    set_origin : bool
-        `True`일 경우 초기 회전 중심을 영상 중심으로 설정 (default: `False`)
-
-        `True`인 경우 **transform matrix를 적용 전 영상 중심을 조정해야 함**.
+    **kwargs: dict, optional
+        set_origin : bool
+            `True`일 경우 초기 회전 중심을 영상 중심으로 설정 (default: `False`).
+            `True`인 경우 **transform matrix를 적용 전 영상 중심을 조정해야 함**.
 
     Returns
     -------

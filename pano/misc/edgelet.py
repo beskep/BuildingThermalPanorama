@@ -116,7 +116,8 @@ def image2edges(image: np.ndarray,
 
 def edge2edgelets(edges: np.ndarray,
                   hough_option: Optional[HoughOptions] = None) -> Edgelets:
-  lines = np.array(probabilistic_hough_line(edges, **dc.asdict(hough_option)))
+  kwargs = {} if hough_option is None else dc.asdict(hough_option)
+  lines = np.array(probabilistic_hough_line(edges, **kwargs))
 
   locations = np.average(lines, axis=1)
   directions = lines[:, 1, :] - lines[:, 0, :]

@@ -813,7 +813,7 @@ class Stitcher:
     dst_size = cv.detail.resultRoi(corners=corners, images=images)
 
     # blend width 계산, blender type 결정
-    blend_width = (np.sqrt(dst_size[2] * dst_size[3]) * self.blend_strength)
+    blend_width = np.sqrt(dst_size[2] * dst_size[3]) * self.blend_strength
     blend_type = 'no' if blend_width < 1 else self.blend_type
     logger.trace('Blend type: {}', blend_type.title())
 
