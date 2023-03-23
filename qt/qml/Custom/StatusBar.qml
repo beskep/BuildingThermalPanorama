@@ -5,6 +5,8 @@ import QtQuick.Layouts 1.15
 
 
 Pane {
+    property alias text : status_text.text
+
     height : 32
     horizontalPadding : 20
     verticalPadding : 0
@@ -22,16 +24,10 @@ Pane {
             Layout.alignment : Qt.AlignVCenter
             font.pointSize : 11
             color : "#212121"
-
-            text : '건물 에너지 검진을 위한 열화상 파노라마 영상처리 프로그램'
         }
 
         Label {
             Layout.fillWidth : true
         }
-    }
-
-    function status_message(msg) {
-        status_text.text = msg
     }
 }
