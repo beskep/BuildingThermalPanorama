@@ -5,6 +5,7 @@ import QtQuick.Layouts 1.15
 import QtQuick.Window 2.15
 
 import 'Custom'
+import 'Panorama'
 
 
 ApplicationWindow {
@@ -16,7 +17,7 @@ ApplicationWindow {
     width : 1600
     height : 900
     visible : true
-    title : '열화상 하자 자동 판정 솔루션'
+    title : '건물 에너지 검진을 위한 열화상 파노라마 영상처리 프로그램'
 
     FontLoader {
         id : mono
@@ -154,23 +155,13 @@ ApplicationWindow {
         }
     }
 
-    Image {
-        source : '../EGSolutionsLogoKR.svg'
-        sourceSize.width : tab_bar.width - 10
-
-        anchors.left : parent.left
-        anchors.leftMargin : 5
-
-        anchors.bottom : parent.bottom
-        anchors.bottomMargin : 10
-    }
-
     TimeoutPopup {
         id : _popup
     }
 
     footer : StatusBar {
         id : _status_bar
+        text : '건물 에너지 검진을 위한 열화상 파노라마 영상처리 프로그램'
     }
 
     function pb_value(value) {
@@ -182,7 +173,7 @@ ApplicationWindow {
     }
 
     function status_message(msg) {
-        _status_bar.status_message(msg)
+        _status_bar.text = msg
     }
 
     function popup(title, message, timeout = 2000) {

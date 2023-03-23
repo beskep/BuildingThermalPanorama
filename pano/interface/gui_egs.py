@@ -1,5 +1,3 @@
-"""파노라마 영상처리 GUI"""
-
 from multiprocessing import freeze_support
 import os
 import sys
@@ -13,12 +11,10 @@ init_project(qt=True)
 
 # pylint: disable=wrong-import-position
 from pano import utils
-from pano.interface.controller import Controller
 from pano.interface.mbq import FigureCanvas
 from pano.interface.mbq import QtCore
 from pano.interface.mbq import QtGui
 from pano.interface.mbq import QtQml
-from pano.interface.plot_controller import PlotControllers
 
 _qt_message = {
     QtCore.QtMsgType.QtDebugMsg: 'DEBUG',
@@ -36,8 +32,8 @@ def _qt_message_handler(mode, context, message):
 
 
 class Files:
-  CONF = utils.DIR.QT / 'QtQuickCtrlsPano.conf'
-  QML = utils.DIR.QT / 'qml/Panorama.qml'
+  CONF = utils.DIR.QT / 'QtQuickCtrlsEGS.conf'
+  QML = utils.DIR.QT / 'qml/EGS.qml'
 
 
 def _init(debug, loglevel, qmh):
@@ -75,19 +71,6 @@ def main(debug=False, loglevel=20):
   except IndexError:
     logger.critical('Failed to load QML {}', Files.QML)
     return -1
-
-  controller = Controller(win, loglevel)
-  context = engine.rootContext()
-  context.setContextProperty('con', controller)
-
-  pcs = {}
-  for name, cls in PlotControllers.classes():
-    canvas = win.findChild(FigureCanvas, f'{name}_plot')
-    pc = cls()
-    pc.init(app, canvas)
-    pcs[name] = pc
-
-  controller.set_plot_controllers(pcs)
 
   return app.exec_()
 

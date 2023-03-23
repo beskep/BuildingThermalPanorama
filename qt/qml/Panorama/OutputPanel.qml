@@ -7,7 +7,7 @@ import QtQuick.Window 2.15
 import QtGraphicalEffects 1.0
 import Qt.labs.qmlmodels 1.0
 
-import 'Custom'
+import '../Custom'
 import 'OptionPopup'
 import Backend 1.0
 
