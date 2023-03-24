@@ -5,12 +5,12 @@ import QtQuick.Layouts 1.15
 import QtQuick.Window 2.15
 
 import 'Custom'
+import 'EGS'
 
 
 ApplicationWindow {
     id : app
     property ApplicationWindow app : app
-    property bool separate_panorama : false
     property string resource : '../../resource'
 
     width : 1600
@@ -61,37 +61,15 @@ ApplicationWindow {
                     text : '보고서 출력'
                     width : parent.width
                 }
+
+                onCurrentIndexChanged : panel.mode = currentIndex
             }
 
-            Page {
+            MainPanel {
+                id : panel
+
                 Layout.fillHeight : true
                 Layout.fillWidth : true
-
-                StackLayout {
-                    anchors.fill : parent
-
-                    currentIndex : tab_bar.currentIndex
-
-                    // TODO
-                    Pane {
-                        id : file_panel
-                        Label {
-                            text : 'file'
-                        }
-                    }
-                    Pane {
-                        id : anomaly_panel
-                        Label {
-                            text : 'anomaly'
-                        }
-                    }
-                    Pane {
-                        id : report_panel
-                        Label {
-                            text : 'report'
-                        }
-                    }
-                }
             }
         }
 
@@ -137,18 +115,5 @@ ApplicationWindow {
 
     function popup(title, message, timeout = 2000) {
         _popup.timeout_open(title, message, timeout)
-    }
-
-    function get_panel(name) {
-        switch (name) {
-            case 'file':
-                return file_panel
-            case 'anomaly':
-                return anomaly_panel
-            case 'report':
-                return report_panel
-            default:
-                return null
-        }
     }
 }
