@@ -8,71 +8,22 @@ import numpy as np
 from omegaconf import DictConfig
 from omegaconf import OmegaConf
 
-from pano import utils
+from pano.interface import analysis
+from pano.interface.common.config import update_config
+from pano.interface.common.pano_files import DIR
+from pano.interface.common.pano_files import ImageNotFoundError
+from pano.interface.common.pano_files import init_directory
+from pano.interface.common.pano_files import replace_vis_images
+from pano.interface.common.pano_files import SP
+from pano.interface.common.pano_files import ThermalPanoramaFileManager
+import pano.interface.controller.controller as con
+from pano.interface.mbq import QtCore
+from pano.interface.mbq import QtGui
+from pano.interface.plot_controller import PlotControllers
+from pano.interface.plot_controller import save_manual_correction
+from pano.interface.plot_controller import WorkingDirNotSet
+from pano.interface.tree import tree_string
 from pano.misc.imageio import ImageIO as IIO
-
-from . import analysis
-from .common.config import update_config
-from .common.pano_files import DIR
-from .common.pano_files import ImageNotFoundError
-from .common.pano_files import init_directory
-from .common.pano_files import replace_vis_images
-from .common.pano_files import SP
-from .common.pano_files import ThermalPanoramaFileManager
-from .mbq import QtCore
-from .mbq import QtGui
-from .plot_controller import PlotControllers
-from .plot_controller import save_manual_correction
-from .plot_controller import WorkingDirNotSet
-from .tree import tree_string
-
-
-def _log(message: str):
-  find = message.find('|')
-  if find == -1:
-    level = 'DEBUG'
-  else:
-    level = message[:find].upper()
-    message = message[(find + 1):]
-
-  logger.log(level, message)
-
-
-def _path2url(path):
-  return 'file:///' + Path(path).as_posix()
-
-
-def _url2path(url: str):
-  return Path(url.removeprefix('file:///'))
-
-
-def _producer(queue: mp.Queue, directory, command: str, loglevel: int):
-  utils.set_logger(loglevel)
-
-  # pylint: disable=import-outside-toplevel
-  from .pano_project import ThermalPanorama
-
-  try:
-    tp = ThermalPanorama(directory=directory)
-  except (ValueError, OSError) as e:
-    queue.put(f'{type(e).__name__}: {e}')
-    return
-
-  logger.info('Run {} command', command)
-
-  try:
-    fn = getattr(tp, f'{command}_generator', None)
-    if fn is not None:
-      for r in fn():
-        queue.put(r)
-    else:
-      fn = getattr(tp, command)
-      queue.put(fn())
-  except (ValueError, RuntimeError, OSError) as e:
-    logger.exception(e)
-    queue.put(f'{type(e).__name__}: {e}')
-
-  queue.put(1.0)
 
 
 def _save_manual_correction(queue: mp.Queue, wd: str, subdir: str,
@@ -101,64 +52,7 @@ def _segments(flag_count: bool, seg_count: int, seg_length: float,
   return segments
 
 
-class _Consumer(QtCore.QThread):
-  update = QtCore.Signal(float)  # 진행률 [0, 1] 업데이트
-  done = QtCore.Signal()  # 작업 종료 signal (진행률 >= 1.0)
-  fail = QtCore.Signal(str)  # 에러 발생 signal. 에러 메세지 emit
-
-  def __init__(self) -> None:
-    super().__init__()
-    self._queue: Optional[mp.Queue] = None
-
-  @property
-  def queue(self):
-    return self._queue
-
-  @queue.setter
-  def queue(self, value):
-    self._queue = value
-
-  def run(self):
-    if self.queue is None:
-      raise ValueError('queue not set')
-
-    while True:
-      if not self.queue.empty():
-        value = self.queue.get()
-
-        if isinstance(value, str):
-          self.fail.emit(value)
-          break
-
-        if value is None or value >= 1.0:
-          self.done.emit()
-          self.quit()
-          break
-
-        self.update.emit(value)
-
-
-class _Window:
-
-  def __init__(self, window: QtGui.QWindow) -> None:
-    self._window = window
-
-  def pb_value(self, value: float):
-    return self._window.pb_value(value)
-
-  def pb_state(self, indeterminate: bool):
-    self._window.pb_state(indeterminate)
-
-  def popup(self, title: str, message: str, timeout=2000):
-    logger.debug('[Popup] {}: {}', title, message)
-    self._window.popup(title, message, timeout)
-
-    ok = title.lower() != 'error'
-    utils.play_sound(ok=ok)
-
-    if ok:
-      msg = message.replace('\n', ' ')
-      self._window.status_message(f'[{title}] {msg}')
+class Window(con.Window):
 
   def panel_funtion(self, panel: str, fn: str, *args):
     p = self._window.get_panel(panel)
@@ -185,10 +79,10 @@ class Controller(QtCore.QObject):
   def __init__(self, win: QtGui.QWindow, loglevel=20) -> None:
     super().__init__()
 
-    self._win = _Window(win)
+    self._win = Window(win)
     self._loglevel = loglevel
 
-    self._consumer = _Consumer()
+    self._consumer = con.Consumer()
     self._consumer.update.connect(self._pb_value)
     self._consumer.fail.connect(self._error_popup)
 
@@ -198,12 +92,12 @@ class Controller(QtCore.QObject):
     self._config: Optional[DictConfig] = None
 
   @property
-  def win(self) -> _Window:
+  def win(self) -> Window:
     return self._win
 
   @win.setter
   def win(self, win: QtGui.QWindow):
-    self._win = _Window(win)
+    self._win = Window(win)
 
   @property
   def pc(self) -> PlotControllers:
@@ -222,7 +116,7 @@ class Controller(QtCore.QObject):
 
   @QtCore.Slot(str)
   def log(self, message: str):
-    _log(message=message)
+    con.log(message=message)
 
   def _pb_value(self, value: float):
     self.win.pb_state(False)
@@ -311,7 +205,7 @@ class Controller(QtCore.QObject):
     self._consumer.start()
 
     process = mp.Process(name=command,
-                         target=_producer,
+                         target=con.producer,
                          args=(queue, self._wd, command, self._loglevel))
     process.start()
 
@@ -373,13 +267,13 @@ class Controller(QtCore.QObject):
 
   def update_image_view(self,
                         panels=('project', 'registration', 'segmentation')):
-    raw_files = [_path2url(x) for x in self.fm.raw_files()]
+    raw_files = [con.path2uri(x) for x in self.fm.raw_files()]
     if not raw_files:
       logger.debug('no files')
       return
 
     try:
-      vis_files = [_path2url(x) for x in self.fm.files(DIR.VIS, error=False)]
+      vis_files = [con.path2uri(x) for x in self.fm.files(DIR.VIS, error=False)]
     except FileNotFoundError:
       vis_files = raw_files
 
@@ -390,7 +284,7 @@ class Controller(QtCore.QObject):
   @QtCore.Slot(str)
   def rgst_plot(self, url):
     assert self._wd is not None
-    path = _url2path(url)
+    path = con.uri2path(url)
 
     try:
       self.pc.registration.plot(path)
@@ -424,7 +318,7 @@ class Controller(QtCore.QObject):
   def seg_plot(self, url):
     assert self._wd is not None
     assert self._config is not None
-    path = _url2path(url)
+    path = con.uri2path(url)
 
     try:
       self.pc.segmentation.plot(path,
