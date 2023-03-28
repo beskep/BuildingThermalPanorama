@@ -11,7 +11,7 @@ import Backend 1.0
 
 
 Pane {
-    property var mode: 0 // [analysis, anomaly, report]
+    property var mode: 0; // [analysis, anomaly, report]
 
     width : 1280
     height : 720
@@ -29,10 +29,12 @@ Pane {
 
                     ToolButton {
                         text : '경로 선택'
+                        onReleased : _dialog.open()
                     }
 
                     ToolButton {
                         text : '영상 변환'
+                        onReleased : con.extract_and_register()
                     }
                 }
 
@@ -70,7 +72,7 @@ Pane {
                 padding : 5
 
                 ListView {
-                    id : image_view
+                    id : _image_view
 
                     anchors.fill : parent
                     clip : true
@@ -80,12 +82,12 @@ Pane {
                     }
 
                     model : ListModel {
-                        id : image_model
+                        id : _image_model
                     }
 
                     delegate : Pane {
                         Material.elevation : 0
-                        width : image_view.width - 20
+                        width : _image_view.width - 20
                         height : width * 3 / 4 + 10
 
                         Image {
@@ -106,7 +108,7 @@ Pane {
                             anchors.fill : parent
                             hoverEnabled : true
 
-                            onReleased : con.rgst_plot(path)
+                            // onReleased : // TODO
                             onEntered : _bc.brightness = -0.25
                             onExited : _bc.brightness = 0
                         }
@@ -132,5 +134,15 @@ Pane {
                 }
             }
         }
+    }
+
+    FolderDialog {
+        id : _dialog
+        onAccepted : con.select_working_dir(folder)
+    }
+
+    function update_image_view(paths) {
+        _image_model.clear();
+        paths.forEach(path => _image_model.append({'path': path}));
     }
 }

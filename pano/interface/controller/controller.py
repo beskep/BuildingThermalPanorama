@@ -1,6 +1,6 @@
 import multiprocessing as mp
 from pathlib import Path
-from typing import Optional
+from typing import Iterable, Optional
 
 from loguru import logger
 
@@ -29,7 +29,28 @@ def uri2path(url: str):
   return Path(url.removeprefix('file:///'))
 
 
-def producer(queue: mp.Queue, directory, command: str, loglevel: int):
+def _command(queue: mp.Queue, tp, command: str, step: int, count: float):
+  fn = getattr(tp, f'{command}_generator', None)
+  queue.put(fn is None)  # generator가 없으면 pb_state(True)
+
+  try:
+    if fn is None:
+      getattr(tp, command)()
+      queue.put(False)
+      queue.put((step + 1) / count)
+    else:
+      for r in fn():
+        queue.put((step + r) / count)
+  except (ValueError, RuntimeError, OSError) as e:
+    logger.exception(e)
+    queue.put(f'{type(e).__name__}: {e}')
+    return False
+
+  return True
+
+
+def producer(queue: mp.Queue, directory, commands: str | Iterable[str],
+             loglevel: int):
   utils.set_logger(loglevel)
 
   # pylint: disable=import-outside-toplevel
@@ -41,24 +62,27 @@ def producer(queue: mp.Queue, directory, command: str, loglevel: int):
     queue.put(f'{type(e).__name__}: {e}')
     return
 
-  logger.info('Run {} command', command)
+  if isinstance(commands, str):
+    commands = (commands,)
+  else:
+    commands = tuple(commands)
 
-  try:
-    fn = getattr(tp, f'{command}_generator', None)
-    if fn is not None:
-      for r in fn():
-        queue.put(r)
-    else:
-      fn = getattr(tp, command)
-      queue.put(fn())
-  except (ValueError, RuntimeError, OSError) as e:
-    logger.exception(e)
-    queue.put(f'{type(e).__name__}: {e}')
+  count = float(len(commands))
+  queue.put(0.0)
 
-  queue.put(1.0)
+  for step, cmd in enumerate(commands):
+    logger.info('Run command "{}"', cmd)
+    if not _command(queue=queue, tp=tp, command=cmd, step=step, count=count):
+      queue.put(0.0)
+      break
+  else:
+    queue.put(1.0)
+
+  queue.put(False)
 
 
 class Consumer(QtCore.QThread):
+  state = QtCore.Signal(bool)
   update = QtCore.Signal(float)  # 진행률 [0, 1] 업데이트
   done = QtCore.Signal()  # 작업 종료 signal (진행률 >= 1.0)
   fail = QtCore.Signal(str)  # 에러 발생 signal. 에러 메세지 emit
@@ -87,12 +111,18 @@ class Consumer(QtCore.QThread):
           self.fail.emit(value)
           break
 
-        if value is None or value >= 1.0:
+        if isinstance(value, bool):
+          self.state.emit(value)
+          continue
+
+        assert isinstance(value, float)
+        if value >= 1.0:
           self.done.emit()
-          self.quit()
           break
 
         self.update.emit(value)
+
+    self.quit()
 
 
 class Window:
@@ -106,13 +136,20 @@ class Window:
   def pb_state(self, indeterminate: bool):
     self._window.pb_state(indeterminate)
 
-  def popup(self, title: str, message: str, timeout=2000):
+  def popup(self, title: str, message: str, timeout: Optional[int] = None):
+    ok = title.lower() != 'error'
+    if not timeout:
+      timeout = 2000 if ok else 10000
+
     logger.debug('[Popup] {}: {}', title, message)
     self._window.popup(title, message, timeout)
-
-    ok = title.lower() != 'error'
     utils.play_sound(ok=ok)
 
     if ok:
       msg = message.replace('\n', ' ')
       self._window.status_message(f'[{title}] {msg}')
+
+  def error_popup(self, message: str):
+    self.pb_state(False)
+    self.pb_value(0.0)
+    self.popup(title='Error', message=message)

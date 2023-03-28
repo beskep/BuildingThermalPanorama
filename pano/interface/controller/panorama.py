@@ -83,8 +83,9 @@ class Controller(QtCore.QObject):
     self._loglevel = loglevel
 
     self._consumer = con.Consumer()
-    self._consumer.update.connect(self._pb_value)
-    self._consumer.fail.connect(self._error_popup)
+    self._consumer.state.connect(self.win.pb_state)
+    self._consumer.update.connect(self.win.pb_value)
+    self._consumer.fail.connect(self.win.error_popup)
 
     self._wd: Optional[Path] = None
     self._fm: Optional[ThermalPanoramaFileManager] = None
@@ -117,15 +118,6 @@ class Controller(QtCore.QObject):
   @QtCore.Slot(str)
   def log(self, message: str):
     con.log(message=message)
-
-  def _pb_value(self, value: float):
-    self.win.pb_state(False)
-    self.win.pb_value(value)
-
-  def _error_popup(self, message: str):
-    self.win.popup('Error', message, timeout=10000)
-    self.win.pb_state(False)
-    self.win.pb_value(1.0)
 
   @QtCore.Slot(str)
   def prj_select_working_dir(self, wd):

@@ -116,4 +116,8 @@ ApplicationWindow {
     function popup(title, message, timeout = 2000) {
         _popup.timeout_open(title, message, timeout)
     }
+
+    function get_panel() {
+        return panel
+    }
 }
