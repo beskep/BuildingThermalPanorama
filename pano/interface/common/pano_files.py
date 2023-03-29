@@ -265,6 +265,9 @@ class ThermalPanoramaFileManager:
   def correction_plot_path(self):
     return self.subdir(DIR.COR).joinpath(f'CorrectionProcess{FN.LS}')
 
+  def anomaly_path(self):
+    return self._wd / 'AnomalyThrehold.yaml'
+
 
 class ImageNotFoundError(FileNotFoundError):
   pass

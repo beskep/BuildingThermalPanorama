@@ -43,6 +43,7 @@ Pane {
 
                     ToolButton {
                         text : '이상 영역 검출'
+                        onReleased : con.segment_and_detect()
                     }
                 }
 

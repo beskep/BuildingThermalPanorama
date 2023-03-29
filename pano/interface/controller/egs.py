@@ -119,3 +119,7 @@ class Controller(QtCore.QObject):
   @QtCore.Slot()
   def extract_and_register(self):
     self.command(commands=('extract', 'register'), name='열·실화상 추출 및 정합')
+
+  @QtCore.Slot()
+  def segment_and_detect(self):
+    self.command(commands=('segment', 'detect'), name='외피 분할 및 열적 이상 영역 검출')

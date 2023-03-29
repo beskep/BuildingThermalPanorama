@@ -353,7 +353,7 @@ class Stitcher:
     self._warper_type = value
 
   @property
-  def blend_type(self) -> str:
+  def blend_type(self) -> Union[bool, str]:
     """
     파노라마를 구성하는 영상의 밝기 차이를 조정하기 위한 Blend 방법
 

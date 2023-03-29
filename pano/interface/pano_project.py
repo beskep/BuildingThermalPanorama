@@ -7,6 +7,7 @@ from loguru import logger
 import matplotlib.pyplot as plt
 import numpy as np
 from omegaconf import OmegaConf
+import yaml
 
 from pano import stitch
 from pano import utils
@@ -14,6 +15,7 @@ from pano.distortion import perspective as persp
 from pano.flir import FlirExtractor
 from pano.misc import exif
 from pano.misc import tools
+from pano.misc.anomaly import anomaly_threshold
 from pano.misc.imageio import ImageIO as IIO
 from pano.misc.imageio import save_webp_images
 import pano.registration.registrator.simpleitk as rsitk
@@ -750,3 +752,25 @@ class ThermalPanorama:
     if not separate:
       logger.info('Start distortion correction')
       self.correct()
+
+  def detect_generator(self):
+    fil = self.fm.files(DIR.IR)
+    fml = self.fm.files(DIR.SEG)
+
+    threshold = {}
+    count = len(fil)
+    for idx, (fi, fm) in enumerate(zip(fil, fml)):
+      ir = IIO.read(fi)
+      mask = IIO.read(fm)
+      mask = tools.SegMask.vis_to_index(mask)
+
+      arr = ir[mask == tools.SegMask.WALL]
+      threshold[fi.stem] = anomaly_threshold(array=arr)
+
+      yield idx / count
+
+    path = self.fm.anomaly_path()
+    with path.open('w') as f:
+      yaml.safe_dump(threshold, f)
+
+    return 1.0
