@@ -62,7 +62,10 @@ ApplicationWindow {
                     width : parent.width
                 }
 
-                onCurrentIndexChanged : panel.mode = currentIndex
+                onCurrentIndexChanged : {
+                    con.plot('', false); // reset plot
+                    panel.mode = currentIndex;
+                }
             }
 
             MainPanel {

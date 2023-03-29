@@ -756,10 +756,12 @@ class ThermalPanorama:
   def detect_generator(self):
     fil = self.fm.files(DIR.IR)
     fml = self.fm.files(DIR.SEG)
+    assert len(fil) == len(fml)
 
     threshold = {}
-    count = len(fil)
-    for idx, (fi, fm) in enumerate(zip(fil, fml)):
+    for r, (fi, fm) in utils.ptrack(zip(fil, fml),
+                                    description='Detecting anomaly area...',
+                                    total=len(fil)):
       ir = IIO.read(fi)
       mask = IIO.read(fm)
       mask = tools.SegMask.vis_to_index(mask)
@@ -767,7 +769,7 @@ class ThermalPanorama:
       arr = ir[mask == tools.SegMask.WALL]
       threshold[fi.stem] = anomaly_threshold(array=arr)
 
-      yield idx / count
+      yield r
 
     path = self.fm.anomaly_path()
     with path.open('w') as f:

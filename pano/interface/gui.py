@@ -40,8 +40,7 @@ class Files:
   QML = utils.DIR.QT / 'qml/Panorama.qml'
 
 
-def _init(debug, loglevel):
-  loglevel = min(loglevel, (10 if debug else 20))
+def _init(loglevel):
   utils.set_logger(loglevel)
 
   if loglevel < 10:
@@ -63,7 +62,8 @@ def _init(debug, loglevel):
 @click.option('-l', '--loglevel', default=20)
 def main(debug=False, loglevel=20):
   freeze_support()
-  _init(debug=debug, loglevel=loglevel)
+  loglevel = min(loglevel, (10 if debug else 20))
+  _init(loglevel=loglevel)
 
   QtQml.qmlRegisterType(FigureCanvas, 'Backend', 1, 0, 'FigureCanvas')
 

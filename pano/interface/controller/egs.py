@@ -8,6 +8,7 @@ import pano.interface.common.pano_files as pf
 import pano.interface.controller.controller as con
 from pano.interface.mbq import QtCore
 from pano.interface.mbq import QtGui
+from pano.interface.plot_controller.egs import PlotController
 
 
 class Window(con.Window):
@@ -34,9 +35,8 @@ class Controller(QtCore.QObject):
 
     self._wd: Path | None = None
     self._fm: pf.ThermalPanoramaFileManager | None = None
+    self._pc = PlotController()
     self._config: DictConfig | None = None
-
-    # TODO plot controller
 
   @property
   def win(self) -> Window:
@@ -47,6 +47,10 @@ class Controller(QtCore.QObject):
     if self._fm is None:
       raise ValueError('FileManager not set')
     return self._fm
+
+  @property
+  def pc(self) -> PlotController:
+    return self._pc
 
   @QtCore.Slot(str)
   def log(self, message: str):
@@ -67,7 +71,6 @@ class Controller(QtCore.QObject):
     self.win.pb_state(True)
 
     def done():
-      # XXX method로?
       self.win.popup('Success', f'{name}작업 완료')
       self.win.pb_state(False)
       self.win.pb_value(1.0)
@@ -76,6 +79,9 @@ class Controller(QtCore.QObject):
         self._consumer.done.disconnect()
       except TypeError:
         pass
+
+      if 'detect' in commands:
+        self.pc.update_threshold()
 
     queue = mp.Queue()
     self._consumer.queue = queue
@@ -88,6 +94,7 @@ class Controller(QtCore.QObject):
     process.start()
 
   def update_image_view(self):
+    # TODO 모두 raw로
     try:
       files = self.fm.files(pf.DIR.VIS)
     except FileNotFoundError:
@@ -112,9 +119,27 @@ class Controller(QtCore.QObject):
 
     self._wd = path
     self._fm = pf.ThermalPanoramaFileManager(path)
+    self._pc.fm = self._fm
+
     self.update_image_view()
 
-    # TODO controller fm 초기화
+    try:
+      self.pc.update_threshold()
+    except FileNotFoundError:
+      pass
+
+  @QtCore.Slot(str, bool)
+  def plot(self, file, anomaly):
+    self.pc.reset()
+    if not file:
+      return
+
+    file = con.uri2path(file)
+
+    try:
+      self.pc.plot(file=file, anomaly=anomaly)
+    except KeyError:
+      self.win.popup('Error', '이상 영역을 먼저 검출해주세요.')
 
   @QtCore.Slot()
   def extract_and_register(self):

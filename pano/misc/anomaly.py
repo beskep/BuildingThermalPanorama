@@ -1,10 +1,13 @@
+from typing import Iterable
+
 from loguru import logger
 import numpy as np
 from numpy.typing import NDArray
 from sklearn.mixture import GaussianMixture
 
 
-def gaussian_mixture(array: NDArray, ks=(2, 3, 4, 5), **kwargs):
+def gaussian_mixture(array: NDArray, ks: Iterable[int], **kwargs):
+  ks = tuple(ks)
   gms = [GaussianMixture(n_components=k, **kwargs) for k in ks]
 
   for gm in gms:
@@ -21,7 +24,7 @@ def gaussian_mixture(array: NDArray, ks=(2, 3, 4, 5), **kwargs):
   return model, mask
 
 
-def anomaly_threshold(array: NDArray, ks=(2, 3, 4, 5), **kwargs) -> float:
+def anomaly_threshold(array: NDArray, kmax=8, **kwargs) -> float:
   """
   Kim, C., Choi, J.-S., Jang, H., & Kim, E.-J. (2021).
   Automatic Detection of Linear Thermal Bridges from Infrared Thermal Images
@@ -31,19 +34,19 @@ def anomaly_threshold(array: NDArray, ks=(2, 3, 4, 5), **kwargs) -> float:
   ----------
   array : NDArray
       array
-  ks : tuple, optional
-      n_components of `GaussianMixture`, by default (2, 3, 4, 5)
-  kwargs : dict, optional
-      kwargs for `GaussianMixture`
+  kmax : int, optional
+      max n_components of `GaussianMixture`, by default 8
 
   Returns
   -------
   float
       anomaly threshold
   """
-  model, mask = gaussian_mixture(array.reshape([-1, 1]), ks=ks, **kwargs)
+  model, mask = gaussian_mixture(array.reshape([-1, 1]),
+                                 ks=range(2, kmax + 1),
+                                 **kwargs)
   counts = [np.sum(mask == i) for i in range(model.n_components)]
   ref = int(np.argmax(counts))  # 면적이 가장 많은 군집
-  threshold = float(np.mean(array.ravel()[mask == ref]))
+  threshold = float(np.max(array.ravel()[mask == ref]))
 
   return threshold

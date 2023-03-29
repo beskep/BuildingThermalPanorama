@@ -109,7 +109,7 @@ Pane {
                             anchors.fill : parent
                             hoverEnabled : true
 
-                            // onReleased : // TODO
+                            onReleased : con.plot(path, mode === 1)
                             onEntered : _bc.brightness = -0.25
                             onExited : _bc.brightness = 0
                         }
@@ -123,16 +123,16 @@ Pane {
                 Layout.fillHeight : true
                 Layout.fillWidth : true
                 padding : 0
+                visible : mode !== 2
 
                 FigureCanvas {
                     id : _plot
                     anchors.fill : parent
 
                     objectName : 'plot'
-                    Layout.fillHeight : true
-                    Layout.fillWidth : true
                     dpi_ratio : Screen.devicePixelRatio
                 }
+                // TODO table
             }
         }
     }
