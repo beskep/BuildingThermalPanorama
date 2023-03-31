@@ -38,7 +38,7 @@ class Files:
 
 
 def _init(loglevel):
-  utils.set_logger(loglevel)
+  utils.set_logger(loglevel, 'AnomalyDetection')
 
   if loglevel < 10:
     os.environ['QT_DEBUG_PLUGINS'] = '1'

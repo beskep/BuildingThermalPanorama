@@ -11,6 +11,7 @@ import yaml
 from pano.interface.common.pano_files import DIR
 from pano.misc.imageio import ImageIO as IIO
 from pano.misc.tools import OutlierArray
+from pano.misc.tools import SegMask
 
 from .plot_controller import FigureCanvas
 from .plot_controller import PanoPlotController as _PanoPlotCtrl
@@ -63,26 +64,33 @@ class PlotController(_PanoPlotCtrl):
 
   def plot(self, file: Path, anomaly: bool):
     ir = IIO.read(self.fm.change_dir(DIR.IR, file))
-    vis = IIO.read(self.fm.change_dir(DIR.VIS, file))
+    vis = IIO.read(self.fm.change_dir(DIR.RGST, file))
 
-    self.axes[0].imshow(ir, cmap=self._cmap)  # TODO colorbar
+    oa = OutlierArray(ir.ravel(), k=2.5)
+    lim = (oa.lower, oa.upper)
+
+    # TODO colorbar
+    self.axes[0].imshow(ir, cmap=self._cmap, vmin=lim[0], vmax=lim[1])
     self.axes[1].imshow(vis)
 
     if anomaly:
       try:
-        t = self._threshold[file.stem]
+        threshold = self._threshold[file.stem]
       except KeyError as e:
         raise KeyError('threshold not found: "{}"', file) from e
 
-      mask = ir > t
-      anomaly_ir = ir.copy()
-      anomaly_ir[~mask] = np.nan
-      self.axes[1].imshow(anomaly_ir, cmap=self._cmap)
+      seg = IIO.read(self.fm.change_dir(DIR.SEG, file))
+      seg = SegMask.vis_to_index(seg)
+      mw = seg == SegMask.WALL  # wall mask
+      ma = mw & (ir > threshold)  # anomaly mask
 
-      hist_data = {'정상 영역': ir[~mask].ravel(), '이상 영역': ir[mask].ravel()}
+      self.axes[1].imshow(np.ma.MaskedArray(ir, ~ma),
+                          cmap=self._cmap,
+                          vmin=lim[0],
+                          vmax=lim[1])
+
+      hist_data = {'정상 영역': ir[mw & ~ma].ravel(), '이상 영역': ir[ma].ravel()}
       sns.histplot(data=hist_data, stat='probability', ax=self.axes[2])
-
-      oa = OutlierArray(ir.ravel(), k=2.5)
-      self.axes[2].set_xlim(oa.lower, oa.upper)
+      self.axes[2].set_xlim(*lim)
 
     self.draw()

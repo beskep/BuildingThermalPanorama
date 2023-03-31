@@ -548,7 +548,7 @@ class ThermalPanorama:
     self._stitch_others(stitcher=stitcher, panorama=pano, sp=SP[sp2])
 
     # segmention mask 저장
-    stitcher.blend_type = False
+    stitcher.blend_type = False  # type: ignore
     stitcher.interp = stitch.Interpolation.NEAREST
     self._stitch_others(stitcher=stitcher, panorama=pano, sp=SP.SEG)
 
@@ -589,7 +589,7 @@ class ThermalPanorama:
       self._save_panorama(spectrum=SP.VIS, panorama=vis_pano, save_mask=False)
 
       # segmentation mask
-      stitcher.blend_type = False
+      stitcher.blend_type = False  # type: ignore
       stitcher.interp = stitch.Interpolation.NEAREST
       self._stitch_others(stitcher=stitcher, panorama=vis_pano, sp=SP.SEG)
 
@@ -767,7 +767,11 @@ class ThermalPanorama:
       mask = tools.SegMask.vis_to_index(mask)
 
       arr = ir[mask == tools.SegMask.WALL]
-      threshold[fi.stem] = anomaly_threshold(array=arr)
+      threshold[fi.stem], model = anomaly_threshold(array=arr)
+
+      cluster = model.predict(ir.reshape([-1, 1])).reshape(ir.shape)
+      path = fi.parent / f'{fi.stem}_cluster.png'
+      IIO.save(path, tools.uint8_image(cluster))
 
       yield r
 

@@ -88,20 +88,16 @@ class Controller(QtCore.QObject):
     self._consumer.done.connect(done)
     self._consumer.start()
 
-    process = mp.Process(name=name,
-                         target=con.producer,
-                         args=(queue, self._wd, commands, self._loglevel))
+    process = mp.Process(
+        name=name,
+        target=con.producer,
+        args=(queue, self._wd, commands, self._loglevel, 'AnomalyDetection'),
+    )
     process.start()
 
   def update_image_view(self):
-    # TODO 모두 raw로
-    try:
-      files = self.fm.files(pf.DIR.VIS)
-    except FileNotFoundError:
-      files = self.fm.files(pf.DIR.RAW)
-
-    uri = [con.path2uri(x) for x in files]
-    self.win.panel_funtion('update_image_view', uri)
+    files = [con.path2uri(x) for x in self.fm.files(pf.DIR.RAW)]
+    self.win.panel_funtion('update_image_view', files)
 
   @QtCore.Slot(str)
   def select_working_dir(self, path):
@@ -138,6 +134,8 @@ class Controller(QtCore.QObject):
 
     try:
       self.pc.plot(file=file, anomaly=anomaly)
+    except FileNotFoundError:
+      self.win.popup('Error', '파일을 먼저 추출해주세요.')
     except KeyError:
       self.win.popup('Error', '이상 영역을 먼저 검출해주세요.')
 

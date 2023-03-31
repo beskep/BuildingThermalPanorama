@@ -49,9 +49,12 @@ def _command(queue: mp.Queue, tp, command: str, step: int, count: float):
   return True
 
 
-def producer(queue: mp.Queue, directory, commands: str | Iterable[str],
-             loglevel: int):
-  utils.set_logger(loglevel)
+def producer(queue: mp.Queue,
+             directory,
+             commands: str | Iterable[str],
+             loglevel: int,
+             logname='pano'):
+  utils.set_logger(loglevel, logname)
 
   # pylint: disable=import-outside-toplevel
   from pano.interface.pano_project import ThermalPanorama

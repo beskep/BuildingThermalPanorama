@@ -79,7 +79,8 @@ def build():
 
   setup(name='app',
         version='0.1',
-        description='ThermalAnomalyDetection',
+        description=
+        'Intelligent Solution for Thermal Anomaly Detection in Buildings',
         options=options,
         executables=executables,
         packages=[])
