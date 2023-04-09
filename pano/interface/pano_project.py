@@ -767,7 +767,8 @@ class ThermalPanorama:
       mask = tools.SegMask.vis_to_index(mask)
 
       arr = ir[mask == tools.SegMask.WALL]
-      threshold[fi.stem], model = anomaly_threshold(array=arr)
+      t, model = anomaly_threshold(array=arr)
+      threshold[fi.stem] = round(t, 2)
 
       cluster = model.predict(ir.reshape([-1, 1])).reshape(ir.shape)
       path = fi.parent / f'{fi.stem}_cluster.png'
