@@ -8,6 +8,8 @@ import yaml
 from pano.flir import FlirExif
 from pano.flir import FlirExtractor
 
+# ruff: noqa: N803, N806
+
 
 def _read_meta(path: Path):
   with path.open('r', encoding='UTF-8-SIG') as f:

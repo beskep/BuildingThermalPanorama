@@ -1,3 +1,4 @@
+from contextlib import suppress
 import dataclasses as dc
 from shutil import copy2
 from typing import Any, Optional
@@ -241,10 +242,8 @@ class Images:
                  apply_colormap(self.ir, cmap=_get_cmap(), na=True))
 
     # temperature factor
-    try:
+    with suppress(ValueError):
       ImageIO.save(self._path(SP.TF), self.temperature_factor())
-    except ValueError:
-      pass
 
     # VIS, mask
     if self._crop is not None:

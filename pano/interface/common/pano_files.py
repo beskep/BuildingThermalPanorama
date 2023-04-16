@@ -302,8 +302,7 @@ def init_directory(directory: Path, default=False) -> DictConfig:
     try:
       _, files = peek(files)
     except StopIteration:
-      # pylint: disable=raise-missing-from
-      raise ImageNotFoundError('영상 파일이 발견되지 않았습니다.', directory.as_posix())
+      raise ImageNotFoundError('영상 파일이 발견되지 않았습니다.', str(directory)) from None
 
     raw_dir.mkdir()
     for file in files:
@@ -326,8 +325,7 @@ def replace_vis_images(fm: ThermalPanoramaFileManager, files: str):
   try:
     _, paths = peek(paths)
   except StopIteration:
-    # pylint: disable=raise-missing-from
-    raise FileNotFoundError('선택된 파일이 없습니다.')
+    raise FileNotFoundError('선택된 파일이 없습니다.') from None
 
   for path in paths:
     logger.info('copy "{}" to VIS', path)

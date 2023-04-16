@@ -8,6 +8,11 @@ ignore_patterns = ['build/']
 [tool.isort]
 profile = 'google'
 
+[tool.ruff]
+select = ['E', 'F', 'W', 'C90', 'N', 'B', 'RET', 'SIM', 'ERA', 'PD', 'PL']
+ignore = ['PD901', 'PLR0913', 'PLR2004', 'RET504']
+per-file-ignores = { '__init__.py' = ['F401'] }
+
 [tool.pylint.MASTER]
 load-plugins = ['pylint.extensions.mccabe', 'pylint.extensions.docparams']
 

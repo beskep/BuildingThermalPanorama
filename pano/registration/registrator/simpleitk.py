@@ -187,7 +187,8 @@ class SITKRegistrator(BaseRegistrator):
                           scale: Optional[float] = None,
                           translation: Optional[tuple] = None):
     if scale is None:
-      logger.warning('초기 scale이 설정되지 않았습니다. 정합 결과가 부정확할 수 있습니다.')
+      logger.warning('초기 scale이 설정되지 않았습니다. '
+                     '정합 결과가 부정확할 수 있습니다.')
       scale = 1.0
 
     trsf: sitk.Transform
@@ -277,11 +278,10 @@ class SITKRegistrator(BaseRegistrator):
     """
     if scale is not None:
       self._scale0 = scale
+    elif not (fixed_alpha is None or moving_alpha is None):
+      self._scale0 = np.tan(fixed_alpha / 2.0) / np.tan(moving_alpha / 2.0)
     else:
-      if not (fixed_alpha is None or moving_alpha is None):
-        self._scale0 = np.tan(fixed_alpha / 2.0) / np.tan(moving_alpha / 2.0)
-      else:
-        self._scale0 = None
+      self._scale0 = None
 
     self._trnsl0 = None if translation is None else tuple(translation)
     logger.debug('Initial scale: {} | translation: {}', self._scale0,

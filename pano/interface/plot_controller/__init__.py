@@ -6,7 +6,7 @@ from .output import OutputPlotController
 from .panorama import PanoramaPlotController
 from .panorama import save_manual_correction
 from .plot_controller import PanoPlotController
-from .plot_controller import WorkingDirNotSet
+from .plot_controller import WorkingDirNotSetError
 from .registration import RegistrationPlotController
 from .segmentation import SegmentationPlotController
 

@@ -65,11 +65,7 @@ def producer(queue: mp.Queue,
     queue.put(f'{type(e).__name__}: {e}')
     return
 
-  if isinstance(commands, str):
-    commands = (commands,)
-  else:
-    commands = tuple(commands)
-
+  commands = (commands,) if isinstance(commands, str) else tuple(commands)
   count = float(len(commands))
   queue.put(0.0)
 

@@ -89,7 +89,7 @@ class _Axes:
       self.bottom.set_title('')
 
 
-class _NavigationToolbar(NavigationToolbar2QtQuick):
+class NavigationToolbar(NavigationToolbar2QtQuick):
 
   def __init__(self, canvas, parent=None):
     super().__init__(canvas, parent)
@@ -102,7 +102,7 @@ class _NavigationToolbar(NavigationToolbar2QtQuick):
     super().zoom()
 
 
-class _MousePoints:
+class MousePoints:
   _REQUIRED = 4
   _SCATTER_ARGS = {'s': 50, 'edgecolors': 'w', 'linewidths': 1}
 
@@ -155,12 +155,12 @@ class PlotController(_PanoPlotCtrl):
     super().__init__(parent)
     self._axes: _Axes
     self._cmap = get_cmap('inferno')
-    self._toolbar: _NavigationToolbar
+    self._toolbar: NavigationToolbar
 
     self._last_file: Path | None = None
     self._threshold: dict[str, float] = {}
 
-    self._points = _MousePoints()
+    self._points = MousePoints()
     self._cid = None  # button_press_event cid
 
   @property
@@ -170,7 +170,7 @@ class PlotController(_PanoPlotCtrl):
   def init(self, app: QtGui.QGuiApplication, canvas: FigureCanvas):
     self._app = app
     self._canvas = canvas
-    self._toolbar = _NavigationToolbar(canvas=canvas)
+    self._toolbar = NavigationToolbar(canvas=canvas)
     self._fig = canvas.figure
     self._axes = _Axes(self._fig)
     self.reset()
@@ -258,10 +258,9 @@ class PlotController(_PanoPlotCtrl):
 
     self.axes.right.imshow(vis)
 
+    summary = None
     if anomaly:
       summary = self._plot_anomaly(path=path, ir=ir, lim=lim)
-    else:
-      summary = None
 
     self.draw()
 

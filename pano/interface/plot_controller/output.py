@@ -24,7 +24,7 @@ from pano.misc.tools import SegMask
 
 from .plot_controller import PanoPlotController
 from .plot_controller import QtGui
-from .plot_controller import WorkingDirNotSet
+from .plot_controller import WorkingDirNotSetError
 
 
 def _suppress_edgelets(edgelets: Edgelets,
@@ -297,7 +297,7 @@ class LinesSelector(_SelectorWidget):
     self._fixed_lines = []
 
   def add_lines(self, xs_arr: np.ndarray, ys_arr: np.ndarray, editable=True):
-    for xs, ys in zip(xs_arr, ys_arr):
+    for xs, ys in zip(xs_arr, ys_arr, strict=True):
       self.make_line(xs, ys, editable)
 
   def add_edgelets(self, edgelets: Edgelets, editable=True):
@@ -533,11 +533,7 @@ class Images:
   @property
   def edges(self) -> np.ndarray:
     if self._edges is None:
-      if self.edgelet_option.segmentation:
-        image = self.seg
-      else:
-        image = self.ir
-
+      image = self.seg if self.edgelet_option.segmentation else self.ir
       self._edges = edge.image2edges(image=image.copy(),
                                      mask=self.read(SP.MASK),
                                      canny_option=self.canny_option)
@@ -596,7 +592,7 @@ class OutputPlotController(PanoPlotController):
   @property
   def images(self) -> Images:
     if self._images is None:
-      raise WorkingDirNotSet
+      raise WorkingDirNotSetError
     return self._images
 
   @property

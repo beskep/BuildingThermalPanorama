@@ -15,7 +15,7 @@ _DIRS = ('bottom', 'top', 'left', 'right')
 TICK_PARAMS = {key: False for key in _DIRS + tuple('label' + x for x in _DIRS)}
 
 
-class WorkingDirNotSet(FileNotFoundError):
+class WorkingDirNotSetError(FileNotFoundError):
 
   def __str__(self) -> str:
     return self.args[0] if self.args else '대상 경로가 지정되지 않았습니다.'
@@ -106,7 +106,7 @@ class PanoPlotController(PlotController):
   @property
   def fm(self) -> ThermalPanoramaFileManager:
     if self._fm is None:
-      raise WorkingDirNotSet
+      raise WorkingDirNotSetError
     return self._fm
 
   @fm.setter

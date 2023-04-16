@@ -1,9 +1,9 @@
-from collections import defaultdict
 from pathlib import Path
 from typing import Optional
 
 from loguru import logger
 from matplotlib.axes import Axes
+from matplotlib.backend_bases import MouseButton
 from matplotlib.backend_bases import MouseEvent
 import numpy as np
 from skimage import transform
@@ -13,12 +13,12 @@ from pano.interface.common.pano_files import DIR
 from pano.interface.common.pano_files import FN
 from pano.interface.common.pano_files import SP
 from pano.interface.mbq import FigureCanvas
-from pano.interface.mbq import NavigationToolbar2QtQuick as NavToolbar
+from pano.misc import tools
 from pano.misc.imageio import ImageIO as IIO
-from pano.misc.tools import Interpolation
-from pano.misc.tools import prep_compare_images
-from pano.misc.tools import uint8_image
+from pano.misc.tools import INTRP
 
+from .egs import MousePoints
+from .egs import NavigationToolbar
 from .plot_controller import PanoPlotController
 from .plot_controller import QtGui
 from .plot_controller import TICK_PARAMS
@@ -40,11 +40,8 @@ class RegistrationPlotController(PanoPlotController):
   def __init__(self, parent=None) -> None:
     super().__init__(parent=parent)
 
-    self._toolbar: Optional[NavToolbar] = None
-
-    self._pnts = defaultdict(list)  # 선택된 점들의 mpl 오브젝트
-    self._pnts_coord = defaultdict(list)  # 선택된 점들의 좌표
-    self._zoom = False
+    self._toolbar: NavigationToolbar
+    self._points = MousePoints()
     self._grid = False
 
     self._images: Optional[tuple] = None
@@ -80,7 +77,7 @@ class RegistrationPlotController(PanoPlotController):
   def init(self, app: QtGui.QGuiApplication, canvas: FigureCanvas):
     self._app = app
     self._canvas = canvas
-    self._toolbar = NavToolbar(canvas=canvas)
+    self._toolbar = NavigationToolbar(canvas=canvas)
 
     self._fig = canvas.figure
     self._axes = self.fig.subplots(2, 2)
@@ -94,13 +91,10 @@ class RegistrationPlotController(PanoPlotController):
       self._toolbar.home()
 
   def zoom(self, value: bool):
-    self._zoom = value
-    if not self._zoom ^ value:
-      assert self._toolbar is not None
-      self._toolbar.zoom()
+    self._toolbar.zoom(value)
 
   def _set_style(self):
-    for ax, title in zip(self.axes.ravel(), self._TITLES):
+    for ax, title in zip(self.axes.ravel(), self._TITLES, strict=True):
       if ax.has_data():
         ax.set_title(title)
       ax.set_axis_off()
@@ -135,8 +129,7 @@ class RegistrationPlotController(PanoPlotController):
     self.axes[0, 1].set_yticks(ticks[0])
 
   def reset(self):
-    self._pnts.clear()
-    self._pnts_coord.clear()
+    self._points.remove_points(None)
     self._registered_image = None
     self._matrix = None
 
@@ -172,7 +165,7 @@ class RegistrationPlotController(PanoPlotController):
 
   def _on_click(self, event: MouseEvent):
     logger.trace(event)
-    if self._zoom or self._images is None:
+    if self._images is None:
       return
 
     ax: Axes = event.inaxes
@@ -183,60 +176,40 @@ class RegistrationPlotController(PanoPlotController):
     if axi not in (0, 1):
       return
 
-    if event.button == 1:
-      self._add_point(axi, event=event)
-    elif event.button == 3:
-      self._remove_points(axi)
+    if event.button == MouseButton.LEFT:
+      self._points.add_point(ax=ax, event=event)
+    elif event.button == MouseButton.RIGHT:
+      self._points.remove_points(ax=ax)
     else:
       return
 
-    if self.all_points_selected():
+    if self._points.all_selected():
       self._manual_register()
 
     self.draw()
 
-  def _add_point(self, ax: int, event: MouseEvent):
-    if len(self._pnts_coord[ax]) < self._REQUIRED:
-      self._pnts_coord[ax].append((event.xdata, event.ydata))
-
-      p = event.inaxes.scatter(event.xdata,
-                               event.ydata,
-                               s=50,
-                               edgecolors='w',
-                               linewidths=1)
-      self._pnts[ax].append(p)
-
-  def _remove_points(self, ax: int):
-    self._pnts_coord.pop(ax, None)
-
-    for p in self._pnts[ax]:
-      p.remove()
-
-    self._pnts.pop(ax, None)
-
-  def all_points_selected(self):
-    return all(len(self._pnts_coord[x]) == self._REQUIRED for x in range(2))
-
   def _plot_registered(self, matrix):
+    assert self._images is not None
+
     registered = transform.warp(image=self._images[1],
                                 inverse_map=matrix,
                                 output_shape=self._images[0].shape[:2],
                                 preserve_range=True)
 
-    cb, diff = prep_compare_images(image1=self._images[0],
-                                   image2=registered,
-                                   norm=True,
-                                   eq_hist=True,
-                                   method=['checkerboard', 'diff'])
+    cb, diff = tools.prep_compare_images(image1=self._images[0],
+                                         image2=registered,
+                                         norm=True,
+                                         eq_hist=True,
+                                         method=['checkerboard', 'diff'])
 
-    self._axes[1, 0].imshow(cb)
-    self._axes[1, 1].imshow(diff)
+    self.axes[1, 0].imshow(cb)
+    self.axes[1, 1].imshow(diff)
 
     self._registered_image = registered
 
   def _manual_register(self):
-    src = np.array(self._pnts_coord[1])
-    dst = np.array(self._pnts_coord[0])
+    src = np.array(self._points.coords[self.axes[0, 1]])
+    dst = np.array(self._points.coords[self.axes[0, 0]])
 
     trsf = transform.ProjectiveTransform()
     trsf.estimate(src=src, dst=dst)
@@ -251,8 +224,10 @@ class RegistrationPlotController(PanoPlotController):
       return
 
     assert self._file is not None
+    assert self._registered_image is not None
+
     path = self.fm.change_dir(DIR.RGST, self._file)
-    IIO.save(path=path, array=uint8_image(self._registered_image))
+    IIO.save(path=path, array=tools.uint8_image(self._registered_image))
 
     compare_path = path.with_name(f'{path.stem}{FN.RGST_MANUAL}{path.suffix}')
     self.fig.savefig(compare_path, dpi=300)
@@ -261,6 +236,9 @@ class RegistrationPlotController(PanoPlotController):
 
   def _save_pano(self):
     """파노라마 정합 결과 저장"""
+    assert self._images is not None
+    assert self._registered_image is not None
+
     vis = self.fm.panorama_path(d=DIR.PANO, sp=SP.VIS)
     vis_unrgst = vis.with_stem(f'{vis.stem}Unregistered')
     seg = self.fm.panorama_path(d=DIR.PANO, sp=SP.SEG)
@@ -271,20 +249,20 @@ class RegistrationPlotController(PanoPlotController):
     _rename_file(seg, seg_unrgst)
 
     # vis 저장
-    IIO.save(path=vis, array=uint8_image(self._registered_image))
+    IIO.save(path=vis, array=tools.uint8_image(self._registered_image))
 
     # seg 저장
     shape = self._images[0].shape[:2]
     trsf = transform.ProjectiveTransform(matrix=self._matrix)
     seg_resized = transform.resize(IIO.read(seg_unrgst),
-                                   order=Interpolation.NearestNeighbor,
+                                   order=INTRP.NearestNeighbor,
                                    output_shape=shape)
     seg_rgst = transform.warp(image=seg_resized,
                               inverse_map=trsf.inverse,
                               output_shape=shape,
-                              order=Interpolation.NearestNeighbor,
+                              order=INTRP.NearestNeighbor,
                               preserve_range=True)
-    IIO.save(path=seg, array=uint8_image(seg_rgst))
+    IIO.save(path=seg, array=tools.uint8_image(seg_rgst))
 
   def save(self, panorama: bool):
     if self._registered_image is None:

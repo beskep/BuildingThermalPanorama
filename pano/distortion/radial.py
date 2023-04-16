@@ -10,7 +10,7 @@ https://doi.org/10.1007/s10851-012-0342-2
 테스트
 """
 
-from typing import Optional
+from typing import Any, Optional
 
 import numpy as np
 from rich.progress import track
@@ -24,6 +24,8 @@ from skimage.restoration import denoise_bilateral
 
 from pano import utils
 from pano.misc import tools
+
+# ruff: noqa: N806
 
 
 class AbsResidualCircleModel(CircleModel):
@@ -92,6 +94,9 @@ class RadialDistortionModel:
     return True
 
   def residuals(self, data):
+    if self.params is None:
+      raise ValueError
+
     data = np.array(data)
     x0, y0, k1 = self.params
     error = self.static_residuals(data=data, x0=x0, y0=y0)
@@ -172,9 +177,9 @@ class RadialDistortion:
     self._levels = levels
     self._clip_limit = clip_limit
 
-    self._ransac_circle_args = dict(min_samples=3,
-                                    residual_threshold=5,
-                                    max_trials=1000)
+    self._ransac_circle_args: dict[str, Any] = dict(min_samples=3,
+                                                    residual_threshold=5,
+                                                    max_trials=1000)
     self._ransac_distort_args = dict(min_sample=4)
 
   def set_circle_ransac_options(self,
@@ -182,13 +187,10 @@ class RadialDistortion:
                                 residual_threshold=5,
                                 max_trials=10000,
                                 **kwargs):
-    self._ransac_circle_args.update(
-        {
-            'min_samples': min_samples,
-            'residual_threshold': residual_threshold,
-            'max_trials': max_trials
-        },
-        kwargs=kwargs)
+    self._ransac_circle_args.update(min_samples=min_samples,
+                                    residual_threshold=residual_threshold,
+                                    max_trials=max_trials,
+                                    kwargs=kwargs)
 
   def preprocess(self, image: np.ndarray, mask: Optional[np.ndarray] = None):
     image = equalize_adapthist(image, clip_limit=self._clip_limit)

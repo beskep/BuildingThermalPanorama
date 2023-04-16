@@ -39,7 +39,8 @@ def set_config(directory: Path, read_only=True, default=False) -> DictConfig:
     try:
       wd_config = OmegaConf.load(config_path)
     except YAMLError:
-      logger.error('`{}` 파일의 형식이 올바르지 않습니다. 기본 설정을 사용합니다.', config_path)
+      logger.error('`{}` 파일의 형식이 올바르지 않습니다. '
+                   '기본 설정을 사용합니다.', config_path)
     else:
       # 기본 설정에 working dir의 설정을 덮어씌움
       config = OmegaConf.merge(config, wd_config)

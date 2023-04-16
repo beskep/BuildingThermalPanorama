@@ -95,7 +95,7 @@ class ThermalPanorama:
 
     def _get_model(exif: dict):
       # iterable 중 조건을 만족하는 첫 element
-      tag = next((x for x in exif.keys() if x in tags), None)
+      tag = next((x for x in exif if x in tags), None)
       if tag is None:
         return None
 
@@ -227,9 +227,9 @@ class ThermalPanorama:
 
   def limit_size(self, image: np.ndarray, aa=True) -> np.ndarray:
     if aa:
-      order = tools.Interpolation.BiCubic
+      order = tools.INTRP.BiCubic
     else:
-      order = tools.Interpolation.NearestNeighbor
+      order = tools.INTRP.NearestNeighbor
 
     return tools.limit_image_size(image=image,
                                   limit=self._size_limit,
@@ -239,9 +239,8 @@ class ThermalPanorama:
   def _init_registrator(self, shape):
     ropt: DictConfig = self._config['registration']
 
-    if self._camera in self._config['camera']:
-      camera = self._camera
-    else:
+    camera = self._camera
+    if camera not in self._config['camera']:
       camera = 'default'
 
     copt: DictConfig = self._config['camera'][camera]
@@ -606,15 +605,9 @@ class ThermalPanorama:
 
   def _init_perspective_correction(self):
     options = self._config['distort_correction']
-
-    canny_options = persp.CannyOptions(**options['canny'])
-    hough_options = persp.HoughOptions(**options['hough'])
-    correction_opts = persp.CorrectionOptions(**options['correction'])
-
-    pc = persp.PerspectiveCorrection(canny_options=canny_options,
-                                     hough_options=hough_options,
-                                     correction_options=correction_opts)
-    return pc
+    return persp.PerspectiveCorrection(canny=options['canny'],
+                                       hough=options['hough'],
+                                       correction=options['correction'])
 
   def _correct_others(self,
                       correction: persp.Correction,
@@ -629,9 +622,9 @@ class ThermalPanorama:
 
     if spectrum is SP.SEG:
       pano = tools.SegMask.vis_to_index(pano)
-      order = tools.Interpolation.NearestNeighbor
+      order = tools.INTRP.NearestNeighbor
     else:
-      order = tools.Interpolation.BiCubic
+      order = tools.INTRP.BiCubic
 
     if crop_range is not None and crop_range.cropped:
       pano = crop_range.crop(pano)
@@ -663,7 +656,8 @@ class ThermalPanorama:
 
     seg = IIO.read(self._fm.panorama_path(DIR.PANO, SP.SEG))
     if pano.shape[:2] != seg.shape[:2]:
-      raise ValueError('열·실화상 파노라마의 크기가 다릅니다. 파노라마 정합을 먼저 시행해주세요.')
+      raise ValueError('열·실화상 파노라마의 크기가 다릅니다. '
+                       '파노라마 정합을 먼저 시행해주세요.')
 
     # wall, window 영역만 추출
     seg = tools.SegMask.vis_to_index(seg[:, :, 0])
@@ -676,8 +670,8 @@ class ThermalPanorama:
     # 왜곡 보정
     try:
       crct = pc.perspective_correct(image=pano, mask=mask)
-    except persp.NotEnoughEdgelets as e:
-      raise persp.NotEnoughEdgelets(
+    except persp.NotEnoughEdgeletsError as e:
+      raise persp.NotEnoughEdgeletsError(
           '시점 왜곡을 추정할 edge의 개수가 부족합니다. '
           'Edge 추출 옵션을 변경하거나 높은 해상도의 파노라마를 사용하세요.') from e
 
@@ -688,7 +682,8 @@ class ThermalPanorama:
     plt.close(fig)
 
     if not crct.success():
-      raise ValueError('IR 파노라마 왜곡 보정 중 오류 발생. 저장된 plot을 참고해주세요.')
+      raise ValueError('IR 파노라마 왜곡 보정 중 오류 발생. '
+                       '저장된 plot을 참고해주세요.')
 
     logger.debug('IR 파노라마 왜곡 보정 완료')
 
@@ -759,7 +754,7 @@ class ThermalPanorama:
     assert len(fil) == len(fml)
 
     threshold = {}
-    for r, (fi, fm) in utils.ptrack(zip(fil, fml),
+    for r, (fi, fm) in utils.ptrack(zip(fil, fml, strict=True),
                                     description='Detecting anomaly area...',
                                     total=len(fil)):
       ir = IIO.read(fi)

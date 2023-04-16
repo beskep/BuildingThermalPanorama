@@ -36,7 +36,7 @@ class SegmentationPlotController(PanoPlotController):
     self.draw()
 
   def _set_style(self):
-    for ax, title in zip(self.axes.ravel(), self._TITLES):
+    for ax, title in zip(self.axes.ravel(), self._TITLES, strict=True):
       if ax.has_data():
         ax.set_title(title)
       ax.set_axis_off()

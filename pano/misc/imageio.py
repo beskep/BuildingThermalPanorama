@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Optional, Tuple, Union
-from warnings import warn
 
+from loguru import logger
 import numpy as np
 import pandas as pd
 import PIL.Image
@@ -108,14 +108,15 @@ class ImageIO:
 
     if scale and path.suffix.lower() not in ('.csv', '.npy'):
       if meta is None:
-        warn(f'메타 정보 파일 ({meta_path.name})이 존재하지 않습니다. '
-             f'영상의 밝기 범위를 변경하지 않습니다.')
+        logger.warning('메타 정보 파일 ({})이 존재하지 않습니다. '
+                       '영상의 밝기 범위를 변경하지 않습니다.', meta_path.name)
       else:
         try:
           img_range = (meta['range']['min'], meta['range']['max'])
         except KeyError:
-          warn(f'메타 정보 파일 ({meta_path.name})에 영상의 밝기 정보가 없습니다. '
-               f'영상의 밝기 범위를 변경하지 않습니다.')
+          logger.warning(
+              '메타 정보 파일 ({})에 영상의 밝기 정보가 없습니다. '
+              '영상의 밝기 범위를 변경하지 않습니다.', meta_path.name)
         else:
           image = rescale_intensity(image=image, out_range=img_range)
 

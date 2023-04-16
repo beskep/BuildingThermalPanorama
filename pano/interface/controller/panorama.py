@@ -1,3 +1,4 @@
+from contextlib import suppress
 import json
 import multiprocessing as mp
 from pathlib import Path
@@ -9,19 +10,14 @@ from omegaconf import DictConfig
 from omegaconf import OmegaConf
 
 from pano.interface import analysis
+from pano.interface import plot_controller as pc
+from pano.interface.common import pano_files as pf
 from pano.interface.common.config import update_config
 from pano.interface.common.pano_files import DIR
-from pano.interface.common.pano_files import ImageNotFoundError
-from pano.interface.common.pano_files import init_directory
-from pano.interface.common.pano_files import replace_vis_images
 from pano.interface.common.pano_files import SP
-from pano.interface.common.pano_files import ThermalPanoramaFileManager
 import pano.interface.controller.controller as con
 from pano.interface.mbq import QtCore
 from pano.interface.mbq import QtGui
-from pano.interface.plot_controller import PlotControllers
-from pano.interface.plot_controller import save_manual_correction
-from pano.interface.plot_controller import WorkingDirNotSet
 from pano.interface.tree import tree_string
 from pano.misc.imageio import ImageIO as IIO
 
@@ -30,7 +26,7 @@ def _save_manual_correction(queue: mp.Queue, wd: str, subdir: str,
                             viewing_angle: float, angles: tuple,
                             crop_range: Optional[np.ndarray]):
   try:
-    save_manual_correction(wd, subdir, viewing_angle, angles, crop_range)
+    pc.save_manual_correction(wd, subdir, viewing_angle, angles, crop_range)
   except (ValueError, RuntimeError, OSError) as e:
     logger.exception(e)
     queue.put(f'{type(e).__name__}: {e}')
@@ -88,8 +84,8 @@ class Controller(QtCore.QObject):
     self._consumer.fail.connect(self.win.error_popup)
 
     self._wd: Optional[Path] = None
-    self._fm: Optional[ThermalPanoramaFileManager] = None
-    self._pc = PlotControllers(None, None, None, None, None)  # type: ignore
+    self._fm: Optional[pf.ThermalPanoramaFileManager] = None
+    self._pc = pc.PlotControllers(None, None, None, None, None)  # type: ignore
     self._config: Optional[DictConfig] = None
 
   @property
@@ -101,18 +97,18 @@ class Controller(QtCore.QObject):
     self._win = Window(win)
 
   @property
-  def pc(self) -> PlotControllers:
+  def pc(self) -> pc.PlotControllers:
     return self._pc
 
   @property
-  def fm(self) -> ThermalPanoramaFileManager:
+  def fm(self) -> pf.ThermalPanoramaFileManager:
     if self._fm is None:
       raise ValueError('ThermalPanoramaFileManager not set')
 
     return self._fm
 
   def set_plot_controllers(self, controllers: dict):
-    self._pc = PlotControllers(**controllers)
+    self._pc = pc.PlotControllers(**controllers)
     self._pc.analysis.summarize = self._analysis_summarize
 
   @QtCore.Slot(str)
@@ -126,13 +122,13 @@ class Controller(QtCore.QObject):
       raise FileNotFoundError(wd)
 
     try:
-      self._config = init_directory(directory=wd)
-    except ImageNotFoundError as e:
+      self._config = pf.init_directory(directory=wd)
+    except pf.ImageNotFoundError as e:
       self.win.popup('Error', f'{e.args[0]}\n({e.args[1]})')
       return
 
     self._wd = wd
-    self._fm = ThermalPanoramaFileManager(wd)
+    self._fm = pf.ThermalPanoramaFileManager(wd)
 
     for controller in self.pc.controllers():
       controller.fm = self._fm
@@ -155,7 +151,7 @@ class Controller(QtCore.QObject):
       return
 
     try:
-      replace_vis_images(fm=self.fm, files=files)
+      pf.replace_vis_images(fm=self.fm, files=files)
     except OSError as e:
       logger.exception(e)
       self.win.popup('Error', str(e))
@@ -187,10 +183,8 @@ class Controller(QtCore.QObject):
       self.win.pb_state(False)
       self.win.pb_value(1.0)
 
-      try:
+      with suppress(TypeError):
         self._consumer.done.disconnect()
-      except TypeError:
-        pass
 
     self._consumer.queue = queue
     self._consumer.done.connect(_done)
@@ -323,7 +317,7 @@ class Controller(QtCore.QObject):
   def pano_plot(self, d, sp):
     try:
       self.pc.panorama.plot(d=DIR[d], sp=SP[sp])
-    except WorkingDirNotSet:
+    except pc.WorkingDirNotSetError:
       pass
     except FileNotFoundError as e:
       logger.debug('FileNotFound: "{}"', e)
@@ -363,10 +357,8 @@ class Controller(QtCore.QObject):
       self.win.pb_state(False)
       self.win.pb_value(1.0)
 
-      try:
+      with suppress(TypeError):
         self._consumer.done.disconnect()
-      except TypeError:
-        pass
 
     queue = mp.Queue()
     self._consumer.queue = queue
@@ -406,7 +398,7 @@ class Controller(QtCore.QObject):
 
     try:
       self.pc.analysis.plot()
-    except WorkingDirNotSet:
+    except pc.WorkingDirNotSetError:
       pass
     except FileNotFoundError as e:
       logger.debug('FileNotFound: "{}"', e)
@@ -454,7 +446,7 @@ class Controller(QtCore.QObject):
       self.pc.analysis.images.reset_images()
       ir = self.pc.analysis.images.ir
       seg = self.pc.analysis.images.seg
-    except WorkingDirNotSet:
+    except pc.WorkingDirNotSetError:
       return
 
     meta_files = list(self.fm.subdir(DIR.IR).glob('*.yaml'))
@@ -517,7 +509,7 @@ class Controller(QtCore.QObject):
       self.pc.analysis.images.save()
       self.pc.analysis.save()
       self.pc.analysis.save_report()
-    except WorkingDirNotSet:
+    except pc.WorkingDirNotSetError:
       pass
     except ValueError as e:
       logger.exception(e)
@@ -533,7 +525,7 @@ class Controller(QtCore.QObject):
 
     try:
       self.pc.output.plot()
-    except WorkingDirNotSet:
+    except pc.WorkingDirNotSetError:
       pass
     except FileNotFoundError as e:
       logger.debug('FileNotFound: "{}"', e)
@@ -543,14 +535,14 @@ class Controller(QtCore.QObject):
     try:
       self.pc.output.lines.clear_lines()
       self.pc.output.draw()
-    except WorkingDirNotSet:
+    except pc.WorkingDirNotSetError:
       pass
 
   @QtCore.Slot()
   def output_estimate_edgelets(self):
     try:
       self.pc.output.estimate_edgelets()
-    except WorkingDirNotSet:
+    except pc.WorkingDirNotSetError:
       pass
     except FileNotFoundError as e:
       self.win.popup('Error', str(e))
@@ -580,7 +572,7 @@ class Controller(QtCore.QObject):
 
     try:
       self.pc.output.save(segments)
-    except WorkingDirNotSet:
+    except pc.WorkingDirNotSetError:
       pass
     except (OSError, ValueError) as e:
       logger.exception(e)
