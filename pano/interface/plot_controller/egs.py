@@ -13,6 +13,7 @@ import seaborn as sns
 from skimage import transform
 import yaml
 
+from pano.interface.analysis import summarize
 from pano.interface.common.pano_files import DIR
 from pano.interface.mbq import NavigationToolbar2QtQuick
 from pano.misc import tools
@@ -237,9 +238,11 @@ class PlotController(_PanoPlotCtrl):
     self._last_file = path
 
     if mode == 'registration':
-      self._plot_rgst(path)
+      summary = self._plot_rgst(path)
     else:
-      self._plot(path, anomaly=mode == 'anomaly')
+      summary = self._plot(path, anomaly=mode == 'anomaly')
+
+    return summary
 
   def _plot(self, path: Path, anomaly: bool):
     ir = IIO.read(self.fm.change_dir(DIR.IR, path))
@@ -256,9 +259,13 @@ class PlotController(_PanoPlotCtrl):
     self.axes.right.imshow(vis)
 
     if anomaly:
-      self._plot_anomaly(path=path, ir=ir, lim=lim)
+      summary = self._plot_anomaly(path=path, ir=ir, lim=lim)
+    else:
+      summary = None
 
     self.draw()
+
+    return summary
 
   def _plot_anomaly(self, path: Path, ir: NDArray, lim: tuple[float, float]):
     try:
@@ -276,9 +283,11 @@ class PlotController(_PanoPlotCtrl):
                            vmin=lim[0],
                            vmax=lim[1])
 
-    hist_data = {'정상 영역': ir[mw & ~ma].ravel(), '이상 영역': ir[ma].ravel()}
-    sns.histplot(data=hist_data, stat='probability', ax=self.axes.bottom)
+    data = {'정상 영역': ir[mw & ~ma].ravel(), '이상 영역': ir[ma].ravel()}
+    sns.histplot(data=data, stat='probability', ax=self.axes.bottom)
     self.axes.bottom.set_xlim(*lim)
+
+    return {k: summarize(v) for k, v in data.items()}
 
   def _plot_rgst(self, path: Path):
     ir = IIO.read(self.fm.change_dir(DIR.IR, path))
@@ -328,5 +337,7 @@ class PlotController(_PanoPlotCtrl):
                                 preserve_range=True)
 
     self._plot_rgst_compare(ir=ir, registered=registered)
+
+    self.fm.subdir(DIR.RGST).mkdir(exist_ok=True)
     IIO.save(path=self.fm.change_dir(DIR.RGST, self._last_file),
              array=tools.uint8_image(registered))

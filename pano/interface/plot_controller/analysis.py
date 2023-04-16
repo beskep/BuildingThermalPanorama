@@ -66,7 +66,7 @@ def _vulnerable_area_ratio(factor, vulnerable, mask):
 
 def _summarize(ir, seg, threshold, factor, index: int):
   mask = seg == index
-  summ = analysis.summary(ir[mask])
+  summ = analysis.summarize(ir[mask])
 
   if factor is None:
     summ['vulnerable'] = '-'

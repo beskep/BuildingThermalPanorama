@@ -124,16 +124,25 @@ class Controller(QtCore.QObject):
     if not uri:
       return
 
-    path = con.uri2path(uri)
     self.pc.rgst = mode == 1
-    mode_ = ('raw', 'registration', 'anomaly')[mode]
 
+    summary = None
     try:
-      self.pc.plot(path=path, mode=mode_)
+      summary = self.pc.plot(path=con.uri2path(uri),
+                             mode=('raw', 'registration', 'anomaly')[mode])
     except FileNotFoundError:
       self.win.popup('Error', '파일을 먼저 추출해주세요.')
     except AnomalyThresholdNotSetError:
       self.win.popup('Error', '이상 영역을 먼저 검출해주세요.')
+
+    if summary is not None:
+      self.win.panel_funtion('clear_table')
+      for c, d in summary.items():
+        row = {
+            k: (v if isinstance(v, str) else f'{v:.2f}') for k, v in d.items()
+        }
+        row['class'] = c
+        self.win.panel_funtion('append_table_row', row)
 
   @QtCore.Slot(bool, bool)
   def plot_navigation(self, home, zoom):

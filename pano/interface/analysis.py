@@ -66,7 +66,7 @@ def correct_temperature(ir: np.ndarray, mask: np.ndarray, coord: tuple,
   return ir, delta
 
 
-def summary(array: np.ndarray):
+def summarize(array: np.ndarray):
   arr = array[np.logical_not(np.isnan(array))]
 
   return {

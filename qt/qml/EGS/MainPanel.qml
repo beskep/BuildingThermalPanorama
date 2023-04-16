@@ -5,6 +5,7 @@ import QtQuick.Layouts 1.15
 import QtQuick.Window 2.15
 import QtGraphicalEffects 1.0
 import Qt.labs.platform 1.1
+import Qt.labs.qmlmodels 1.0
 
 import '../Custom'
 import Backend 1.0
@@ -16,6 +17,52 @@ Pane {
     width : 1280
     height : 720
     padding : 10
+
+    ListModel {
+        id : table_header_model
+
+        ListElement {
+            name : '클래스'
+        }
+        ListElement {
+            name : '평균'
+        }
+        ListElement {
+            name : '표준편차'
+        }
+        ListElement {
+            name : 'Q1'
+        }
+        ListElement {
+            name : '중위수'
+        }
+        ListElement {
+            name : 'Q3'
+        }
+    }
+
+    TableModel {
+        id : table_model
+
+        TableModelColumn {
+            display : 'class'
+        }
+        TableModelColumn {
+            display : 'avg'
+        }
+        TableModelColumn {
+            display : 'std'
+        }
+        TableModelColumn {
+            display : 'q1'
+        }
+        TableModelColumn {
+            display : 'median'
+        }
+        TableModelColumn {
+            display : 'q3'
+        }
+    }
 
     ColumnLayout {
         anchors.fill : parent
@@ -163,22 +210,75 @@ Pane {
                 }
             }
 
-            // plot
-            Pane {
-                Material.elevation : 2
-                Layout.fillHeight : true
-                Layout.fillWidth : true
-                padding : 0
-                visible : mode !== 3
+            ColumnLayout {
+                Pane {
+                    Material.elevation : 2
+                    Layout.fillHeight : true
+                    Layout.fillWidth : true
+                    padding : 0
+                    visible : mode !== 3
 
-                FigureCanvas {
-                    id : _plot
-                    anchors.fill : parent
+                    // plot
+                    FigureCanvas {
+                        id : _plot
+                        anchors.fill : parent
 
-                    objectName : 'plot'
-                    dpi_ratio : Screen.devicePixelRatio
+                        objectName : 'plot'
+                        dpi_ratio : Screen.devicePixelRatio
+                    }
                 }
-                // TODO table
+
+                Pane {
+                    Material.elevation : 2
+                    Layout.preferredHeight : 200
+                    Layout.fillWidth : true
+                    visible : mode === 2
+
+                    // table
+                    ColumnLayout {
+                        anchors.fill : parent
+                        spacing : 0
+
+                        HorizontalHeaderView {
+                            syncView : table_view
+
+                            model : table_header_model
+                            delegate : Rectangle {
+                                implicitHeight : 50
+                                implicitWidth : 150
+                                color : '#eeeeee'
+
+                                Label {
+                                    anchors.centerIn : parent
+                                    horizontalAlignment : Text.AlignHCenter
+                                    text : name
+                                }
+                            }
+                        }
+
+                        TableView {
+                            id : table_view
+                            columnSpacing : 1
+                            rowSpacing : 1
+                            boundsBehavior : Flickable.StopAtBounds
+
+                            Layout.fillWidth : true
+                            Layout.fillHeight : true
+
+                            model : table_model
+
+                            delegate : Rectangle {
+                                implicitHeight : 40
+                                implicitWidth : 150
+
+                                Label {
+                                    anchors.centerIn : parent
+                                    text : display
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -191,5 +291,13 @@ Pane {
     function update_image_view(paths) {
         _image_model.clear();
         paths.forEach(path => _image_model.append({'path': path}));
+    }
+
+    function clear_table() {
+        table_model.clear()
+    }
+
+    function append_table_row(row) {
+        table_model.appendRow(row)
     }
 }
