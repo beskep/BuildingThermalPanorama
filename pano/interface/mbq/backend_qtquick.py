@@ -121,7 +121,7 @@ class FigureCanvasQtQuick(QtQuick.QQuickPaintedItem, FigureCanvasBase):
       def _draw_rect_callback(painter):
         pen = QtGui.QPen(QtCore.Qt.black, 1 / self.dpi_ratio, QtCore.Qt.DotLine)
         painter.setPen(pen)
-        painter.drawRect(*(pt / self.dpi_ratio for pt in rect))
+        painter.drawRect(*(int(pt / self.dpi_ratio) for pt in rect))
     else:
 
       def _draw_rect_callback(painter):

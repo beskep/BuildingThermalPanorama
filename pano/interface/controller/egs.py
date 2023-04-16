@@ -1,3 +1,4 @@
+from contextlib import suppress
 import multiprocessing as mp
 from pathlib import Path
 from typing import Iterable
@@ -8,6 +9,7 @@ import pano.interface.common.pano_files as pf
 import pano.interface.controller.controller as con
 from pano.interface.mbq import QtCore
 from pano.interface.mbq import QtGui
+from pano.interface.plot_controller.egs import AnomalyThresholdNotSetError
 from pano.interface.plot_controller.egs import PlotController
 
 
@@ -62,11 +64,7 @@ class Controller(QtCore.QObject):
       self.win.pb_state(False)
       return
 
-    if isinstance(commands, str):
-      commands = (commands,)
-    else:
-      commands = tuple(commands)
-
+    commands = (commands,) if isinstance(commands, str) else tuple(commands)
     name = '' if name is None else f'{name.strip()} '
     self.win.pb_state(True)
 
@@ -75,10 +73,8 @@ class Controller(QtCore.QObject):
       self.win.pb_state(False)
       self.win.pb_value(1.0)
 
-      try:
+      with suppress(TypeError):
         self._consumer.done.disconnect()
-      except TypeError:
-        pass
 
       if 'detect' in commands:
         self.pc.update_threshold()
@@ -119,30 +115,30 @@ class Controller(QtCore.QObject):
 
     self.update_image_view()
 
-    try:
+    with suppress(FileNotFoundError):
       self.pc.update_threshold()
-    except FileNotFoundError:
-      pass
 
-  @QtCore.Slot(str, bool)
-  def plot(self, file, anomaly):
+  @QtCore.Slot(str, int)
+  def plot(self, uri, mode):
     self.pc.reset()
-    if not file:
+    if not uri:
       return
 
-    file = con.uri2path(file)
+    path = con.uri2path(uri)
+    self.pc.rgst = mode == 1
+    mode_ = ('raw', 'registration', 'anomaly')[mode]
 
     try:
-      self.pc.plot(file=file, anomaly=anomaly)
+      self.pc.plot(path=path, mode=mode_)
     except FileNotFoundError:
       self.win.popup('Error', '파일을 먼저 추출해주세요.')
-    except KeyError:
+    except AnomalyThresholdNotSetError:
       self.win.popup('Error', '이상 영역을 먼저 검출해주세요.')
 
-  @QtCore.Slot()
-  def extract_and_register(self):
-    self.command(commands=('extract', 'register'), name='열·실화상 추출 및 정합')
+  @QtCore.Slot(bool, bool)
+  def plot_navigation(self, home, zoom):
+    self.pc.navigation(home=home, zoom=zoom)
 
-  @QtCore.Slot()
-  def segment_and_detect(self):
-    self.command(commands=('segment', 'detect'), name='외피 분할 및 열적 이상 영역 검출')
+  @QtCore.Slot(str, str)
+  def qml_command(self, commands: str, name: str):
+    self.command(commands=map(str.strip, commands.split(',')), name=name)

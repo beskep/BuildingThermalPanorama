@@ -54,6 +54,10 @@ ApplicationWindow {
                     width : parent.width
                 }
                 TabButton {
+                    text : '열·실화상 정합'
+                    width : parent.width
+                }
+                TabButton {
                     text : '열적 이상 영역 검출'
                     width : parent.width
                 }
@@ -63,7 +67,7 @@ ApplicationWindow {
                 }
 
                 onCurrentIndexChanged : {
-                    con.plot('', false); // reset plot
+                    con.plot('', 0); // reset plot
                     panel.mode = currentIndex;
                 }
             }

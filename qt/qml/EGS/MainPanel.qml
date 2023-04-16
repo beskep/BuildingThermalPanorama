@@ -11,7 +11,7 @@ import Backend 1.0
 
 
 Pane {
-    property var mode: 0; // [analysis, anomaly, report]
+    property var mode: 0; // [analysis, registration, anomaly, report]
 
     width : 1280
     height : 720
@@ -29,21 +29,53 @@ Pane {
 
                     ToolButton {
                         text : '경로 선택'
+                        icon : '\ue8a7'
                         onReleased : _dialog.open()
                     }
 
                     ToolButton {
                         text : '영상 변환'
-                        onReleased : con.extract_and_register()
+                        icon : '\ue30d'
+                        onReleased : con.qml_command('extract', '열·실화상 추출')
                     }
                 }
 
                 RowLayout {
                     visible : mode === 1
-
                     ToolButton {
-                        text : '이상 영역 검출'
-                        onReleased : con.segment_and_detect()
+                        text : '자동 정합'
+                        icon : '\ue663'
+                        onReleased : con.qml_command( //
+                                'register', '열·실화상 자동 정합')
+
+                        visible : false
+                    }
+                    ToolButton {
+                        id : _point
+                        text : '지점 선택'
+                        icon : '\ue55c'
+
+                        down : true
+                        onReleased : {
+                            down = true;
+                            _zoom.down = false;
+                        }
+                    }
+                    ToolButton {
+                        id : _zoom
+                        text : '확대'
+                        icon : '\ue56b'
+
+                        onReleased : {
+                            down = true;
+                            _point.down = false;
+                        }
+                        onDownChanged : con.plot_navigation(false, down)
+                    }
+                    ToolButton {
+                        text : '초기 시점'
+                        icon : '\ue88a'
+                        onReleased : con.plot_navigation(true, false)
                     }
                 }
 
@@ -51,10 +83,24 @@ Pane {
                     visible : mode === 2
 
                     ToolButton {
+                        text : '이상 영역 검출'
+                        icon : '\ue7ee'
+                        onReleased : con.qml_command( //
+                                'segment, detect', //
+                                '외피 분할 및 열적 이상 영역 검출')
+                    }
+                }
+
+                RowLayout {
+                    visible : mode === 3
+
+                    ToolButton {
                         text : '보고서 생성'
+                        icon : '\ue873'
                     }
                     ToolButton {
                         text : '저장'
+                        icon : '\ue161'
                     }
                 }
             }
@@ -109,7 +155,7 @@ Pane {
                             anchors.fill : parent
                             hoverEnabled : true
 
-                            onReleased : con.plot(path, mode === 1)
+                            onReleased : con.plot(path, mode)
                             onEntered : _bc.brightness = -0.25
                             onExited : _bc.brightness = 0
                         }
@@ -123,7 +169,7 @@ Pane {
                 Layout.fillHeight : true
                 Layout.fillWidth : true
                 padding : 0
-                visible : mode !== 2
+                visible : mode !== 3
 
                 FigureCanvas {
                     id : _plot
