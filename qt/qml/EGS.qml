@@ -68,6 +68,7 @@ ApplicationWindow {
 
                 onCurrentIndexChanged : {
                     con.plot('', 0); // reset plot
+                    panel.clear_table();
                     panel.mode = currentIndex;
                 }
             }

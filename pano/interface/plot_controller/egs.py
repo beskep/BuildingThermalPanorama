@@ -35,7 +35,7 @@ class _Axes:
     self._axes: tuple[Axes, ...] = tuple(
         fig.add_subplot(x) for x in [gs[0, 0], gs[0, 1], gs[0, 2], gs[1, :]])
 
-    self._titles = ('열화상', None, '이상영역', '온도 분포')  # rgst일 때 수정
+    self.anomaly = False
 
   def __iter__(self):
     yield from self.axes
@@ -61,11 +61,14 @@ class _Axes:
   def bottom(self) -> Axes:
     return self._axes[3]
 
+  def titles(self):
+    return ('열화상', None, '이상영역' if self.anomaly else '실화상', '온도 분포')
+
   def set_style(self):
     self.left.set_axis_off()
     self.right.set_axis_off()
 
-    for ax, title in zip(self.axes, self._titles, strict=True):
+    for ax, title in zip(self.axes, self.titles(), strict=True):
       if title and ax.has_data():
         ax.set_title(title)
 
@@ -94,9 +97,12 @@ class NavigationToolbar(NavigationToolbar2QtQuick):
   def __init__(self, canvas, parent=None):
     super().__init__(canvas, parent)
 
+  @property
+  def zoom_mode(self):
+    return bool(self.mode)  # default mode: '', zoom mode: 'zoom rect'
+
   def zoom(self, value: bool) -> None:
-    current = bool(self.mode)  # default mode: '', zoom mode: 'zoom rect'
-    if current == bool(value):
+    if self.zoom_mode == bool(value):
       return
 
     super().zoom()
@@ -181,6 +187,7 @@ class PlotController(_PanoPlotCtrl):
 
   def reset(self):
     super().reset()
+    self.axes.anomaly = False
     self._last_file = None
     self._points.remove_points(None)
 
@@ -205,7 +212,7 @@ class PlotController(_PanoPlotCtrl):
     if ax is None:
       return
 
-    if event.button == MouseButton.LEFT:
+    if event.button == MouseButton.LEFT and not self._toolbar.zoom_mode:
       self._points.add_point(ax=ax, event=event)
     elif event.button == MouseButton.RIGHT:
       self._points.remove_points(ax=ax)
@@ -261,6 +268,7 @@ class PlotController(_PanoPlotCtrl):
     summary = None
     if anomaly:
       summary = self._plot_anomaly(path=path, ir=ir, lim=lim)
+      self.axes.anomaly = True
 
     self.draw()
 
