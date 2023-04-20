@@ -302,7 +302,10 @@ def init_directory(directory: Path, default=False) -> DictConfig:
     try:
       _, files = peek(files)
     except StopIteration:
-      raise ImageNotFoundError('영상 파일이 발견되지 않았습니다.', str(directory)) from None
+      raise ImageNotFoundError(
+          '영상 파일이 발견되지 않았습니다.',
+          str(directory),
+      ) from None
 
     raw_dir.mkdir()
     for file in files:

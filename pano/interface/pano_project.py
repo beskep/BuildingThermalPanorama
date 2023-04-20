@@ -226,7 +226,7 @@ class ThermalPanorama:
     return self._config['file']['size_limit']
 
   def limit_size(self, image: np.ndarray, aa=True) -> np.ndarray:
-    if aa:
+    if aa:  # noqa: SIM108
       order = tools.INTRP.BiCubic
     else:
       order = tools.INTRP.NearestNeighbor
@@ -656,8 +656,7 @@ class ThermalPanorama:
 
     seg = IIO.read(self._fm.panorama_path(DIR.PANO, SP.SEG))
     if pano.shape[:2] != seg.shape[:2]:
-      raise ValueError('열·실화상 파노라마의 크기가 다릅니다. '
-                       '파노라마 정합을 먼저 시행해주세요.')
+      raise ValueError('열·실화상 파노라마의 크기가 다릅니다. 파노라마 정합을 먼저 시행해주세요.')
 
     # wall, window 영역만 추출
     seg = tools.SegMask.vis_to_index(seg[:, :, 0])
@@ -682,8 +681,7 @@ class ThermalPanorama:
     plt.close(fig)
 
     if not crct.success():
-      raise ValueError('IR 파노라마 왜곡 보정 중 오류 발생. '
-                       '저장된 plot을 참고해주세요.')
+      raise ValueError('IR 파노라마 왜곡 보정 중 오류 발생. 저장된 plot을 참고해주세요.')
 
     logger.debug('IR 파노라마 왜곡 보정 완료')
 

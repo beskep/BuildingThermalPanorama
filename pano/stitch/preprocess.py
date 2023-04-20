@@ -10,6 +10,8 @@ from skimage.exposure import rescale_intensity
 
 from pano.misc.tools import normalize_rgb_image_hist
 
+# ruff: noqa: N803
+
 
 class PanoramaPreprocess:
   """

@@ -83,7 +83,7 @@ class VIAProject:
 
       ra = region['region_attributes'][self._attr_name]
       if not any(x in ra for x in self._attr_ids):
-        warn(f'file {fname}: attribute 지정 안됨')
+        warn(f'file {fname}: attribute 지정 안됨', UserWarning, stacklevel=1)
         continue
 
       for x in self._attr_ids:

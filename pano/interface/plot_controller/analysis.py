@@ -193,7 +193,7 @@ class Images:
     return np.absolute((self.ir - self.teti[0]) / (self.teti[1] - self.teti[0]))
 
   def vulnerable_area(self, window=True):
-    if window:
+    if window:  # noqa: SIM108
       mask = np.isin(self.seg, [1, 2])
     else:
       mask = self.seg == 1

@@ -17,7 +17,7 @@ def exiftool(*args) -> bytes:
   """
   ExifTool 프로그램을 통해 영상 파일의 메타 데이터 (Exif) 추출
   """
-  args = (EXIFTOOL_PATH.as_posix(),) + args
+  args = (str(EXIFTOOL_PATH), *args)
 
   return check_output(args, stderr=DEVNULL)
 
@@ -41,10 +41,7 @@ def get_exif(files: Union[str, List[str]],
   if isinstance(files, str):
     files = [files]
 
-  if tags is None:
-    tags = []
-  else:
-    tags = [(x if x.startswith('-') else '-' + x) for x in tags]
+  tags = [(x if x.startswith('-') else '-' + x) for x in tags or []]
 
   exifs_byte = exiftool('-j', *tags, *files)
   exifs = yaml.safe_load(exifs_byte.decode())

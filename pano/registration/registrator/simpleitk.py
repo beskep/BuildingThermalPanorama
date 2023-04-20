@@ -6,14 +6,14 @@ from typing import Callable, Optional, Tuple, Union
 from loguru import logger
 import numpy as np
 from numpy.linalg import inv
-import SimpleITK as sitk
+import SimpleITK as sitk  # noqa: N813
 from skimage.transform import estimate_transform
 
 from pano.misc.tools import bin_size
 
 from .registrator import BaseRegistrator
-from .registrator import RegisteringImage
-from .registrator import RegistrationPreprocess
+from .registrator import RegisteringImage  # noqa: F401
+from .registrator import RegistrationPreprocess  # noqa: F401
 
 
 class Metric(enum.Enum):
@@ -187,8 +187,7 @@ class SITKRegistrator(BaseRegistrator):
                           scale: Optional[float] = None,
                           translation: Optional[tuple] = None):
     if scale is None:
-      logger.warning('초기 scale이 설정되지 않았습니다. '
-                     '정합 결과가 부정확할 수 있습니다.')
+      logger.warning('초기 scale이 설정되지 않았습니다. 정합 결과가 부정확할 수 있습니다.')
       scale = 1.0
 
     trsf: sitk.Transform
@@ -406,5 +405,7 @@ class SITKRegistrator(BaseRegistrator):
   #     preprocess: RegistrationPreprocess,
   #     **kwargs,
   # ) -> Tuple[RegisteringImage, RegisteringImage]:
+  #   return super().prep_and_register(fixed_image, moving_image, preprocess,
+  #                                    **kwargs)
   #   return super().prep_and_register(fixed_image, moving_image, preprocess,
   #                                    **kwargs)

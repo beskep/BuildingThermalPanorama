@@ -159,10 +159,7 @@ def crop_mask(mask: np.ndarray,
   bbox = mask_bbox(mask=mask.astype(bool), morphology_open=morphology_open)
   cr = CropRange(*bbox, mask.shape[:2])
 
-  if cr.cropped:
-    cropped = cr.crop(mask)
-  else:
-    cropped = mask
+  cropped = cr.crop(mask) if cr.cropped else mask
 
   return cr, cropped
 

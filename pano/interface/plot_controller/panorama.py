@@ -204,7 +204,7 @@ def save_manual_correction(wd, subdir, viewing_angle, angles,
   angles = np.deg2rad(angles)
 
   for sp in [SP.IR, SP.VIS, SP.SEG, SP.MASK]:
-    if sp is SP.IR:
+    if sp is SP.IR:  # noqa: SIM108
       image = ir_pano
     else:
       image = ImageIO.read(tp.fm.panorama_path(subdir, sp))

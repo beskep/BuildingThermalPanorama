@@ -55,7 +55,7 @@ class RadialDistortionModel:
         weights=[1, 1, -1],
     ).reshape([-1, 1])  # (xc^2 + yc^2 - r^2)
 
-    rows = list(range(1, data.shape[0])) + [0]
+    rows = [*range(1, data.shape[0]), 0]
     Ap = A - A[rows]
     Bp = B - B[rows]
 

@@ -43,7 +43,7 @@ class SmpModel:
 
   def visualization(self, src: Union[str, Path, Image.Image, np.ndarray],
                     mask: np.ndarray):
-    if isinstance(src, (Image.Image, np.ndarray)):
+    if isinstance(src, (Image.Image, np.ndarray)):  # noqa: SIM108
       image = src
     else:
       image = Image.open(src)
