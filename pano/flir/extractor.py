@@ -6,7 +6,7 @@ import re
 import numpy as np
 from PIL import Image
 
-from pano.misc import exif
+from pano.misc import subprocess
 
 T0 = -273.15
 
@@ -165,13 +165,13 @@ class FlirExtractor:
 
   @cached_property
   def meta(self):
-    meta = exif.get_exif(files=self._path, tags=self.TAGS)[0]
+    meta = subprocess.get_exif(files=self._path, tags=self.TAGS)[0]
     meta.pop('SourceFile')
 
     return FlirExif(**meta)
 
   def ir(self):
-    raw_bytes = exif.get_exif_binary(self.path, '-RawThermalImage')
+    raw_bytes = subprocess.get_exif_binary(self.path, '-RawThermalImage')
     raw_image = np.array(Image.open(BytesIO(raw_bytes)))
 
     if self.meta.RawThermalImageType == 'PNG':
@@ -189,13 +189,13 @@ class FlirExtractor:
     else:
       tag = '-EmbeddedImage'
 
-    vis_bytes = exif.get_exif_binary(self.path, tag)
+    vis_bytes = subprocess.get_exif_binary(self.path, tag)
     vis_image = Image.open(BytesIO(vis_bytes))
 
     return np.array(vis_image)
 
   def exif(self):
-    return exif.get_exif(self.path)[0]
+    return subprocess.get_exif(self.path)[0]
 
   def extract(self):
     ir, signal_reflected = self.ir()

@@ -1,0 +1,145 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Report</title>
+    <link rel="stylesheet" href="materialize.css" />
+    <link rel="stylesheet" href="custom.css" />
+  </head>
+
+  <body>
+    <!-- 기본 정보 -->
+    <table>
+      <tr>
+        <th style="width: 25%">측정 위치</th>
+        <td>{location}</td>
+      </tr>
+      <tr>
+        <th>건물 명칭</th>
+        <td>{building}</td>
+      </tr>
+      <tr>
+        <th>측정 날짜</th>
+        <td>{date}</td>
+      </tr>
+      <tr>
+        <th>측정 부위</th>
+        <td>{part}</td>
+      </tr>
+    </table>
+    <br />
+    <br />
+
+    <!-- 영상 -->
+    <table>
+      <tr>
+        <th style="width: 50%">열화상</th>
+        <th style="width: 50%">실화상 (열적 이상부위)</th>
+      </tr>
+      <tr>
+        <td>{ir}</td>
+        <td>{vis}</td>
+      </tr>
+    </table>
+    <br />
+    <br />
+
+    <!-- 통계 -->
+    <table style="border-spacing: 10px; border-collapse: separate">
+      <tr>
+        <td style="width: 50%">
+          <!-- 측정 결과 -->
+          <table>
+            <tr>
+              <th colspan="3">측정 결과&nbsp;</th>
+            </tr>
+            <tr>
+              <td rowspan="3">정상 영역</td>
+              <td>최고 온도</td>
+              <td>{ordinary_max}</td>
+            </tr>
+            <tr>
+              <td>최저 온도</td>
+              <td>{ordinary_min}</td>
+            </tr>
+            <tr>
+              <td>평균 온도</td>
+              <td>{ordinary_avg}</td>
+            </tr>
+            <tr>
+              <td rowspan="3">이상 영역</td>
+              <td>최고 온도</td>
+              <td>{anomaly_max}</td>
+            </tr>
+            <tr>
+              <td>최저 온도</td>
+              <td>{anomaly_min}</td>
+            </tr>
+            <tr>
+              <td>평균 온도</td>
+              <td>{anomaly_avg}</td>
+            </tr>
+          </table>
+        </td>
+
+        <td style="width: 50%">
+          <!-- 측정 파라미터 -->
+          <table>
+            <tr>
+              <th colspan="3">측정 파라미터</th>
+            </tr>
+            <tr>
+              <td>방사율</td>
+              <td>{e}</td>
+            </tr>
+            <tr>
+              <td>기준 온도</td>
+              <td>{e}</td>
+            </tr>
+            <tr>
+              <td>측정 거리</td>
+              <td>{distance}</td>
+            </tr>
+            <tr>
+              <td>상대 습도</td>
+              <td>{RH}</td>
+            </tr>
+            <tr>
+              <td>대기 온도</td>
+              <td>{temperature}</td>
+            </tr>
+            <tr>
+              <td>반사율</td>
+              <td>{r}</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+    <br />
+    <br />
+
+    <!-- 측정 온도 분포 -->
+    <table>
+      <tr>
+        <th>측정 온도 분포</th>
+      </tr>
+      <tr>
+        <td>{distribution}</td>
+      </tr>
+    </table>
+    <br />
+    <br />
+
+    <!-- 기타 참고사항 -->
+    <table>
+      <tr>
+        <th>기타 참고사항</th>
+      </tr>
+      <tr>
+        <td>{etc}</td>
+      </tr>
+    </table>
+  </body>
+</html>

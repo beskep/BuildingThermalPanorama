@@ -2,6 +2,6 @@
 
 from . import cmap
 from . import edgelet
-from . import exif
 from . import imageio
+from . import subprocess
 from . import tools

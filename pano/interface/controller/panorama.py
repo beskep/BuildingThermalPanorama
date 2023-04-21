@@ -506,9 +506,7 @@ class Controller(QtCore.QObject):
   @QtCore.Slot()
   def analysis_save(self):
     try:
-      self.pc.analysis.images.save()
       self.pc.analysis.save()
-      self.pc.analysis.save_report()
     except pc.WorkingDirNotSetError:
       pass
     except ValueError as e:

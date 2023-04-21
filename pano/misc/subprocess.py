@@ -1,42 +1,51 @@
-"""영상 파일의 Exif 정보 추출"""
-
-from subprocess import check_output
-from subprocess import DEVNULL
-from typing import Iterable, List, Optional, Union
+from pathlib import Path
+import subprocess as sp
+from typing import Iterable
 
 import yaml
 
-from pano import utils
+from pano.utils import DIR
 
-EXIFTOOL_PATH = utils.DIR.RESOURCE.joinpath('exiftool.exe')
-if not EXIFTOOL_PATH.exists():
-  raise FileNotFoundError(EXIFTOOL_PATH)
+
+class PATH:
+  BIN = DIR.RESOURCE / 'bin'
+  EXIFTOOL = BIN / 'exiftool.exe'
+  WKHTMLTOPDF = BIN / 'wkhtmltopdf.exe'
+
+
+def _check_exists(path: Path):
+  if not path.exists():
+    raise FileNotFoundError(path)
+
+
+_check_exists(PATH.EXIFTOOL)
+_check_exists(PATH.WKHTMLTOPDF)
 
 
 def exiftool(*args) -> bytes:
   """
   ExifTool 프로그램을 통해 영상 파일의 메타 데이터 (Exif) 추출
   """
-  args = (str(EXIFTOOL_PATH), *args)
+  args = (str(PATH.EXIFTOOL), *args)
 
-  return check_output(args, stderr=DEVNULL)
+  return sp.check_output(args, stderr=sp.DEVNULL)
 
 
-def get_exif(files: Union[str, List[str]],
-             tags: Optional[Iterable[str]] = None) -> List[dict]:
+def get_exif(files: str | list[str],
+             tags: Iterable[str] | None = None) -> list[dict]:
   """
   촬영 파일로부터 Exif tag 추출
 
   Parameters
   ----------
-  files : Union[str, List[str]]
+  files : str | list[str]
       대상 파일 경로, 혹은 경로의 목록
-  tags : Optional[List[str]], optional
-      추출할 tag. `None`인 경우 모든 tag 추출, by default None
+  tags : Iterable[str] | None, optional
+      추출할 tag. `None`인 경우 모든 tag 추출.
 
   Returns
   -------
-  List[dict]
+  list[dict]
   """
   if isinstance(files, str):
     files = [files]
@@ -66,3 +75,14 @@ def get_exif_binary(image_path: str, tag: str) -> bytes:
   bytes
   """
   return exiftool(tag, '-b', image_path)
+
+
+def wkhtmltopdf(src, dst):
+  args = (
+      str(PATH.WKHTMLTOPDF),
+      '--enable-local-file-access',
+      str(src),
+      str(dst),
+  )
+
+  sp.check_output(args)

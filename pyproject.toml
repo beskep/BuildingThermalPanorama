@@ -55,6 +55,7 @@ disable_error_code = ['var-annotated', 'import']
 check_untyped_defs = true
 warn_unused_ignores = true
 warn_unused_configs = true
+exclude = ['.*/mbq/.*']
 cache_dir = '.cache/mypy'
 
 [tool.pytest.ini_options]

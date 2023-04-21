@@ -13,7 +13,7 @@ from pano import stitch
 from pano import utils
 from pano.distortion import perspective as persp
 from pano.flir import FlirExtractor
-from pano.misc import exif
+from pano.misc import subprocess
 from pano.misc import tools
 from pano.misc.anomaly import anomaly_threshold
 from pano.misc.imageio import ImageIO as IIO
@@ -101,7 +101,8 @@ class ThermalPanorama:
 
       return exif[tag]
 
-    exifs = exif.get_exif(files=[x.as_posix() for x in raw_files], tags=tags)
+    exifs = subprocess.get_exif(files=[x.as_posix() for x in raw_files],
+                                tags=tags)
     models = [_get_model(x) for x in exifs]
     models = [x for x in models if x is not None]
 
