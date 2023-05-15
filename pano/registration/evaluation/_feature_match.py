@@ -19,8 +19,7 @@ class FeatureEvaluation(BaseEvaluation):
       fixed_prep: Callable,
       moving_prep: Callable,
   ) -> None:
-    super().__init__(case_names, fixed_files, moving_files, fixed_prep,
-                     moving_prep)
+    super().__init__(case_names, fixed_files, moving_files, fixed_prep, moving_prep)
     self._registrator = fm.FeatureBasedRegistrator()
 
   @property
@@ -36,17 +35,18 @@ class FeatureEvaluation(BaseEvaluation):
       moving_image = rgb2gray(moving_image)
 
     mfig, maxes = plt.subplots(1, 1, figsize=(16, 9))
-    mi, metrics = self.register_and_evaluate(case=case,
-                                             fi=fixed_image,
-                                             mi=moving_image,
-                                             df=df,
-                                             ax=maxes)
+    mi, metrics = self.register_and_evaluate(
+        case=case, fi=fixed_image, mi=moving_image, df=df, ax=maxes
+    )
     mfig.savefig(output_dir.joinpath(f'match_{case}.png'))
     mfig.tight_layout()
     plt.close(mfig)
 
-    title = case + ' | ' + ' | '.join(
-        [f'{key}: {value:.2f}' for key, value in metrics.items()])
+    title = (
+        case
+        + ' | '
+        + ' | '.join([f'{key}: {value:.2f}' for key, value in metrics.items()])
+    )
     fig, axes, ci = self.plot(fi=fixed_image, mi=moving_image, title=title)
     fig.savefig(output_dir.joinpath(f'fig_{case}.png'))
     plt.close(fig)

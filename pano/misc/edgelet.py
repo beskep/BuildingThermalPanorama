@@ -21,6 +21,7 @@ class Edgelets:
   strength : np.ndarray
       선분 길이. (count,).
   """
+
   locations: np.ndarray
   directions: np.ndarray
   strengths: np.ndarray
@@ -29,9 +30,11 @@ class Edgelets:
     if isinstance(index, int):
       index = [index]
 
-    return Edgelets(locations=self.locations[index],
-                    directions=self.directions[index],
-                    strengths=self.strengths[index])
+    return Edgelets(
+        locations=self.locations[index],
+        directions=self.directions[index],
+        strengths=self.strengths[index],
+    )
 
   def __post_init__(self):
     count = self.locations.shape[0]
@@ -53,9 +56,11 @@ class Edgelets:
     self.directions /= np.linalg.norm(self.directions, axis=1).reshape([-1, 1])
 
   def copy(self):
-    return Edgelets(locations=self.locations.copy(),
-                    directions=self.directions.copy(),
-                    strengths=self.strengths.copy())
+    return Edgelets(
+        locations=self.locations.copy(),
+        directions=self.directions.copy(),
+        strengths=self.strengths.copy(),
+    )
 
   def sort(self):
     argsort = np.flip(np.argsort(self.strengths))
@@ -67,6 +72,7 @@ class Edgelets:
 @dc.dataclass
 class CannyOptions:
   """`skimage.feature.canny` 옵션"""
+
   sigma: float = 1.0
   low_threshold: Optional[float] = None
   high_threshold: Optional[float] = None
@@ -76,6 +82,7 @@ class CannyOptions:
 @dc.dataclass
 class HoughOptions:
   """`skimage.transform.probabilistic_hough_line` 옵션"""
+
   threshold: int = 10
   line_length: int = 50
   line_gap: int = 10
@@ -95,10 +102,12 @@ def edge_preprocess(image: np.ndarray, eqhist=True) -> np.ndarray:
   return image
 
 
-def image2edges(image: np.ndarray,
-                mask: Optional[np.ndarray] = None,
-                canny_option: Optional[CannyOptions] = None,
-                eqhist=True) -> np.ndarray:
+def image2edges(
+    image: np.ndarray,
+    mask: Optional[np.ndarray] = None,
+    canny_option: Optional[CannyOptions] = None,
+    eqhist=True,
+) -> np.ndarray:
   if image.ndim != 2:
     raise ValueError('image.ndim != 2')
 
@@ -107,15 +116,16 @@ def image2edges(image: np.ndarray,
   if canny_option is None:
     canny_option = CannyOptions()
 
-  edges = canny(image=tools.normalize_image(image),
-                mask=mask,
-                **dc.asdict(canny_option))
+  edges = canny(
+      image=tools.normalize_image(image), mask=mask, **dc.asdict(canny_option)
+  )
 
   return edges
 
 
-def edge2edgelets(edges: np.ndarray,
-                  hough_option: Optional[HoughOptions] = None) -> Edgelets:
+def edge2edgelets(
+    edges: np.ndarray, hough_option: Optional[HoughOptions] = None
+) -> Edgelets:
   kwargs = {} if hough_option is None else dc.asdict(hough_option)
   lines = np.array(probabilistic_hough_line(edges, **kwargs))
 
@@ -124,20 +134,17 @@ def edge2edgelets(edges: np.ndarray,
   strengths = np.linalg.norm(directions, ord=2, axis=1)
   directions = np.divide(directions, strengths.reshape([-1, 1]))
 
-  return Edgelets(locations=locations,
-                  directions=directions,
-                  strengths=strengths)
+  return Edgelets(locations=locations, directions=directions, strengths=strengths)
 
 
-def image2edgelets(image: np.ndarray,
-                   mask: Optional[np.ndarray] = None,
-                   canny_option: Optional[CannyOptions] = None,
-                   hough_option: Optional[HoughOptions] = None,
-                   eqhist=True):
-  edges = image2edges(image=image,
-                      mask=mask,
-                      canny_option=canny_option,
-                      eqhist=eqhist)
+def image2edgelets(
+    image: np.ndarray,
+    mask: Optional[np.ndarray] = None,
+    canny_option: Optional[CannyOptions] = None,
+    hough_option: Optional[HoughOptions] = None,
+    eqhist=True,
+):
+  edges = image2edges(image=image, mask=mask, canny_option=canny_option, eqhist=eqhist)
   edgelets = edge2edgelets(edges=edges, hough_option=hough_option)
 
   return edgelets, edges

@@ -1,13 +1,11 @@
 """cx_Freeze를 통해 실행 파일 생성을 위한 코드"""
 
-from pathlib import Path
 import sys
+from pathlib import Path
 
-from cx_Freeze import Executable
-from cx_Freeze import setup
+from cx_Freeze import Executable, setup
 
-from pano.utils import DIR
-from pano.utils import play_sound
+from pano.utils import DIR, play_sound
 
 
 def build():
@@ -68,22 +66,22 @@ def build():
           'zip_include_packages': zip_include_packages,
           'excludes': excludes,
           'optimize': 1,
-          'silent_level': 1
+          'silent_level': 1,
       }
   }
 
   executables = [
-      Executable(script=r'pano\interface\gui_egs.py',
-                 target_name='AnomalyDetection')
+      Executable(script=r'pano\interface\gui_egs.py', target_name='AnomalyDetection')
   ]
 
-  setup(name='app',
-        version='0.1',
-        description=
-        'Intelligent Solution for Thermal Anomaly Detection in Buildings',
-        options=options,
-        executables=executables,
-        packages=[])
+  setup(
+      name='app',
+      version='0.1',
+      description='Intelligent Solution for Thermal Anomaly Detection in Buildings',
+      options=options,
+      executables=executables,
+      packages=[],
+  )
 
 
 if __name__ == '__main__':

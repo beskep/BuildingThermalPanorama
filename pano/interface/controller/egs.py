@@ -1,7 +1,7 @@
-from contextlib import suppress
 import dataclasses as dc
-from enum import IntEnum
 import multiprocessing as mp
+from contextlib import suppress
+from enum import IntEnum
 from pathlib import Path
 from shutil import copy2
 from typing import Iterable
@@ -10,14 +10,11 @@ from loguru import logger
 from omegaconf import DictConfig
 from toolz import dicttoolz
 
-from pano.flir.extractor import FlirExtractor
 import pano.interface.common.pano_files as pf
 import pano.interface.controller.controller as con
-from pano.interface.mbq import QtCore
-from pano.interface.mbq import QtGui
-from pano.interface.plot_controller.egs import DataNotFoundError
-from pano.interface.plot_controller.egs import Images
-from pano.interface.plot_controller.egs import PlotController
+from pano.flir.extractor import FlirExtractor
+from pano.interface.mbq import QtCore, QtGui
+from pano.interface.plot_controller.egs import DataNotFoundError, Images, PlotController
 from pano.misc.sp import wkhtmltopdf
 from pano.utils import DIR
 
@@ -84,9 +81,7 @@ class IRParameter:
     ]
 
   def asdict(self):
-    return {
-        f.name: x for f, x in zip(self.fields(), self.aslist(), strict=True)
-    }
+    return {f.name: x for f, x in zip(self.fields(), self.aslist(), strict=True)}
 
 
 class Controller(QtCore.QObject):
@@ -240,7 +235,7 @@ class Controller(QtCore.QObject):
   def display_stat(self, summary: dict[str, dict[str, float]]):
     self.win.panel.clear_stat()
     for c, d in summary.items():
-      row = {k: (v if isinstance(v, str) else f'{v:.2f}') for k, v in d.items()}
+      row = {k: v if isinstance(v, str) else f'{v:.2f}' for k, v in d.items()}
       row['class'] = {'normal': '정상 영역', 'anomaly': '이상 영역'}[c]
       self.win.panel.append_stat_row(row)
 
@@ -250,14 +245,15 @@ class Controller(QtCore.QObject):
 
     _, _, summary = Images(image, self.fm).data()
     stat = {
-        f'{x}_{y}': summary[x][y] for x in ['normal', 'anomaly']
+        f'{x}_{y}': summary[x][y]
+        for x in ['normal', 'anomaly']
         for y in ['avg', 'min', 'max']
     }
 
     images = {
         'IR': dst / f'{image.stem}.png',
         'AnomalyPlot': dst / f'{image.stem}_anomaly.png',
-        'Histogram': dst / f'{image.stem}_hist.png'
+        'Histogram': dst / f'{image.stem}_hist.png',
     }
 
     fmt = dicttoolz.merge(

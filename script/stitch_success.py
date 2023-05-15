@@ -26,8 +26,9 @@ def show_or_save(fig, output: Optional[Path] = None, fname=None):
 
 
 def _plot_success_rate(df: pd.DataFrame, output):
-  df_p = df[['Photographer',
-             'success']].groupby('Photographer').agg('mean').reset_index()
+  df_p = (
+      df[['Photographer', 'success']].groupby('Photographer').agg('mean').reset_index()
+  )
 
   print(df_p)
 
@@ -36,9 +37,12 @@ def _plot_success_rate(df: pd.DataFrame, output):
   ax.set_ylim(0, 1)
   show_or_save(fig, output=output, fname='success_p')
 
-  df_pc = df[['Photographer', 'success',
-              'Camera']].groupby(['Photographer',
-                                  'Camera']).agg('mean').reset_index()
+  df_pc = (
+      df[['Photographer', 'success', 'Camera']]
+      .groupby(['Photographer', 'Camera'])
+      .agg('mean')
+      .reset_index()
+  )
   print(df_pc)
   fig, ax = plt.subplots(1, 1)
   sns.barplot(data=df_pc, x='Photographer', y='success', hue='Camera', ax=ax)
@@ -52,16 +56,18 @@ def _plot_scatter(df: pd.DataFrame, outout):
   dfc['success'] = ['Success' if x else 'Fail' for x in dfc['success']]
 
   fig, ax = plt.subplots(1, 1)
-  sns.scatterplot(data=dfc,
-                  x='Distance(m)',
-                  y='ImagesCount',
-                  hue='success',
-                  hue_order=['Success', 'Fail'],
-                  style='Camera',
-                  palette='Dark2',
-                  alpha=0.75,
-                  s=75,
-                  ax=ax)
+  sns.scatterplot(
+      data=dfc,
+      x='Distance(m)',
+      y='ImagesCount',
+      hue='success',
+      hue_order=['Success', 'Fail'],
+      style='Camera',
+      palette='Dark2',
+      alpha=0.75,
+      s=75,
+      ax=ax,
+  )
 
   show_or_save(fig, output=outout, fname='scatter')
 
@@ -118,12 +124,8 @@ def _plot_heatmap(df: pd.DataFrame, output):
   cidx = np.digitize(dfc['ImagesCount'], cedges)
 
   dfs = pd.DataFrame({'didx': didx, 'cidx': cidx, 'success': dfc['success']})
-  dfs['distance'] = [
-      f'{dedges[x-1]:02.0f}–{dedges[x]:02.0f}' for x in dfs['didx']
-  ]
-  dfs['images_count'] = [
-      f'{cedges[x-1]:02d}–{cedges[x]:02d}' for x in dfs['cidx']
-  ]
+  dfs['distance'] = [f'{dedges[x-1]:02.0f}–{dedges[x]:02.0f}' for x in dfs['didx']]
+  dfs['images_count'] = [f'{cedges[x-1]:02d}–{cedges[x]:02d}' for x in dfs['cidx']]
   dfs = dfs.groupby(['distance', 'images_count']).agg('mean').reset_index()
 
   fig, ax = plt.subplots(1, 1, figsize=(8, 6))
@@ -154,8 +156,7 @@ def _plot_heatmap(df: pd.DataFrame, output):
 def main(path, photographer, camera, output, ratio):
   df: pd.DataFrame = pd.read_csv(path)
   df['Camera'] = [
-      'FLIR One' if x.lower().startswith('flir one') else x
-      for x in df['Camera']
+      'FLIR One' if x.lower().startswith('flir one') else x for x in df['Camera']
   ]
   df = df.dropna(axis=0, subset=['Distance(m)'])
 

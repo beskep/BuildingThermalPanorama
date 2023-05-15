@@ -15,7 +15,7 @@ class ImageEnhance:
       image: np.ndarray,
       scales: Iterable[float] = (1.0,),
       rotations: Iterable[float] = (0.0,),
-      translations: Iterable[Iterable[float]] = ((0.0, 0.0),)
+      translations: Iterable[Iterable[float]] = ((0.0, 0.0),),
   ) -> None:
     """
     대상 영상에 similarity transform을 적용한 이미지를 반환
@@ -64,10 +64,9 @@ class ImageEnhance:
     """
     return self.mtx_from_center @ mtx @ self.mtx_to_center
 
-  def similarity_matrix_at_center(self,
-                                  scale=1,
-                                  rotation=0,
-                                  translation=(0, 0)) -> np.ndarray:
+  def similarity_matrix_at_center(
+      self, scale=1, rotation=0, translation=(0, 0)
+  ) -> np.ndarray:
     """
     원점을 기준으로 영상에 scale, rotation, translation을 적용하는 matrix
 
@@ -85,17 +84,14 @@ class ImageEnhance:
     np.ndarray
         Transformation matrix
     """
-    mtx = trsf.SimilarityTransform(scale=scale,
-                                   rotation=rotation,
-                                   translation=translation).params
+    mtx = trsf.SimilarityTransform(
+        scale=scale, rotation=rotation, translation=translation
+    ).params
     mtx_at_center = self.transform_matrix_at_center(mtx)
 
     return mtx_at_center
 
-  def transformed_image(self,
-                        scale=1,
-                        rotation=0,
-                        translation=(0, 0)) -> np.ndarray:
+  def transformed_image(self, scale=1, rotation=0, translation=(0, 0)) -> np.ndarray:
     """
     원점을 기준으로 영상에 scale, rotation, translation을 적용
 
@@ -113,15 +109,16 @@ class ImageEnhance:
     np.ndarray
         Transformed image
     """
-    mtx = self.similarity_matrix_at_center(scale=scale,
-                                           rotation=rotation,
-                                           translation=translation)
+    mtx = self.similarity_matrix_at_center(
+        scale=scale, rotation=rotation, translation=translation
+    )
     transformed_image = trsf.warp(self._image, inverse_map=inv(mtx))
 
     return transformed_image
 
   def transformed_images(
-      self) -> Iterator[Tuple[np.ndarray, float, float, np.ndarray]]:
+      self,
+  ) -> Iterator[Tuple[np.ndarray, float, float, np.ndarray]]:
     """
     입력한 scale, rotation, translation 조합 (product)을 적용한 영상의 iterator
 
@@ -141,7 +138,7 @@ class ImageEnhance:
       if scale == 1 and rotation == 0 and tuple(translation) == (0, 0):
         image = self._image.copy()
       else:
-        image = self.transformed_image(scale=scale,
-                                       rotation=rotation,
-                                       translation=translation)
+        image = self.transformed_image(
+            scale=scale, rotation=rotation, translation=translation
+        )
       yield image, scale, rotation, translation

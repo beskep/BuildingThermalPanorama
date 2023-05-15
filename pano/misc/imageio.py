@@ -1,21 +1,19 @@
 from pathlib import Path
 from typing import Optional, Tuple, Union
 
-from loguru import logger
 import numpy as np
 import pandas as pd
 import PIL.Image
-from skimage.color import rgb2hsv
-from skimage.exposure import rescale_intensity
-from skimage.io import imread
-from skimage.io import imsave
 import webp  # TODO PIL로 대체
 import yaml
+from loguru import logger
+from skimage.color import rgb2hsv
+from skimage.exposure import rescale_intensity
+from skimage.io import imread, imsave
 
 from pano.utils import StrPath
 
-from .tools import uint8_image
-from .tools import uint16_image
+from .tools import uint8_image, uint16_image
 
 
 class ImageIO:
@@ -74,9 +72,9 @@ class ImageIO:
     return image
 
   @classmethod
-  def read_with_meta(cls,
-                     path: StrPath,
-                     scale=False) -> Tuple[np.ndarray, Optional[dict]]:
+  def read_with_meta(
+      cls, path: StrPath, scale=False
+  ) -> Tuple[np.ndarray, Optional[dict]]:
     """
     주어진 path의 확장자에 따라 영상 파일 및 메타 정보 해석.
     조건에 따라 영상의 픽셀 값을 메타 정보에 기록된 원 범위로 scale함.
@@ -107,15 +105,21 @@ class ImageIO:
 
     if scale and path.suffix.lower() not in ('.csv', '.npy'):
       if meta is None:
-        logger.warning('메타 정보 파일 ({})이 존재하지 않습니다. '
-                       '영상의 밝기 범위를 변경하지 않습니다.', meta_path.name)
+        logger.warning(
+            '메타 정보 파일 ({})이 존재하지 않습니다. 영상의 밝기 범위를 변경하지 않습니다.',
+            meta_path.name,
+        )
       else:
         try:
           img_range = (meta['range']['min'], meta['range']['max'])
         except KeyError:
           logger.warning(
-              '메타 정보 파일 ({})에 영상의 밝기 정보가 없습니다. '
-              '영상의 밝기 범위를 변경하지 않습니다.', meta_path.name)
+              (
+                  '메타 정보 파일 ({})에 영상의 밝기 정보가 없습니다. '
+                  '영상의 밝기 범위를 변경하지 않습니다.'
+              ),
+              meta_path.name,
+          )
         else:
           image = rescale_intensity(image=image, out_range=img_range)
 
@@ -158,9 +162,11 @@ class ImageIO:
     if dtype == 'uint8':
       image = uint8_image(array)
       for ext in exts:
-        imsave(fname=path.with_suffix(ext).as_posix(),
-               arr=image,
-               check_contrast=False)
+        imsave(
+            fname=path.with_suffix(ext).as_posix(),
+            arr=image,
+            check_contrast=False,
+        )
     else:
       image = uint16_image(array)
       pil_image = PIL.Image.fromarray(image)
@@ -174,12 +180,14 @@ class ImageIO:
       imsave(fname=path.with_suffix(ext).as_posix(), arr=array)
 
   @classmethod
-  def save_with_meta(cls,
-                     path: StrPath,
-                     array: np.ndarray,
-                     exts: list,
-                     meta: Optional[dict] = None,
-                     dtype: Optional[str] = None):
+  def save_with_meta(
+      cls,
+      path: StrPath,
+      array: np.ndarray,
+      exts: list,
+      meta: Optional[dict] = None,
+      dtype: Optional[str] = None,
+  ):
     """
     주어진 path와 각 확장자 (`exts`)에 따라 영상 파일 저장.
     조건에 따라 주어진 메타 정보를 함께 저장하며, 영상 확장자 (`.png` 등) 파일은
@@ -209,9 +217,11 @@ class ImageIO:
 
     # csv 저장
     if cls.CSV_EXT in exts:
-      np.savetxt(fname=path.with_suffix(cls.CSV_EXT).as_posix(),
-                 X=array,
-                 delimiter=cls.DELIMITER)
+      np.savetxt(
+          fname=path.with_suffix(cls.CSV_EXT).as_posix(),
+          X=array,
+          delimiter=cls.DELIMITER,
+      )
       exts.remove(cls.CSV_EXT)
 
     # 이미지 파일 저장
@@ -224,7 +234,7 @@ class ImageIO:
     if meta is not None:
       meta['range'] = {
           'min': np.around(np.nanmin(array).item(), 4).item(),
-          'max': np.around(np.nanmax(array).item(), 4).item()
+          'max': np.around(np.nanmax(array).item(), 4).item(),
       }
       meta_path = cls.meta_path(path)
       with open(meta_path, 'w', encoding=cls.ENCODING) as f:
@@ -232,10 +242,9 @@ class ImageIO:
 
 
 def save_webp_images(*images: Union[str, Path], path: str):
-  webp.save_images(imgs=[PIL.Image.open(x) for x in images],
-                   file_path=path,
-                   fps=1,
-                   lossless=True)
+  webp.save_images(
+      imgs=[PIL.Image.open(x) for x in images], file_path=path, fps=1, lossless=True
+  )
 
 
 def _mask_image(image: PIL.Image.Image):

@@ -1,9 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy import ndimage as ndi
 import seaborn as sns
-from skimage import feature
-from skimage import filters
+from scipy import ndimage as ndi
+from skimage import feature, filters
 from skimage.util import random_noise
 
 from pano.interface.common.init import init_project
@@ -11,9 +10,10 @@ from pano.interface.common.init import init_project
 
 def main():
   init_project(qt=True)
-  sns.set_context('talk',
-                  # font_scale=0.8,
-                 )
+  sns.set_context(
+      'talk',
+      # font_scale=0.8,
+  )
 
   # Generate noisy image of a square
   image = np.zeros((128, 128), dtype=float)
@@ -26,8 +26,9 @@ def main():
   gaussian = filters.gaussian(image=image, sigma=1.5)
 
   blur = filters.gaussian(image=image, sigma=1.5)
-  edges_sobel = np.hypot(np.abs(ndi.sobel(blur, axis=1)),
-                         np.abs(ndi.sobel(blur, axis=0)))
+  edges_sobel = np.hypot(
+      np.abs(ndi.sobel(blur, axis=1)), np.abs(ndi.sobel(blur, axis=0))
+  )
 
   edges_canny = feature.canny(image=image, sigma=3)
 

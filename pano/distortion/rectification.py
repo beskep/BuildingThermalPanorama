@@ -14,11 +14,10 @@ References
 
 from typing import Optional, Tuple
 
-from loguru import logger
 import numpy as np
+from loguru import logger
 from skimage.feature import canny
-from skimage.transform import probabilistic_hough_line
-from skimage.transform import warp
+from skimage.transform import probabilistic_hough_line, warp
 
 
 def compute_edgelets(image, sigma=3):
@@ -107,8 +106,7 @@ def compute_votes(edgelets, model, threshold_inlier=5):
 
   est_directions = locations - vp
   dot_prod = np.sum(est_directions * directions, axis=1)
-  abs_prod = (np.linalg.norm(directions, axis=1) *
-              np.linalg.norm(est_directions, axis=1))
+  abs_prod = np.linalg.norm(directions, axis=1) * np.linalg.norm(est_directions, axis=1)
   abs_prod[abs_prod == 0] = 1e-5
 
   cosine_theta = np.clip(dot_prod / abs_prod, a_min=-1.0, a_max=1.0)
@@ -148,8 +146,8 @@ def ransac_vanishing_point(edgelets, num_ransac_iter=2000, threshold_inlier=5):
   num_pts = strengths.size
 
   arg_sort = np.argsort(-strengths)
-  first_index_space = arg_sort[:num_pts // 5]
-  second_index_space = arg_sort[:num_pts // 2]
+  first_index_space = arg_sort[: num_pts // 5]
+  second_index_space = arg_sort[: num_pts // 2]
 
   best_model = None
   best_votes = np.zeros(num_pts)
@@ -172,8 +170,11 @@ def ransac_vanishing_point(edgelets, num_ransac_iter=2000, threshold_inlier=5):
     if current_votes.sum() > best_votes.sum():
       best_model = current_model
       best_votes = current_votes
-      logger.trace("Current best model has {:.2f} votes at iteration {}",
-                   current_votes.sum(), ransac_iter)
+      logger.trace(
+          'Current best model has {:.2f} votes at iteration {}',
+          current_votes.sum(),
+          ransac_iter,
+      )
 
   logger.debug('Best model has {:.2f} votes', best_votes.sum())
 
@@ -181,10 +182,8 @@ def ransac_vanishing_point(edgelets, num_ransac_iter=2000, threshold_inlier=5):
 
 
 def ransac_3_line(
-    edgelets,
-    focal_length,
-    num_ransac_iter=2000,
-    threshold_inlier=5) -> Tuple[Optional[np.ndarray], Optional[np.ndarray]]:
+    edgelets, focal_length, num_ransac_iter=2000, threshold_inlier=5
+) -> Tuple[Optional[np.ndarray], Optional[np.ndarray]]:
   """Estimate orthogonal vanishing points using 3 line Ransac algorithm.
 
   Assumes camera has been calibrated and its focal length is known.
@@ -220,9 +219,9 @@ def ransac_3_line(
   num_pts = strengths.size
 
   arg_sort = np.argsort(-strengths)
-  first_index_space = arg_sort[:num_pts // 5]
-  second_index_space = arg_sort[:num_pts // 5]
-  third_index_space = arg_sort[:num_pts // 2]
+  first_index_space = arg_sort[: num_pts // 5]
+  second_index_space = arg_sort[: num_pts // 5]
+  third_index_space = arg_sort[: num_pts // 2]
 
   invfsq = 1 / (focal_length**2)
   farr = np.array([invfsq, invfsq, 1.0])
@@ -262,8 +261,11 @@ def ransac_3_line(
     if current_votes > best_votes:
       best_model = (vp1, vp2)
       best_votes = current_votes
-      logger.debug("Current best model has {:.2f} votes at iteration {}",
-                   current_votes, ransac_iter)
+      logger.debug(
+          'Current best model has {:.2f} votes at iteration {}',
+          current_votes,
+          ransac_iter,
+      )
 
   return best_model
 
@@ -302,7 +304,7 @@ def reestimate_model(model, edgelets, threshold_reestimate=5):
   b = -lines[:, 2]
   est_model = np.linalg.lstsq(a, b)[0]
 
-  return np.concatenate((est_model, [1.]))
+  return np.concatenate((est_model, [1.0]))
 
 
 def remove_inliers(model, edgelets, threshold_inlier=10):
@@ -372,11 +374,13 @@ def compute_homography_and_warp(image, vp1, vp2, clip=True, clip_factor=3):
   # Find directions corresponding to vanishing points
   v_post1 = np.dot(H, vp1)
   v_post2 = np.dot(H, vp2)
-  v_post1 = v_post1 / np.sqrt(v_post1[0]**2 + v_post1[1]**2)
-  v_post2 = v_post2 / np.sqrt(v_post2[0]**2 + v_post2[1]**2)
+  v_post1 = v_post1 / np.sqrt(v_post1[0] ** 2 + v_post1[1] ** 2)
+  v_post2 = v_post2 / np.sqrt(v_post2[0] ** 2 + v_post2[1] ** 2)
 
-  directions = np.array([[v_post1[0], -v_post1[0], v_post2[0], -v_post2[0]],
-                         [v_post1[1], -v_post1[1], v_post2[1], -v_post2[1]]])
+  directions = np.array([
+      [v_post1[0], -v_post1[0], v_post2[0], -v_post2[0]],
+      [v_post1[1], -v_post1[1], v_post2[1], -v_post2[1]],
+  ])
 
   thetas = np.arctan2(directions[0], directions[1])
 
@@ -403,9 +407,14 @@ def compute_homography_and_warp(image, vp1, vp2, clip=True, clip_factor=3):
   # Translate so that whole of the image is covered
   inter_matrix = np.dot(A, H)
 
-  cords = np.dot(inter_matrix,
-                 [[0, 0, image.shape[1], image.shape[1]],
-                  [0, image.shape[0], 0, image.shape[0]], [1, 1, 1, 1]])
+  cords = np.dot(
+      inter_matrix,
+      [
+          [0, 0, image.shape[1], image.shape[1]],
+          [0, image.shape[0], 0, image.shape[0]],
+          [1, 1, 1, 1],
+      ],
+  )
   cords = cords[:2] / cords[2]
 
   tx = min(0, cords[0].min())
@@ -430,9 +439,7 @@ def compute_homography_and_warp(image, vp1, vp2, clip=True, clip_factor=3):
 
   final_homography = np.dot(T, inter_matrix)
 
-  warped_img = warp(image,
-                    np.linalg.inv(final_homography),
-                    output_shape=(max_y, max_x))
+  warped_img = warp(image, np.linalg.inv(final_homography), output_shape=(max_y, max_x))
 
   return warped_img
 
@@ -448,11 +455,11 @@ def vis_edgelets(image, edgelets, show=True):
   for i in range(locations.shape[0]):
     xax = [
         locations[i, 0] - directions[i, 0] * strengths[i] / 2,
-        locations[i, 0] + directions[i, 0] * strengths[i] / 2
+        locations[i, 0] + directions[i, 0] * strengths[i] / 2,
     ]
     yax = [
         locations[i, 1] - directions[i, 1] * strengths[i] / 2,
-        locations[i, 1] + directions[i, 1] * strengths[i] / 2
+        locations[i, 1] + directions[i, 1] * strengths[i] / 2,
     ]
 
     plt.plot(xax, yax, 'r-')
@@ -484,10 +491,9 @@ def vis_model(image, model, show=True):
     plt.show()
 
 
-def rectify_image(image: np.ndarray,
-                  clip_factor=6,
-                  algorithm='independent',
-                  reestimate=False):
+def rectify_image(
+    image: np.ndarray, clip_factor=6, algorithm='independent', reestimate=False
+):
   """Rectified image with vanishing point computed using ransac.
 
   Parameters
@@ -533,18 +539,13 @@ def rectify_image(image: np.ndarray,
 
   elif algorithm == '3-line':
     focal_length = None
-    vp1, vp2 = ransac_3_line(edgelets1,
-                             focal_length,
-                             num_ransac_iter=3000,
-                             threshold_inlier=5)
+    vp1, vp2 = ransac_3_line(
+        edgelets1, focal_length, num_ransac_iter=3000, threshold_inlier=5
+    )
   else:
-    raise KeyError(
-        "Parameter 'algorithm' has to be one of {'3-line', 'independent'}")
+    raise KeyError("Parameter 'algorithm' has to be one of {'3-line', 'independent'}")
 
   # Compute the homography and warp
-  warped_img = compute_homography_and_warp(image,
-                                           vp1,
-                                           vp2,
-                                           clip_factor=clip_factor)
+  warped_img = compute_homography_and_warp(image, vp1, vp2, clip_factor=clip_factor)
 
   return warped_img

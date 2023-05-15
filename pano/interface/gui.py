@@ -1,8 +1,8 @@
 """파노라마 영상처리 GUI"""
 
-from multiprocessing import freeze_support
 import os
 import sys
+from multiprocessing import freeze_support
 
 import click
 from loguru import logger
@@ -15,10 +15,7 @@ init_project(qt=True)
 # ruff: noqa: E402
 from pano import utils
 from pano.interface.controller.panorama import Controller
-from pano.interface.mbq import FigureCanvas
-from pano.interface.mbq import QtCore
-from pano.interface.mbq import QtGui
-from pano.interface.mbq import QtQml
+from pano.interface.mbq import FigureCanvas, QtCore, QtGui, QtQml
 from pano.interface.plot_controller import PlotControllers
 
 _qt_message = {
@@ -55,10 +52,9 @@ def _init(loglevel):
   os.environ['QT_QUICK_CONTROLS_CONF'] = str(Files.CONF)
 
 
-@click.command(context_settings={
-    'allow_extra_args': True,
-    'ignore_unknown_options': True
-})
+@click.command(
+    context_settings={'allow_extra_args': True, 'ignore_unknown_options': True}
+)
 @click.option('-d', '--debug', is_flag=True)
 @click.option('-l', '--loglevel', default=20)
 def main(debug=False, loglevel=20):

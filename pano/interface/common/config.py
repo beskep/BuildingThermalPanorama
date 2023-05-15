@@ -5,8 +5,7 @@ from shutil import copy2
 from typing import Union
 
 from loguru import logger
-from omegaconf import DictConfig
-from omegaconf import OmegaConf
+from omegaconf import DictConfig, OmegaConf
 from yaml.error import YAMLError
 
 from pano.utils import DIR
@@ -40,8 +39,7 @@ def set_config(directory: Path, read_only=True, default=False) -> DictConfig:
       wd_config = OmegaConf.load(config_path)
     except YAMLError:
       logger.error(
-          '`{}` 파일의 형식이 올바르지 않습니다. '
-          '기본 설정을 사용합니다.',
+          '`{}` 파일의 형식이 올바르지 않습니다. 기본 설정을 사용합니다.',
           config_path,
       )
     else:

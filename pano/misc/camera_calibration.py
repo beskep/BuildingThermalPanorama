@@ -12,8 +12,7 @@ from .imageio import ImageIO
 _ENC = 'UTF-8'
 
 
-def _detect_chessboard(file: Path, save_dir: Path, img_size, pattern_size,
-                       criteria):
+def _detect_chessboard(file: Path, save_dir: Path, img_size, pattern_size, criteria):
   """체스보드 패턴 검출"""
   image = cv.imread(file.as_posix())
   gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
@@ -23,20 +22,19 @@ def _detect_chessboard(file: Path, save_dir: Path, img_size, pattern_size,
   else:
     assert img_size == gray.shape[::-1]
 
-  ret, corners = cv.findChessboardCorners(gray,
-                                          patternSize=pattern_size,
-                                          corners=None)
+  ret, corners = cv.findChessboardCorners(gray, patternSize=pattern_size, corners=None)
   if ret:
-    corners2 = cv.cornerSubPix(gray,
-                               corners=corners,
-                               winSize=(11, 11),
-                               zeroZone=(-1, -1),
-                               criteria=criteria)
+    corners2 = cv.cornerSubPix(
+        gray,
+        corners=corners,
+        winSize=(11, 11),
+        zeroZone=(-1, -1),
+        criteria=criteria,
+    )
 
-    cv.drawChessboardCorners(image,
-                             patternSize=pattern_size,
-                             corners=corners2,
-                             patternWasFound=ret)
+    cv.drawChessboardCorners(
+        image, patternSize=pattern_size, corners=corners2, patternWasFound=ret
+    )
 
     path = save_dir.joinpath(file.with_suffix('.jpg').name)
     ImageIO.save(path=path, array=image)
@@ -51,7 +49,8 @@ def _calibrate_camera(object_points, image_points, image_size, save_dir: Path):
       imagePoints=image_points,
       imageSize=image_size,
       cameraMatrix=None,
-      distCoeffs=None)
+      distCoeffs=None,
+  )
 
   res_dict = {
       'image_size': list(image_size),
@@ -64,17 +63,19 @@ def _calibrate_camera(object_points, image_points, image_size, save_dir: Path):
   with open(save_dir.joinpath('parameters.yaml'), 'w', encoding=_ENC) as f:
     yaml.dump(res_dict, stream=f)
 
-  np.savez(file=save_dir.joinpath('parameters'),
-           image_size=image_size,
-           matrix=mtx,
-           dist_coeff=dist_coeff,
-           rvecs=np.array(rvecs),
-           tvecs=np.array(tvecs))
+  np.savez(
+      file=save_dir.joinpath('parameters'),
+      image_size=image_size,
+      matrix=mtx,
+      dist_coeff=dist_coeff,
+      rvecs=np.array(rvecs),
+      tvecs=np.array(tvecs),
+  )
 
 
-def compute_camera_matrix(files: List[Union[str, Path]],
-                          save_dir: Union[str, Path],
-                          pattern_size=(3, 3)):
+def compute_camera_matrix(
+    files: List[Union[str, Path]], save_dir: Union[str, Path], pattern_size=(3, 3)
+):
   """
   주어진 영상으로부터 Chessboard 패턴을 검출하고 카메라 보정 패러미터 산정.
 
@@ -91,18 +92,19 @@ def compute_camera_matrix(files: List[Union[str, Path]],
 
   criteria = (cv.TermCriteria_EPS + cv.TermCriteria_MAX_ITER, 30, 0.001)
   objp = np.zeros((pattern_size[0] * pattern_size[1], 3), dtype=np.float32)
-  objp[:, :2] = np.mgrid[0:pattern_size[0],
-                         0:pattern_size[1]].T.reshape([-1, 2])
+  objp[:, :2] = np.mgrid[0 : pattern_size[0], 0 : pattern_size[1]].T.reshape([-1, 2])
 
   obj_points = []
   img_points = []
   img_size = None
   for file in files:
-    img_size, ret, corners = _detect_chessboard(file=Path(file),
-                                                save_dir=save_dir,
-                                                img_size=img_size,
-                                                pattern_size=pattern_size,
-                                                criteria=criteria)
+    img_size, ret, corners = _detect_chessboard(
+        file=Path(file),
+        save_dir=save_dir,
+        img_size=img_size,
+        pattern_size=pattern_size,
+        criteria=criteria,
+    )
     if ret:
       obj_points.append(objp)
       img_points.append(corners)
@@ -110,10 +112,12 @@ def compute_camera_matrix(files: List[Union[str, Path]],
   if not obj_points:
     raise ValueError('Chessboard 추출 실패')
 
-  _calibrate_camera(object_points=obj_points,
-                    image_points=img_points,
-                    image_size=img_size,
-                    save_dir=save_dir)
+  _calibrate_camera(
+      object_points=obj_points,
+      image_points=img_points,
+      image_size=img_size,
+      save_dir=save_dir,
+  )
 
 
 class CameraCalibration:
@@ -176,17 +180,21 @@ class CameraCalibration:
     np.ndarray
         보정된 영상.
     """
-    new_matrix, roi = cv.getOptimalNewCameraMatrix(cameraMatrix=self._matrix,
-                                                   distCoeffs=self._dist_coeff,
-                                                   imageSize=self._img_size,
-                                                   alpha=1,
-                                                   newImgSize=self._img_size)
+    new_matrix, roi = cv.getOptimalNewCameraMatrix(
+        cameraMatrix=self._matrix,
+        distCoeffs=self._dist_coeff,
+        imageSize=self._img_size,
+        alpha=1,
+        newImgSize=self._img_size,
+    )
 
-    calibrated = cv.undistort(image,
-                              cameraMatrix=self._matrix,
-                              distCoeffs=self._dist_coeff,
-                              dst=None,
-                              newCameraMatrix=new_matrix)
+    calibrated = cv.undistort(
+        image,
+        cameraMatrix=self._matrix,
+        distCoeffs=self._dist_coeff,
+        dst=None,
+        newCameraMatrix=new_matrix,
+    )
 
     return calibrated
 

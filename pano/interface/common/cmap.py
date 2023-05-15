@@ -2,19 +2,20 @@
 
 from typing import Union
 
+import numpy as np
 from loguru import logger
 from matplotlib.cm import get_cmap
-from matplotlib.colors import Colormap
-from matplotlib.colors import ListedColormap
-import numpy as np
+from matplotlib.colors import Colormap, ListedColormap
 
-from pano.misc.cmap import apply_colormap
-from pano.misc.cmap import FLIRColormap
+from pano.misc.cmap import FLIRColormap, apply_colormap
 from pano.utils import DIR
 
 __all__ = [
-    'apply_colormap', 'get_iron_colormap', 'get_mpl_colormap',
-    'get_thermal_colormap', 'save_colormap'
+    'apply_colormap',
+    'get_iron_colormap',
+    'get_mpl_colormap',
+    'get_thermal_colormap',
+    'save_colormap',
 ]
 
 DEFAULT_CMAP = 'inferno'

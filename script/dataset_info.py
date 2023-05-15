@@ -1,7 +1,7 @@
-from collections import defaultdict
 import os
-from pathlib import Path
 import re
+from collections import defaultdict
+from pathlib import Path
 from typing import Optional
 
 import click
@@ -35,7 +35,7 @@ def get_camera(directory: Path):
   if name.startswith('TESTO'):
     return 'testo 882'
 
-  return name[:name.find(' ', 5)]
+  return name[: name.find(' ', 5)]
 
 
 def get_images_count(directory: Path, camera: Optional[str] = None):

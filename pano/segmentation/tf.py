@@ -3,15 +3,15 @@
 from pathlib import Path
 from typing import List, Optional, Tuple, Union
 
+import numpy as np
+import PIL.Image
+import tensorflow.compat.v1 as tf
 from loguru import logger
 from matplotlib import gridspec
 from matplotlib import pyplot as plt
-import numpy as np
-import PIL.Image
 from PIL.Image import Image as PILImage
 from rich.progress import track
 from skimage.transform import resize as _resize
-import tensorflow.compat.v1 as tf
 
 
 def tf_gpu_memory_config():
@@ -86,10 +86,9 @@ FULL_LABEL_MAP = np.arange(len(LABEL_NAMES)).reshape(len(LABEL_NAMES), 1)
 # FULL_COLOR_MAP = label_to_color_image(FULL_LABEL_MAP)
 
 
-def vis_segmentation(image: Union[np.ndarray, PILImage],
-                     seg_map: np.ndarray,
-                     show=False,
-                     cmap='pascal') -> Tuple[plt.Figure, np.ndarray]:
+def vis_segmentation(
+    image: Union[np.ndarray, PILImage], seg_map: np.ndarray, show=False, cmap='pascal'
+) -> Tuple[plt.Figure, np.ndarray]:
   """
   Visualizes input image, segmentation map and overlay view.
 
@@ -134,8 +133,7 @@ def vis_segmentation(image: Union[np.ndarray, PILImage],
   full_color_map = label_to_color_image(FULL_LABEL_MAP, cmap=cmap)
   unique_labels = np.unique(seg_map)
   ax = plt.subplot(grid_spec[3])
-  plt.imshow(full_color_map[unique_labels].astype(np.uint8),
-             interpolation='nearest')
+  plt.imshow(full_color_map[unique_labels].astype(np.uint8), interpolation='nearest')
   ax.yaxis.tick_right()
   plt.yticks(range(len(unique_labels)), LABEL_NAMES[unique_labels])
   plt.xticks([], [])
@@ -150,11 +148,13 @@ def vis_segmentation(image: Union[np.ndarray, PILImage],
   return fig, seg_image
 
 
-def predict(model_path: str,
-            images: List[np.ndarray],
-            output: Path,
-            cmap='Dark2',
-            names: Optional[List[str]] = None):
+def predict(
+    model_path: str,
+    images: List[np.ndarray],
+    output: Path,
+    cmap='Dark2',
+    names: Optional[List[str]] = None,
+):
   """
   입력받은 각 영상을 DeepLabV3+ 모델을 통해 segment하고 결과를 저장.
 
@@ -182,10 +182,7 @@ def predict(model_path: str,
     pil_image = PIL.Image.fromarray(image)
 
     resized_image, seg_map = model.run(pil_image)
-    fig, seg_image = vis_segmentation(resized_image,
-                                      seg_map,
-                                      show=False,
-                                      cmap=cmap)
+    fig, seg_image = vis_segmentation(resized_image, seg_map, show=False, cmap=cmap)
 
     mask = PIL.Image.fromarray(seg_map)
     mask.save(output.joinpath(fname + '_mask').with_suffix('.png'))
@@ -245,20 +242,18 @@ class DeepLabModel:
     width, height = image.size
     resize_ratio = 1.0 * self.INPUT_SIZE / max(width, height)
     target_size = (int(resize_ratio * width), int(resize_ratio * height))
-    resized_image = image.convert('RGB').resize(target_size,
-                                                PIL.Image.ANTIALIAS)
+    resized_image = image.convert('RGB').resize(target_size, PIL.Image.ANTIALIAS)
     batch_seg_map = self.sess.run(
         self.OUTPUT_TENSOR_NAME,
-        feed_dict={self.INPUT_TENSOR_NAME: [np.asarray(resized_image)]})
+        feed_dict={self.INPUT_TENSOR_NAME: [np.asarray(resized_image)]},
+    )
     seg_map = batch_seg_map[0]
 
     return resized_image, seg_map
 
   def predict_and_visualize(
-      self,
-      image: np.ndarray,
-      cmap='Dark2',
-      resize=True) -> Tuple[np.ndarray, np.ndarray, plt.Figure]:
+      self, image: np.ndarray, cmap='Dark2', resize=True
+  ) -> Tuple[np.ndarray, np.ndarray, plt.Figure]:
     """
     주어진 영상으로 segmentation 예측 및 시각화
 
@@ -289,16 +284,17 @@ class DeepLabModel:
       vis_image = resized_image
     else:
       vis_image = image
-      seg_map = _resize(seg_map,
-                        output_shape=image.shape[:2],
-                        order=0,
-                        preserve_range=True,
-                        anti_aliasing=False)
+      seg_map = _resize(
+          seg_map,
+          output_shape=image.shape[:2],
+          order=0,
+          preserve_range=True,
+          anti_aliasing=False,
+      )
       seg_map = np.round(seg_map).astype(np.uint8)
 
-    fig, seg_image = vis_segmentation(image=vis_image,
-                                      seg_map=seg_map,
-                                      show=False,
-                                      cmap=cmap)
+    fig, seg_image = vis_segmentation(
+        image=vis_image, seg_map=seg_map, show=False, cmap=cmap
+    )
 
     return seg_map, seg_image, fig

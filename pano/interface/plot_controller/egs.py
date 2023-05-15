@@ -4,22 +4,20 @@ from functools import cached_property
 from itertools import chain
 from pathlib import Path
 
+import numpy as np
+import seaborn as sns
+import yaml
 from matplotlib.axes import Axes
-from matplotlib.backend_bases import MouseButton
-from matplotlib.backend_bases import MouseEvent
+from matplotlib.backend_bases import MouseButton, MouseEvent
 from matplotlib.cm import get_cmap
 from matplotlib.figure import Figure
 from matplotlib.gridspec import GridSpec
 from matplotlib.transforms import Bbox
-import numpy as np
 from numpy.typing import NDArray
-import seaborn as sns
 from skimage import transform
-import yaml
 
 from pano.interface.analysis import summarize
-from pano.interface.common.pano_files import DIR
-from pano.interface.common.pano_files import ThermalPanoramaFileManager
+from pano.interface.common.pano_files import DIR, ThermalPanoramaFileManager
 from pano.interface.mbq import NavigationToolbar2QtQuick
 from pano.misc import tools
 from pano.misc.imageio import ImageIO
@@ -110,7 +108,7 @@ class Images:
     anomaly = wall & (self.ir > self.threshold())
     array = {
         'normal': self.ir[wall & ~anomaly].ravel(),
-        'anomaly': self.ir[anomaly].ravel()
+        'anomaly': self.ir[anomaly].ravel(),
     }
     summary = {k: summarize(v) for k, v in array.items()}
 
@@ -128,7 +126,8 @@ class _Axes:
     gs = GridSpec(2, 3, width_ratios=(1, 0.05, 1))
     self.gs = gs
     self._axes: tuple[Axes, ...] = tuple(
-        fig.add_subplot(x) for x in [gs[0, 0], gs[0, 1], gs[0, 2], gs[1, :]])
+        fig.add_subplot(x) for x in [gs[0, 0], gs[0, 1], gs[0, 2], gs[1, :]]
+    )
 
     self.anomaly = False
     self._hide_bottom = False
@@ -247,8 +246,9 @@ class MousePoints:
       self._remove_points(ax_)
 
   def all_selected(self):
-    return (len(self._coords) >= 2 and
-            all(len(x) >= self._REQUIRED for x in self._coords.values()))
+    return len(self._coords) >= 2 and all(
+        len(x) >= self._REQUIRED for x in self._coords.values()
+    )
 
 
 def _limit(data: NDArray, k=2.5):
@@ -265,14 +265,17 @@ def _bbox(axes: Axes | Iterable[Axes], *, full=False):
   if not full:
     items = axes
   else:
-    items = chain.from_iterable([
-        ax,
-        ax.title,
-        ax.xaxis.label,
-        ax.yaxis.label,
-        *ax.get_xticklabels(),
-        *ax.get_yticklabels(),
-    ] for ax in axes)
+    items = chain.from_iterable(
+        [
+            ax,
+            ax.title,
+            ax.xaxis.label,
+            ax.yaxis.label,
+            *ax.get_xticklabels(),
+            *ax.get_yticklabels(),
+        ]
+        for ax in axes
+    )
 
   return Bbox.union([x.get_window_extent() for x in items])
 
@@ -400,10 +403,9 @@ class PlotController(_PanoPlotCtrl):
   def _plot_anomaly(self, images: Images, lim: tuple[float, float]):
     anomaly, array, summary = images.data()
 
-    self.axes.right.imshow(np.ma.MaskedArray(images.ir, ~anomaly),
-                           cmap=CMAP,
-                           vmin=lim[0],
-                           vmax=lim[1])
+    self.axes.right.imshow(
+        np.ma.MaskedArray(images.ir, ~anomaly), cmap=CMAP, vmin=lim[0], vmax=lim[1]
+    )
 
     array = {'정상 영역': array['normal'], '이상 영역': array['anomaly']}
     sns.histplot(data=array, stat='probability', ax=self.axes.bottom)
@@ -426,11 +428,9 @@ class PlotController(_PanoPlotCtrl):
     self.draw()
 
   def _plot_rgst_compare(self, ir: NDArray, registered: NDArray):
-    checkerboard = tools.prep_compare_images(ir,
-                                             registered,
-                                             norm=True,
-                                             eq_hist=True,
-                                             method='checkerboard')
+    checkerboard = tools.prep_compare_images(
+        ir, registered, norm=True, eq_hist=True, method='checkerboard'
+    )
     self.axes.bottom.imshow(checkerboard)
 
   def _register(self):
@@ -443,16 +443,20 @@ class PlotController(_PanoPlotCtrl):
     trsf.estimate(src=src, dst=dst)
 
     image = Images(self._last_file, self.fm)
-    registered = transform.warp(image=image.vis,
-                                inverse_map=trsf.inverse,
-                                output_shape=image.ir.shape[:2],
-                                preserve_range=True)
+    registered = transform.warp(
+        image=image.vis,
+        inverse_map=trsf.inverse,
+        output_shape=image.ir.shape[:2],
+        preserve_range=True,
+    )
 
     self._plot_rgst_compare(ir=image.ir, registered=registered)
 
     self.fm.subdir(DIR.RGST).mkdir(exist_ok=True)
-    ImageIO.save(path=self.fm.change_dir(DIR.RGST, self._last_file),
-                 array=tools.uint8_image(registered))
+    ImageIO.save(
+        path=self.fm.change_dir(DIR.RGST, self._last_file),
+        array=tools.uint8_image(registered),
+    )
 
   def _save(self, stem: str, dpi=300):
     directory = self.fm.wd / '03 Report'  # TODO file manager
@@ -464,5 +468,6 @@ class PlotController(_PanoPlotCtrl):
     for ax, suffix in zip(axes, suffixes, strict=True):
       path = directory / f'{stem}{suffix}.png'
       bbox = _bbox(ax, full=suffix == '_hist').transformed(
-          self.fig.dpi_scale_trans.inverted())
+          self.fig.dpi_scale_trans.inverted()
+      )
       self.fig.savefig(path, bbox_inches=bbox, dpi=dpi)

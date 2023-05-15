@@ -1,12 +1,10 @@
-[tool.yapf]
-based_on_style = 'google'
-indent_width = 2
-
-[tool.yapfignore]
-ignore_patterns = ['build/']
+[tool.pyink]
+pyink-use-majority-quotes = true
+pyink-indentation = 2
+preview = true
 
 [tool.isort]
-profile = 'google'
+profile = 'black'
 
 [tool.ruff]
 select = ['ALL']
@@ -40,18 +38,6 @@ convention = 'numpy'
 max-args = 7
 
 [tool.pylint.messages_control]
-enable = [
-    'F',
-    'E',
-    'anomalous-backslash-in-string',
-    'bad-format-string',
-    'bad-open-mode',
-    'binary-op-exception',
-    'duplicate-key',
-    'global-variable-not-assigned',
-    'unnecessary-semicolon',
-    'unreachable',
-]
 disable = [
     'bad-indentation',
     'c-extension-no-member',

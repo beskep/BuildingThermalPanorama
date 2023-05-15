@@ -3,10 +3,9 @@
 from typing import Optional, Tuple
 
 import cv2 as cv
-from loguru import logger
 import numpy as np
-from skimage.exposure import equalize_hist
-from skimage.exposure import rescale_intensity
+from loguru import logger
+from skimage.exposure import equalize_hist, rescale_intensity
 
 from pano.misc.tools import normalize_rgb_image_hist
 
@@ -18,12 +17,14 @@ class PanoramaPreprocess:
   파노라마 생성을 위한 열화상, 실화상의 전처리
   """
 
-  def __init__(self,
-               is_numeric: bool,
-               fillna: float = 0.0,
-               mask_threshold: Optional[float] = -30.0,
-               contrast: Optional[str] = 'equalization',
-               denoise: Optional[str] = 'bilateral'):
+  def __init__(
+      self,
+      is_numeric: bool,
+      fillna: float = 0.0,
+      mask_threshold: Optional[float] = -30.0,
+      contrast: Optional[str] = 'equalization',
+      denoise: Optional[str] = 'bilateral',
+  ):
     """
     Parameters
     ----------
@@ -101,7 +102,7 @@ class PanoramaPreprocess:
     self._bilateral_args = {
         'd': d,
         'sigmaColor': sigmaColor,
-        'sigmaSpace': sigmaSpace
+        'sigmaSpace': sigmaSpace,
     }
 
   def set_gaussian_args(self, ksize=(5, 5), sigmaX=0):
@@ -117,8 +118,7 @@ class PanoramaPreprocess:
   def _gaussian_filter(self, image: np.ndarray) -> np.ndarray:
     return cv.GaussianBlur(image, **self._gaussian_args)
 
-  def masking(self,
-              image: np.ndarray) -> Tuple[np.ndarray, Optional[np.ndarray]]:
+  def masking(self, image: np.ndarray) -> Tuple[np.ndarray, Optional[np.ndarray]]:
     """
     영상의 픽셀값에 따라 마스킹하고 영상과 마스크 반환.
     대상 영상이 열화상이 아닌 경우 (not `is_numeric`) 마스크는 `None` 반환.
@@ -168,8 +168,10 @@ class PanoramaPreprocess:
     """
     if self._contrast_type == 'equalization':
       if not self._is_numeric:
-        logger.warning('실화상에 Histogram equalization을 적용합니다. '
-                       '예상치 못한 오류가 발생할 수 있습니다.')
+        logger.warning(
+            '실화상에 Histogram equalization을 적용합니다. '
+            '예상치 못한 오류가 발생할 수 있습니다.'
+        )
 
       res = equalize_hist(image)
 
@@ -178,8 +180,10 @@ class PanoramaPreprocess:
         res = normalize_rgb_image_hist(image)
       else:
         res = image
-        logger.warning('열화상에 Histogram normalization을 적용할 수 없습니다. '
-                       '명암 보정을 적용하지 않습니다')
+        logger.warning(
+            '열화상에 Histogram normalization을 적용할 수 없습니다. '
+            '명암 보정을 적용하지 않습니다'
+        )
 
     else:
       res = image
@@ -208,8 +212,7 @@ class PanoramaPreprocess:
 
     return res
 
-  def __call__(self,
-               image: np.ndarray) -> Tuple[np.ndarray, Optional[np.ndarray]]:
+  def __call__(self, image: np.ndarray) -> Tuple[np.ndarray, Optional[np.ndarray]]:
     """
     마스킹, 명암비 개선, 잡음 제거 알고리즘 순차적으로 적용
 

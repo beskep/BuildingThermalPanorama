@@ -3,9 +3,9 @@
 import dataclasses as dc
 from typing import Optional, Tuple
 
-from loguru import logger
 import matplotlib.pyplot as plt
 import numpy as np
+from loguru import logger
 from skimage.transform import warp
 
 from pano.misc import edgelet as edge
@@ -34,6 +34,7 @@ class CorrectionOptions:
   vp_iter: int
       (Vanishing point가 영상 내부에 존재하는 경우) 최대 반복 연산 횟수.
   """
+
   threshold: float = 5.0
   ransac_iter: int = 1000
   clip_factor: float = 0.0
@@ -57,7 +58,7 @@ class VanishingPoint:
       (True, True): DIAG,
       (True, False): HORIZ,
       (False, True): VERT,
-      (False, False): INSIDE
+      (False, False): INSIDE,
   }
 
   def __init__(self, array: np.ndarray) -> None:
@@ -100,37 +101,41 @@ class _Rectify:
   """rectification warpper"""
 
   @staticmethod
-  def ransac_vanishing_point(edgelets: edge.Edgelets,
-                             num_ransac_iter=2000,
-                             threshold_inlier=5.0) -> VanishingPoint:
+  def ransac_vanishing_point(
+      edgelets: edge.Edgelets, num_ransac_iter=2000, threshold_inlier=5.0
+  ) -> VanishingPoint:
     vp_array = rectification.ransac_vanishing_point(
         edgelets=edgelets.astuple(),
         num_ransac_iter=num_ransac_iter,
-        threshold_inlier=threshold_inlier)
+        threshold_inlier=threshold_inlier,
+    )
     vp = VanishingPoint(array=vp_array)
 
     return vp
 
   @staticmethod
-  def compute_votes(vp: VanishingPoint,
-                    edgelets: edge.Edgelets,
-                    threshold_inlier=10.0) -> np.ndarray:
-    return rectification.compute_votes(edgelets=edgelets.astuple(),
-                                       model=vp.array,
-                                       threshold_inlier=threshold_inlier)
+  def compute_votes(
+      vp: VanishingPoint, edgelets: edge.Edgelets, threshold_inlier=10.0
+  ) -> np.ndarray:
+    return rectification.compute_votes(
+        edgelets=edgelets.astuple(),
+        model=vp.array,
+        threshold_inlier=threshold_inlier,
+    )
 
   @classmethod
-  def remove_inliers(cls,
-                     vp: VanishingPoint,
-                     edgelets: edge.Edgelets,
-                     threshold_inlier=10.0) -> edge.Edgelets:
-    votes = cls.compute_votes(vp=vp,
-                              edgelets=edgelets,
-                              threshold_inlier=threshold_inlier)
+  def remove_inliers(
+      cls, vp: VanishingPoint, edgelets: edge.Edgelets, threshold_inlier=10.0
+  ) -> edge.Edgelets:
+    votes = cls.compute_votes(
+        vp=vp, edgelets=edgelets, threshold_inlier=threshold_inlier
+    )
     inliers = votes > 0
-    removed = edge.Edgelets(locations=edgelets.locations[~inliers],
-                            directions=edgelets.directions[~inliers],
-                            strengths=edgelets.strengths[~inliers])
+    removed = edge.Edgelets(
+        locations=edgelets.locations[~inliers],
+        directions=edgelets.directions[~inliers],
+        strengths=edgelets.strengths[~inliers],
+    )
 
     return removed
 
@@ -152,20 +157,25 @@ class Homography:
       raise ValueError('Homography not set')
 
     if image.shape[:2] != self.input_shape:
-      raise ValueError(f'입력한 영상의 해상도 {image.shape[:2]}가 '
-                       '시점 왜곡을 추정한 영상의 해상도 '
-                       f'{self.input_shape}와 다릅니다.')
+      raise ValueError(
+          f'입력한 영상의 해상도 {image.shape[:2]}가 '
+          '시점 왜곡을 추정한 영상의 해상도 '
+          f'{self.input_shape}와 다릅니다.'
+      )
 
-    return warp(image=image,
-                inverse_map=np.linalg.inv(self.Htranslate),
-                order=order,
-                output_shape=self.output_shape,
-                preserve_range=True)
+    return warp(
+        image=image,
+        inverse_map=np.linalg.inv(self.Htranslate),
+        order=order,
+        output_shape=self.output_shape,
+        preserve_range=True,
+    )
 
 
 @dc.dataclass
 class Correction:
   """Perspective correction 결과"""
+
   edges: np.ndarray
   edgelets: edge.Edgelets
 
@@ -178,19 +188,16 @@ class Correction:
   def success(self) -> bool:
     return self.homography.available()
 
-  def _warp_and_crop(self,
-                     image: np.ndarray,
-                     order=INTRP.BiCubic) -> np.ndarray:
+  def _warp_and_crop(self, image: np.ndarray, order=INTRP.BiCubic) -> np.ndarray:
     img = self.homography.warp(image=image, order=int(order))
     if self.crop_range is not None:
       img = self.crop_range.crop(img)
 
     return img
 
-  def correct(self,
-              image: np.ndarray,
-              mask: Optional[np.ndarray] = None,
-              order=INTRP.BiCubic) -> Tuple[np.ndarray, Optional[np.ndarray]]:
+  def correct(
+      self, image: np.ndarray, mask: Optional[np.ndarray] = None, order=INTRP.BiCubic
+  ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
     """
     저장된 왜곡 보정 결과를 통해 새 영상 보정
 
@@ -230,15 +237,17 @@ class Correction:
     if self.edgelets is None:
       raise ValueError
 
-    inliers = _Rectify.compute_votes(
-        vp=vp, edgelets=self.edgelets, threshold_inlier=10) > 0
+    inliers = (
+        _Rectify.compute_votes(vp=vp, edgelets=self.edgelets, threshold_inlier=10) > 0
+    )
 
     locations = self.edgelets.locations[inliers]
     for idx in range(locations.shape[0]):
       ax.plot(
           [locations[idx, 0], vp.xy[0]],  # 소실점 선분 x 좌표
           [locations[idx, 1], vp.xy[1]],  # 소실점 선분 y 좌표
-          'b--')
+          'b--',
+      )
 
   def process_plot(self, image: np.ndarray) -> Tuple[plt.Figure, plt.Axes]:
     """보정 과정을 확인할 수 있는 matplotlib plot 생성"""
@@ -292,10 +301,12 @@ class Correction:
 
 class PerspectiveCorrection:
 
-  def __init__(self,
-               canny: edge.CannyOptions | dict | None = None,
-               hough: edge.HoughOptions | dict | None = None,
-               correction: CorrectionOptions | dict | None = None) -> None:
+  def __init__(
+      self,
+      canny: edge.CannyOptions | dict | None = None,
+      hough: edge.HoughOptions | dict | None = None,
+      correction: CorrectionOptions | dict | None = None,
+  ) -> None:
     """
     영상의 소실점으로부터 시점 왜곡 (perspective distortion)을 보정하는
     Homography 행렬 추정.
@@ -321,16 +332,17 @@ class PerspectiveCorrection:
     self._opt = correction
 
   @staticmethod
-  def _compute_affine(vp1: np.ndarray, vp2: np.ndarray,
-                      H: np.ndarray) -> np.ndarray:
+  def _compute_affine(vp1: np.ndarray, vp2: np.ndarray, H: np.ndarray) -> np.ndarray:
     # Find directions corresponding to vanishing points
     v_post1 = np.dot(H, vp1)
     v_post2 = np.dot(H, vp2)
-    v_post1 = v_post1 / np.sqrt(v_post1[0]**2 + v_post1[1]**2)
-    v_post2 = v_post2 / np.sqrt(v_post2[0]**2 + v_post2[1]**2)
+    v_post1 = v_post1 / np.sqrt(v_post1[0] ** 2 + v_post1[1] ** 2)
+    v_post2 = v_post2 / np.sqrt(v_post2[0] ** 2 + v_post2[1] ** 2)
 
-    directions = np.array([[v_post1[0], -v_post1[0], v_post2[0], -v_post2[0]],
-                           [v_post1[1], -v_post1[1], v_post2[1], -v_post2[1]]])
+    directions = np.array([
+        [v_post1[0], -v_post1[0], v_post2[0], -v_post2[0]],
+        [v_post1[1], -v_post1[1], v_post2[1], -v_post2[1]],
+    ])
 
     thetas = np.arctan2(directions[0], directions[1])
 
@@ -358,8 +370,7 @@ class PerspectiveCorrection:
     return A
 
   @staticmethod
-  def _compute_translate(H: np.ndarray, shape: Tuple[int, ...],
-                         clip_factor: float):
+  def _compute_translate(H: np.ndarray, shape: Tuple[int, ...], clip_factor: float):
     points = [
         [0, 0, shape[1], shape[1]],
         [0, shape[0], 0, shape[0]],
@@ -422,17 +433,19 @@ class PerspectiveCorrection:
     Haffine = np.dot(A, Hproject)
 
     # Image is translated so that the image is not missed.
-    T, max_x, max_y = self._compute_translate(H=Haffine,
-                                              shape=image_shape,
-                                              clip_factor=self._opt.clip_factor)
+    T, max_x, max_y = self._compute_translate(
+        H=Haffine, shape=image_shape, clip_factor=self._opt.clip_factor
+    )
 
     Htranslate = np.dot(T, Haffine)
 
-    homography = Homography(Hproject=Hproject,
-                            Haffine=Haffine,
-                            Htranslate=Htranslate,
-                            input_shape=image_shape,
-                            output_shape=(max_y, max_x))
+    homography = Homography(
+        Hproject=Hproject,
+        Haffine=Haffine,
+        Htranslate=Htranslate,
+        input_shape=image_shape,
+        output_shape=(max_y, max_x),
+    )
 
     return homography
 
@@ -440,7 +453,8 @@ class PerspectiveCorrection:
       self,
       edgelets: edge.Edgelets,
       image_shape: Tuple[int, ...],
-      target: Optional[int] = None) -> Tuple[VanishingPoint, edge.Edgelets]:
+      target: Optional[int] = None,
+  ) -> Tuple[VanishingPoint, edge.Edgelets]:
     """
     RANSAC을 통해 주어진 edgelet으로부터 vanishing point를 추정하고,
     vanishing point와 vanishing point에 수렴하는 inlier를 제외한 edgelets 반환.
@@ -478,7 +492,8 @@ class PerspectiveCorrection:
       vp = _Rectify.ransac_vanishing_point(
           edgelets=edgelets,
           num_ransac_iter=self._opt.ransac_iter,
-          threshold_inlier=self._opt.threshold)
+          threshold_inlier=self._opt.threshold,
+      )
       edgelets = _Rectify.remove_inliers(
           vp=vp,
           edgelets=edgelets,
@@ -525,19 +540,23 @@ class PerspectiveCorrection:
         Vanishing point 2
     """
     vp1, vp2 = None, None
-    vp1, edgelets2 = self._estimate_vanishing_point(edgelets=edgelets,
-                                                    image_shape=image_shape)
+    vp1, edgelets2 = self._estimate_vanishing_point(
+        edgelets=edgelets, image_shape=image_shape
+    )
     logger.debug('VP1: {}', vp1)
     if vp1 is None:
       return None, None
 
     target = None
     if self._opt.strict:
-      target = (VanishingPoint.VERT
-                if vp1.pos == VanishingPoint.HORIZ else VanishingPoint.HORIZ)
-    vp2, _ = self._estimate_vanishing_point(edgelets=edgelets2,
-                                            image_shape=image_shape,
-                                            target=target)
+      target = (
+          VanishingPoint.VERT
+          if vp1.pos == VanishingPoint.HORIZ
+          else VanishingPoint.HORIZ
+      )
+    vp2, _ = self._estimate_vanishing_point(
+        edgelets=edgelets2, image_shape=image_shape, target=target
+    )
 
     # 영상 중심으로부터 두 vp의 방향이 유사한지 확인
     if vp2 is not None:
@@ -558,9 +577,9 @@ class PerspectiveCorrection:
 
     return vp1, vp2
 
-  def perspective_correct(self,
-                          image: np.ndarray,
-                          mask: Optional[np.ndarray] = None) -> Correction:
+  def perspective_correct(
+      self, image: np.ndarray, mask: Optional[np.ndarray] = None
+  ) -> Correction:
     """
     시점 왜곡 보정
 
@@ -582,16 +601,20 @@ class PerspectiveCorrection:
 
       if self._opt.erode:
         logger.debug('Erode mask (iterations: {})', self._opt.erode)
-        edge_mask = tools.erode(edge_mask.astype(np.uint8),
-                                iterations=self._opt.erode).astype(bool)
+        edge_mask = tools.erode(
+            edge_mask.astype(np.uint8), iterations=self._opt.erode
+        ).astype(bool)
 
-    edgelets, edges = edge.image2edgelets(image=image,
-                                          mask=edge_mask,
-                                          canny_option=self._canny_options,
-                                          hough_option=self._hough_options)
+    edgelets, edges = edge.image2edgelets(
+        image=image,
+        mask=edge_mask,
+        canny_option=self._canny_options,
+        hough_option=self._hough_options,
+    )
 
-    vp1, vp2 = self._estimate_vanishing_points(edgelets=edgelets,
-                                               image_shape=image.shape[:2])
+    vp1, vp2 = self._estimate_vanishing_points(
+        edgelets=edgelets, image_shape=image.shape[:2]
+    )
 
     crop_range = None
     if vp1 is None or vp2 is None:
@@ -599,18 +622,21 @@ class PerspectiveCorrection:
       homography = Homography()
     else:
       # Homography 행렬 추정
-      homography = self.compute_homography(image_shape=image.shape[:2],
-                                           vp1=vp1.array,
-                                           vp2=vp2.array)
+      homography = self.compute_homography(
+          image_shape=image.shape[:2], vp1=vp1.array, vp2=vp2.array
+      )
       if mask is not None:
         crop_range = tools.crop_mask(
-            mask=homography.warp(mask, order=INTRP.NearestNeighbor))[0]
+            mask=homography.warp(mask, order=INTRP.NearestNeighbor)
+        )[0]
 
-    correction = Correction(edges=edges,
-                            edgelets=edgelets,
-                            vp1=vp1,
-                            vp2=vp2,
-                            homography=homography,
-                            crop_range=crop_range)
+    correction = Correction(
+        edges=edges,
+        edgelets=edgelets,
+        vp1=vp1,
+        vp2=vp2,
+        homography=homography,
+        crop_range=crop_range,
+    )
 
     return correction

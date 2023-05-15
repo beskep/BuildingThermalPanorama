@@ -1,10 +1,10 @@
 """경로 및 로거 설정"""
 
+import sys
 from logging import LogRecord
 from operator import length_hint
 from os import PathLike
 from pathlib import Path
-import sys
 from typing import Iterable, Optional, Sequence, TypeVar, Union
 
 try:
@@ -42,7 +42,7 @@ class _Handler(RichHandler):
       'SUCCESS': 25,
       'WARNING': 30,
       'ERROR': 40,
-      'CRITICAL': 50
+      'CRITICAL': 50,
   }
   BLANK_NO = 21
   _NEW_LVLS = {5: 'TRACE', 25: 'SUCCESS', BLANK_NO: ''}
@@ -69,17 +69,15 @@ def set_logger(level: Union[int, str] = 20, name='pano'):
   if getattr(logger, 'lvl', -1) != level:
     logger.remove()
 
-    logger.add(_handler,
-               level=level,
-               format='{message}',
-               backtrace=False,
-               enqueue=True)
-    logger.add(f'{name}.log',
-               level='DEBUG',
-               rotation='1 month',
-               retention='1 year',
-               encoding='UTF-8-SIG',
-               enqueue=True)
+    logger.add(_handler, level=level, format='{message}', backtrace=False, enqueue=True)
+    logger.add(
+        f'{name}.log',
+        level='DEBUG',
+        rotation='1 month',
+        retention='1 year',
+        encoding='UTF-8-SIG',
+        enqueue=True,
+    )
 
     setattr(logger, 'lvl', level)
 
@@ -93,25 +91,31 @@ def set_logger(level: Union[int, str] = 20, name='pano'):
 T = TypeVar('T')
 
 
-def track(sequence: Iterable[T] | Sequence[T],
-          description='Working...',
-          total: Optional[float] = None,
-          transient=True,
-          **kwargs):
+def track(
+    sequence: Iterable[T] | Sequence[T],
+    description='Working...',
+    total: Optional[float] = None,
+    transient=True,
+    **kwargs,
+):
   """Track progress on console by iterating over a sequence."""
-  return _track(sequence=sequence,
-                description=description,
-                total=total,
-                console=console,
-                transient=transient,
-                **kwargs)
+  return _track(
+      sequence=sequence,
+      description=description,
+      total=total,
+      console=console,
+      transient=transient,
+      **kwargs,
+  )
 
 
-def ptrack(sequence: Iterable[T] | Sequence[T],
-           description='Working...',
-           total: Optional[float] = None,
-           transient=True,
-           **kwargs):
+def ptrack(
+    sequence: Iterable[T] | Sequence[T],
+    description='Working...',
+    total: Optional[float] = None,
+    transient=True,
+    **kwargs,
+):
   """
   Track progress on console by iterating over a sequence.
   Yield progress ratio and value.
@@ -121,12 +125,14 @@ def ptrack(sequence: Iterable[T] | Sequence[T],
   if not total:
     raise ValueError(f'Invalid total value: {total}')
 
-  for idx, value in _track(sequence=enumerate(sequence),
-                           description=description,
-                           total=total,
-                           console=console,
-                           transient=transient,
-                           **kwargs):
+  for idx, value in _track(
+      sequence=enumerate(sequence),
+      description=description,
+      total=total,
+      console=console,
+      transient=transient,
+      **kwargs,
+  ):
     yield (idx + 1) / total, value
 
 

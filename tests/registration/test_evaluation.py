@@ -27,8 +27,9 @@ class TestEval:
 
   def test_root_mean_square_error(self):
     expected = np.sqrt(22 / 4.0)
-    assert metrics.compute_rmse(self.img1, self.img2,
-                                norm=False) == pytest.approx(expected)
+    assert metrics.compute_rmse(self.img1, self.img2, norm=False) == pytest.approx(
+        expected
+    )
 
   def test_normalized_cross_correlation(self):
     assert metrics.compute_ncc(self.img1, self.img2) == 0.0
@@ -59,9 +60,7 @@ class TestMI:
     assert hist == pytest.approx(np.array([2, 2]))
 
   def test_np_histogram2d(self):
-    H, xedges, yedges = np.histogram2d(x=self.img1.ravel(),
-                                       y=self.img2.ravel(),
-                                       bins=2)
+    H, xedges, yedges = np.histogram2d(x=self.img1.ravel(), y=self.img2.ravel(), bins=2)
     expected = np.array([[0, 2], [2, 0]])
     assert H == pytest.approx(expected)
 
@@ -70,21 +69,26 @@ class TestMI:
     px = np.sum(pxy, axis=0)
     py = np.sum(pxy, axis=1).reshape([-1, 1])
 
-    assert pxy / px == pytest.approx(np.array([
-        [1 / 4, 2 / 6],
-        [3 / 4, 4 / 6],
-    ]))
-    assert pxy / py == pytest.approx(np.array([
-        [1 / 3, 2 / 3],
-        [3 / 7, 4 / 7],
-    ]))
+    assert pxy / px == pytest.approx(
+        np.array([
+            [1 / 4, 2 / 6],
+            [3 / 4, 4 / 6],
+        ])
+    )
+    assert pxy / py == pytest.approx(
+        np.array([
+            [1 / 3, 2 / 3],
+            [3 / 7, 4 / 7],
+        ])
+    )
 
     pxy_pxpy = pxy / (px * py)
     assert pxy_pxpy == pytest.approx(
         np.array([
             [1 / 12, 2 / 18],
             [3 / 28, 4 / 42],
-        ]))
+        ])
+    )
 
   def test_image_entropy(self):
     entropy = metrics.image_entropy(self.img1, bins=self.bins)
@@ -99,8 +103,7 @@ class TestMI:
     assert self.mi.joint_hist == pytest.approx(expected)
 
   def test_mi_joint_entropy(self):
-    assert self.mi.joint_entropy == pytest.approx(
-        pytest.approx(self.expected_entropy))
+    assert self.mi.joint_entropy == pytest.approx(pytest.approx(self.expected_entropy))
 
   def test_mi_mutual_information(self):
     # expected = 2 * self.expected_entropy - self.expected_entropy

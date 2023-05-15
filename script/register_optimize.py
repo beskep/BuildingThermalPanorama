@@ -3,15 +3,16 @@ STIK 인자 최적화 효율 평가
 대상: 전처리 (nomalization, standardization), STIK metric
 """
 
+import shutil
 from itertools import product
 from pathlib import Path
-import shutil
 from typing import Optional, Union
 
 import click
-from loguru import logger
 import numpy as np
+from loguru import logger
 
+import pano.registration.registrator.simpleitk as rsitk
 from pano import utils
 from pano.interface.common.init import init_project
 from pano.interface.common.pano_files import DIR
@@ -19,7 +20,6 @@ from pano.interface.pano_project import ThermalPanorama
 from pano.misc import tools
 from pano.misc.imageio import ImageIO as IIO
 from pano.registration.registrator import RegistrationPreprocess
-import pano.registration.registrator.simpleitk as rsitk
 
 
 class _RegistrationPreprocess(RegistrationPreprocess):
@@ -126,10 +126,8 @@ class _ThermalPanorama(ThermalPanorama):
   def evaluate(self):
     rgst_dir = self._fm.subdir(DIR.RGST)
 
-    for metric, exposure, bins in product(self.METRIC, self.EXPOSURE,
-                                          self.BINS):
-      logger.info('Metric: "{}", Exposure: "{}", Bins: "{}"', metric, exposure,
-                  bins)
+    for metric, exposure, bins in product(self.METRIC, self.EXPOSURE, self.BINS):
+      logger.info('Metric: "{}", Exposure: "{}", Bins: "{}"', metric, exposure, bins)
       self.metric = metric
       self.exposure = exposure
       self.bins = bins

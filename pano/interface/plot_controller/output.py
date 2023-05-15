@@ -2,35 +2,32 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Iterable, Literal, Optional, Union
 
+import numpy as np
 from matplotlib.image import AxesImage
 from matplotlib.lines import Line2D
 from matplotlib.widgets import _SelectorWidget
-import numpy as np
 from numpy.typing import NDArray
 from skimage import draw
 from skimage.color import label2rgb
 from toolz.itertoolz import sliding_window
 
 from pano.interface.common.cmap import save_colormap
-from pano.interface.common.pano_files import DIR
-from pano.interface.common.pano_files import SP
-from pano.interface.common.pano_files import ThermalPanoramaFileManager
+from pano.interface.common.pano_files import DIR, SP, ThermalPanoramaFileManager
 from pano.interface.mbq import FigureCanvas
 from pano.misc import edgelet as edge
 from pano.misc.edgelet import Edgelets
 from pano.misc.imageio import ImageIO as IIO
-from pano.misc.tools import normalize_image
-from pano.misc.tools import SegMask
+from pano.misc.tools import SegMask, normalize_image
 
-from .plot_controller import PanoPlotController
-from .plot_controller import QtGui
-from .plot_controller import WorkingDirNotSetError
+from .plot_controller import PanoPlotController, QtGui, WorkingDirNotSetError
 
 
-def _suppress_edgelets(edgelets: Edgelets,
-                       distance_threshold=10,
-                       angle_threshold=10,
-                       repeat: Optional[int] = None):
+def _suppress_edgelets(
+    edgelets: Edgelets,
+    distance_threshold=10,
+    angle_threshold=10,
+    repeat: Optional[int] = None,
+):
   repeat = repeat or edgelets.count
   angle_threshold = np.deg2rad(angle_threshold)
 
@@ -62,9 +59,9 @@ def _edgelets_between_edgelets(edgelets: Edgelets, weight=0.5):
   e.normalize()
 
   # 수직 방향 인접한 edgelet의 위치 평균. weight가 낮을수록 아래 edgelet과 가까움
-  locations = np.average([e.locations[:-1, :], e.locations[1:, :]],
-                         axis=0,
-                         weights=(weight, 1 - weight))
+  locations = np.average(
+      [e.locations[:-1, :], e.locations[1:, :]], axis=0, weights=(weight, 1 - weight)
+  )
 
   # 왼쪽 방향 벡터에 -1 곱하기
   is_right = e.directions[:, 0] > 0
@@ -77,9 +74,7 @@ def _edgelets_between_edgelets(edgelets: Edgelets, weight=0.5):
   # strength (길이)는 1로 고정
   strengths = np.ones(edgelets.count - 1)
 
-  return Edgelets(locations=locations,
-                  directions=directions,
-                  strengths=strengths)
+  return Edgelets(locations=locations, directions=directions, strengths=strengths)
 
 
 def extend_lines(n: Any, p: Any, xlim: Any, ylim: Any) -> tuple[tuple, tuple]:
@@ -126,17 +121,19 @@ def _segment_mask(storey_mask: np.ndarray, num: int):
 
   for idx1, idx2 in sliding_window(2, np.round(points)):
     mask = storey_mask.copy()
-    mask[:, :int(idx1)] = False
-    mask[:, int(idx2):] = False
+    mask[:, : int(idx1)] = False
+    mask[:, int(idx2) :] = False
 
     yield mask
 
 
 class SegmentsSummary:
 
-  def __init__(self,
-               functions: Optional[Iterable[Callable]] = None,
-               names: Optional[Iterable[str]] = None) -> None:
+  def __init__(
+      self,
+      functions: Optional[Iterable[Callable]] = None,
+      names: Optional[Iterable[str]] = None,
+  ) -> None:
     if functions is None:
       functions = (np.nanmean, np.nanmedian, np.nanmin, np.nanmax)
     if names is None:
@@ -218,12 +215,14 @@ class SegmentsSummary:
     return stats_dict, label
 
 
-def _save_segments(subdir: Path,
-                   fname: str,
-                   arr: np.ndarray,
-                   coords: np.ndarray,
-                   num: int,
-                   label_thold=50):
+def _save_segments(
+    subdir: Path,
+    fname: str,
+    arr: np.ndarray,
+    coords: np.ndarray,
+    num: int,
+    label_thold=50,
+):
   seg_summ = SegmentsSummary()
   stats, label = seg_summ(arr=arr, coords=coords, num=num)
 
@@ -232,20 +231,23 @@ def _save_segments(subdir: Path,
 
   if num <= label_thold:
     arr[np.isnan(arr)] = np.nanmin(arr)
-    IIO.save(path=subdir.joinpath(f'{fname}-Label.png'),
-             array=label2rgb(label, image=normalize_image(arr)))
+    IIO.save(
+        path=subdir.joinpath(f'{fname}-Label.png'),
+        array=label2rgb(label, image=normalize_image(arr)),
+    )
 
 
 class LinesSelector(_SelectorWidget):
   DIST_THOLD = 10
-  PROPS = dict(alpha=0.6,
-               animated=False,
-               color='k',
-               label='Floor Edgelet',
-               linestyle='-',
-               marker='D')
-  PROPS_FIXED = PROPS | dict(
-      alpha=0.8, color='steelblue', label='Window Edgelet')
+  PROPS = dict(
+      alpha=0.6,
+      animated=False,
+      color='k',
+      label='Floor Edgelet',
+      linestyle='-',
+      marker='D',
+  )
+  PROPS_FIXED = PROPS | dict(alpha=0.8, color='steelblue', label='Window Edgelet')
 
   def __init__(self, ax, useblit=False, update=None) -> None:
     super().__init__(ax, onselect=lambda *args, **kwargs: None, useblit=useblit)
@@ -337,8 +339,12 @@ class LinesSelector(_SelectorWidget):
       self._active_index = (-1, -1)
 
   def _onmove(self, event):
-    if (event.button != 1 or self._current_line is not None or
-        self._active_index[0] < 0 or not self._lines):
+    if (
+        event.button != 1
+        or self._current_line is not None
+        or self._active_index[0] < 0
+        or not self._lines
+    ):
       return
 
     line = self._lines[self._active_index[0]]
@@ -400,7 +406,6 @@ class LinesSelector(_SelectorWidget):
       line.set_ydata([pt1[1], pt2[1]])
 
   def remove_window_line(self, seg: np.ndarray, threshold: float):
-
     def clip(c: float, axis=0):
       # 영상 내 shape 범위로 clip하고 int 형식으로 변환
       return int(np.clip(c, a_min=0, a_max=(seg.shape[axis] - 1)))
@@ -410,10 +415,12 @@ class LinesSelector(_SelectorWidget):
       xs, ys = line.get_data()
 
       # edgelet이 지나는 좌표
-      lxs, lys = draw.line(r0=clip(ys[0], 1),
-                           c0=clip(xs[0], 0),
-                           r1=clip(ys[1], 1),
-                           c1=clip(xs[1], 0))
+      lxs, lys = draw.line(
+          r0=clip(ys[0], 1),
+          c0=clip(xs[0], 0),
+          r1=clip(ys[1], 1),
+          c1=clip(xs[1], 0),
+      )
 
       pixels = seg[lxs, lys]
       wall = np.sum(pixels == SegMask.WALL)
@@ -534,9 +541,11 @@ class Images:
   def edges(self) -> np.ndarray:
     if self._edges is None:
       image = self.seg if self.edgelet_option.segmentation else self.ir
-      self._edges = edge.image2edges(image=image.copy(),
-                                     mask=self.read(SP.MASK),
-                                     canny_option=self.canny_option)
+      self._edges = edge.image2edges(
+          image=image.copy(),
+          mask=self.read(SP.MASK),
+          canny_option=self.canny_option,
+      )
     return self._edges
 
   def edgelets(self) -> Edgelets:
@@ -544,13 +553,15 @@ class Images:
     opt = self.edgelet_option
 
     # 가까운 edgelet 중 길이가 더 긴 것 선택
-    edgelets = _suppress_edgelets(edgelets,
-                                  distance_threshold=opt.distance_threshold,
-                                  angle_threshold=opt.angle_threshold)
+    edgelets = _suppress_edgelets(
+        edgelets,
+        distance_threshold=opt.distance_threshold,
+        angle_threshold=opt.angle_threshold,
+    )
 
     # 최대 n개 선택
     if edgelets.count > opt.max_count:
-      edgelets = edgelets[:opt.max_count]
+      edgelets = edgelets[: opt.max_count]
 
     return edgelets
 
@@ -650,8 +661,7 @@ class OutputPlotController(PanoPlotController):
       self.lines.add_edgelets(edgelets=edgelets2, editable=True)
       self.lines.extend_lines()
 
-      self.lines.remove_window_line(seg=self.images.seg,
-                                    threshold=opt.window_threshold)
+      self.lines.remove_window_line(seg=self.images.seg, threshold=opt.window_threshold)
 
     self.draw()
 
@@ -671,29 +681,31 @@ class OutputPlotController(PanoPlotController):
     # 벽 온도
     wall = ir.copy()
     wall[self.images.seg != SegMask.WALL] = np.nan
-    _save_segments(subdir=subdir,
-                   fname='TemperatureWall',
-                   arr=wall,
-                   coords=coords,
-                   num=segments)
+    _save_segments(
+        subdir=subdir,
+        fname='TemperatureWall',
+        arr=wall,
+        coords=coords,
+        num=segments,
+    )
 
     # 벽+창문 온도
     building = ir.copy()
     mask = np.isin(self.images.seg, [SegMask.WALL, SegMask.WINDOW])
     building[~mask] = np.nan
-    _save_segments(subdir=subdir,
-                   fname='TemperatureBuilding',
-                   arr=building,
-                   coords=coords,
-                   num=segments)
+    _save_segments(
+        subdir=subdir,
+        fname='TemperatureBuilding',
+        arr=building,
+        coords=coords,
+        num=segments,
+    )
 
     # 벽+창문 factor
     factor = IIO.read(self.fm.panorama_path(DIR.ANLY, SP.TF))
-    _save_segments(subdir=subdir,
-                   fname=SP.TF.value,
-                   arr=factor,
-                   coords=coords,
-                   num=segments)
+    _save_segments(
+        subdir=subdir, fname=SP.TF.value, arr=factor, coords=coords, num=segments
+    )
 
     # 컬러맵
     save_colormap(path=subdir.joinpath('colormap.csv'))

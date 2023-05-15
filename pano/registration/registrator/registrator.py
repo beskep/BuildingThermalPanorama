@@ -7,22 +7,22 @@ import numpy as np
 from numpy.linalg import inv
 from skimage.color import rgb2gray
 from skimage.exposure import equalize_hist
-from skimage.filters import sobel
-from skimage.filters import unsharp_mask
-from skimage.transform import resize
-from skimage.transform import warp
+from skimage.filters import sobel, unsharp_mask
+from skimage.transform import resize, warp
 
 from pano.misc.tools import normalize_image
 
 
 class RegistrationPreprocess:
 
-  def __init__(self,
-               shape: tuple,
-               fillnan: Optional[float] = 0.0,
-               eqhist: Union[bool, Tuple[bool, bool]] = True,
-               unsharp: Union[bool, Tuple[bool, bool]] = False,
-               edge: Union[bool, Tuple[bool, bool]] = False) -> None:
+  def __init__(
+      self,
+      shape: tuple,
+      fillnan: Optional[float] = 0.0,
+      eqhist: Union[bool, Tuple[bool, bool]] = True,
+      unsharp: Union[bool, Tuple[bool, bool]] = False,
+      edge: Union[bool, Tuple[bool, bool]] = False,
+  ) -> None:
     """
     영상 정합을 위한 전처리 방법.
     `eqhist`, `unsharp`는 상응하는 전처리 방법 적용 여부.
@@ -56,8 +56,7 @@ class RegistrationPreprocess:
 
   def parameters(self):
     value: Union[bool, tuple[bool, bool]]
-    for name, value in zip(['eqhist', 'unsharp'],
-                           [self._eqhist, self._unsharp]):
+    for name, value in zip(['eqhist', 'unsharp'], [self._eqhist, self._unsharp]):
       if isinstance(value, tuple) and value[0] == value[1]:
         value = value[0]
 
@@ -103,10 +102,12 @@ class RegistrationPreprocess:
 
 class RegisteringImage:
 
-  def __init__(self,
-               image: np.ndarray,
-               shape: Optional[tuple] = None,
-               preprocess: Optional[Callable] = None) -> None:
+  def __init__(
+      self,
+      image: np.ndarray,
+      shape: Optional[tuple] = None,
+      preprocess: Optional[Callable] = None,
+  ) -> None:
     """
     정합 대상 영상 및 전처리 방법
 
@@ -189,7 +190,8 @@ class RegisteringImage:
   def set_registration(
       self,
       transform_matrix: Optional[np.ndarray] = None,
-      transform_function: Optional[Callable[[np.ndarray], np.ndarray]] = None):
+      transform_function: Optional[Callable[[np.ndarray], np.ndarray]] = None,
+  ):
     """
     Moving image의 registration 방법 설정
 
@@ -268,7 +270,8 @@ class RegisteringImage:
       except RuntimeError:
         trsf_image = np.stack(
             [self._trsf_fn(image[:, :, x]) for x in range(image.shape[-1])],
-            axis=-1)
+            axis=-1,
+        )
 
     return trsf_image
 
@@ -328,16 +331,18 @@ class BaseRegistrator(abc.ABC):
       preprocess: RegistrationPreprocess,
       **kwargs,
   ) -> Tuple[RegisteringImage, RegisteringImage]:
-    fri = RegisteringImage(image=fixed_image,
-                           shape=None,
-                           preprocess=preprocess.fixed_preprocess)
-    mri = RegisteringImage(image=moving_image,
-                           shape=fixed_image.shape,
-                           preprocess=preprocess.moving_preprocess)
+    fri = RegisteringImage(
+        image=fixed_image, shape=None, preprocess=preprocess.fixed_preprocess
+    )
+    mri = RegisteringImage(
+        image=moving_image,
+        shape=fixed_image.shape,
+        preprocess=preprocess.moving_preprocess,
+    )
 
-    _, register, matrix = self.register(fixed_image=fri.prep_image(),
-                                        moving_image=mri.prep_image(),
-                                        **kwargs)
+    _, register, matrix = self.register(
+        fixed_image=fri.prep_image(), moving_image=mri.prep_image(), **kwargs
+    )
     mri.set_registration(transform_matrix=matrix, transform_function=register)
 
     return fri, mri

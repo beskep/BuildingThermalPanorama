@@ -5,8 +5,7 @@ from typing import Iterable, Optional
 from loguru import logger
 
 from pano import utils
-from pano.interface.mbq import QtCore
-from pano.interface.mbq import QtGui
+from pano.interface.mbq import QtCore, QtGui
 
 
 def log(message: str):
@@ -16,7 +15,7 @@ def log(message: str):
     level = 'DEBUG'
   else:
     level = message[:idx].upper()
-    message = message[(idx + 1):]
+    message = message[(idx + 1) :]
 
   logger.log(level, message)
 
@@ -49,11 +48,13 @@ def _command(queue: mp.Queue, tp, command: str, step: int, count: float):
   return True
 
 
-def producer(queue: mp.Queue,
-             directory,
-             commands: str | Iterable[str],
-             loglevel: int,
-             logname='pano'):
+def producer(
+    queue: mp.Queue,
+    directory,
+    commands: str | Iterable[str],
+    loglevel: int,
+    logname='pano',
+):
   utils.set_logger(loglevel, logname)
 
   # pylint: disable=import-outside-toplevel

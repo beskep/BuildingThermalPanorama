@@ -3,41 +3,32 @@
 from pathlib import Path
 from typing import List, Optional, Union
 
-from loguru import logger
 import matplotlib.pyplot as plt
 import numpy as np
-from omegaconf import OmegaConf
 import yaml
+from loguru import logger
+from omegaconf import OmegaConf
 
-from pano import stitch
-from pano import utils
+import pano.registration.registrator.simpleitk as rsitk
+from pano import stitch, utils
 from pano.distortion import perspective as persp
 from pano.flir import FlirExtractor
-from pano.misc import sp
-from pano.misc import tools
+from pano.misc import sp, tools
 from pano.misc.anomaly import anomaly_threshold
 from pano.misc.imageio import ImageIO as IIO
 from pano.misc.imageio import save_webp_images
-import pano.registration.registrator.simpleitk as rsitk
 from pano.segmentation.onnx import SmpModel
 
-from .common.cmap import apply_colormap
-from .common.cmap import get_thermal_colormap
-from .common.config import DictConfig
-from .common.config import update_config
-from .common.pano_files import DIR
-from .common.pano_files import FN
-from .common.pano_files import init_directory
-from .common.pano_files import SP
-from .common.pano_files import ThermalPanoramaFileManager
+from .common.cmap import apply_colormap, get_thermal_colormap
+from .common.config import DictConfig, update_config
+from .common.pano_files import DIR, FN, SP, ThermalPanoramaFileManager, init_directory
 
 
 class ThermalPanorama:
 
-  def __init__(self,
-               directory: Union[str, Path],
-               default_config=False,
-               init_loglevel='INFO') -> None:
+  def __init__(
+      self, directory: Union[str, Path], default_config=False, init_loglevel='INFO'
+  ) -> None:
     # working directory
     wd = Path(directory).resolve()
     if not wd.exists():
@@ -58,7 +49,8 @@ class ThermalPanorama:
 
     # 컬러맵
     self._cmap = get_thermal_colormap(
-        name=self._config['color'].get('colormap', 'iron'))
+        name=self._config['color'].get('colormap', 'iron')
+    )
 
   @property
   def fm(self):
@@ -110,8 +102,13 @@ class ThermalPanorama:
       return None
 
     if any(models[0] != x for x in models[1:]):
-      logger.warning('다수의 카메라로 촬영된 Raw 파일을 입력했습니다 ({}). '
-                     '카메라 기종을 추정할 수 없습니다.', set(models))
+      logger.warning(
+          (
+              '다수의 카메라로 촬영된 Raw 파일을 입력했습니다 ({}). '
+              '카메라 기종을 추정할 수 없습니다.'
+          ),
+          set(models),
+      )
       return None
 
     return models[0]
@@ -149,11 +146,9 @@ class ThermalPanorama:
 
     return ir, vis
 
-  def _save_extracted_image(self,
-                            fname: str,
-                            ir: np.ndarray,
-                            vis: np.ndarray,
-                            meta: Optional[dict] = None):
+  def _save_extracted_image(
+      self, fname: str, ir: np.ndarray, vis: np.ndarray, meta: Optional[dict] = None
+  ):
     """추출한 열/실화상을 각 폴더에 저장"""
     ir_path = self._fm.change_dir(DIR.IR, file=fname)
     vis_path = self._fm.change_dir(DIR.VIS, file=fname)
@@ -231,10 +226,9 @@ class ThermalPanorama:
     else:
       order = tools.INTRP.NearestNeighbor
 
-    return tools.limit_image_size(image=image,
-                                  limit=self._size_limit,
-                                  order=order,
-                                  anti_aliasing=aa)
+    return tools.limit_image_size(
+        image=image, limit=self._size_limit, order=order, anti_aliasing=aa
+    )
 
   def _init_registrator(self, shape):
     ropt: DictConfig = self._config['registration']
@@ -250,27 +244,31 @@ class ThermalPanorama:
     metric = rsitk.Metric[ropt['metric']]
     optimizer = ropt['optimizer']
 
-    registrator = rsitk.SITKRegistrator(transformation=trsf,
-                                        metric=metric,
-                                        optimizer=optimizer,
-                                        bins=ropt['bins'])
-    aov = [
-        np.deg2rad(copt[x]) if copt[x] else None for x in ['IR_AOV', 'VIS_AOV']
-    ]
-    registrator.set_initial_params(scale=copt['scale'],
-                                   fixed_alpha=aov[0],
-                                   moving_alpha=aov[1],
-                                   translation=copt['translation'])
+    registrator = rsitk.SITKRegistrator(
+        transformation=trsf, metric=metric, optimizer=optimizer, bins=ropt['bins']
+    )
+    aov = [np.deg2rad(copt[x]) if copt[x] else None for x in ['IR_AOV', 'VIS_AOV']]
+    registrator.set_initial_params(
+        scale=copt['scale'],
+        fixed_alpha=aov[0],
+        moving_alpha=aov[1],
+        translation=copt['translation'],
+    )
     prep = rsitk.RegistrationPreprocess(
         shape=shape,
         eqhist=ropt['preprocess']['equalize_histogram'],
         unsharp=ropt['preprocess']['unsharp'],
-        edge=ropt['preprocess']['edge'])
+        edge=ropt['preprocess']['edge'],
+    )
 
     return registrator, prep
 
-  def _register(self, file, registrator: rsitk.SITKRegistrator,
-                prep: rsitk.RegistrationPreprocess):
+  def _register(
+      self,
+      file,
+      registrator: rsitk.SITKRegistrator,
+      prep: rsitk.RegistrationPreprocess,
+  ):
     ir = IIO.read(self._fm.change_dir(DIR.IR, file))
     vis = IIO.read(self._fm.change_dir(DIR.VIS, file))
 
@@ -278,9 +276,9 @@ class ThermalPanorama:
       registrator, prep = self._init_registrator(shape=ir.shape)
 
     logger.debug('Registering "{}"', file.stem)
-    fri, mri = registrator.prep_and_register(fixed_image=ir,
-                                             moving_image=vis,
-                                             preprocess=prep)
+    fri, mri = registrator.prep_and_register(
+        fixed_image=ir, moving_image=vis, preprocess=prep
+    )
     rgst_color_img = mri.registered_orig_image()
 
     # 정합한 실화상
@@ -291,7 +289,8 @@ class ThermalPanorama:
     compare_path = path.with_name(f'{path.stem}{FN.RGST_AUTO}.jpg')
     compare_fig, _ = tools.prep_compare_fig(
         images=(fri.prep_image(), mri.registered_prep_image()),
-        titles=('열화상', '실화상', '비교 (Checkerboard)', '비교 (Difference)'))
+        titles=('열화상', '실화상', '비교 (Checkerboard)', '비교 (Difference)'),
+    )
     compare_fig.savefig(compare_path, dpi=200)
     plt.close(compare_fig)
 
@@ -345,8 +344,9 @@ class ThermalPanorama:
       try:
         files = self._fm.files(DIR.RGST)
       except FileNotFoundError as e:
-        raise FileNotFoundError('대상 경로를 찾을 수 없습니다. '
-                                '열화상-실화상 정합을 먼저 시행해주세요.') from e
+        raise FileNotFoundError(
+            '대상 경로를 찾을 수 없습니다. 열화상-실화상 정합을 먼저 시행해주세요.'
+        ) from e
 
     try:
       path = self._fm.segment_model_path()
@@ -391,10 +391,12 @@ class ThermalPanorama:
   def _init_stitcher(self) -> stitch.Stitcher:
     sopt: DictConfig = self._config['panorama']['stitch']
 
-    stitcher = stitch.Stitcher(mode=sopt['perspective'],
-                               compose_scale=sopt['compose_scale'],
-                               work_scale=sopt['work_scale'],
-                               warp_threshold=sopt['warp_threshold'])
+    stitcher = stitch.Stitcher(
+        mode=sopt['perspective'],
+        compose_scale=sopt['compose_scale'],
+        work_scale=sopt['work_scale'],
+        warp_threshold=sopt['warp_threshold'],
+    )
     stitcher.warper_type = sopt['warp']
 
     logger.debug('Stitcher 초기화')
@@ -411,10 +413,12 @@ class ThermalPanorama:
     popt: DictConfig = self._config['panorama']['preprocess'][spectrum]
 
     # 전처리 정의
-    prep = stitch.PanoramaPreprocess(is_numeric=(images[0].ndim == 2),
-                                     mask_threshold=popt['masking_threshold'],
-                                     contrast=popt['contrast'],
-                                     denoise=popt['denoise'])
+    prep = stitch.PanoramaPreprocess(
+        is_numeric=(images[0].ndim == 2),
+        mask_threshold=popt['masking_threshold'],
+        contrast=popt['contrast'],
+        denoise=popt['denoise'],
+    )
     if 'bilateral_args' in popt:
       prep.set_bilateral_args(**popt['bilateral_args'])
     if 'gaussian_args' in popt:
@@ -426,18 +430,18 @@ class ThermalPanorama:
     logger.trace('Stitch 대상 영상 & 전처리 설정')
 
     with utils.console.status('Stitching...'):
-      res = stitcher.stitch(images=stitching_images,
-                            masks=None,
-                            names=names,
-                            crop=self._config['panorama']['stitch']['crop'])
+      res = stitcher.stitch(
+          images=stitching_images,
+          masks=None,
+          names=names,
+          crop=self._config['panorama']['stitch']['crop'],
+      )
 
     return res
 
-  def _save_panorama(self,
-                     spectrum: SP,
-                     panorama: stitch.Panorama,
-                     save_mask=True,
-                     save_meta=True):
+  def _save_panorama(
+      self, spectrum: SP, panorama: stitch.Panorama, save_mask=True, save_meta=True
+  ):
     self._fm.subdir(DIR.PANO, mkdir=True)
 
     if max(panorama.panorama.shape[:2]) > self._size_limit:
@@ -450,7 +454,7 @@ class ThermalPanorama:
           'panorama': {
               'including': panorama.included(),
               'not_including': panorama.not_included(),
-              'graph': panorama.graph_list()
+              'graph': panorama.graph_list(),
           }
       }
 
@@ -458,33 +462,41 @@ class ThermalPanorama:
       path = self._fm.panorama_path(DIR.PANO, spectrum)
       if spectrum is SP.IR:
         # 적외선 수치, meta 정보 저장
-        IIO.save_with_meta(path=path,
-                           array=panorama.panorama.astype(np.float16),
-                           exts=[FN.NPY],
-                           meta=meta)
+        IIO.save_with_meta(
+            path=path,
+            array=panorama.panorama.astype(np.float16),
+            exts=[FN.NPY],
+            meta=meta,
+        )
 
         # 적외선 colormap 영상 저장
         color_panorama = apply_colormap(panorama.panorama, self._cmap)
         IIO.save(path=self._fm.color_path(path), array=color_panorama)
       else:
         # 실화상 저장
-        IIO.save_with_meta(path=path,
-                           array=np.round(panorama.panorama).astype(np.uint8),
-                           exts=[FN.LS],
-                           meta=meta)
+        IIO.save_with_meta(
+            path=path,
+            array=np.round(panorama.panorama).astype(np.uint8),
+            exts=[FN.LS],
+            meta=meta,
+        )
 
       if save_mask:
         # 마스크 저장
-        IIO.save(path=self._fm.panorama_path(DIR.PANO, SP.MASK),
-                 array=tools.uint8_image(panorama.mask))
+        IIO.save(
+            path=self._fm.panorama_path(DIR.PANO, SP.MASK),
+            array=tools.uint8_image(panorama.mask),
+        )
 
-  def _stitch_others(self, stitcher: stitch.Stitcher, panorama: stitch.Panorama,
-                     sp: SP):
+  def _stitch_others(
+      self, stitcher: stitch.Stitcher, panorama: stitch.Panorama, sp: SP
+  ):
     try:
       files = self._fm.files(DIR[sp.name], error=(sp is SP.IR))
     except FileNotFoundError as e:
-      raise FileNotFoundError('대상 파일을 찾을 수 없습니다. '
-                              f'{sp.value} 파노라마를 생성할 수 없습니다.') from e
+      raise FileNotFoundError(
+          f'대상 파일을 찾을 수 없습니다. {sp.value} 파노라마를 생성할 수 없습니다.'
+      ) from e
 
     files = [files[x] for x in panorama.indices]
     images = [IIO.read(x) for x in files]
@@ -494,7 +506,8 @@ class ThermalPanorama:
         images=stitch.StitchingImages(arrays=images),
         cameras=cameras,
         masks=None,
-        names=[x.name for x in files])
+        names=[x.name for x in files],
+    )
 
     if panorama.crop_range:
       pano = panorama.crop_range.crop(pano, strict=False)
@@ -508,14 +521,15 @@ class ThermalPanorama:
       pano = np.round(pano).astype(np.uint8)
 
     if sp is SP.SEG:
-      IIO.save(path=self._fm.panorama_path(DIR.PANO, sp),
-               array=self.limit_size(pano, aa=False))
+      IIO.save(
+          path=self._fm.panorama_path(DIR.PANO, sp),
+          array=self.limit_size(pano, aa=False),
+      )
     else:
       panorama.panorama = pano
-      self._save_panorama(spectrum=sp,
-                          panorama=panorama,
-                          save_mask=False,
-                          save_meta=False)
+      self._save_panorama(
+          spectrum=sp, panorama=panorama, save_mask=False, save_meta=False
+      )
 
   def _panorama_join(self):
     cfg = self._config['panorama']['blend']
@@ -532,10 +546,12 @@ class ThermalPanorama:
     # 파노라마 생성
     stitcher.blend_type = cfg['type'][spectrum]
     stitcher.blend_strength = cfg['strength'][spectrum]
-    pano = self._stitch(stitcher=stitcher,
-                        images=images,
-                        names=[x.stem for x in files],
-                        spectrum=spectrum)
+    pano = self._stitch(
+        stitcher=stitcher,
+        images=images,
+        names=[x.stem for x in files],
+        spectrum=spectrum,
+    )
 
     # 저장
     self._save_panorama(spectrum=SP[spectrum], panorama=pano)
@@ -562,10 +578,12 @@ class ThermalPanorama:
     ir_images = [IIO.read(x) for x in ir_files]
 
     try:
-      ir_pano = self._stitch(stitcher=stitcher,
-                             images=ir_images,
-                             names=[x.stem for x in ir_files],
-                             spectrum='IR')
+      ir_pano = self._stitch(
+          stitcher=stitcher,
+          images=ir_images,
+          names=[x.stem for x in ir_files],
+          spectrum='IR',
+      )
     except (ValueError, RuntimeError) as e:
       logger.exception(e)
     else:
@@ -578,10 +596,12 @@ class ThermalPanorama:
     vis_images = [IIO.read(x) for x in vis_files]
 
     try:
-      vis_pano = self._stitch(stitcher=stitcher,
-                              images=vis_images,
-                              names=[x.stem for x in vis_files],
-                              spectrum='VIS')
+      vis_pano = self._stitch(
+          stitcher=stitcher,
+          images=vis_images,
+          names=[x.stem for x in vis_files],
+          spectrum='VIS',
+      )
     except (ValueError, RuntimeError) as e:
       logger.exception(e)
     else:
@@ -605,14 +625,18 @@ class ThermalPanorama:
 
   def _init_perspective_correction(self):
     options = self._config['distort_correction']
-    return persp.PerspectiveCorrection(canny=options['canny'],
-                                       hough=options['hough'],
-                                       correction=options['correction'])
+    return persp.PerspectiveCorrection(
+        canny=options['canny'],
+        hough=options['hough'],
+        correction=options['correction'],
+    )
 
-  def _correct_others(self,
-                      correction: persp.Correction,
-                      spectrum: SP,
-                      crop_range: Optional[tools.CropRange] = None):
+  def _correct_others(
+      self,
+      correction: persp.Correction,
+      spectrum: SP,
+      crop_range: Optional[tools.CropRange] = None,
+  ):
     try:
       path = self._fm.panorama_path(DIR.PANO, spectrum, error=True)
     except FileNotFoundError as e:
@@ -656,7 +680,9 @@ class ThermalPanorama:
 
     seg = IIO.read(self._fm.panorama_path(DIR.PANO, SP.SEG))
     if pano.shape[:2] != seg.shape[:2]:
-      raise ValueError('열·실화상 파노라마의 크기가 다릅니다. 파노라마 정합을 먼저 시행해주세요.')
+      raise ValueError(
+          '열·실화상 파노라마의 크기가 다릅니다. 파노라마 정합을 먼저 시행해주세요.'
+      )
 
     # wall, window 영역만 추출
     seg = tools.SegMask.vis_to_index(seg[:, :, 0])
@@ -672,7 +698,8 @@ class ThermalPanorama:
     except persp.NotEnoughEdgeletsError as e:
       raise persp.NotEnoughEdgeletsError(
           '시점 왜곡을 추정할 edge의 개수가 부족합니다. '
-          'Edge 추출 옵션을 변경하거나 높은 해상도의 파노라마를 사용하세요.') from e
+          'Edge 추출 옵션을 변경하거나 높은 해상도의 파노라마를 사용하세요.'
+      ) from e
 
     # plot 저장
     self._fm.subdir(DIR.COR, mkdir=True)
@@ -681,7 +708,9 @@ class ThermalPanorama:
     plt.close(fig)
 
     if not crct.success():
-      raise ValueError('IR 파노라마 왜곡 보정 중 오류 발생. 저장된 plot을 참고해주세요.')
+      raise ValueError(
+          'IR 파노라마 왜곡 보정 중 오류 발생. 저장된 plot을 참고해주세요.'
+      )
 
     logger.debug('IR 파노라마 왜곡 보정 완료')
 
@@ -689,29 +718,28 @@ class ThermalPanorama:
     cpano, cmask = crct.correct(pano, mask)
     cpano = self.limit_size(cpano)
     path = self._fm.panorama_path(DIR.COR, SP.IR)
-    IIO.save_with_meta(path=path,
-                       array=cpano.astype(np.float16),
-                       exts=[FN.NPY, FN.LL],
-                       dtype='uint16')
+    IIO.save_with_meta(
+        path=path,
+        array=cpano.astype(np.float16),
+        exts=[FN.NPY, FN.LL],
+        dtype='uint16',
+    )
 
     # colormap 적용 버전 저장
-    IIO.save(path=self._fm.color_path(path),
-             array=apply_colormap(cpano, self._cmap))
+    IIO.save(path=self._fm.color_path(path), array=apply_colormap(cpano, self._cmap))
     logger.debug('IR 파노라마 보정 파일 저장')
 
     # mask 저장
     if cmask is not None:
       cmask = self.limit_size(cmask, aa=False)
-      IIO.save(path=self._fm.panorama_path(DIR.COR, SP.MASK),
-               array=tools.uint8_image(cmask))
+      IIO.save(
+          path=self._fm.panorama_path(DIR.COR, SP.MASK),
+          array=tools.uint8_image(cmask),
+      )
 
     # 실화상, 부위인식 파노라마 보정
-    self._correct_others(correction=crct,
-                         spectrum=SP.VIS,
-                         crop_range=crop_range)
-    self._correct_others(correction=crct,
-                         spectrum=SP.SEG,
-                         crop_range=crop_range)
+    self._correct_others(correction=crct, spectrum=SP.VIS, crop_range=crop_range)
+    self._correct_others(correction=crct, spectrum=SP.SEG, crop_range=crop_range)
 
     self.save_multilayer_panorama()
 
@@ -719,8 +747,7 @@ class ThermalPanorama:
 
   def save_multilayer_panorama(self):
     images = [
-        self._fm.panorama_path(DIR.COR, x, error=True)
-        for x in [SP.IR, SP.VIS, SP.SEG]
+        self._fm.panorama_path(DIR.COR, x, error=True) for x in [SP.IR, SP.VIS, SP.SEG]
     ]
     images[0] = self._fm.color_path(images[0])
     path = self.fm.subdir(DIR.COR).joinpath('Panorama.webp')
@@ -752,9 +779,11 @@ class ThermalPanorama:
     assert len(fil) == len(fml)
 
     threshold = {}
-    for r, (fi, fm) in utils.ptrack(zip(fil, fml, strict=True),
-                                    description='Detecting anomaly area...',
-                                    total=len(fil)):
+    for r, (fi, fm) in utils.ptrack(
+        zip(fil, fml, strict=True),
+        description='Detecting anomaly area...',
+        total=len(fil),
+    ):
       ir = IIO.read(fi)
       mask = IIO.read(fm)
       mask = tools.SegMask.vis_to_index(mask)

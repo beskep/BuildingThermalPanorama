@@ -1,6 +1,5 @@
 name: tp
 channels:
-    - defaults
     - conda-forge
     - simpleitk
 dependencies:
@@ -33,7 +32,7 @@ dependencies:
     - pywin32
     # dev
     - pytest
+    - pyink
     - pylint
-    - yapf
-    - toml
     - mypy
+    - ruff

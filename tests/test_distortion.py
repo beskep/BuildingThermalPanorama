@@ -21,9 +21,9 @@ class TestRadialDistortionModel:
   xc = -abc[:, 0] / (2 * abc[:, 2] * k1) + x0  # x_ci = x0 - a_i/(2*c_i*k1)
   yc = -abc[:, 1] / (2 * abc[:, 2] * k1) + y0  # y_ci = y0 - b_i/(2*c_i*k1)
   r = np.sqrt(
-      (np.square(abc[:, 0]) + np.square(abc[:, 1])) / np.square(
-          (2 * abc[:, 2] * k1)) -
-      1 / k1)  # r_i = (a_i / (2*c_i*k1))^2 + (b_i / (2*c_i*k1))^2 - 1 / k1
+      (np.square(abc[:, 0]) + np.square(abc[:, 1])) / np.square((2 * abc[:, 2] * k1))
+      - 1 / k1
+  )  # r_i = (a_i / (2*c_i*k1))^2 + (b_i / (2*c_i*k1))^2 - 1 / k1
 
   xcycr = np.vstack([xc, yc, r]).T
 

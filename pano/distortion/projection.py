@@ -19,8 +19,9 @@ class ProjectionMatrix:
     viewing_angle : float
         Viewing angle of camera [rad]
     """
-    self._cam_mtx = self.camera_matrix(image_shape=image_shape,
-                                       viewing_angle=viewing_angle)
+    self._cam_mtx = self.camera_matrix(
+        image_shape=image_shape, viewing_angle=viewing_angle
+    )
     self._inv_cam_mtx = np.linalg.inv(self._cam_mtx)
 
   def __call__(self, roll=0.0, pitch=0.0, yaw=0.0) -> np.ndarray:
@@ -178,8 +179,9 @@ class ImageProjection:
         Viewing angle of camera [rad]
     """
     self._image = image
-    self._prj_mtx = ProjectionMatrix(image_shape=image.shape[:2],
-                                     viewing_angle=viewing_angle)
+    self._prj_mtx = ProjectionMatrix(
+        image_shape=image.shape[:2], viewing_angle=viewing_angle
+    )
 
     self._vertex0 = np.array([
         [0, 0],
@@ -204,10 +206,10 @@ class ImageProjection:
       scale_factor = 1.0
     else:
       rotated_area = 0.5 * np.abs(
-          np.dot(rotated_vertex[:, 0], np.roll(rotated_vertex[:, 1], 1)) -
-          np.dot(rotated_vertex[:, 1], np.roll(rotated_vertex[:, 0], 1)))
-      scale_factor = np.sqrt(self._image.shape[0] * self._image.shape[1] /
-                             rotated_area)
+          np.dot(rotated_vertex[:, 0], np.roll(rotated_vertex[:, 1], 1))
+          - np.dot(rotated_vertex[:, 1], np.roll(rotated_vertex[:, 0], 1))
+      )
+      scale_factor = np.sqrt(self._image.shape[0] * self._image.shape[1] / rotated_area)
 
     mtx_fit = transform.AffineTransform(
         scale=scale_factor,
@@ -216,13 +218,15 @@ class ImageProjection:
 
     return np.matmul(mtx_fit, mtx_rot)
 
-  def project(self,
-              roll=0.0,
-              pitch=0.0,
-              yaw=0.0,
-              scale=True,
-              cval=None,
-              image: Optional[np.ndarray] = None) -> np.ndarray:
+  def project(
+      self,
+      roll=0.0,
+      pitch=0.0,
+      yaw=0.0,
+      scale=True,
+      cval=None,
+      image: Optional[np.ndarray] = None,
+  ) -> np.ndarray:
     if image is None:
       image = self._image
     elif image.shape[:2] != self._image.shape[:2]:
@@ -239,12 +243,14 @@ class ImageProjection:
     vertex = transform.matrix_transform(self._vertex0, mtx)
     shape = np.max(vertex, axis=0) - np.min(vertex, axis=0)
 
-    projected = transform.warp(image=image,
-                               inverse_map=np.linalg.inv(mtx),
-                               output_shape=np.ceil(shape)[[1, 0]],
-                               cval=cval,
-                               clip=False,
-                               preserve_range=True)
+    projected = transform.warp(
+        image=image,
+        inverse_map=np.linalg.inv(mtx),
+        output_shape=np.ceil(shape)[[1, 0]],
+        cval=cval,
+        clip=False,
+        preserve_range=True,
+    )
 
     return projected
 
@@ -252,8 +258,7 @@ class ImageProjection:
 if __name__ == '__main__':
   # pylint: disable=ungrouped-imports
   import matplotlib.pyplot as plt
-  from skimage import data
-  from skimage import img_as_float
+  from skimage import data, img_as_float
 
   image = img_as_float(data.chelsea())
 

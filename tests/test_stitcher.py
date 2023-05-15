@@ -23,8 +23,7 @@ def test_stitcher():
 
     return image, mask
 
-  stitching_images = stitch.stitcher.StitchingImages(arrays=arrays,
-                                                     preprocess=_prep)
+  stitching_images = stitch.stitcher.StitchingImages(arrays=arrays, preprocess=_prep)
 
   stitcher = stitch.stitcher.Stitcher(mode='pano')
   stitcher.warper_type = 'plane'
@@ -39,5 +38,5 @@ def test_stitcher():
   assert isinstance(stitched.indices, list)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
   pytest.main(['-v', '-k', 'test_stitcher'])

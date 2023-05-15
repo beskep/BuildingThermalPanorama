@@ -4,17 +4,13 @@ from pathlib import Path
 from typing import Union
 
 import cv2 as cv
-from matplotlib.colors import Colormap
-from matplotlib.colors import ListedColormap
 import numpy as np
+from matplotlib.colors import Colormap, ListedColormap
 
-from pano.misc import sp
-from pano.misc import tools
+from pano.misc import sp, tools
 
 
-def extract_flir_colormap(image_path: str,
-                          save_path: str,
-                          color_space: str = 'RGB'):
+def extract_flir_colormap(image_path: str, save_path: str, color_space: str = 'RGB'):
   """
   FLIR 촬영 파일로부터 열화상의 colormap 정보를 추출하고 text 파일로 저장
 
@@ -43,9 +39,9 @@ def extract_flir_colormap(image_path: str,
 class FLIRColormap(ListedColormap):
 
   @classmethod
-  def from_uint8_colors(cls,
-                        colors: np.ndarray,
-                        color_space: str = 'RGB') -> ListedColormap:
+  def from_uint8_colors(
+      cls, colors: np.ndarray, color_space: str = 'RGB'
+  ) -> ListedColormap:
     """
     unit8 형태 색상 정보로부터 matplotlib cmap 생성
 
@@ -92,9 +88,9 @@ class FLIRColormap(ListedColormap):
     return cls.from_uint8_colors(colors=colors, color_space='ycrcb')
 
   @classmethod
-  def from_uint8_text_file(cls,
-                           path: Union[str, Path],
-                           color_space='RGB') -> ListedColormap:
+  def from_uint8_text_file(
+      cls, path: Union[str, Path], color_space='RGB'
+  ) -> ListedColormap:
     """
     `extract_flir_colormap` 함수로 추출/저장한 텍스트 파일로부터 colormap 생성
 

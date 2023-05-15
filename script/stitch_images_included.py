@@ -3,9 +3,9 @@ from pathlib import Path
 from typing import DefaultDict
 
 import click
-from loguru import logger
 import pandas as pd
 import yaml
+from loguru import logger
 
 
 def _images_count(images):

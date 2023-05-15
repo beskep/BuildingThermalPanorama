@@ -4,9 +4,8 @@ SimpleITK를 이용한 최적화 방법이 정확도가 더 높음.
 """
 
 import numpy as np
-from skimage import feature
-from skimage import transform
 import skimage.feature.util as _fu
+from skimage import feature, transform
 from skimage.measure import ransac
 
 from .registrator import BaseRegistrator
@@ -65,7 +64,7 @@ class HoughLineFeatureDetector(BaseDetector):
     return {
         'hough': self._hough,
         'length': self._length,
-        'normalize': self._normalize
+        'normalize': self._normalize,
     }
 
   def detect(self, image, canny_kwargs=None, hough_kwargs=None):
@@ -76,8 +75,7 @@ class HoughLineFeatureDetector(BaseDetector):
       hough_kwargs = dict()
 
     image_canny = feature.canny(image=image, **canny_kwargs)
-    lines = transform.probabilistic_hough_line(image=image_canny,
-                                               **hough_kwargs)
+    lines = transform.probabilistic_hough_line(image=image_canny, **hough_kwargs)
 
     self._lines = np.array(lines)
     self.keypoints_ = np.average(self._lines, axis=1)
@@ -99,8 +97,9 @@ class HoughLineFeatureDetector(BaseDetector):
 
       if self._hough:
         theta = np.arctan2(-delta[:, 0], delta[:, 1])
-        rho = np.abs(self._lines[:, 0, 0] * np.cos(theta) +
-                     self._lines[:, 0, 1] * np.sin(theta))
+        rho = np.abs(
+            self._lines[:, 0, 0] * np.cos(theta) + self._lines[:, 0, 1] * np.sin(theta)
+        )
         if self._normalize:
           rho /= diag_length
 
@@ -134,24 +133,21 @@ class BRIEFDetector(BaseDetector):
   https://docs.opencv.org/4.5.2/dc/d7d/tutorial_py_brief.html
   """
 
-  def __init__(self,
-               descriptor_size=256,
-               patch_size=49,
-               mode='normal',
-               sigma=1,
-               sample_seed=1):
+  def __init__(
+      self, descriptor_size=256, patch_size=49, mode='normal', sigma=1, sample_seed=1
+  ):
     super().__init__()
-    self._extractor = feature.BRIEF(descriptor_size=descriptor_size,
-                                    patch_size=patch_size,
-                                    mode=mode,
-                                    sigma=sigma,
-                                    sample_seed=sample_seed)
+    self._extractor = feature.BRIEF(
+        descriptor_size=descriptor_size,
+        patch_size=patch_size,
+        mode=mode,
+        sigma=sigma,
+        sample_seed=sample_seed,
+    )
 
   def detect(self, image):
     corner = feature.corner_harris(image)
-    self.keypoints_ = feature.corner_peaks(corner,
-                                           min_distance=5,
-                                           threshold_rel=0.1)
+    self.keypoints_ = feature.corner_peaks(corner, min_distance=5, threshold_rel=0.1)
     assert self.keypoints_ is not None
 
   def extract(self, image, keypoints):
@@ -169,11 +165,13 @@ class FeatureBasedRegistrator(BaseRegistrator):
   두 영상을 정합
   """
 
-  def __init__(self,
-               detector: BaseDetector = None,
-               hough_transform=False,
-               fixed_kwargs=None,
-               moving_kwargs=None) -> None:
+  def __init__(
+      self,
+      detector: BaseDetector = None,
+      hough_transform=False,
+      fixed_kwargs=None,
+      moving_kwargs=None,
+  ) -> None:
     if detector is None:
       detector = HoughLineFeatureDetector()
     self._detector = detector
@@ -224,38 +222,46 @@ class FeatureBasedRegistrator(BaseRegistrator):
       moving_keypoints,
       moving_descriptors,
   ):
-    matches = feature.match_descriptors(descriptors1=fixed_descriptors,
-                                        descriptors2=moving_descriptors,
-                                        cross_check=True)
-    keypoints = (fixed_keypoints[matches[:, 0]][:, ::-1],
-                 moving_keypoints[matches[:, 1]][:, ::-1])
-    trsf, inliers = ransac(data=keypoints,
-                           model_class=transform.ProjectiveTransform,
-                           min_samples=min(20, matches.shape[0] - 1),
-                           residual_threshold=5,
-                           max_trials=500)
+    matches = feature.match_descriptors(
+        descriptors1=fixed_descriptors,
+        descriptors2=moving_descriptors,
+        cross_check=True,
+    )
+    keypoints = (
+        fixed_keypoints[matches[:, 0]][:, ::-1],
+        moving_keypoints[matches[:, 1]][:, ::-1],
+    )
+    trsf, inliers = ransac(
+        data=keypoints,
+        model_class=transform.ProjectiveTransform,
+        min_samples=min(20, matches.shape[0] - 1),
+        residual_threshold=5,
+        max_trials=500,
+    )
     matches_ransac = matches[inliers]
 
     return trsf, matches_ransac
 
-  def register(self, fixed_image: np.ndarray, moving_image: np.ndarray,
-               **kwargs):
+  def register(self, fixed_image: np.ndarray, moving_image: np.ndarray, **kwargs):
     fixed_kps, fixed_dscs = self.detect(fixed_image, **self._fixed_kwargs)
     moving_kps, moving_dscs = self.detect(moving_image, **self._moving_kwargs)
 
-    trsf, matches = self.match_features(fixed_keypoints=fixed_kps,
-                                        fixed_descriptors=fixed_dscs,
-                                        moving_keypoints=moving_kps,
-                                        moving_descriptors=moving_dscs)
+    trsf, matches = self.match_features(
+        fixed_keypoints=fixed_kps,
+        fixed_descriptors=fixed_dscs,
+        moving_keypoints=moving_kps,
+        moving_descriptors=moving_dscs,
+    )
     if trsf is None:
       return None, None, None
 
-    if self._hough_transform and isinstance(self.detector,
-                                            HoughLineFeatureDetector):
+    if self._hough_transform and isinstance(self.detector, HoughLineFeatureDetector):
       delta_avg = np.average(
-          (fixed_dscs[matches[:, 0], 4] - moving_dscs[matches[:, 1], 4]))
+          (fixed_dscs[matches[:, 0], 4] - moving_dscs[matches[:, 1], 4])
+      )
       hough_trsf = transform.SimilarityTransform(
-          rotation=delta_avg)  # TODO rho, theta, scale 각각 추출하고 적용
+          rotation=delta_avg
+      )  # TODO rho, theta, scale 각각 추출하고 적용
 
       def register(image: np.ndarray) -> np.ndarray:
         return transform.warp(image, hough_trsf.inverse)
@@ -272,12 +278,14 @@ class FeatureBasedRegistrator(BaseRegistrator):
 
     ax = kwargs.get('ax', None)
     if ax is not None:
-      feature.plot_matches(ax=ax,
-                           image1=fixed_image,
-                           image2=moving_image,
-                           keypoints1=fixed_kps,
-                           keypoints2=moving_kps,
-                           matches=matches)
+      feature.plot_matches(
+          ax=ax,
+          image1=fixed_image,
+          image2=moving_image,
+          keypoints1=fixed_kps,
+          keypoints2=moving_kps,
+          matches=matches,
+      )
       ax.set_axis_off()
 
     return registered, register, mtx

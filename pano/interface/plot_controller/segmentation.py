@@ -1,16 +1,15 @@
 from pathlib import Path
 
+import numpy as np
 from matplotlib.cm import get_cmap
 from matplotlib.patches import Patch
-import numpy as np
 
 from pano.interface.common.pano_files import DIR
 from pano.interface.mbq import FigureCanvas
 from pano.misc.imageio import ImageIO
 from pano.misc.tools import SegMask
 
-from .plot_controller import PanoPlotController
-from .plot_controller import QtGui
+from .plot_controller import PanoPlotController, QtGui
 
 
 class SegmentationPlotController(PanoPlotController):
@@ -65,10 +64,12 @@ class SegmentationPlotController(PanoPlotController):
           Patch(color=self._cmap(i), label=label)
           for i, label in enumerate(self._CLASSES)
       ]
-      self._legend = self.fig.legend(handles=patches,
-                                     ncol=len(patches),
-                                     loc='lower center',
-                                     bbox_to_anchor=(0.5, 0.01))
+      self._legend = self.fig.legend(
+          handles=patches,
+          ncol=len(patches),
+          loc='lower center',
+          bbox_to_anchor=(0.5, 0.01),
+      )
       self.fig.tight_layout()
 
     self.draw()

@@ -1,22 +1,21 @@
 import numpy as np
-from numpy.linalg import inv
 import pytest
 import SimpleITK as sitk
+from numpy.linalg import inv
 from skimage.exposure import rescale_intensity
 from skimage.io import imread
-from skimage.transform import resize
-from skimage.transform import warp
+from skimage.transform import resize, warp
 
 import pano.registration.registrator.simpleitk as rsitk
 from pano.utils import DIR
 
 
 class TestSITK:
-
   registrator = rsitk.SITKRegistrator()
   # test용으로 iteration 적게 설정
-  registrator.method.SetOptimizerAsGradientDescent(learningRate=0.01,
-                                                   numberOfIterations=10)
+  registrator.method.SetOptimizerAsGradientDescent(
+      learningRate=0.01, numberOfIterations=10
+  )
   fixed_image: np.ndarray = None
   moving_image: np.ndarray = None
 
@@ -28,9 +27,9 @@ class TestSITK:
     moving_image = imread(moving_path.as_posix())
 
     if fixed_image.shape != moving_image.shape:
-      moving_image = resize(moving_image,
-                            output_shape=fixed_image.shape,
-                            anti_aliasing=True)
+      moving_image = resize(
+          moving_image, output_shape=fixed_image.shape, anti_aliasing=True
+      )
 
     fixed_image = rescale_intensity(fixed_image, out_range=(0.0, 1.0))
     moving_image = rescale_intensity(moving_image, out_range=(0.0, 1.0))
@@ -75,40 +74,40 @@ class TestSITK:
     self.registrator.transformation = rsitk.Transformation.Affine
 
     fixed_image, moving_image = self.get_images()
-    registered, fn, mtx = self.registrator.register(fixed_image,
-                                                    moving_image,
-                                                    set_origin=False)
+    registered, fn, mtx = self.registrator.register(
+        fixed_image, moving_image, set_origin=False
+    )
 
     assert isinstance(registered, np.ndarray)
     assert isinstance(mtx, np.ndarray)
 
     registered_from_matrix = warp(moving_image, inverse_map=inv(mtx))
-    corr = np.corrcoef(registered.ravel(),
-                       registered_from_matrix.ravel(),
-                       rowvar=False)[0, 1]
+    corr = np.corrcoef(
+        registered.ravel(), registered_from_matrix.ravel(), rowvar=False
+    )[0, 1]
     assert corr > 0.99  # 동일한 변환인지 확인
 
   def test_similarity_matrix(self):
     self.registrator.transformation = rsitk.Transformation.Similarity
 
     fixed_image, moving_image = self.get_images()
-    registered, fn, mtx = self.registrator.register(fixed_image,
-                                                    moving_image,
-                                                    set_origin=False)
+    registered, fn, mtx = self.registrator.register(
+        fixed_image, moving_image, set_origin=False
+    )
 
     assert isinstance(registered, np.ndarray)
     assert isinstance(mtx, np.ndarray)
 
     registered_by_matrix = warp(moving_image, inverse_map=inv(mtx))
-    corr = np.corrcoef(registered.ravel(),
-                       registered_by_matrix.ravel(),
-                       rowvar=False)[0, 1]
+    corr = np.corrcoef(registered.ravel(), registered_by_matrix.ravel(), rowvar=False)[
+        0, 1
+    ]
     assert corr > 0.99  # 동일한 변환인지 확인
 
     registered_by_fn = fn(moving_image)
-    corr2 = np.corrcoef(registered.ravel(),
-                        registered_by_fn.ravel(),
-                        rowvar=False)[0, 1]
+    corr2 = np.corrcoef(registered.ravel(), registered_by_fn.ravel(), rowvar=False)[
+        0, 1
+    ]
     assert corr2 > 0.99
 
 

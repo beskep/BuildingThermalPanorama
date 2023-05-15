@@ -7,8 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import entropy as calculate_entropy
 
-from pano.misc.tools import bin_size
-from pano.misc.tools import normalize_image
+from pano.misc.tools import bin_size, normalize_image
 
 
 def _check_shape(image1: np.ndarray, image2: np.ndarray):
@@ -96,8 +95,7 @@ def compute_ncc(image1: np.ndarray, image2: np.ndarray):
 
   img1 = image1 - np.average(image1)
   img2 = image2 - np.average(image2)
-  ncc = (np.sum(img1 * img2) /
-         np.sqrt(np.sum(np.square(img1)) * np.sum(np.square(img2))))
+  ncc = np.sum(img1 * img2) / np.sqrt(np.sum(np.square(img1)) * np.sum(np.square(img2)))
 
   return ncc
 
@@ -138,11 +136,13 @@ class MutualInformation:
   with Deep Learning (pp. 527-543). PMLR.
   """
 
-  def __init__(self,
-               image1: np.ndarray,
-               image2: np.ndarray,
-               bins: Union[int, str] = 'auto',
-               base=2) -> None:
+  def __init__(
+      self,
+      image1: np.ndarray,
+      image2: np.ndarray,
+      bins: Union[int, str] = 'auto',
+      base=2,
+  ) -> None:
     _check_shape(image1, image2)
 
     self._image1 = image1
@@ -188,9 +188,9 @@ class MutualInformation:
     np.ndarray
         Joint histogram (shape: (bins, bins))
     """
-    return np.histogram2d(x=self._image1.ravel(),
-                          y=self._image2.ravel(),
-                          bins=self._bins)[0]
+    return np.histogram2d(
+        x=self._image1.ravel(), y=self._image2.ravel(), bins=self._bins
+    )[0]
 
   @cached_property
   def joint_entropy(self) -> float:
@@ -268,16 +268,16 @@ class MutualInformation:
 
     axes[0].set_title(f'Image 1 | entropy: {self.image1_entropy:.3f}')
     axes[1].set_title(f'Image 2 | entropy: {self.image2_entropy:.3f}')
-    axes[2].set_title(f'Entropy: {self.joint_entropy:.3f} | '
-                      f'MI: {self.mutual_information:.3f}')
+    axes[2].set_title(
+        f'Entropy: {self.joint_entropy:.3f} | MI: {self.mutual_information:.3f}'
+    )
 
     return fig, axes
 
 
-def calculate_all_metrics(image1: np.ndarray,
-                          image2: np.ndarray,
-                          bins: Union[int, str] = 'auto',
-                          base=2) -> dict:
+def calculate_all_metrics(
+    image1: np.ndarray, image2: np.ndarray, bins: Union[int, str] = 'auto', base=2
+) -> dict:
   """
   지원하는 모든 metric을 계산
 

@@ -20,8 +20,7 @@ def exiftool(*args) -> bytes:
   return sp.check_output(list(map(str, args)), stderr=sp.DEVNULL)
 
 
-def get_exif(files: str | list[str],
-             tags: Iterable[str] | None = None) -> list[dict]:
+def get_exif(files: str | list[str], tags: Iterable[str] | None = None) -> list[dict]:
   """
   촬영 파일로부터 Exif tag 추출
 

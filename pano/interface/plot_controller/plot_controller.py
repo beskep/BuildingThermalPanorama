@@ -1,15 +1,14 @@
 from collections.abc import Iterable
 from typing import Optional
 
+import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
-import numpy as np
 
 from pano.interface.common.pano_files import ThermalPanoramaFileManager
 from pano.interface.mbq import FigureCanvas
 from pano.interface.mbq import NavigationToolbar2QtQuick as NavToolbar
-from pano.interface.mbq import QtCore
-from pano.interface.mbq import QtGui
+from pano.interface.mbq import QtCore, QtGui
 
 _DIRS = ('bottom', 'top', 'left', 'right')
 TICK_PARAMS = {key: False for key in _DIRS + tuple('label' + x for x in _DIRS)}

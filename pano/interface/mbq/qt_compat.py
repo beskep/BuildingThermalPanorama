@@ -16,9 +16,9 @@ Support for PyQt4 is deprecated.
 """
 # pylint: disable-all
 
-from distutils.version import LooseVersion
 import os
 import sys
+from distutils.version import LooseVersion
 
 import matplotlib as mpl
 
@@ -35,7 +35,7 @@ _ETS = {
     "pyside2": QT_API_PYSIDE2,
     "pyqt": QT_API_PYQTv2,
     "pyside": QT_API_PYSIDE,
-    None: None
+    None: None,
 }
 # First, check if anything is already imported.
 if "PyQt5.QtCore" in sys.modules:
@@ -68,36 +68,29 @@ else:
     raise RuntimeError(
         "The environment variable QT_API has the unrecognized value {!r};"
         "valid values are 'pyqt5', 'pyside2', 'pyqt', and "
-        "'pyside'") from err
+        "'pyside'"
+    ) from err
 
 
 def _setup_pyqt5():
-  global QtCore, QtGui, QtWidgets, QtQuick, QtQml, __version__, is_pyqt5, \
-      _isdeleted, _devicePixelRatio, _setDevicePixelRatio, _getSaveFileName
+  global QtCore, QtGui, QtWidgets, QtQuick, QtQml, __version__, is_pyqt5, _isdeleted, _devicePixelRatio, _setDevicePixelRatio, _getSaveFileName
 
   if QT_API == QT_API_PYQT5:
-    from PyQt5 import QtCore
-    from PyQt5 import QtGui
-    from PyQt5 import QtQml
-    from PyQt5 import QtQuick
-    from PyQt5 import QtWidgets
     import sip
+    from PyQt5 import QtCore, QtGui, QtQml, QtQuick, QtWidgets
+
     __version__ = QtCore.PYQT_VERSION_STR
     QtCore.Signal = QtCore.pyqtSignal
     QtCore.Slot = QtCore.pyqtSlot
     QtCore.Property = QtCore.pyqtProperty
     _isdeleted = sip.isdeleted
   elif QT_API == QT_API_PYSIDE2:
-    from PySide2 import __version__
-    from PySide2 import QtCore
-    from PySide2 import QtGui
-    from PySide2 import QtQml
-    from PySide2 import QtQuick
-    from PySide2 import QtWidgets
     import shiboken2
+    from PySide2 import QtCore, QtGui, QtQml, QtQuick, QtWidgets, __version__
 
     def _isdeleted(obj):
       return not shiboken2.isValid(obj)
+
   else:
     raise ValueError("Unexpected value for the 'backend.qt5' rcparam")
   _getSaveFileName = QtWidgets.QFileDialog.getSaveFileName
@@ -114,17 +107,20 @@ def _setup_pyqt5():
 
 
 def _setup_pyqt4():
-  global QtCore, QtGui, QtWidgets, __version__, is_pyqt5, \
-      _isdeleted, _devicePixelRatio, _setDevicePixelRatio, _getSaveFileName
+  global QtCore, QtGui, QtWidgets, __version__, is_pyqt5, _isdeleted, _devicePixelRatio, _setDevicePixelRatio, _getSaveFileName
 
   def _setup_pyqt4_internal(api):
-    global QtCore, QtGui, QtWidgets, \
-        __version__, is_pyqt5, _isdeleted, _getSaveFileName
+    global QtCore, QtGui, QtWidgets, __version__, is_pyqt5, _isdeleted, _getSaveFileName
     # List of incompatible APIs:
     # http://pyqt.sourceforge.net/Docs/PyQt4/incompatible_apis.html
     _sip_apis = [
-        "QDate", "QDateTime", "QString", "QTextStream", "QTime", "QUrl",
-        "QVariant"
+        "QDate",
+        "QDateTime",
+        "QString",
+        "QTextStream",
+        "QTime",
+        "QUrl",
+        "QVariant",
     ]
     try:
       import sip
@@ -136,9 +132,9 @@ def _setup_pyqt4():
           sip.setapi(_sip_api, api)
         except ValueError:
           pass
-    from PyQt4 import QtCore
-    from PyQt4 import QtGui
     import sip  # Always succeeds *after* importing PyQt4.
+    from PyQt4 import QtCore, QtGui
+
     __version__ = QtCore.PYQT_VERSION_STR
     # PyQt 4.6 introduced getSaveFileNameAndFilter:
     # https://riverbankcomputing.com/news/pyqt-46
@@ -153,11 +149,8 @@ def _setup_pyqt4():
   if QT_API == QT_API_PYQTv2:
     _setup_pyqt4_internal(api=2)
   elif QT_API == QT_API_PYSIDE:
-    from PySide import __version__
-    from PySide import __version_info__
-    from PySide import QtCore
-    from PySide import QtGui
     import shiboken
+    from PySide import QtCore, QtGui, __version__, __version_info__
 
     # PySide 1.0.3 fixed the following:
     # https://srinikom.github.io/pyside-bz-archive/809.html
@@ -190,13 +183,21 @@ elif QT_API in [QT_API_PYQTv2, QT_API_PYSIDE, QT_API_PYQT]:
   _setup_pyqt4()
 elif QT_API is None:
   if mpl.rcParams["backend"] == "Qt4Agg":
-    _candidates = [(_setup_pyqt4, QT_API_PYQTv2), (_setup_pyqt4, QT_API_PYSIDE),
-                   (_setup_pyqt4, QT_API_PYQT), (_setup_pyqt5, QT_API_PYQT5),
-                   (_setup_pyqt5, QT_API_PYSIDE2)]
+    _candidates = [
+        (_setup_pyqt4, QT_API_PYQTv2),
+        (_setup_pyqt4, QT_API_PYSIDE),
+        (_setup_pyqt4, QT_API_PYQT),
+        (_setup_pyqt5, QT_API_PYQT5),
+        (_setup_pyqt5, QT_API_PYSIDE2),
+    ]
   else:
-    _candidates = [(_setup_pyqt5, QT_API_PYQT5), (_setup_pyqt5, QT_API_PYSIDE2),
-                   (_setup_pyqt4, QT_API_PYQTv2), (_setup_pyqt4, QT_API_PYSIDE),
-                   (_setup_pyqt4, QT_API_PYQT)]
+    _candidates = [
+        (_setup_pyqt5, QT_API_PYQT5),
+        (_setup_pyqt5, QT_API_PYSIDE2),
+        (_setup_pyqt4, QT_API_PYQTv2),
+        (_setup_pyqt4, QT_API_PYSIDE),
+        (_setup_pyqt4, QT_API_PYQT),
+    ]
   for _setup, QT_API in _candidates:
     try:
       _setup()
@@ -209,10 +210,12 @@ else:  # We should not get there.
   raise AssertionError("Unexpected QT_API: {}".format(QT_API))
 
 # These globals are only defined for backcompatibility purposes.
-ETS = dict(pyqt=(QT_API_PYQTv2, 4),
-           pyside=(QT_API_PYSIDE, 4),
-           pyqt5=(QT_API_PYQT5, 5),
-           pyside2=(QT_API_PYSIDE2, 5))
+ETS = dict(
+    pyqt=(QT_API_PYQTv2, 4),
+    pyside=(QT_API_PYSIDE, 4),
+    pyqt5=(QT_API_PYQT5, 5),
+    pyside2=(QT_API_PYSIDE2, 5),
+)
 QT_RC_MAJOR_VERSION = 5 if is_pyqt5() else 4
 
 if not is_pyqt5():

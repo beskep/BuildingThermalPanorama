@@ -1,7 +1,7 @@
 from typing import Iterable
 
-from loguru import logger
 import numpy as np
+from loguru import logger
 from numpy.typing import NDArray
 from sklearn.mixture import GaussianMixture
 
@@ -24,9 +24,9 @@ def gaussian_mixture(array: NDArray, ks: Iterable[int], **kwargs):
   return model, mask
 
 
-def anomaly_threshold(array: NDArray,
-                      kmax=8,
-                      **kwargs) -> tuple[float, GaussianMixture]:
+def anomaly_threshold(
+    array: NDArray, kmax=8, **kwargs
+) -> tuple[float, GaussianMixture]:
   """
   Kim, C., Choi, J.-S., Jang, H., & Kim, E.-J. (2021).
   Automatic Detection of Linear Thermal Bridges from Infrared Thermal Images
@@ -44,9 +44,9 @@ def anomaly_threshold(array: NDArray,
   tuple[float, GaussianMixture]
       anomaly threshold, model
   """
-  model, mask = gaussian_mixture(array.reshape([-1, 1]),
-                                 ks=range(2, kmax + 1),
-                                 **kwargs)
+  model, mask = gaussian_mixture(
+      array.reshape([-1, 1]), ks=range(2, kmax + 1), **kwargs
+  )
   counts = [np.sum(mask == i) for i in range(model.n_components)]
   ref = int(np.argmax(counts))  # 면적이 가장 많은 군집
   threshold = float(np.max(array.ravel()[mask == ref]))

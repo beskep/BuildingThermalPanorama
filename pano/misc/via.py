@@ -1,7 +1,7 @@
 """VGG Image Annotator (VIA)의 프로젝트 저장 결과로부터 annotation 해석"""
 
-from collections import defaultdict
 import json
+from collections import defaultdict
 from pathlib import Path
 from typing import List, Tuple, Union
 from warnings import warn
@@ -119,11 +119,12 @@ class VIAProject:
 
     for rclass, rshape in self.regions(fname.name):
       class_count[rclass] += 1
-      mask = draw_mask(shape=shape,
-                       rows=rshape['all_points_y'],
-                       cols=rshape['all_points_x'])
+      mask = draw_mask(
+          shape=shape, rows=rshape['all_points_y'], cols=rshape['all_points_x']
+      )
       mask = mask.astype('uint8') * 255
 
       path = save_dir.joinpath(
-          f'{fname.stem}_{rclass}_{class_count[rclass]}').with_suffix('.png')
+          f'{fname.stem}_{rclass}_{class_count[rclass]}'
+      ).with_suffix('.png')
       imsave(fname=path.as_posix(), arr=mask, check_contrast=False)

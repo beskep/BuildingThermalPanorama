@@ -31,9 +31,7 @@ def remove_outliers(data: np.ndarray, k=1.5):
   return data[~mask]
 
 
-def image_outlier_map(image: np.ndarray,
-                      label: Optional[np.ndarray] = None,
-                      k=1.5):
+def image_outlier_map(image: np.ndarray, label: Optional[np.ndarray] = None, k=1.5):
   if label is None:
     label = np.zeros_like(image, dtype=int)
   else:

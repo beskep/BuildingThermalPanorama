@@ -1,27 +1,21 @@
 from pathlib import Path
 from typing import Optional
 
+import numpy as np
 from loguru import logger
 from matplotlib.axes import Axes
-from matplotlib.backend_bases import MouseButton
-from matplotlib.backend_bases import MouseEvent
-import numpy as np
+from matplotlib.backend_bases import MouseButton, MouseEvent
 from skimage import transform
 from skimage.exposure import equalize_hist
 
-from pano.interface.common.pano_files import DIR
-from pano.interface.common.pano_files import FN
-from pano.interface.common.pano_files import SP
+from pano.interface.common.pano_files import DIR, FN, SP
 from pano.interface.mbq import FigureCanvas
 from pano.misc import tools
 from pano.misc.imageio import ImageIO as IIO
 from pano.misc.tools import INTRP
 
-from .egs import MousePoints
-from .egs import NavigationToolbar
-from .plot_controller import PanoPlotController
-from .plot_controller import QtGui
-from .plot_controller import TICK_PARAMS
+from .egs import MousePoints, NavigationToolbar
+from .plot_controller import TICK_PARAMS, PanoPlotController, QtGui
 
 
 def _rename_file(p0: Path, p1: Path):
@@ -121,7 +115,9 @@ class RegistrationPlotController(PanoPlotController):
             image.shape[x],
             num=self._GRID_COUNTS[x],
             endpoint=True,
-        ) for x in range(2))
+        )
+        for x in range(2)
+    )
 
     self.axes[0, 0].set_xticks(ticks[1])
     self.axes[0, 0].set_yticks(ticks[0])
@@ -139,9 +135,9 @@ class RegistrationPlotController(PanoPlotController):
     self.reset()
 
     if fixed_image.shape[:2] != moving_image.shape[:2]:
-      moving_image = transform.resize(moving_image,
-                                      output_shape=fixed_image.shape[:2],
-                                      anti_aliasing=True)
+      moving_image = transform.resize(
+          moving_image, output_shape=fixed_image.shape[:2], anti_aliasing=True
+      )
 
     self._images = (fixed_image, moving_image)
     self.axes[0, 0].imshow(equalize_hist(fixed_image))
@@ -191,16 +187,20 @@ class RegistrationPlotController(PanoPlotController):
   def _plot_registered(self, matrix):
     assert self._images is not None
 
-    registered = transform.warp(image=self._images[1],
-                                inverse_map=matrix,
-                                output_shape=self._images[0].shape[:2],
-                                preserve_range=True)
+    registered = transform.warp(
+        image=self._images[1],
+        inverse_map=matrix,
+        output_shape=self._images[0].shape[:2],
+        preserve_range=True,
+    )
 
-    cb, diff = tools.prep_compare_images(image1=self._images[0],
-                                         image2=registered,
-                                         norm=True,
-                                         eq_hist=True,
-                                         method=['checkerboard', 'diff'])
+    cb, diff = tools.prep_compare_images(
+        image1=self._images[0],
+        image2=registered,
+        norm=True,
+        eq_hist=True,
+        method=['checkerboard', 'diff'],
+    )
 
     self.axes[1, 0].imshow(cb)
     self.axes[1, 1].imshow(diff)
@@ -254,14 +254,16 @@ class RegistrationPlotController(PanoPlotController):
     # seg 저장
     shape = self._images[0].shape[:2]
     trsf = transform.ProjectiveTransform(matrix=self._matrix)
-    seg_resized = transform.resize(IIO.read(seg_unrgst),
-                                   order=INTRP.NearestNeighbor,
-                                   output_shape=shape)
-    seg_rgst = transform.warp(image=seg_resized,
-                              inverse_map=trsf.inverse,
-                              output_shape=shape,
-                              order=INTRP.NearestNeighbor,
-                              preserve_range=True)
+    seg_resized = transform.resize(
+        IIO.read(seg_unrgst), order=INTRP.NearestNeighbor, output_shape=shape
+    )
+    seg_rgst = transform.warp(
+        image=seg_resized,
+        inverse_map=trsf.inverse,
+        output_shape=shape,
+        order=INTRP.NearestNeighbor,
+        preserve_range=True,
+    )
     IIO.save(path=seg, array=tools.uint8_image(seg_rgst))
 
   def save(self, panorama: bool):

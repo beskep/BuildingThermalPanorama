@@ -3,8 +3,8 @@ from itertools import product
 from pathlib import Path
 from typing import Callable, List
 
-from loguru import logger
 import pandas as pd
+from loguru import logger
 from rich.progress import Progress
 from skimage.exposure import rescale_intensity
 from skimage.io import imsave
@@ -17,17 +17,20 @@ from ._evaluation import BaseEvaluation
 
 class SITKEvaluation(BaseEvaluation):
 
-  def __init__(self,
-               case_names: list,
-               fixed_files: list,
-               moving_files: list,
-               fixed_prep: Callable,
-               moving_prep: Callable,
-               save_fig=False) -> None:
+  def __init__(
+      self,
+      case_names: list,
+      fixed_files: list,
+      moving_files: list,
+      fixed_prep: Callable,
+      moving_prep: Callable,
+      save_fig=False,
+  ) -> None:
     self._fixed_prep = None
     self._moving_prep = None
-    super().__init__(case_names, fixed_files, moving_files, fixed_prep,
-                     moving_prep, save_fig)
+    super().__init__(
+        case_names, fixed_files, moving_files, fixed_prep, moving_prep, save_fig
+    )
     self._registrator = rsitk.SITKRegistrator()
 
   @property
@@ -48,8 +51,7 @@ class SITKEvaluation(BaseEvaluation):
     total = len(self._cases) * len(trsfs) * len(metric_opts) * len(preps)
 
     logger.info('Number of files: {}', len(self._cases))
-    logger.info('Number of parameters: {}',
-                len(trsfs) * len(metric_opts) * len(preps))
+    logger.info('Number of parameters: {}', len(trsfs) * len(metric_opts) * len(preps))
     logger.info('Number of total cases: {}', total)
 
     save_image = kwargs.get('save_image', False)
@@ -69,11 +71,9 @@ class SITKEvaluation(BaseEvaluation):
         mf = self._moving_files[iidx]
 
         try:
-          fi, mi = self.execute_once(case=case,
-                                     ff=ff,
-                                     mf=mf,
-                                     df=df,
-                                     output_dir=output_dir)
+          fi, mi = self.execute_once(
+              case=case, ff=ff, mf=mf, df=df, output_dir=output_dir
+          )
         except (RuntimeError, ValueError, TypeError) as e:
           logger.error(f'FAIL: {case}')
           # fi, mi = None, None
@@ -90,21 +90,21 @@ class SITKEvaluation(BaseEvaluation):
 
         if save_image and mi is not None:
           img_file = [
-              f'{value[-1]}' for key, value in df.items()
-              if key.startswith('param')
+              f'{value[-1]}' for key, value in df.items() if key.startswith('param')
           ]
           img_file = case + '_' + '_'.join(img_file) + '.jpg'
 
-          ci = compare_images(fi.prep_image,
-                              mi.registered_prep_image,
-                              method='diff')
+          ci = compare_images(fi.prep_image, mi.registered_prep_image, method='diff')
           imsave(
               output_dir.joinpath(img_file).as_posix(),
-              rescale_intensity(ci, out_range='uint8'))
+              rescale_intensity(ci, out_range='uint8'),
+          )
 
         progress.advance(task)
 
     df = pd.DataFrame(df)
-    df.to_csv(output_dir.joinpath(fname).with_suffix('.csv'),
-              index=False,
-              encoding='utf-8-sig')
+    df.to_csv(
+        output_dir.joinpath(fname).with_suffix('.csv'),
+        index=False,
+        encoding='utf-8-sig',
+    )

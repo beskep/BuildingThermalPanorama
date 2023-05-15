@@ -42,7 +42,8 @@ def test_correct_emissivity(image, e0, e1):
   assert not np.isclose(ir0, ir1).any()
 
   corrected = FlirExtractor.correct_emissivity(
-      ir0, meta=extractor.meta, signal_reflected=signal_reflected, e0=e0, e1=e1)
+      ir0, meta=extractor.meta, signal_reflected=signal_reflected, e0=e0, e1=e1
+  )
 
   mask = np.isnan(corrected)
 

@@ -8,23 +8,28 @@ from pano.interface.common.init import init_project
 
 init_project(qt=False)
 
-commands = {
-    'init', 'extract', 'register', 'segment', 'panorama', 'correct', 'run'
-}
+commands = {'init', 'extract', 'register', 'segment', 'panorama', 'correct', 'run'}
 
 
 @click.command(context_settings=dict(help_option_names=['-h', '--help']))
 @click.argument('path', required=True)
 @click.argument('command', default='run')
 @click.option('--default', is_flag=True, help='기본 설정 사용')
-@click.option('--config',
-              help='설정 파일 경로',
-              type=click.Path(exists=True, dir_okay=False))
+@click.option(
+    '--config', help='설정 파일 경로', type=click.Path(exists=True, dir_okay=False)
+)
 @click.option('--debug', is_flag=True, help='디버그 메세지 출력')
 @click.option('--raise', 'flag_raise', is_flag=True)
 @click.option('-l', '--loglevel', default=20, help='로깅 레벨')
-def cli(path: str, command: str, config: str, default: bool, debug: bool,
-        flag_raise: bool, loglevel: int):
+def cli(
+    path: str,
+    command: str,
+    config: str,
+    default: bool,
+    debug: bool,
+    flag_raise: bool,
+    loglevel: int,
+):
   """
   PATH: 대상 프로젝트 경로
 

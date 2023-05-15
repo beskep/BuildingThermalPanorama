@@ -1,30 +1,32 @@
-from contextlib import suppress
 import json
 import multiprocessing as mp
+from contextlib import suppress
 from pathlib import Path
 from typing import Optional
 
-from loguru import logger
 import numpy as np
-from omegaconf import DictConfig
-from omegaconf import OmegaConf
+from loguru import logger
+from omegaconf import DictConfig, OmegaConf
 
+import pano.interface.controller.controller as con
 from pano.interface import analysis
 from pano.interface import plot_controller as pc
 from pano.interface.common import pano_files as pf
 from pano.interface.common.config import update_config
-from pano.interface.common.pano_files import DIR
-from pano.interface.common.pano_files import SP
-import pano.interface.controller.controller as con
-from pano.interface.mbq import QtCore
-from pano.interface.mbq import QtGui
+from pano.interface.common.pano_files import DIR, SP
+from pano.interface.mbq import QtCore, QtGui
 from pano.interface.tree import tree_string
 from pano.misc.imageio import ImageIO as IIO
 
 
-def _save_manual_correction(queue: mp.Queue, wd: str, subdir: str,
-                            viewing_angle: float, angles: tuple,
-                            crop_range: Optional[np.ndarray]):
+def _save_manual_correction(
+    queue: mp.Queue,
+    wd: str,
+    subdir: str,
+    viewing_angle: float,
+    angles: tuple,
+    crop_range: Optional[np.ndarray],
+):
   try:
     pc.save_manual_correction(wd, subdir, viewing_angle, angles, crop_range)
   except (ValueError, RuntimeError, OSError) as e:
@@ -34,8 +36,9 @@ def _save_manual_correction(queue: mp.Queue, wd: str, subdir: str,
   queue.put(1.0)
 
 
-def _segments(flag_count: bool, seg_count: int, seg_length: float,
-              building_width: float) -> int:
+def _segments(
+    flag_count: bool, seg_count: int, seg_length: float, building_width: float
+) -> int:
   if flag_count:
     segments = seg_count
   elif np.isnan(building_width):
@@ -69,7 +72,7 @@ class Controller(QtCore.QObject):
       'register': '열화상-실화상 정합',
       'segment': '외피 부위 인식',
       'panorama': '파노라마 생성',
-      'correct': '왜곡 보정'
+      'correct': '왜곡 보정',
   }
 
   def __init__(self, win: QtGui.QWindow, loglevel=20) -> None:
@@ -133,7 +136,8 @@ class Controller(QtCore.QObject):
     for controller in self.pc.controllers():
       controller.fm = self._fm
     self.pc.analysis.show_point_temperature = lambda x: self.win.panel_funtion(
-        'analysis', 'show_point_temperature', x)
+        'analysis', 'show_point_temperature', x
+    )
 
     self.win.update_config(self._config)
 
@@ -173,7 +177,8 @@ class Controller(QtCore.QObject):
     def _done():
       if command in ('panorama', 'correct'):
         self.pc.panorama.plot(
-            d=(DIR.PANO if command == 'panorama' else DIR.COR), sp=SP.IR)
+            d=(DIR.PANO if command == 'panorama' else DIR.COR), sp=SP.IR
+        )
         self.win.panel_funtion('panorama', 'reset')
       elif command == 'register':
         self.pc.registration.reset()
@@ -190,9 +195,11 @@ class Controller(QtCore.QObject):
     self._consumer.done.connect(_done)
     self._consumer.start()
 
-    process = mp.Process(name=command,
-                         target=con.producer,
-                         args=(queue, self._wd, command, self._loglevel))
+    process = mp.Process(
+        name=command,
+        target=con.producer,
+        args=(queue, self._wd, command, self._loglevel),
+    )
     process.start()
 
   @QtCore.Slot(str)
@@ -224,8 +231,7 @@ class Controller(QtCore.QObject):
 
       # 실화상 blend 설정 변경
       blend_type = 'feather' if separate else 'no'
-      vis_blend = OmegaConf.from_dotlist(
-          [f'panorama.blend.type.VIS={blend_type}'])
+      vis_blend = OmegaConf.from_dotlist([f'panorama.blend.type.VIS={blend_type}'])
 
     if 'output' in config1:
       self.pc.output.configure(config1['output'])
@@ -238,8 +244,7 @@ class Controller(QtCore.QObject):
     exts = {'.npy', '.jpg', '.png', '.webp'}
     for d in (DIR.SEG, DIR.PANO, DIR.COR):
       files = [
-          x for x in self.fm.glob(d, '*')
-          if x.is_file() and x.suffix.lower() in exts
+          x for x in self.fm.glob(d, '*') if x.is_file() and x.suffix.lower() in exts
       ]
       logger.debug('delete files in {}: {}', d, [x.name for x in files])
 
@@ -251,8 +256,7 @@ class Controller(QtCore.QObject):
       pc.reset()
       pc.draw()
 
-  def update_image_view(self,
-                        panels=('project', 'registration', 'segmentation')):
+  def update_image_view(self, panels=('project', 'registration', 'segmentation')):
     raw_files = [con.path2uri(x) for x in self.fm.raw_files()]
     if not raw_files:
       logger.debug('no files')
@@ -307,8 +311,7 @@ class Controller(QtCore.QObject):
     path = con.uri2path(url)
 
     try:
-      self.pc.segmentation.plot(path,
-                                separate=self._config['panorama']['separate'])
+      self.pc.segmentation.plot(path, separate=self._config['panorama']['separate'])
     except FileNotFoundError:
       self.win.popup('Error', '부위 인식 결과가 없습니다.')
       logger.warning('File not found: {}', path)
@@ -367,8 +370,14 @@ class Controller(QtCore.QObject):
 
     pano = self.pc.panorama
     assert self._wd is not None
-    args = (queue, self._wd.as_posix(), pano.subdir, pano.viewing_angle,
-            (roll, pitch, yaw), pano.crop_range())
+    args = (
+        queue,
+        self._wd.as_posix(),
+        pano.subdir,
+        pano.viewing_angle,
+        (roll, pitch, yaw),
+        pano.crop_range(),
+    )
     process = mp.Process(name='save', target=_save_manual_correction, args=args)
     process.start()
 
@@ -385,8 +394,9 @@ class Controller(QtCore.QObject):
       return
 
     # XXX 해상도 낮추기?
-    self.pc.registration.set_images(fixed_image=IIO.read(ir),
-                                    moving_image=IIO.read(vis))
+    self.pc.registration.set_images(
+        fixed_image=IIO.read(ir), moving_image=IIO.read(vis)
+    )
     self.pc.registration.draw()
 
   @QtCore.Slot(bool, bool, bool, bool)
@@ -406,8 +416,11 @@ class Controller(QtCore.QObject):
       logger.exception(e)
       self.win.popup('Error', str(e))
     else:
-      self.win.panel_funtion('analysis', 'set_temperature_range',
-                             *self.pc.analysis.images.temperature_range())
+      self.win.panel_funtion(
+          'analysis',
+          'set_temperature_range',
+          *self.pc.analysis.images.temperature_range(),
+      )
       self._analysis_summarize()
 
   @QtCore.Slot(bool)
@@ -463,16 +476,21 @@ class Controller(QtCore.QObject):
     self.pc.analysis.correction_params.e_wall = wall
     self.pc.analysis.correction_params.e_window = window
 
-    self.win.panel_funtion('analysis', 'set_temperature_range',
-                           *self.pc.analysis.images.temperature_range())
+    self.win.panel_funtion(
+        'analysis',
+        'set_temperature_range',
+        *self.pc.analysis.images.temperature_range(),
+    )
 
   @QtCore.Slot(float)
   def analysis_correct_temperature(self, temperature):
     try:
-      ir, delta = analysis.correct_temperature(ir=self.pc.analysis.images.ir,
-                                               mask=self.pc.analysis.images.seg,
-                                               coord=self.pc.analysis.coord,
-                                               T1=temperature)
+      ir, delta = analysis.correct_temperature(
+          ir=self.pc.analysis.images.ir,
+          mask=self.pc.analysis.images.seg,
+          coord=self.pc.analysis.coord,
+          T1=temperature,
+      )
     except ValueError as e:
       logger.exception(e)
       self.win.popup('Error', str(e))
@@ -481,8 +499,11 @@ class Controller(QtCore.QObject):
       self.pc.analysis.correction_params.delta_temperature = delta
 
       self.win.panel_funtion('analysis', 'show_point_temperature', temperature)
-      self.win.panel_funtion('analysis', 'set_temperature_range',
-                             *self.pc.analysis.images.temperature_range())
+      self.win.panel_funtion(
+          'analysis',
+          'set_temperature_range',
+          *self.pc.analysis.images.temperature_range(),
+      )
 
   @QtCore.Slot(float, float)
   def analysis_set_teti(self, te, ti):
@@ -496,10 +517,7 @@ class Controller(QtCore.QObject):
   def _analysis_summarize(self):
     self.win.panel_funtion('analysis', 'clear_table')
     for cls, summary in self.pc.analysis.images.summarize().items():
-      row = {
-          k: (v if isinstance(v, str) else f'{v:.2f}')
-          for k, v in summary.items()
-      }
+      row = {k: v if isinstance(v, str) else f'{v:.2f}' for k, v in summary.items()}
       row['class'] = cls
       self.win.panel_funtion('analysis', 'add_table_row', row)
 
@@ -552,10 +570,12 @@ class Controller(QtCore.QObject):
   @QtCore.Slot(bool, int, float, float)
   def output_save(self, flag_count, seg_count, seg_length, building_width):
     try:
-      segments = _segments(flag_count=flag_count,
-                           seg_count=seg_count,
-                           seg_length=seg_length,
-                           building_width=building_width)
+      segments = _segments(
+          flag_count=flag_count,
+          seg_count=seg_count,
+          seg_length=seg_length,
+          building_width=building_width,
+      )
     except ValueError as e:
       logger.exception(e)
       self.win.popup('Error', str(e))
@@ -563,7 +583,12 @@ class Controller(QtCore.QObject):
 
     logger.debug(
         'flag_count={} | count={} | length={} | width={} | segments={}',
-        flag_count, seg_count, seg_length, building_width, segments)
+        flag_count,
+        seg_count,
+        seg_length,
+        building_width,
+        segments,
+    )
 
     if not segments:
       return

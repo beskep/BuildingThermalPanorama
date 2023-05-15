@@ -1,18 +1,19 @@
-from loguru import logger
-from matplotlib import gridspec
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
+from loguru import logger
+from matplotlib import gridspec
 from skimage import draw
 
 from pano import utils
-from pano.interface.plot_controller.output import _edgelets_between_edgelets
-from pano.interface.plot_controller.output import _suppress_edgelets
-from pano.interface.plot_controller.output import extend_lines
+from pano.interface.plot_controller.output import (
+    _edgelets_between_edgelets,
+    _suppress_edgelets,
+    extend_lines,
+)
 from pano.misc import edgelet
 from pano.misc.imageio import ImageIO as IIO
-from pano.misc.tools import normalize_image
-from pano.misc.tools import SegMask
+from pano.misc.tools import SegMask, normalize_image
 
 DIR = utils.DIR.RESOURCE / 'TestImage'
 cmap = sns.color_palette('Dark2')
@@ -67,10 +68,12 @@ class WindowLine:
 
   def is_window_line(self, xs, ys):
     # edgelet이 지나는 좌표
-    lxs, lys = draw.line(r0=self.clip(ys[0], 1),
-                         c0=self.clip(xs[0], 0),
-                         r1=self.clip(ys[1], 1),
-                         c1=self.clip(xs[1], 0))
+    lxs, lys = draw.line(
+        r0=self.clip(ys[0], 1),
+        c0=self.clip(xs[0], 0),
+        r1=self.clip(ys[1], 1),
+        c1=self.clip(xs[1], 0),
+    )
 
     pixels = self.mask[lxs, lys]
     wall = np.sum(pixels == SegMask.WALL)
@@ -84,7 +87,8 @@ def draw_edgelets(
     ax: plt.Axes,
     wl: WindowLine,
     # color=None,
-    extend=False):
+    extend=False,
+):
   arr = _pnts_arr(edgelets)
   lim = dict(xlim=ax.get_xlim(), ylim=ax.get_ylim())
 
@@ -111,7 +115,7 @@ def example(path, img_cmap='gray'):
   axes = [
       fig.add_subplot(gs[0, 0]),
       fig.add_subplot(gs[0, 1]),
-      fig.add_subplot(gs[1, :])
+      fig.add_subplot(gs[1, :]),
   ]
 
   axes[0].imshow(image, cmap=img_cmap)
@@ -128,13 +132,12 @@ def example(path, img_cmap='gray'):
 
 
 if __name__ == '__main__':
-  sns.set_theme(context='talk',
-                style='white',
-                font='Source Han Sans KR',
-                rc={
-                    'figure.figsize': [16, 9],
-                    'savefig.dpi': 300
-                })
+  sns.set_theme(
+      context='talk',
+      style='white',
+      font='Source Han Sans KR',
+      rc={'figure.figsize': [16, 9], 'savefig.dpi': 300},
+  )
 
   path = DIR / 'floor-detection2.png'
 

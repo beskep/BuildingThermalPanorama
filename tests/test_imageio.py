@@ -17,24 +17,20 @@ class TestImageIO:
     path = Path(directory).joinpath(self.fname)
     exts = ['.npy', '.csv', '.png']
 
-    ImageIO.save_with_meta(path=path,
-                           array=self.arr,
-                           exts=exts,
-                           meta=self.meta,
-                           dtype='uint16')
+    ImageIO.save_with_meta(
+        path=path, array=self.arr, exts=exts, meta=self.meta, dtype='uint16'
+    )
 
     for ext in exts:
       assert path.with_suffix(ext).exists()
 
-    meta_path = path.with_name(
-        f'{path.stem}{ImageIO.META_SUFFIX}{ImageIO.META_EXT}')
+    meta_path = path.with_name(f'{path.stem}{ImageIO.META_SUFFIX}{ImageIO.META_EXT}')
     assert meta_path.exists()
 
   def read_image(self, directory):
     path = Path(directory).joinpath(self.fname)
 
-    img_npy, meta = ImageIO.read_with_meta(path.with_suffix('.npy'),
-                                           scale=False)
+    img_npy, meta = ImageIO.read_with_meta(path.with_suffix('.npy'), scale=False)
     assert self.arr == pytest.approx(img_npy)
     assert meta is not None
 

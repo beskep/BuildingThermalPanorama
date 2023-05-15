@@ -3,12 +3,8 @@ import traceback
 
 import matplotlib
 from matplotlib import cbook
-from matplotlib.backend_bases import FigureCanvasBase
-from matplotlib.backend_bases import MouseButton
-from matplotlib.backend_bases import NavigationToolbar2
-from matplotlib.backends.backend_qt5 import cursord
-from matplotlib.backends.backend_qt5 import SPECIAL_KEYS
-from matplotlib.backends.backend_qt5 import TimerQT
+from matplotlib.backend_bases import FigureCanvasBase, MouseButton, NavigationToolbar2
+from matplotlib.backends.backend_qt5 import SPECIAL_KEYS, TimerQT, cursord
 from matplotlib.figure import Figure
 
 try:
@@ -16,20 +12,15 @@ try:
 except ImportError:
   from matplotlib.backends.backend_qt import _MODIFIER_KEYS as MODIFIER_KEYS
 
-from .qt_compat import QT_API
-from .qt_compat import QT_API_PYSIDE2
-from .qt_compat import QtCore
-from .qt_compat import QtGui
-from .qt_compat import QtQuick
-from .qt_compat import QtWidgets
+from .qt_compat import QT_API, QT_API_PYSIDE2, QtCore, QtGui, QtQuick, QtWidgets
 
 # pylint: disable-all
 
 
 class FigureCanvasQtQuick(QtQuick.QQuickPaintedItem, FigureCanvasBase):
-  """ This class creates a QtQuick Item encapsulating a Matplotlib
-      Figure and all the functions to interact with the 'standard'
-      Matplotlib navigation toolbar.
+  """This class creates a QtQuick Item encapsulating a Matplotlib
+  Figure and all the functions to interact with the 'standard'
+  Matplotlib navigation toolbar.
   """
 
   dpi_ratio_changed = QtCore.Signal()
@@ -104,10 +95,9 @@ class FigureCanvasQtQuick(QtQuick.QQuickPaintedItem, FigureCanvasBase):
       # resizeEvent triggers a paintEvent itself, so we exit this one
       # (after making sure that the event is immediately handled).
 
-  dpi_ratio = QtCore.Property(float,
-                              get_dpi_ratio,
-                              set_dpi_ratio,
-                              notify=dpi_ratio_changed)
+  dpi_ratio = QtCore.Property(
+      float, get_dpi_ratio, set_dpi_ratio, notify=dpi_ratio_changed
+  )
 
   def get_width_height(self):
     w, h = FigureCanvasBase.get_width_height(self)
@@ -122,6 +112,7 @@ class FigureCanvasQtQuick(QtQuick.QQuickPaintedItem, FigureCanvasBase):
         pen = QtGui.QPen(QtCore.Qt.black, 1 / self.dpi_ratio, QtCore.Qt.DotLine)
         painter.setPen(pen)
         painter.drawRect(*(int(pt / self.dpi_ratio) for pt in rect))
+
     else:
 
       def _draw_rect_callback(painter):
@@ -149,8 +140,9 @@ class FigureCanvasQtQuick(QtQuick.QQuickPaintedItem, FigureCanvasBase):
     # current event loop in order to ensure thread affinity and to
     # accumulate multiple draw requests from event handling.
     # TODO: queued signal connection might be safer than singleShot
-    if not (getattr(self, '_draw_pending', False) or
-            getattr(self, '_is_drawing', False)):
+    if not (
+        getattr(self, '_draw_pending', False) or getattr(self, '_is_drawing', False)
+    ):
       self._draw_pending = True
       QtCore.QTimer.singleShot(0, self._draw_idle)
 
@@ -243,12 +235,9 @@ class FigureCanvasQtQuick(QtQuick.QQuickPaintedItem, FigureCanvasBase):
     x, y = self.mouseEventCoords(event.pos())
     button = self.buttond.get(event.button())
     if button is not None:
-      FigureCanvasBase.button_press_event(self,
-                                          x,
-                                          y,
-                                          button,
-                                          dblclick=True,
-                                          guiEvent=event)
+      FigureCanvasBase.button_press_event(
+          self, x, y, button, dblclick=True, guiEvent=event
+      )
 
   def wheelEvent(self, event):
     x, y = self.mouseEventCoords(event.pos())
@@ -281,7 +270,8 @@ class FigureCanvasQtQuick(QtQuick.QQuickPaintedItem, FigureCanvasBase):
     # bit twiddling to pick out modifier keys from event_mods bitmask,
     # if event_key is a MODIFIER, it should not be duplicated in mods
     mods = [
-        name for name, mod_key, qt_key in MODIFIER_KEYS
+        name
+        for name, mod_key, qt_key in MODIFIER_KEYS
         if event_key != qt_key and (event_mods & mod_key) == mod_key
     ]
     try:
@@ -294,7 +284,7 @@ class FigureCanvasQtQuick(QtQuick.QQuickPaintedItem, FigureCanvasBase):
       # are not unicode characters (like multimedia keys)
       # skip these
       # if you really want them, you should add them to SPECIAL_KEYS
-      MAX_UNICODE = 0x10ffff
+      MAX_UNICODE = 0x10FFFF
       if event_key > MAX_UNICODE:
         return None
 
@@ -333,8 +323,7 @@ class FigureCanvasQtQuick(QtQuick.QQuickPaintedItem, FigureCanvasBase):
 
 
 class MatplotlibIconProvider(QtQuick.QQuickImageProvider):
-  """ This class provide the matplotlib icons for the navigation toolbar.
-    """
+  """This class provide the matplotlib icons for the navigation toolbar."""
 
   def __init__(self, img_type=QtQuick.QQuickImageProvider.Image):
     self.basedir = os.path.join(matplotlib.rcParams['datapath'], 'images')
@@ -348,8 +337,7 @@ class MatplotlibIconProvider(QtQuick.QQuickImageProvider):
 
 
 class NavigationToolbar2QtQuick(QtCore.QObject, NavigationToolbar2):
-  """ NavigationToolbar2 customized for QtQuick
-  """
+  """NavigationToolbar2 customized for QtQuick"""
 
   messageChanged = QtCore.Signal(str)
 
@@ -361,7 +349,6 @@ class NavigationToolbar2QtQuick(QtCore.QObject, NavigationToolbar2):
   hspaceChanged = QtCore.Signal()
 
   def __init__(self, canvas, parent=None):
-
     # I think this is needed due to a bug in PySide2
     if QT_API == QT_API_PYSIDE2:
       QtCore.QObject.__init__(self, parent)
@@ -369,7 +356,7 @@ class NavigationToolbar2QtQuick(QtCore.QObject, NavigationToolbar2):
     else:
       super().__init__(canvas=canvas, parent=parent)
 
-    self._message = ""
+    self._message = ''
 
     #
     # Store margin
@@ -388,8 +375,7 @@ class NavigationToolbar2QtQuick(QtCore.QObject, NavigationToolbar2):
       setattr(self, attr, val)
 
   def _init_toolbar(self):
-    """ don't actually build the widgets here, build them in QML
-    """
+    """don't actually build the widgets here, build them in QML"""
     pass
 
   # Define a few properties.
@@ -538,4 +524,4 @@ class NavigationToolbar2QtQuick(QtCore.QObject, NavigationToolbar2):
     self.canvas.draw_idle()
 
   def save_figure(self, *args):
-    raise NotImplementedError("save_figure is not yet implemented")
+    raise NotImplementedError('save_figure is not yet implemented')

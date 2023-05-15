@@ -1,14 +1,12 @@
 from collections import defaultdict
 
 import click
-from matplotlib import pyplot as plt
 import matplotlib as mpl
 import numpy as np
 import seaborn as sns
+from matplotlib import pyplot as plt
 from skimage.exposure import equalize_hist
-from skimage.transform import EuclideanTransform
-from skimage.transform import resize
-from skimage.transform import warp
+from skimage.transform import EuclideanTransform, resize, warp
 
 from pano.misc import tools
 from pano.misc.imageio import ImageIO
@@ -18,11 +16,9 @@ font_name = 'Noto Sans CJK KR'
 mpl.rc('font', family=font_name)
 mpl.rcParams['axes.unicode_minus'] = False
 snsrc = {'axes.edgecolor': '0.2', 'grid.color': '0.8'}
-sns.set_theme(context='paper',
-              style='whitegrid',
-              font=font_name,
-              font_scale=1.75,
-              rc=snsrc)
+sns.set_theme(
+    context='paper', style='whitegrid', font=font_name, font_scale=1.75, rc=snsrc
+)
 
 
 def metrics_by_trnsl(fixed_image, moving_image, translation_range, bins='auto'):
@@ -33,9 +29,11 @@ def metrics_by_trnsl(fixed_image, moving_image, translation_range, bins='auto'):
       mi = moving_image
       fi = fixed_image
     else:
-      mi = warp(moving_image,
-                inverse_map=EuclideanTransform(translation=(tr, 0)).inverse,
-                cval=np.nan)
+      mi = warp(
+          moving_image,
+          inverse_map=EuclideanTransform(translation=(tr, 0)).inverse,
+          cval=np.nan,
+      )
 
       mask = ~np.isnan(mi)
       mi = mi[mask]
@@ -51,7 +49,8 @@ def metrics_by_trnsl(fixed_image, moving_image, translation_range, bins='auto'):
       zip(
           [fixed_image, moving_image],
           ['IR image', 'Visible image'],
-      )):
+      )
+  ):
     axes[0, col].imshow(img)
     axes[0, col].set_title(title)
     axes[0, col].set_axis_off()
@@ -84,9 +83,9 @@ def main(paths, output, tmin, tmax, tnum):
   moving_image = _read(paths[1])
 
   if fixed_image.shape != moving_image.shape:
-    moving_image = resize(moving_image,
-                          output_shape=fixed_image.shape,
-                          anti_aliasing=True)
+    moving_image = resize(
+        moving_image, output_shape=fixed_image.shape, anti_aliasing=True
+    )
 
   fig, axes = metrics_by_trnsl(
       fixed_image=fixed_image,

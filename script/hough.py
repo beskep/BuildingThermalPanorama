@@ -4,8 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 from skimage.draw import line
-from skimage.transform import hough_line
-from skimage.transform import hough_line_peaks
+from skimage.transform import hough_line, hough_line_peaks
 
 font_name = 'Noto Sans CJK KR'
 mpl.rc('font', family=font_name)
@@ -21,11 +20,9 @@ def cli():
 @cli.command()
 @click.option('--path', '-p', default=None)
 def hough1(path):
-  sns.set_theme(context='notebook',
-                style='whitegrid',
-                font=font_name,
-                font_scale=1,
-                rc=snsrc)
+  sns.set_theme(
+      context='notebook', style='whitegrid', font=font_name, font_scale=1, rc=snsrc
+  )
   w = [-1 / 2, 1]
   x0y0 = [2 / 5, 4 / 5]
 
@@ -71,11 +68,13 @@ def hough1(path):
 @click.option('--path', '-p', default=None)
 @click.option('--fs', '-f', default=2)
 def hough2(path, fs):
-  sns.set_theme(context='paper',
-                style='whitegrid',
-                font=font_name,
-                font_scale=float(fs),
-                rc=snsrc)
+  sns.set_theme(
+      context='paper',
+      style='whitegrid',
+      font=font_name,
+      font_scale=float(fs),
+      rc=snsrc,
+  )
 
   # Constructing test image
   image = np.zeros((200, 200))
@@ -109,7 +108,9 @@ def hough2(path, fs):
   d_step = 0.5 * np.diff(d).mean()
   bounds = [
       np.rad2deg(theta[0] - angle_step),
-      np.rad2deg(theta[-1] + angle_step), d[-1] + d_step, d[0] - d_step
+      np.rad2deg(theta[-1] + angle_step),
+      d[-1] + d_step,
+      d[0] - d_step,
   ]
   ax[1].imshow(np.log(1 + h), extent=bounds, cmap='gray', aspect=0.5)
   ax[1].set_title('(b) Hough transform')
@@ -127,9 +128,7 @@ def hough2(path, fs):
     ax[2].axline((x0, y0), slope=np.tan(angle + np.pi / 2), linewidth=2)
 
   for l in lines:
-    ax[2].plot([l[0][1], l[1][1]], [l[0][0], l[1][0]],
-               color='orangered',
-               linewidth=5)
+    ax[2].plot([l[0][1], l[1][1]], [l[0][0], l[1][0]], color='orangered', linewidth=5)
 
   fig.tight_layout()
 

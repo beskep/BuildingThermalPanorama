@@ -3,10 +3,10 @@
 from pathlib import Path
 from typing import Union
 
-from matplotlib.cm import get_cmap
-from matplotlib.patches import Patch
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.cm import get_cmap
+from matplotlib.patches import Patch
 from onnxruntime import InferenceSession
 from PIL import Image
 
@@ -25,8 +25,7 @@ class SmpModel:
 
     self._cmap = get_cmap(self.CMAP)
     self._handles = [
-        Patch(facecolor=self._cmap(i), label=l)
-        for i, l in enumerate(self.LABELS)
+        Patch(facecolor=self._cmap(i), label=l) for i, l in enumerate(self.LABELS)
     ]
 
   def predict(self, src: Union[str, bytes, Path]):
@@ -34,15 +33,15 @@ class SmpModel:
     inputs = np.array(image.resize(self.IMG_SIZE, resample=RSMP.LANCZOS))
     inputs = np.moveaxis(inputs, -1, 0).astype(np.float32)  # HWC -> CHW
 
-    outputs = self._sess.run(output_names=None,
-                             input_feed={self._input_name: inputs})
+    outputs = self._sess.run(output_names=None, input_feed={self._input_name: inputs})
     pred = np.argmax(outputs[0][0], axis=0).astype(np.int8)
     resized = Image.fromarray(pred).resize(image.size, resample=RSMP.NEAREST)
 
     return np.array(resized)
 
-  def visualization(self, src: Union[str, Path, Image.Image, np.ndarray],
-                    mask: np.ndarray):
+  def visualization(
+      self, src: Union[str, Path, Image.Image, np.ndarray], mask: np.ndarray
+  ):
     if isinstance(src, (Image.Image, np.ndarray)):  # noqa: SIM108
       image = src
     else:

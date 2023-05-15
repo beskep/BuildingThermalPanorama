@@ -8,18 +8,16 @@ from pathlib import Path
 from typing import Optional
 
 import click
-from loguru import logger
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
+from loguru import logger
 from skimage.exposure import equalize_hist
 from skimage.transform import resize
 
 from pano.misc import tools
 from pano.misc.imageio import ImageIO
-from pano.registration.evaluation import compute_ncc
-from pano.registration.evaluation import compute_rmse
-from pano.registration.evaluation import MutualInformation
+from pano.registration.evaluation import MutualInformation, compute_ncc, compute_rmse
 
 
 def _read_img(path, eq=False) -> np.ndarray:
@@ -40,9 +38,9 @@ def pairwise(iterable):
   return zip(it, it)
 
 
-def mi_plot(paths: tuple,
-            titles=('IR', 'Visible'),
-            eqs: Optional[tuple] = None) -> tuple[plt.Figure, plt.Axes]:
+def mi_plot(
+    paths: tuple, titles=('IR', 'Visible'), eqs: Optional[tuple] = None
+) -> tuple[plt.Figure, plt.Axes]:
   """
   Parameters
   ----------
@@ -84,10 +82,7 @@ def mi_plot(paths: tuple,
       # axes[row, col].set_title(titles[col])
 
     hist_data = {title: img.ravel() for title, img in zip(titles, images)}
-    sns.histplot(data=hist_data,
-                 ax=axes[row, 2],
-                 stat='probability',
-                 palette=palette)
+    sns.histplot(data=hist_data, ax=axes[row, 2], stat='probability', palette=palette)
     axes[row, 2].set_xlabel('Intensity')
     if not all(eq):
       axes[row, 2].set_xlim(-3, 3)

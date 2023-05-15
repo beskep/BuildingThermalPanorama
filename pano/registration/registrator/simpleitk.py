@@ -3,21 +3,22 @@
 import enum
 from typing import Callable, Optional, Tuple, Union
 
-from loguru import logger
 import numpy as np
-from numpy.linalg import inv
 import SimpleITK as sitk  # noqa: N813
+from loguru import logger
+from numpy.linalg import inv
 from skimage.transform import estimate_transform
 
 from pano.misc.tools import bin_size
 
-from .registrator import BaseRegistrator
 from .registrator import RegisteringImage  # noqa: F401
 from .registrator import RegistrationPreprocess  # noqa: F401
+from .registrator import BaseRegistrator
 
 
 class Metric(enum.Enum):
   """최적화 대상 metric"""
+
   MeanSquare = enum.auto()
   Corr = enum.auto()
   ANTSNCorr = enum.auto()
@@ -27,6 +28,7 @@ class Metric(enum.Enum):
 
 class Transformation(enum.Enum):
   """정합을 위한 영상 변환 방법"""
+
   Similarity = enum.auto()
   Affine = enum.auto()
 
@@ -57,11 +59,13 @@ def to_sitk_image(image: np.ndarray, set_origin=False) -> sitk.Image:
 class SITKRegistrator(BaseRegistrator):
   # pylint: disable=no-member
 
-  def __init__(self,
-               transformation=Transformation.Similarity,
-               metric=Metric.JointHistMI,
-               optimizer='powell',
-               bins: Union[str, int] = 'auto') -> None:
+  def __init__(
+      self,
+      transformation=Transformation.Similarity,
+      metric=Metric.JointHistMI,
+      optimizer='powell',
+      bins: Union[str, int] = 'auto',
+  ) -> None:
     """
     SimpleITK 라이브러리와 수치적 최적화를 통해 영상 정합
 
@@ -98,11 +102,13 @@ class SITKRegistrator(BaseRegistrator):
     self._method.SetInterpolator(sitk.sitkLinear)
 
     if optimizer == 'powell':
-      self._method.SetOptimizerAsPowell(numberOfIterations=500,
-                                        maximumLineIterations=100,
-                                        stepLength=1,
-                                        stepTolerance=1e-8,
-                                        valueTolerance=1e-8)
+      self._method.SetOptimizerAsPowell(
+          numberOfIterations=500,
+          maximumLineIterations=100,
+          stepLength=1,
+          stepTolerance=1e-8,
+          valueTolerance=1e-8,
+      )
     elif optimizer == 'gradient_descent':
       # TODO optimizer option 설정
       self._method.SetOptimizerAsGradientDescent(
@@ -110,10 +116,10 @@ class SITKRegistrator(BaseRegistrator):
           numberOfIterations=500,
           convergenceMinimumValue=1e-4,
           convergenceWindowSize=20,
-          maximumStepSizeInPhysicalUnits=2)
+          maximumStepSizeInPhysicalUnits=2,
+      )
     else:
-      raise ValueError(
-          f'Optimizer `{optimizer}` not in ["powell", "gradient_descent"]')
+      raise ValueError(f'Optimizer `{optimizer}` not in ["powell", "gradient_descent"]')
 
     # 각 parameter의 scaling factor 결정 방법
     self._method.SetOptimizerScalesFromPhysicalShift()
@@ -140,11 +146,7 @@ class SITKRegistrator(BaseRegistrator):
     """
     return self._metric
 
-  def _set_method_metric(self,
-                         metric: Metric,
-                         bins=20,
-                         pdf_var=1.5,
-                         ants_radius=2):
+  def _set_method_metric(self, metric: Metric, bins=20, pdf_var=1.5, ants_radius=2):
     if metric is Metric.MeanSquare:
       self.method.SetMetricAsMeanSquares()
     elif metric is Metric.Corr:
@@ -153,26 +155,24 @@ class SITKRegistrator(BaseRegistrator):
       self.method.SetMetricAsANTSNeighborhoodCorrelation(radius=ants_radius)
     elif metric is Metric.JointHistMI:
       self.method.SetMetricAsJointHistogramMutualInformation(
-          numberOfHistogramBins=bins, varianceForJointPDFSmoothing=pdf_var)
+          numberOfHistogramBins=bins, varianceForJointPDFSmoothing=pdf_var
+      )
     elif metric is Metric.MattesMI:
       self.method.SetMetricAsMattesMutualInformation(numberOfHistogramBins=bins)
     else:
       raise ValueError(metric)
 
-  def set_metric(self,
-                 metric: Metric,
-                 bins: Union[int, str] = 'auto',
-                 pdf_var=1.5,
-                 ants_radius=2):
+  def set_metric(
+      self, metric: Metric, bins: Union[int, str] = 'auto', pdf_var=1.5, ants_radius=2
+  ):
     self._metric = metric
     self._bins = bins
     self._metric_options = {'pdf_var': pdf_var, 'ants_radius': ants_radius}
 
     if isinstance(bins, int):
-      self._set_method_metric(metric=metric,
-                              bins=bins,
-                              pdf_var=pdf_var,
-                              ants_radius=ants_radius)
+      self._set_method_metric(
+          metric=metric, bins=bins, pdf_var=pdf_var, ants_radius=ants_radius
+      )
 
   @property
   def transformation(self):
@@ -183,11 +183,15 @@ class SITKRegistrator(BaseRegistrator):
     self._transformation = value
 
   @staticmethod
-  def _get_transformation(transformation: Transformation,
-                          scale: Optional[float] = None,
-                          translation: Optional[tuple] = None):
+  def _get_transformation(
+      transformation: Transformation,
+      scale: Optional[float] = None,
+      translation: Optional[tuple] = None,
+  ):
     if scale is None:
-      logger.warning('초기 scale이 설정되지 않았습니다. 정합 결과가 부정확할 수 있습니다.')
+      logger.warning(
+          '초기 scale이 설정되지 않았습니다. 정합 결과가 부정확할 수 있습니다.'
+      )
       scale = 1.0
 
     trsf: sitk.Transform
@@ -207,8 +211,7 @@ class SITKRegistrator(BaseRegistrator):
 
       if translation is None:
         translation = (0.0, 0.0)
-      trsf.SetParameters(
-          (scale, 0.0, 0.0, scale, translation[0], translation[1]))
+      trsf.SetParameters((scale, 0.0, 0.0, scale, translation[0], translation[1]))
     else:
       raise ValueError(transformation)
 
@@ -242,18 +245,18 @@ class SITKRegistrator(BaseRegistrator):
 
     return matrix
 
-  def set_multi_resolution(self,
-                           shrink_factors=(4, 2, 1),
-                           smoothing_sigmas=(2, 1, 0)):
+  def set_multi_resolution(self, shrink_factors=(4, 2, 1), smoothing_sigmas=(2, 1, 0)):
     self.method.SetShrinkFactorsPerLevel(shrink_factors)
     self.method.SetSmoothingSigmasPerLevel(smoothing_sigmas)
     self.method.SmoothingSigmasAreSpecifiedInPhysicalUnitsOn()
 
-  def set_initial_params(self,
-                         scale: Optional[float] = None,
-                         fixed_alpha: Optional[float] = None,
-                         moving_alpha: Optional[float] = None,
-                         translation: Optional[list] = None):
+  def set_initial_params(
+      self,
+      scale: Optional[float] = None,
+      fixed_alpha: Optional[float] = None,
+      moving_alpha: Optional[float] = None,
+      translation: Optional[list] = None,
+  ):
     """
     정합을 위한 translation의 초기 패러미터 지정.
 
@@ -283,8 +286,7 @@ class SITKRegistrator(BaseRegistrator):
       self._scale0 = None
 
     self._trnsl0 = None if translation is None else tuple(translation)
-    logger.debug('Initial scale: {} | translation: {}', self._scale0,
-                 self._trnsl0)
+    logger.debug('Initial scale: {} | translation: {}', self._scale0, self._trnsl0)
 
   def _registration_results(
       self,
@@ -294,12 +296,14 @@ class SITKRegistrator(BaseRegistrator):
       set_origin: bool,
   ) -> Tuple[np.ndarray, Optional[Callable], Optional[np.ndarray]]:
     # 정합된 영상 추출
-    registered = sitk.Resample(image1=moving_simg,
-                               referenceImage=fixed_simg,
-                               transform=trsf,
-                               interpolator=sitk.sitkLinear,
-                               defaultPixelValue=0.0,
-                               outputPixelType=moving_simg.GetPixelID())
+    registered = sitk.Resample(
+        image1=moving_simg,
+        referenceImage=fixed_simg,
+        transform=trsf,
+        interpolator=sitk.sitkLinear,
+        defaultPixelValue=0.0,
+        outputPixelType=moving_simg.GetPixelID(),
+    )
     registered_image = sitk.GetArrayFromImage(registered)
 
     # 변환 행렬
@@ -320,12 +324,14 @@ class SITKRegistrator(BaseRegistrator):
           변환된 영상
       """
       simg = to_sitk_image(image, set_origin=set_origin)
-      registered_simg = sitk.Resample(simg,
-                                      referenceImage=fixed_simg,
-                                      transform=trsf,
-                                      interpolator=sitk.sitkLinear,
-                                      defaultPixelValue=0.0,
-                                      outputPixelType=moving_simg.GetPixelID())
+      registered_simg = sitk.Resample(
+          simg,
+          referenceImage=fixed_simg,
+          transform=trsf,
+          interpolator=sitk.sitkLinear,
+          defaultPixelValue=0.0,
+          outputPixelType=moving_simg.GetPixelID(),
+      )
       registered_image = sitk.GetArrayFromImage(registered_simg)
 
       return registered_image
@@ -371,9 +377,9 @@ class SITKRegistrator(BaseRegistrator):
       bins = bin_size(fixed_image, moving_image, bins=self._bins)
       self._set_method_metric(self.metric, bins=bins, **self._metric_options)
 
-    trsf = self._get_transformation(self._transformation,
-                                    scale=self._scale0,
-                                    translation=self._trnsl0)
+    trsf = self._get_transformation(
+        self._transformation, scale=self._scale0, translation=self._trnsl0
+    )
 
     # 초기 transformation 설정
     # (`operationMode=GEOMETRY` -> 영상의 기하학적 중심을 초기 회전축으로 설정)
@@ -381,7 +387,8 @@ class SITKRegistrator(BaseRegistrator):
         fixedImage=fixed,
         movingImage=moving,
         transform=trsf,
-        operationMode=sitk.CenteredTransformInitializerFilter.GEOMETRY)
+        operationMode=sitk.CenteredTransformInitializerFilter.GEOMETRY,
+    )
     self.method.SetInitialTransform(initial_trsf, inPlace=False)
 
     # 연산
@@ -389,14 +396,15 @@ class SITKRegistrator(BaseRegistrator):
         sitk.Cast(fixed, sitk.sitkFloat32),
         sitk.Cast(moving, sitk.sitkFloat32),
     )
-    logger.debug('Optimizer stopping condition: {}',
-                 self.method.GetOptimizerStopConditionDescription())
+    logger.debug(
+        'Optimizer stopping condition: {}',
+        self.method.GetOptimizerStopConditionDescription(),
+    )
     logger.debug('Final param: {}', np.round(final_trsf.GetParameters(), 3))
 
-    return self._registration_results(fixed_simg=fixed,
-                                      moving_simg=moving,
-                                      trsf=final_trsf,
-                                      set_origin=set_origin)
+    return self._registration_results(
+        fixed_simg=fixed, moving_simg=moving, trsf=final_trsf, set_origin=set_origin
+    )
 
   # def prep_and_register(
   #     self,

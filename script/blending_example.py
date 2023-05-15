@@ -1,12 +1,12 @@
 from typing import Optional
 
 import cv2 as cv
-from matplotlib import gridspec
 import matplotlib.pyplot as plt
 import numpy as np
+import seaborn as sns
+from matplotlib import gridspec
 from numpy.typing import NDArray
 from PIL import Image
-import seaborn as sns
 
 from pano import utils
 
@@ -28,25 +28,22 @@ def laplacian_pyramid(pyramid: list[NDArray]):
   for idx in reversed(range(1, len(pyramid))):
     img = cv.pyrUp(pyramid[idx])
     shape = pyramid[idx - 1].shape
-    resized = cv.resize(img,
-                        dsize=(shape[1], shape[0]),
-                        interpolation=cv.INTER_CUBIC)
+    resized = cv.resize(img, dsize=(shape[1], shape[0]), interpolation=cv.INTER_CUBIC)
     laplacian = cv.subtract(pyramid[idx - 1], resized)
     lp.append(laplacian)
 
   return lp
 
 
-def multiband_blending(img1: NDArray,
-                       img2: NDArray,
-                       mask: Optional[NDArray] = None,
-                       deep=4):
+def multiband_blending(
+    img1: NDArray, img2: NDArray, mask: Optional[NDArray] = None, deep=4
+):
   if img1.shape != img2.shape:
     raise ValueError
 
   if mask is None:
     mask = np.zeros_like(img1)
-    mask[:, int(img1.shape[1] / 2):] = 1
+    mask[:, int(img1.shape[1] / 2) :] = 1
 
   gp1 = pyr_down(image=img1, deep=deep)
   gp2 = pyr_down(image=img2, deep=deep)
@@ -61,9 +58,9 @@ def multiband_blending(img1: NDArray,
   for idx in range(1, deep):
     blended = cv.pyrUp(blended)
     shape = lp1[idx].shape
-    blended = cv.resize(blended,
-                        dsize=(shape[1], shape[0]),
-                        interpolation=cv.INTER_CUBIC)
+    blended = cv.resize(
+        blended, dsize=(shape[1], shape[0]), interpolation=cv.INTER_CUBIC
+    )
     blended = cv.add(blended, pyramid[idx])
 
   return blended
@@ -75,8 +72,8 @@ def feather_alpha(width: float, shape: tuple):
 
   pnts = [int(x) for x in np.round(shape[1] * np.array(xy[0]))]
   line = np.zeros(shape[1])
-  line[pnts[1]:pnts[2]] = np.linspace(0, 1, num=(pnts[2] - pnts[1]))
-  line[int(pnts[2]):] = 1
+  line[pnts[1] : pnts[2]] = np.linspace(0, 1, num=(pnts[2] - pnts[1]))
+  line[int(pnts[2]) :] = 1
 
   alpha = np.tile(line, (shape[0], 1))
 
@@ -93,7 +90,7 @@ def example_no_blending(img1: NDArray, img2: NDArray):
   axes = [
       fig.add_subplot(gs[0, 0]),
       fig.add_subplot(gs[1, :]),
-      fig.add_subplot(gs[0, 1])
+      fig.add_subplot(gs[0, 1]),
   ]
 
   axes[0].imshow(img1)
@@ -150,7 +147,7 @@ def example_feather(img1: NDArray, img2: NDArray, width=0.1):
   axes = [
       fig.add_subplot(gs[0, 0]),
       fig.add_subplot(gs[1, :]),
-      fig.add_subplot(gs[0, 1])
+      fig.add_subplot(gs[0, 1]),
   ]
   for idx, (ax, img) in enumerate(zip(axes, [img1, blended, img2])):
     imgu = img.astype(np.uint8)
@@ -180,16 +177,15 @@ def _pyramid_plot(pyramid: list, title=None):
   return fig, axes
 
 
-def example_multiband(img1: NDArray,
-                      img2: NDArray,
-                      mask: Optional[NDArray] = None,
-                      deep=4):
+def example_multiband(
+    img1: NDArray, img2: NDArray, mask: Optional[NDArray] = None, deep=4
+):
   if img1.shape != img2.shape:
     raise ValueError
 
   if mask is None:
     mask = np.zeros_like(img1)
-    mask[:, int(img1.shape[1] / 2):] = 1
+    mask[:, int(img1.shape[1] / 2) :] = 1
 
   gp1 = pyr_down(image=img1, deep=deep)
   gp2 = pyr_down(image=img2, deep=deep)
@@ -202,8 +198,9 @@ def example_multiband(img1: NDArray,
 
   lp1 = laplacian_pyramid(gp1)
   lp2 = laplacian_pyramid(gp2)
-  fig, _ = _pyramid_plot([(1.5 * x).astype(np.uint8) for x in lp1[:0:-1]],
-                         title='Laplacian Pyramid')
+  fig, _ = _pyramid_plot(
+      [(1.5 * x).astype(np.uint8) for x in lp1[:0:-1]], title='Laplacian Pyramid'
+  )
   fig.savefig(DIR / 'blending-multiband-laplacian.png')
   plt.close(fig)
 
@@ -214,13 +211,12 @@ def example_multiband(img1: NDArray,
 
 
 if __name__ == '__main__':
-  sns.set_theme(context='talk',
-                style='white',
-                font='Source Han Sans KR',
-                rc={
-                    'figure.figsize': [16, 9],
-                    'savefig.dpi': 300
-                })
+  sns.set_theme(
+      context='talk',
+      style='white',
+      font='Source Han Sans KR',
+      rc={'figure.figsize': [16, 9], 'savefig.dpi': 300},
+  )
 
   img1 = cv.imread(str(DIR / 'blending01.png'))
   img2 = cv.imread(str(DIR / 'blending02.png'))
@@ -231,5 +227,4 @@ if __name__ == '__main__':
 
   for deep in range(2, 11, 2):
     blended = multiband_blending(img1=img1, img2=img2, deep=deep)
-    Image.fromarray(blended).save(DIR /
-                                  f'blending-multiband-blended-{deep}.png')
+    Image.fromarray(blended).save(DIR / f'blending-multiband-blended-{deep}.png')

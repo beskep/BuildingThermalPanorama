@@ -8,10 +8,9 @@ import os
 import re
 import subprocess
 
-from matplotlib import cm
 import numpy as np
-from PIL import Image
-from PIL import UnidentifiedImageError
+from matplotlib import cm
+from PIL import Image, UnidentifiedImageError
 
 # ruff: noqa
 
@@ -22,13 +21,13 @@ class FlirExifNotFoundError(ValueError):
 
 class FlirImageExtractor:
 
-  def __init__(self, exiftool_path="exiftool", is_debug=False):
+  def __init__(self, exiftool_path='exiftool', is_debug=False):
     self.exiftool_path = exiftool_path
     self.is_debug = is_debug
-    self.flir_img_filename = ""
-    self.image_suffix = "_rgb_image.jpg"
-    self.thumbnail_suffix = "_rgb_thumb.jpg"
-    self.thermal_suffix = "_thermal.png"
+    self.flir_img_filename = ''
+    self.image_suffix = '_rgb_image.jpg'
+    self.thumbnail_suffix = '_rgb_thumb.jpg'
+    self.thermal_suffix = '_thermal.png'
     self.default_distance = 1.0
 
     # valid for PNG thermal images
@@ -48,15 +47,16 @@ class FlirImageExtractor:
     :return:
     """
     if self.is_debug:
-      print("INFO Flir image filepath:{}".format(flir_img_filename))
+      print('INFO Flir image filepath:{}'.format(flir_img_filename))
 
     if not os.path.isfile(flir_img_filename):
-      raise ValueError("Input file does not exist or "
-                       "this user don't have permission on this file")
+      raise ValueError(
+          "Input file does not exist or this user don't have permission on this file"
+      )
 
     self.flir_img_filename = flir_img_filename
 
-    if self.get_image_type().upper().strip() == "TIFF":
+    if self.get_image_type().upper().strip() == 'TIFF':
       # valid for tiff images from Zenmuse XTR
       self.use_thumbnail = True
       self.fix_endian = False
@@ -80,8 +80,7 @@ class FlirImageExtractor:
     meta = json.loads(meta_json.decode())[0]
 
     if key not in meta:
-      raise FlirExifNotFoundError(
-          f'{key} not found in {self.flir_img_filename}')
+      raise FlirExifNotFoundError(f'{key} not found in {self.flir_img_filename}')
 
     return meta[key]
 
@@ -103,15 +102,15 @@ class FlirImageExtractor:
     """
     extracts the visual image as 2D numpy array of RGB values
     """
-    image_tag = "-EmbeddedImage"
+    image_tag = '-EmbeddedImage'
     # ThumbnailImage 대신 적용
     if self.use_thumbnail:
-      image_tag = "-ThumbnailImage"
+      image_tag = '-ThumbnailImage'
 
     args = [
         self.exiftool_path,
         image_tag,
-        "-b",
+        '-b',
         self.flir_img_filename,
     ]
     visual_img_bytes = subprocess.check_output(args, stderr=subprocess.DEVNULL)
@@ -156,12 +155,11 @@ class FlirImageExtractor:
     # exifread can't extract the embedded thermal image, use exiftool instead
     img_args = [
         self.exiftool_path,
-        "-RawThermalImage",
-        "-b",
+        '-RawThermalImage',
+        '-b',
         self.flir_img_filename,
     ]
-    thermal_img_bytes = subprocess.check_output(img_args,
-                                                stderr=subprocess.DEVNULL)
+    thermal_img_bytes = subprocess.check_output(img_args, stderr=subprocess.DEVNULL)
     thermal_img_stream = io.BytesIO(thermal_img_bytes)
 
     thermal_img = Image.open(thermal_img_stream)
@@ -170,20 +168,17 @@ class FlirImageExtractor:
     # raw values -> temperature
     subject_distance = self.default_distance
     if 'SubjectDistance' in meta:
-      subject_distance = FlirImageExtractor.extract_float(
-          meta['SubjectDistance'])
+      subject_distance = FlirImageExtractor.extract_float(meta['SubjectDistance'])
 
     if self.fix_endian:
       # fix endianness, the bytes in the embedded png are in the wrong order
-      thermal_np = np.vectorize(lambda x: (x >> 8) + ((x & 0x00ff) << 8))(
-          thermal_np)
+      thermal_np = np.vectorize(lambda x: (x >> 8) + ((x & 0x00FF) << 8))(thermal_np)
 
     thermal_np = self.raw2temp(
         thermal_np,
         E=meta['Emissivity'],
         OD=subject_distance,
-        RTemp=FlirImageExtractor.extract_float(
-            meta['ReflectedApparentTemperature']),
+        RTemp=FlirImageExtractor.extract_float(meta['ReflectedApparentTemperature']),
         ATemp=FlirImageExtractor.extract_float(meta['AtmosphericTemperature']),
         IRWTemp=FlirImageExtractor.extract_float(meta['IRWindowTemperature']),
         IRT=meta['IRWindowTransmission'],
@@ -192,24 +187,27 @@ class FlirImageExtractor:
         PB=meta['PlanckB'],
         PF=meta['PlanckF'],
         PO=meta['PlanckO'],
-        PR2=meta['PlanckR2'])
+        PR2=meta['PlanckR2'],
+    )
 
     return thermal_np
 
   @staticmethod
-  def raw2temp(raw,
-               E=1,
-               OD=1,
-               RTemp=20,
-               ATemp=20,
-               IRWTemp=20,
-               IRT=1,
-               RH=50,
-               PR1=21106.77,
-               PB=1501,
-               PF=1,
-               PO=-7340,
-               PR2=0.012545258):
+  def raw2temp(
+      raw,
+      E=1,
+      OD=1,
+      RTemp=20,
+      ATemp=20,
+      IRWTemp=20,
+      IRT=1,
+      RH=50,
+      PR1=21106.77,
+      PB=1501,
+      PF=1,
+      PO=-7340,
+      PR2=0.012545258,
+  ):
     """
     convert raw values from the flir sensor to temperatures in C
     # this calculation has been ported to python from
@@ -229,14 +227,20 @@ class FlirImageExtractor:
     refl_wind = 0
 
     # transmission through the air
-    h2o = ((RH / 100) * np.exp(1.5587 + 0.06939 * (ATemp) - 0.00027816 *
-                               (ATemp)**2 + 0.00000068455 * (ATemp)**3))
+    h2o = (RH / 100) * np.exp(
+        1.5587
+        + 0.06939 * (ATemp)
+        - 0.00027816 * (ATemp) ** 2
+        + 0.00000068455 * (ATemp) ** 3
+    )
 
-    tau1 = (ATX * np.exp(-np.sqrt(OD / 2) * (ATA1 + ATB1 * np.sqrt(h2o))) +
-            (1 - ATX) * np.exp(-np.sqrt(OD / 2) * (ATA2 + ATB2 * np.sqrt(h2o))))
+    tau1 = ATX * np.exp(-np.sqrt(OD / 2) * (ATA1 + ATB1 * np.sqrt(h2o))) + (
+        1 - ATX
+    ) * np.exp(-np.sqrt(OD / 2) * (ATA2 + ATB2 * np.sqrt(h2o)))
 
-    tau2 = (ATX * np.exp(-np.sqrt(OD / 2) * (ATA1 + ATB1 * np.sqrt(h2o))) +
-            (1 - ATX) * np.exp(-np.sqrt(OD / 2) * (ATA2 + ATB2 * np.sqrt(h2o))))
+    tau2 = ATX * np.exp(-np.sqrt(OD / 2) * (ATA1 + ATB1 * np.sqrt(h2o))) + (
+        1 - ATX
+    ) * np.exp(-np.sqrt(OD / 2) * (ATA2 + ATB2 * np.sqrt(h2o)))
 
     # radiance from the environment
     raw_refl1 = PR1 / (PR2 * (np.exp(PB / (RTemp + 273.15)) - PF)) - PO
@@ -254,8 +258,14 @@ class FlirImageExtractor:
     raw_atm2 = PR1 / (PR2 * (np.exp(PB / (ATemp + 273.15)) - PF)) - PO
     raw_atm2_attn = (1 - tau2) / E / tau1 / IRT / tau2 * raw_atm2
 
-    raw_obj = (raw / E / tau1 / IRT / tau2 - raw_atm1_attn - raw_atm2_attn -
-               raw_wind_attn - raw_refl1_attn - raw_refl2_attn)
+    raw_obj = (
+        raw / E / tau1 / IRT / tau2
+        - raw_atm1_attn
+        - raw_atm2_attn
+        - raw_wind_attn
+        - raw_refl1_attn
+        - raw_refl2_attn
+    )
 
     # temperature from radiance
     RSob = PR1 / (PR2 * (raw_obj + PO)) + PF
@@ -279,7 +289,7 @@ class FlirImageExtractor:
     Extract the float value of a string, helpful for parsing the exiftool data
     :return:
     """
-    digits = re.findall(r"[-+]?\d*\.\d+|\d+", dirtystr)
+    digits = re.findall(r'[-+]?\d*\.\d+|\d+', dirtystr)
 
     return float(digits[0])
 
@@ -292,10 +302,10 @@ class FlirImageExtractor:
     thermal_np = self.extract_thermal_image()
 
     img_visual = Image.fromarray(rgb_np)
-    thermal_normalized = ((thermal_np - np.amin(thermal_np)) /
-                          (np.amax(thermal_np) - np.amin(thermal_np)))
-    img_thermal = Image.fromarray(np.uint8(
-        cm.inferno(thermal_normalized) * 255))
+    thermal_normalized = (thermal_np - np.amin(thermal_np)) / (
+        np.amax(thermal_np) - np.amin(thermal_np)
+    )
+    img_thermal = Image.fromarray(np.uint8(cm.inferno(thermal_normalized) * 255))
 
     fn_prefix, _ = os.path.splitext(self.flir_img_filename)
     thermal_filename = fn_prefix + self.thermal_suffix
@@ -304,8 +314,8 @@ class FlirImageExtractor:
       image_filename = fn_prefix + self.thumbnail_suffix
 
     if self.is_debug:
-      print("DEBUG Saving RGB image to:{}".format(image_filename))
-      print("DEBUG Saving Thermal image to:{}".format(thermal_filename))
+      print('DEBUG Saving RGB image to:{}'.format(image_filename))
+      print('DEBUG Saving Thermal image to:{}'.format(thermal_filename))
 
     img_visual.save(image_filename)
     img_thermal.save(thermal_filename)
