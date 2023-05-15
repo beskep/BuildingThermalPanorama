@@ -8,18 +8,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 from skimage.transform import warp
 
+from pano.misc import edgelet as edge
 from pano.misc import tools
-from pano.misc.edgelet import CannyOptions
-from pano.misc.edgelet import edge_preprocess
-from pano.misc.edgelet import Edgelets
-from pano.misc.edgelet import HoughOptions
-from pano.misc.edgelet import image2edgelets
-from pano.misc.tools import Interpolation
+from pano.misc.tools import INTRP
 
 from . import rectification
 
+# ruff: noqa: N803, N806
 
-class NotEnoughEdgelets(ValueError):
+
+class NotEnoughEdgeletsError(ValueError):
   pass
 
 
@@ -102,7 +100,7 @@ class _Rectify:
   """rectification warpper"""
 
   @staticmethod
-  def ransac_vanishing_point(edgelets: Edgelets,
+  def ransac_vanishing_point(edgelets: edge.Edgelets,
                              num_ransac_iter=2000,
                              threshold_inlier=5.0) -> VanishingPoint:
     vp_array = rectification.ransac_vanishing_point(
@@ -115,7 +113,7 @@ class _Rectify:
 
   @staticmethod
   def compute_votes(vp: VanishingPoint,
-                    edgelets: Edgelets,
+                    edgelets: edge.Edgelets,
                     threshold_inlier=10.0) -> np.ndarray:
     return rectification.compute_votes(edgelets=edgelets.astuple(),
                                        model=vp.array,
@@ -124,15 +122,15 @@ class _Rectify:
   @classmethod
   def remove_inliers(cls,
                      vp: VanishingPoint,
-                     edgelets: Edgelets,
-                     threshold_inlier=10.0) -> Edgelets:
+                     edgelets: edge.Edgelets,
+                     threshold_inlier=10.0) -> edge.Edgelets:
     votes = cls.compute_votes(vp=vp,
                               edgelets=edgelets,
                               threshold_inlier=threshold_inlier)
     inliers = votes > 0
-    removed = Edgelets(locations=edgelets.locations[~inliers],
-                       directions=edgelets.directions[~inliers],
-                       strengths=edgelets.strengths[~inliers])
+    removed = edge.Edgelets(locations=edgelets.locations[~inliers],
+                            directions=edgelets.directions[~inliers],
+                            strengths=edgelets.strengths[~inliers])
 
     return removed
 
@@ -149,13 +147,14 @@ class Homography:
   def available(self):
     return self.Htranslate is not None
 
-  def warp(self, image: np.ndarray, order=Interpolation.BiCubic):
+  def warp(self, image: np.ndarray, order=INTRP.BiCubic):
     if self.Htranslate is None:
       raise ValueError('Homography not set')
 
     if image.shape[:2] != self.input_shape:
       raise ValueError(f'입력한 영상의 해상도 {image.shape[:2]}가 '
-                       f'시점 왜곡을 추정한 영상의 해상도 {self.input_shape}와 다릅니다.')
+                       '시점 왜곡을 추정한 영상의 해상도 '
+                       f'{self.input_shape}와 다릅니다.')
 
     return warp(image=image,
                 inverse_map=np.linalg.inv(self.Htranslate),
@@ -168,7 +167,7 @@ class Homography:
 class Correction:
   """Perspective correction 결과"""
   edges: np.ndarray
-  edgelets: Edgelets
+  edgelets: edge.Edgelets
 
   vp1: Optional[VanishingPoint]
   vp2: Optional[VanishingPoint]
@@ -181,18 +180,17 @@ class Correction:
 
   def _warp_and_crop(self,
                      image: np.ndarray,
-                     order=Interpolation.BiCubic) -> np.ndarray:
+                     order=INTRP.BiCubic) -> np.ndarray:
     img = self.homography.warp(image=image, order=int(order))
     if self.crop_range is not None:
       img = self.crop_range.crop(img)
 
     return img
 
-  def correct(
-      self,
-      image: np.ndarray,
-      mask: Optional[np.ndarray] = None,
-      order=Interpolation.BiCubic) -> Tuple[np.ndarray, Optional[np.ndarray]]:
+  def correct(self,
+              image: np.ndarray,
+              mask: Optional[np.ndarray] = None,
+              order=INTRP.BiCubic) -> Tuple[np.ndarray, Optional[np.ndarray]]:
     """
     저장된 왜곡 보정 결과를 통해 새 영상 보정
 
@@ -223,7 +221,7 @@ class Correction:
     if mask is None:
       msk = None
     else:
-      msk = self._warp_and_crop(mask, order=Interpolation.NearestNeighbor)
+      msk = self._warp_and_crop(mask, order=INTRP.NearestNeighbor)
       img[np.logical_not(msk)] = np.nanmin(img)
 
     return img, msk
@@ -248,7 +246,7 @@ class Correction:
 
     # preprocessed image
     axes[0, 0].set_title('Preped Image')
-    axes[0, 0].imshow(edge_preprocess(image))
+    axes[0, 0].imshow(edge.edge_preprocess(image))
 
     # edges (canny)
     axes[0, 1].set_title('Edges')
@@ -295,32 +293,32 @@ class Correction:
 class PerspectiveCorrection:
 
   def __init__(self,
-               canny_options: Optional[CannyOptions] = None,
-               hough_options: Optional[HoughOptions] = None,
-               correction_options: Optional[CorrectionOptions] = None) -> None:
+               canny: edge.CannyOptions | dict | None = None,
+               hough: edge.HoughOptions | dict | None = None,
+               correction: CorrectionOptions | dict | None = None) -> None:
     """
     영상의 소실점으로부터 시점 왜곡 (perspective distortion)을 보정하는
     Homography 행렬 추정.
 
     Parameters
     ----------
-    canny_options : Optional[CannyOptions], optional
+    canny : edge.CannyOptions | dict | None, optional
         `skimage.feature.canny` 옵션
-    hough_options : Optional[HoughOptions], optional
+    hough : edge.HoughOptions | dict | None, optional
         `skimage.transform.probabilistic_hough_line` 옵션
-    correction_options : Optional[CorrectionOptions], optional
+    correction : CorrectionOptions | dict | None, optional
         소실점, 시점 보정 행렬의 수치적 추정을 위한 옵션
     """
-    if canny_options is None:
-      canny_options = CannyOptions()
-    if hough_options is None:
-      hough_options = HoughOptions()
-    if correction_options is None:
-      correction_options = CorrectionOptions()
+    if not isinstance(canny, edge.CannyOptions):
+      canny = edge.CannyOptions(**(canny or {}))
+    if not isinstance(hough, edge.HoughOptions):
+      hough = edge.HoughOptions(**(hough or {}))
+    if not isinstance(correction, CorrectionOptions):
+      correction = CorrectionOptions(**(correction or {}))
 
-    self._canny_options = canny_options
-    self._hough_options = hough_options
-    self._opt = correction_options
+    self._canny_options = canny
+    self._hough_options = hough
+    self._opt = correction
 
   @staticmethod
   def _compute_affine(vp1: np.ndarray, vp2: np.ndarray,
@@ -440,9 +438,9 @@ class PerspectiveCorrection:
 
   def _estimate_vanishing_point(
       self,
-      edgelets: Edgelets,
+      edgelets: edge.Edgelets,
       image_shape: Tuple[int, ...],
-      target: Optional[int] = None) -> Tuple[VanishingPoint, Edgelets]:
+      target: Optional[int] = None) -> Tuple[VanishingPoint, edge.Edgelets]:
     """
     RANSAC을 통해 주어진 edgelet으로부터 vanishing point를 추정하고,
     vanishing point와 vanishing point에 수렴하는 inlier를 제외한 edgelets 반환.
@@ -475,7 +473,7 @@ class PerspectiveCorrection:
     for idx in range(self._opt.vp_iter + 1):
       logger.debug('Vanishing point iter {}', idx)
       if edgelets.count < 10:
-        raise NotEnoughEdgelets('Not enough edgelets')
+        raise NotEnoughEdgeletsError('Not enough edgelets')
 
       vp = _Rectify.ransac_vanishing_point(
           edgelets=edgelets,
@@ -494,12 +492,10 @@ class PerspectiveCorrection:
           valid_positions = VanishingPoint.STRICT
         else:
           valid_positions = VanishingPoint.SOFT
-
         if vp.pos in valid_positions:
           break
-      else:
-        if vp.pos == target:
-          break
+      elif vp.pos == target:
+        break
 
     else:
       raise ValueError('Vanishing point 추정 실패')
@@ -508,7 +504,7 @@ class PerspectiveCorrection:
 
   def _estimate_vanishing_points(
       self,
-      edgelets: Edgelets,
+      edgelets: edge.Edgelets,
       image_shape: Tuple[int, ...],
   ) -> Tuple[Optional[VanishingPoint], Optional[VanishingPoint]]:
     """
@@ -589,10 +585,10 @@ class PerspectiveCorrection:
         edge_mask = tools.erode(edge_mask.astype(np.uint8),
                                 iterations=self._opt.erode).astype(bool)
 
-    edgelets, edges = image2edgelets(image=image,
-                                     mask=edge_mask,
-                                     canny_option=self._canny_options,
-                                     hough_option=self._hough_options)
+    edgelets, edges = edge.image2edgelets(image=image,
+                                          mask=edge_mask,
+                                          canny_option=self._canny_options,
+                                          hough_option=self._hough_options)
 
     vp1, vp2 = self._estimate_vanishing_points(edgelets=edgelets,
                                                image_shape=image.shape[:2])
@@ -608,7 +604,7 @@ class PerspectiveCorrection:
                                            vp2=vp2.array)
       if mask is not None:
         crop_range = tools.crop_mask(
-            mask=homography.warp(mask, order=Interpolation.NearestNeighbor))[0]
+            mask=homography.warp(mask, order=INTRP.NearestNeighbor))[0]
 
     correction = Correction(edges=edges,
                             edgelets=edgelets,

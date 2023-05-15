@@ -8,8 +8,36 @@ ignore_patterns = ['build/']
 [tool.isort]
 profile = 'google'
 
-[tool.pylint.MASTER]
-load-plugins = ['pylint.extensions.mccabe', 'pylint.extensions.docparams']
+[tool.ruff]
+select = ['ALL']
+ignore = [
+    'ANN',
+    'COM',
+    'D100',
+    'D101',
+    'D102',
+    'D103',
+    'D104',
+    'D105',
+    'D106',
+    'D107',
+    'D400',
+    'I',
+    'PTH123',
+    'Q',
+    'S101',
+    'TCH',
+    'TRY',
+]
+exclude = ['mbq', 'script']
+per-file-ignores = { '__init__.py' = ['F401'] }
+cache-dir = '.cache/ruff'
+
+[tool.ruff.pydocstyle]
+convention = 'numpy'
+
+[tool.ruff.pylint]
+max-args = 7
 
 [tool.pylint.messages_control]
 enable = [
@@ -48,6 +76,9 @@ disable_error_code = ['var-annotated', 'import']
 check_untyped_defs = true
 warn_unused_ignores = true
 warn_unused_configs = true
+exclude = ['.*/mbq/.*']
+cache_dir = '.cache/mypy'
 
 [tool.pytest.ini_options]
 addopts = '-v'
+cache_dir = '.cache/pytest'

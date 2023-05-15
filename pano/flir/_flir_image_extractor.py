@@ -13,6 +13,8 @@ import numpy as np
 from PIL import Image
 from PIL import UnidentifiedImageError
 
+# ruff: noqa
+
 
 class FlirExifNotFoundError(ValueError):
   pass

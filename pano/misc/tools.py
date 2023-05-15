@@ -159,10 +159,7 @@ def crop_mask(mask: np.ndarray,
   bbox = mask_bbox(mask=mask.astype(bool), morphology_open=morphology_open)
   cr = CropRange(*bbox, mask.shape[:2])
 
-  if cr.cropped:
-    cropped = cr.crop(mask)
-  else:
-    cropped = mask
+  cropped = cr.crop(mask) if cr.cropped else mask
 
   return cr, cropped
 
@@ -358,7 +355,7 @@ def prep_compare_fig(images: Tuple[np.ndarray, np.ndarray],
   axes[1, 0].imshow(cb, cmap=cmap)
   axes[1, 1].imshow(diff, cmap=cmap)
 
-  for ax, title in zip(axes.ravel(), titles):
+  for ax, title in zip(axes.ravel(), titles, strict=True):
     ax.set_axis_off()
     ax.set_title(title)
 
@@ -376,9 +373,12 @@ class Interpolation(IntEnum):
   BiQuintic = 5
 
 
+INTRP = Interpolation
+
+
 def limit_image_size(image: np.ndarray,
                      limit: int,
-                     order=Interpolation.BiCubic,
+                     order=INTRP.BiCubic,
                      anti_aliasing=True) -> np.ndarray:
   max_shape = np.max(image.shape[:2]).astype(float)
   if max_shape <= limit:
@@ -404,6 +404,8 @@ class SegMask:
   WALL = 1
   WINDOW = 2
   ETC = 3
+
+  # TODO index2vis, SCALE, read?
 
   @classmethod
   def index_to_vis(cls, array: np.ndarray):

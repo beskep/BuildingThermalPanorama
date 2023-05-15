@@ -1,10 +1,11 @@
 """경로 및 로거 설정"""
 
 from logging import LogRecord
+from operator import length_hint
 from os import PathLike
 from pathlib import Path
 import sys
-from typing import Optional, Union
+from typing import Iterable, Optional, Sequence, TypeVar, Union
 
 try:
   import winsound
@@ -58,7 +59,7 @@ console = Console(theme=Theme({'logging.level.success': 'blue'}))
 _handler = _Handler(console=console, log_time_format='[%X]')
 
 
-def set_logger(level: Union[int, str] = 20):
+def set_logger(level: Union[int, str] = 20, name='pano'):
   if isinstance(level, str):
     try:
       level = _Handler.LVLS[level.upper()]
@@ -73,7 +74,7 @@ def set_logger(level: Union[int, str] = 20):
                format='{message}',
                backtrace=False,
                enqueue=True)
-    logger.add('pano.log',
+    logger.add(f'{name}.log',
                level='DEBUG',
                rotation='1 month',
                retention='1 year',
@@ -89,7 +90,10 @@ def set_logger(level: Union[int, str] = 20):
     logger.level(name='BLANK', no=_Handler.BLANK_NO)
 
 
-def track(sequence,
+T = TypeVar('T')
+
+
+def track(sequence: Iterable[T] | Sequence[T],
           description='Working...',
           total: Optional[float] = None,
           transient=True,
@@ -103,7 +107,7 @@ def track(sequence,
                 **kwargs)
 
 
-def ptrack(sequence,
+def ptrack(sequence: Iterable[T] | Sequence[T],
            description='Working...',
            total: Optional[float] = None,
            transient=True,
@@ -113,7 +117,9 @@ def ptrack(sequence,
   Yield progress ratio and value.
   """
   if total is None:
-    total = len(sequence)
+    total = length_hint(sequence)
+  if not total:
+    raise ValueError(f'Invalid total value: {total}')
 
   for idx, value in _track(sequence=enumerate(sequence),
                            description=description,

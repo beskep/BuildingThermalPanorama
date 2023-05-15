@@ -7,13 +7,15 @@ from loguru import logger
 import matplotlib.pyplot as plt
 import numpy as np
 from omegaconf import OmegaConf
+import yaml
 
 from pano import stitch
 from pano import utils
 from pano.distortion import perspective as persp
 from pano.flir import FlirExtractor
-from pano.misc import exif
+from pano.misc import sp
 from pano.misc import tools
+from pano.misc.anomaly import anomaly_threshold
 from pano.misc.imageio import ImageIO as IIO
 from pano.misc.imageio import save_webp_images
 import pano.registration.registrator.simpleitk as rsitk
@@ -93,13 +95,13 @@ class ThermalPanorama:
 
     def _get_model(exif: dict):
       # iterable 중 조건을 만족하는 첫 element
-      tag = next((x for x in exif.keys() if x in tags), None)
+      tag = next((x for x in exif if x in tags), None)
       if tag is None:
         return None
 
       return exif[tag]
 
-    exifs = exif.get_exif(files=[x.as_posix() for x in raw_files], tags=tags)
+    exifs = sp.get_exif(files=[x.as_posix() for x in raw_files], tags=tags)
     models = [_get_model(x) for x in exifs]
     models = [x for x in models if x is not None]
 
@@ -224,10 +226,10 @@ class ThermalPanorama:
     return self._config['file']['size_limit']
 
   def limit_size(self, image: np.ndarray, aa=True) -> np.ndarray:
-    if aa:
-      order = tools.Interpolation.BiCubic
+    if aa:  # noqa: SIM108
+      order = tools.INTRP.BiCubic
     else:
-      order = tools.Interpolation.NearestNeighbor
+      order = tools.INTRP.NearestNeighbor
 
     return tools.limit_image_size(image=image,
                                   limit=self._size_limit,
@@ -237,9 +239,8 @@ class ThermalPanorama:
   def _init_registrator(self, shape):
     ropt: DictConfig = self._config['registration']
 
-    if self._camera in self._config['camera']:
-      camera = self._camera
-    else:
+    camera = self._camera
+    if camera not in self._config['camera']:
       camera = 'default'
 
     copt: DictConfig = self._config['camera'][camera]
@@ -546,7 +547,7 @@ class ThermalPanorama:
     self._stitch_others(stitcher=stitcher, panorama=pano, sp=SP[sp2])
 
     # segmention mask 저장
-    stitcher.blend_type = False
+    stitcher.blend_type = False  # type: ignore
     stitcher.interp = stitch.Interpolation.NEAREST
     self._stitch_others(stitcher=stitcher, panorama=pano, sp=SP.SEG)
 
@@ -587,7 +588,7 @@ class ThermalPanorama:
       self._save_panorama(spectrum=SP.VIS, panorama=vis_pano, save_mask=False)
 
       # segmentation mask
-      stitcher.blend_type = False
+      stitcher.blend_type = False  # type: ignore
       stitcher.interp = stitch.Interpolation.NEAREST
       self._stitch_others(stitcher=stitcher, panorama=vis_pano, sp=SP.SEG)
 
@@ -604,15 +605,9 @@ class ThermalPanorama:
 
   def _init_perspective_correction(self):
     options = self._config['distort_correction']
-
-    canny_options = persp.CannyOptions(**options['canny'])
-    hough_options = persp.HoughOptions(**options['hough'])
-    correction_opts = persp.CorrectionOptions(**options['correction'])
-
-    pc = persp.PerspectiveCorrection(canny_options=canny_options,
-                                     hough_options=hough_options,
-                                     correction_options=correction_opts)
-    return pc
+    return persp.PerspectiveCorrection(canny=options['canny'],
+                                       hough=options['hough'],
+                                       correction=options['correction'])
 
   def _correct_others(self,
                       correction: persp.Correction,
@@ -627,9 +622,9 @@ class ThermalPanorama:
 
     if spectrum is SP.SEG:
       pano = tools.SegMask.vis_to_index(pano)
-      order = tools.Interpolation.NearestNeighbor
+      order = tools.INTRP.NearestNeighbor
     else:
-      order = tools.Interpolation.BiCubic
+      order = tools.INTRP.BiCubic
 
     if crop_range is not None and crop_range.cropped:
       pano = crop_range.crop(pano)
@@ -674,8 +669,8 @@ class ThermalPanorama:
     # 왜곡 보정
     try:
       crct = pc.perspective_correct(image=pano, mask=mask)
-    except persp.NotEnoughEdgelets as e:
-      raise persp.NotEnoughEdgelets(
+    except persp.NotEnoughEdgeletsError as e:
+      raise persp.NotEnoughEdgeletsError(
           '시점 왜곡을 추정할 edge의 개수가 부족합니다. '
           'Edge 추출 옵션을 변경하거나 높은 해상도의 파노라마를 사용하세요.') from e
 
@@ -750,3 +745,32 @@ class ThermalPanorama:
     if not separate:
       logger.info('Start distortion correction')
       self.correct()
+
+  def detect_generator(self):
+    fil = self.fm.files(DIR.IR)
+    fml = self.fm.files(DIR.SEG)
+    assert len(fil) == len(fml)
+
+    threshold = {}
+    for r, (fi, fm) in utils.ptrack(zip(fil, fml, strict=True),
+                                    description='Detecting anomaly area...',
+                                    total=len(fil)):
+      ir = IIO.read(fi)
+      mask = IIO.read(fm)
+      mask = tools.SegMask.vis_to_index(mask)
+
+      arr = ir[mask == tools.SegMask.WALL]
+      t, model = anomaly_threshold(array=arr)
+      threshold[fi.stem] = round(t, 2)
+
+      cluster = model.predict(ir.reshape([-1, 1])).reshape(ir.shape)
+      path = fi.parent / f'{fi.stem}_cluster.png'
+      IIO.save(path, tools.uint8_image(cluster))
+
+      yield r
+
+    path = self.fm.anomaly_path()
+    with path.open('w') as f:
+      yaml.safe_dump(threshold, f)
+
+    return 1.0

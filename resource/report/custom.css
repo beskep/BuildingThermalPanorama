@@ -1,0 +1,16 @@
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+KR&display=swap");
+
+html {
+  margin: 5%;
+  font-family: "본고딕 KR", "Noto Sans KR", "맑은 고딕", "Malgun Gothic",
+    sans-serif;
+}
+
+th,
+td {
+  text-align: center;
+}
+
+th {
+  background-color: lightgray;
+}

@@ -12,8 +12,9 @@ from pano.interface.common.init import init_project
 init_project(qt=True)
 
 # pylint: disable=wrong-import-position
+# ruff: noqa: E402
 from pano import utils
-from pano.interface.controller import Controller
+from pano.interface.controller.panorama import Controller
 from pano.interface.mbq import FigureCanvas
 from pano.interface.mbq import QtCore
 from pano.interface.mbq import QtGui
@@ -40,14 +41,13 @@ class Files:
   QML = utils.DIR.QT / 'qml/Panorama.qml'
 
 
-def _init(debug, loglevel, qmh):
-  loglevel = min(loglevel, (10 if debug else 20))
+def _init(loglevel):
   utils.set_logger(loglevel)
 
   if loglevel < 10:
     os.environ['QT_DEBUG_PLUGINS'] = '1'
 
-  if qmh:
+  if loglevel < 5:
     QtCore.qInstallMessageHandler(_qt_message_handler)
 
   QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
@@ -63,7 +63,8 @@ def _init(debug, loglevel, qmh):
 @click.option('-l', '--loglevel', default=20)
 def main(debug=False, loglevel=20):
   freeze_support()
-  _init(debug=debug, loglevel=loglevel, qmh=loglevel < 10)
+  loglevel = min(loglevel, (10 if debug else 20))
+  _init(loglevel=loglevel)
 
   QtQml.qmlRegisterType(FigureCanvas, 'Backend', 1, 0, 'FigureCanvas')
 

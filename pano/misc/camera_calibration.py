@@ -98,8 +98,7 @@ def compute_camera_matrix(files: List[Union[str, Path]],
   img_points = []
   img_size = None
   for file in files:
-    file = Path(file)
-    img_size, ret, corners = _detect_chessboard(file=file,
+    img_size, ret, corners = _detect_chessboard(file=Path(file),
                                                 save_dir=save_dir,
                                                 img_size=img_size,
                                                 pattern_size=pattern_size,

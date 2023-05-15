@@ -7,5 +7,5 @@ import QtQuick.Layouts 1.15
 ToolBar {
     Layout.fillWidth : true
     Material.elevation : 1
-    Material.background : Material.color(Material.foreground, Material.ShadeA200)
+    Material.background : Material.primary
 }

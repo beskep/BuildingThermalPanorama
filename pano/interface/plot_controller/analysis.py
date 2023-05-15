@@ -1,3 +1,4 @@
+from contextlib import suppress
 import dataclasses as dc
 from shutil import copy2
 from typing import Any, Optional
@@ -24,6 +25,7 @@ from pano.misc import tools
 from pano.misc.cmap import apply_colormap
 from pano.misc.imageio import ImageIO
 from pano.misc.imageio import load_webp_mask
+from pano.misc.sp import wkhtmltopdf
 
 from .plot_controller import PanoPlotController
 from .plot_controller import QtGui
@@ -66,7 +68,7 @@ def _vulnerable_area_ratio(factor, vulnerable, mask):
 
 def _summarize(ir, seg, threshold, factor, index: int):
   mask = seg == index
-  summ = analysis.summary(ir[mask])
+  summ = analysis.summarize(ir[mask])
 
   if factor is None:
     summ['vulnerable'] = '-'
@@ -192,7 +194,7 @@ class Images:
     return np.absolute((self.ir - self.teti[0]) / (self.teti[1] - self.teti[0]))
 
   def vulnerable_area(self, window=True):
-    if window:
+    if window:  # noqa: SIM108
       mask = np.isin(self.seg, [1, 2])
     else:
       mask = self.seg == 1
@@ -227,24 +229,29 @@ class Images:
         'Window': _summarize(self.ir, self.seg, self.threshold, factor, index=2)
     }
 
-  def _path(self, sp):
-    return self._fm.panorama_path(DIR.ANLY, sp, error=False)
+  def _path(self, sp, color=False):
+    path = self._fm.panorama_path(DIR.ANLY, sp, error=False)
+    if color:
+      path = self._fm.color_path(path)
+    if path.suffix != '.npy':
+      path = path.parent / 'source' / path.name
+
+    return path
 
   def save(self):
-    self._fm.subdir(DIR.ANLY, mkdir=True)
+    self._path(SP.SEG).parent.mkdir(parents=True, exist_ok=True)
+
+    # SEG
     ImageIO.save(self._path(SP.SEG), tools.SegMask.index_to_vis(self.seg))
 
     # IR
-    irp = self._path(SP.IR)
-    ImageIO.save(irp, self.ir)
-    ImageIO.save(self._fm.color_path(irp),
+    ImageIO.save(self._path(SP.IR), self.ir)
+    ImageIO.save(self._path(SP.IR, color=True),
                  apply_colormap(self.ir, cmap=_get_cmap(), na=True))
 
     # temperature factor
-    try:
+    with suppress(ValueError):
       ImageIO.save(self._path(SP.TF), self.temperature_factor())
-    except ValueError:
-      pass
 
     # VIS, mask
     if self._crop is not None:
@@ -255,8 +262,8 @@ class Images:
         img[~cm] = 0
         ImageIO.save(self._path(sp), img)
     else:
-      copy2(self._fm.panorama_path(DIR.COR, SP.VIS), self._fm.subdir(DIR.ANLY))
-      copy2(self._fm.panorama_path(DIR.COR, SP.MASK), self._fm.subdir(DIR.ANLY))
+      copy2(self._fm.panorama_path(DIR.COR, SP.VIS), self._path(SP.VIS))
+      copy2(self._fm.panorama_path(DIR.COR, SP.MASK), self._path(SP.MASK))
 
 
 class PointSelector(_SelectorWidget):
@@ -527,8 +534,9 @@ class AnalysisPlotController(PanoPlotController):
     self._axes_image.set_clim(vmin, vmax)
     self.draw()
 
-  def save(self):
-    subdir = self.fm.subdir(DIR.ANLY, mkdir=True)
+  def save_plot(self):
+    subdir = self.fm.subdir(DIR.ANLY) / 'source'
+    subdir.mkdir(parents=True, exist_ok=True)
     distribution = self.setting.distribution
 
     # distribution
@@ -553,10 +561,7 @@ class AnalysisPlotController(PanoPlotController):
 
     self.plot()
 
-  def save_report(self):
-    src = utils.DIR.RESOURCE.joinpath('Report.html')
-    dst = self.fm.subdir(DIR.ANLY).joinpath('Report.html')
-
+  def _report_stats(self):
     summ = self.images.summarize()
     summ_wall = {f'{k}_wall': v for k, v in summ['Wall'].items()}
     summ_window = {f'{k}_window': v for k, v in summ['Window'].items()}
@@ -565,10 +570,37 @@ class AnalysisPlotController(PanoPlotController):
         for k, v in (summ_wall | summ_window).items()
     }
 
-    fmt = dict(exterior_temperature=self.images.teti[0],
-               interior_temperature=self.images.teti[1],
-               **self.correction_params.asdict(),
-               **summ_all)
+    return {
+        'exterior_temperature': self.images.teti[0],
+        'interior_temperature': self.images.teti[1],
+        **self.correction_params.asdict(),
+        **summ_all
+    }
 
-    txt = src.read_text(encoding='utf-8')
-    dst.write_text(data=txt.format_map(fmt), encoding='utf-8')
+  def save_report(self):
+    report = utils.DIR.RESOURCE / 'report'
+    dst = self.fm.subdir(DIR.ANLY)
+
+    fmt = self._report_stats()
+    text = report.joinpath('Report.html').read_text(encoding='utf-8')
+    text = text.format_map(fmt)
+
+    # html
+    html = dst / 'Report.html'
+    html.write_text(data=text, encoding='utf-8')
+
+    # pdf
+    for css in report.glob('*.css'):
+      copy2(css, dst / 'source')
+
+    wkhtmltopdf(html, html.with_suffix('.pdf'))
+
+    # unlink
+    html.unlink()
+    for css in dst.joinpath('source').glob('*.css'):
+      css.unlink()
+
+  def save(self):
+    self.images.save()
+    self.save_plot()
+    self.save_report()

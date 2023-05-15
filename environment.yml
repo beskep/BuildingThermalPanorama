@@ -4,17 +4,17 @@ channels:
     - conda-forge
     - simpleitk
 dependencies:
-    - python>=3.9
+    - python>=3.10
     # UI
     - pip
     - pip:
           - webp
-          - PyQt5>=5.15 # or
-          # - PySide2>=5.15
-          # - matplotlib-backend-qtquick
+          - PyQt5>=5.15
+          - PyQtWebEngine
     # data analysis
     - numpy
     - nomkl
+    - scikit-learn
     - matplotlib-base
     - seaborn-base
     - pandas

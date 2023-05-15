@@ -835,9 +835,11 @@ class Stitcher:
     blender.prepare(dst_size)
     for image, mask, corner in zip(images, masks, corners):
       if image.ndim == 2:
-        image = np.repeat(image[:, :, np.newaxis], repeats=3, axis=2)
+        img = np.repeat(image[:, :, np.newaxis], repeats=3, axis=2)
+      else:
+        img = image
 
-      blender.feed(img=image, mask=mask, tl=corner)
+      blender.feed(img=img, mask=mask, tl=corner)
 
     stitched_image, stitched_mask = blender.blend(dst=None, dst_mask=None)
 

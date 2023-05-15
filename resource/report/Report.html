@@ -1,43 +1,45 @@
 ﻿<!DOCTYPE html>
-<html>
+<html style="padding: 10%">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Report</title>
-    <link rel="stylesheet" href="https://stackedit.io/style.css" />
+    <link rel="stylesheet" href="source/materialize.css" />
+    <link rel="stylesheet" href="source/custom.css" />
   </head>
 
   <body class="stackedit">
     <div class="stackedit__html">
-      <h1 id="열화상-파노라마를-통한-건물-에너지-검진-결과">
+      <h2 id="열화상-파노라마를-통한-건물-에너지-검진-결과">
         열화상 파노라마를 통한 건물 에너지 검진 결과
-      </h1>
-      <h2 id="파노라마">파노라마</h2>
+      </h2>
+      <br />
+      <h3 id="파노라마">파노라마</h3>
 
       <table>
         <tbody>
           <tr>
             <td>
-              <img src="PanoramaIR_color.png" alt="description" />
+              <img src="source/PanoramaIR_color.png" style="width: 100%" />
             </td>
             <td>
-              <img src="PanoramaVIS.jpg" alt="description" />
+              <img src="source/PanoramaVIS.jpg" style="width: 100%" />
             </td>
           </tr>
         </tbody>
         <tbody>
           <tr>
             <td>
-              <img src="PanoramaMask.png" alt="description" />
+              <img src="source/PanoramaMask.png" style="width: 100%" />
             </td>
             <td>
-              <img src="PanoramaSegmentation.png" alt="description" />
+              <img src="source/PanoramaSegmentation.png" style="width: 100%" />
             </td>
           </tr>
         </tbody>
       </table>
-      <h2 id="온도-분포">온도 분포</h2>
-      <h3 id="온도-보정-인자">온도 보정 인자</h3>
+      <h3 id="온도-분포">온도 분포</h3>
+      <h4 id="온도-보정-인자">온도 보정 인자</h4>
 
       <table>
         <thead>
@@ -55,10 +57,10 @@
           </tr>
         </tbody>
       </table>
-      <h3 id="온도-분포-1">온도 분포</h3>
-      <p>
-        <img src="TemperatureDistribution.png" alt="description" />
-      </p>
+      <h4 id="온도-분포-1">온도 분포</h4>
+      <div class="plot" style="z-index: 1000; position: relative">
+        <img src="source/TemperatureDistribution.png" style="width: 100%" />
+      </div>
 
       <table>
         <thead>
@@ -90,9 +92,9 @@
           </tr>
         </tbody>
       </table>
-      <h2 id="취약부위-검진-결과">취약부위 검진 결과</h2>
+      <h3 id="취약부위-검진-결과">취약부위 검진 결과</h3>
       <p>
-        <img src="VulnerableArea.png" alt="description" />
+        <img src="source/VulnerableArea.png" style="width: 100%" />
       </p>
 
       <table>

@@ -48,7 +48,9 @@ class VIAProject:
       raise FileNotFoundError(path)
 
     self._path = path
-    self._json = json.load(open(path, 'r', encoding='utf-8-sig'))
+    with path.open('r', encoding='utf-8-sig') as f:
+      self._json = json.load(f)
+
     self._image_metadata = self._json['_via_img_metadata']
     self._fname_dict = {
         Path(self._image_metadata[x]['filename']).resolve().as_posix(): x
@@ -81,7 +83,7 @@ class VIAProject:
 
       ra = region['region_attributes'][self._attr_name]
       if not any(x in ra for x in self._attr_ids):
-        warn(f'file {fname}: attribute 지정 안됨')
+        warn(f'file {fname}: attribute 지정 안됨', UserWarning, stacklevel=1)
         continue
 
       for x in self._attr_ids:

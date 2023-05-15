@@ -6,14 +6,14 @@ from typing import Callable, Optional, Tuple, Union
 from loguru import logger
 import numpy as np
 from numpy.linalg import inv
-import SimpleITK as sitk
+import SimpleITK as sitk  # noqa: N813
 from skimage.transform import estimate_transform
 
 from pano.misc.tools import bin_size
 
 from .registrator import BaseRegistrator
-from .registrator import RegisteringImage
-from .registrator import RegistrationPreprocess
+from .registrator import RegisteringImage  # noqa: F401
+from .registrator import RegistrationPreprocess  # noqa: F401
 
 
 class Metric(enum.Enum):
@@ -277,11 +277,10 @@ class SITKRegistrator(BaseRegistrator):
     """
     if scale is not None:
       self._scale0 = scale
+    elif not (fixed_alpha is None or moving_alpha is None):
+      self._scale0 = np.tan(fixed_alpha / 2.0) / np.tan(moving_alpha / 2.0)
     else:
-      if not (fixed_alpha is None or moving_alpha is None):
-        self._scale0 = np.tan(fixed_alpha / 2.0) / np.tan(moving_alpha / 2.0)
-      else:
-        self._scale0 = None
+      self._scale0 = None
 
     self._trnsl0 = None if translation is None else tuple(translation)
     logger.debug('Initial scale: {} | translation: {}', self._scale0,
@@ -406,5 +405,7 @@ class SITKRegistrator(BaseRegistrator):
   #     preprocess: RegistrationPreprocess,
   #     **kwargs,
   # ) -> Tuple[RegisteringImage, RegisteringImage]:
+  #   return super().prep_and_register(fixed_image, moving_image, preprocess,
+  #                                    **kwargs)
   #   return super().prep_and_register(fixed_image, moving_image, preprocess,
   #                                    **kwargs)
