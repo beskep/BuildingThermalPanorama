@@ -119,6 +119,10 @@ class ThermalPanoramaFileManager:
     self._raw_pattern = raw_pattern
 
   @property
+  def wd(self):
+    return self._wd
+
+  @property
   def raw_pattern(self):
     return self._raw_pattern
 

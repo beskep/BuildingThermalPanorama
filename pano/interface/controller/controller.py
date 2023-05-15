@@ -25,8 +25,8 @@ def path2uri(path):
   return 'file:///' + Path(path).as_posix()
 
 
-def uri2path(url: str):
-  return Path(url.removeprefix('file:///'))
+def uri2path(uri: str):
+  return Path(uri.removeprefix('file:///'))
 
 
 def _command(queue: mp.Queue, tp, command: str, step: int, count: float):

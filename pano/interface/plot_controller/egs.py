@@ -1,4 +1,7 @@
 from collections import defaultdict
+from collections.abc import Iterable
+from functools import cached_property
+from itertools import chain
 from pathlib import Path
 
 from matplotlib.axes import Axes
@@ -7,6 +10,7 @@ from matplotlib.backend_bases import MouseEvent
 from matplotlib.cm import get_cmap
 from matplotlib.figure import Figure
 from matplotlib.gridspec import GridSpec
+from matplotlib.transforms import Bbox
 import numpy as np
 from numpy.typing import NDArray
 import seaborn as sns
@@ -15,27 +19,119 @@ import yaml
 
 from pano.interface.analysis import summarize
 from pano.interface.common.pano_files import DIR
+from pano.interface.common.pano_files import ThermalPanoramaFileManager
 from pano.interface.mbq import NavigationToolbar2QtQuick
 from pano.misc import tools
-from pano.misc.imageio import ImageIO as IIO
+from pano.misc.imageio import ImageIO
 
 from .plot_controller import FigureCanvas
 from .plot_controller import PanoPlotController as _PanoPlotCtrl
 from .plot_controller import QtGui
 
+CMAP = get_cmap('inferno')
+
+
+class DataNotFoundError(ValueError):
+  PROCESS = ''
+  DATA = ''
+
+  def __init__(self, path=None) -> None:
+    self.path = path
+
+  def __str__(self) -> str:
+    data = f' ({self.DATA} 미발견)' if self.DATA else ''
+    return f'{self.PROCESS} 단계가 필요합니다.{data}'
+
+
+class NotExtractedError(DataNotFoundError):
+  PROCESS = '파일 추출'
+
+
+class NotRegisteredError(DataNotFoundError):
+  PROCESS = '열·실화상 정합'
+  DATA = ''
+
+
+class NotSegmentedError(DataNotFoundError):
+  PROCESS = '이상 영역 검출'
+  DATA = '외피 분할 데이터'
+
+
+class AnomalyThresholdError(DataNotFoundError):
+  PROCESS = '이상 영역 검출'
+  DATA = '이상 영역 임계치'
+
+
+class Images:
+
+  def __init__(self, path: Path, fm: ThermalPanoramaFileManager) -> None:
+    self._path = path
+    self._fm = fm
+
+  @cached_property
+  def ir(self):
+    try:
+      return ImageIO.read(self._fm.change_dir('IR', self._path))
+    except FileNotFoundError as e:
+      raise NotExtractedError(e.args[0]) from e
+
+  @cached_property
+  def vis(self):
+    try:
+      return ImageIO.read(self._fm.change_dir(DIR.VIS, self._path))
+    except FileNotFoundError as e:
+      raise NotExtractedError(e.args[0]) from e
+
+  def rgst(self):
+    try:
+      return ImageIO.read(self._fm.change_dir(DIR.RGST, self._path))
+    except FileNotFoundError as e:
+      raise NotRegisteredError(e.args[0]) from e
+
+  def seg(self):
+    try:
+      array = ImageIO.read(self._fm.change_dir(DIR.SEG, self._path))
+    except FileNotFoundError as e:
+      raise NotSegmentedError(e.args[0]) from e
+
+    return tools.SegMask.vis_to_index(array)
+
+  def threshold(self):
+    try:
+      with self._fm.anomaly_path().open() as f:
+        threshold = yaml.safe_load(f)
+
+      return threshold[self._path.stem]
+    except (FileNotFoundError, KeyError):
+      raise AnomalyThresholdError(self._path) from None
+
+  def data(self):
+    wall = self.seg() == tools.SegMask.WALL
+    anomaly = wall & (self.ir > self.threshold())
+    array = {
+        'normal': self.ir[wall & ~anomaly].ravel(),
+        'anomaly': self.ir[anomaly].ravel()
+    }
+    summary = {k: summarize(v) for k, v in array.items()}
+
+    return anomaly, array, summary
+
 
 class _Axes:
-  """
+  """Matplotlib Axes.
+
   [[left, center, right],
    [bottom]]
   """
 
-  def __init__(self, fig: Figure, width_ratio=(1, 0.05, 1)) -> None:
-    gs = GridSpec(2, 3, width_ratios=width_ratio)
+  def __init__(self, fig: Figure) -> None:
+    gs = GridSpec(2, 3, width_ratios=(1, 0.05, 1))
+    self.gs = gs
     self._axes: tuple[Axes, ...] = tuple(
         fig.add_subplot(x) for x in [gs[0, 0], gs[0, 1], gs[0, 2], gs[1, :]])
 
     self.anomaly = False
+    self._hide_bottom = False
 
   def __iter__(self):
     yield from self.axes
@@ -60,6 +156,16 @@ class _Axes:
   @property
   def bottom(self) -> Axes:
     return self._axes[3]
+
+  @property
+  def hide_bottom(self):
+    return self._hide_bottom
+
+  @hide_bottom.setter
+  def hide_bottom(self, value: bool):
+    value = bool(value)
+    self._hide_bottom = value
+    self.gs.set_height_ratios((1, 0.2) if value else (1, 1))
 
   def titles(self):
     return ('열화상', None, '이상영역' if self.anomaly else '실화상', '온도 분포')
@@ -94,8 +200,8 @@ class _Axes:
 
 class NavigationToolbar(NavigationToolbar2QtQuick):
 
-  def __init__(self, canvas, parent=None):
-    super().__init__(canvas, parent)
+  def save_figure(self, *_):
+    pass
 
   @property
   def zoom_mode(self):
@@ -137,16 +243,12 @@ class MousePoints:
 
   def remove_points(self, ax: Axes | None):
     axes = tuple(self._points.keys()) if ax is None else (ax,)
-    for ax in axes:
-      self._remove_points(ax)
+    for ax_ in axes:
+      self._remove_points(ax_)
 
   def all_selected(self):
     return (len(self._coords) >= 2 and
             all(len(x) >= self._REQUIRED for x in self._coords.values()))
-
-
-class AnomalyThresholdNotSetError(ValueError):
-  pass
 
 
 def _limit(data: NDArray, k=2.5):
@@ -155,12 +257,31 @@ def _limit(data: NDArray, k=2.5):
   return (oa.lower, oa.upper)
 
 
+def _bbox(axes: Axes | Iterable[Axes], *, full=False):
+  """From https://stackoverflow.com/questions/4325733/save-a-subplot-in-matplotlib."""
+  if isinstance(axes, Axes):
+    axes = [axes]
+
+  if not full:
+    items = axes
+  else:
+    items = chain.from_iterable([
+        ax,
+        ax.title,
+        ax.xaxis.label,
+        ax.yaxis.label,
+        *ax.get_xticklabels(),
+        *ax.get_yticklabels(),
+    ] for ax in axes)
+
+  return Bbox.union([x.get_window_extent() for x in items])
+
+
 class PlotController(_PanoPlotCtrl):
 
   def __init__(self, parent=None) -> None:
     super().__init__(parent)
     self._axes: _Axes
-    self._cmap = get_cmap('inferno')
     self._toolbar: NavigationToolbar
 
     self._last_file: Path | None = None
@@ -183,6 +304,7 @@ class PlotController(_PanoPlotCtrl):
 
   def _set_style(self):
     self.axes.set_style()
+    self.fig.subplots_adjust()
     self.fig.tight_layout()
 
   def reset(self):
@@ -209,7 +331,7 @@ class PlotController(_PanoPlotCtrl):
       return
 
     ax = event.inaxes
-    if ax is None:
+    if ax not in {self.axes.left, self.axes.right}:
       return
 
     if event.button == MouseButton.LEFT and not self._toolbar.zoom_mode:
@@ -226,10 +348,10 @@ class PlotController(_PanoPlotCtrl):
 
   def update_threshold(self):
     p = self.fm.anomaly_path()
-    with p.open('r') as f:
+    with p.open() as f:
       self._threshold = yaml.safe_load(f)
 
-  def navigation(self, home: bool, zoom: bool):
+  def navigation(self, *, home: bool, zoom: bool):
     if self.axes.left.has_data() and home:
       self._toolbar.home()
       return
@@ -239,86 +361,71 @@ class PlotController(_PanoPlotCtrl):
   def plot(self, path: Path, mode: str):
     modes = {'raw', 'registration', 'anomaly'}
     if mode not in modes:
-      raise ValueError(f'{mode!r} not in {modes!r}')
+      msg = f'{mode!r} not in {modes!r}'
+      raise ValueError(msg)
 
     self.reset()
     self._last_file = path
+    self.axes.hide_bottom = mode == 'raw'  # raw plot의 경우 bottom 높이를 축소
+
+    images = Images(path, self.fm)
 
     if mode == 'registration':
-      summary = self._plot_rgst(path)
+      self._plot_rgst(images)
+      summary = None
     else:
-      summary = self._plot(path, anomaly=mode == 'anomaly')
+      summary = self._plot(images, anomaly=mode == 'anomaly')
+
+    if mode == 'anomaly':
+      self._save(stem=path.stem)
 
     return summary
 
-  def _plot(self, path: Path, anomaly: bool):
-    ir = IIO.read(self.fm.change_dir(DIR.IR, path))
-
-    try:
-      vis = IIO.read(self.fm.change_dir(DIR.RGST, path))
-    except FileNotFoundError:
-      vis = IIO.read(self.fm.change_dir(DIR.VIS, path))
-
-    lim = _limit(ir)
-    im = self.axes.left.imshow(ir, cmap=self._cmap, vmin=lim[0], vmax=lim[1])
+  def _plot(self, images: Images, *, anomaly: bool):
+    lim = _limit(images.ir)
+    im = self.axes.left.imshow(images.ir, cmap=CMAP, vmin=lim[0], vmax=lim[1])
     self.fig.colorbar(im, cax=self.axes.center, ticklocation='left')
 
-    self.axes.right.imshow(vis)
+    self.axes.right.imshow(images.rgst() if anomaly else images.vis)
 
     summary = None
     if anomaly:
-      summary = self._plot_anomaly(path=path, ir=ir, lim=lim)
+      summary = self._plot_anomaly(images=images, lim=lim)
       self.axes.anomaly = True
 
     self.draw()
 
     return summary
 
-  def _plot_anomaly(self, path: Path, ir: NDArray, lim: tuple[float, float]):
-    try:
-      threshold = self._threshold[path.stem]
-    except KeyError as e:
-      raise AnomalyThresholdNotSetError(f'threshold not found: "{path}"') from e
+  def _plot_anomaly(self, images: Images, lim: tuple[float, float]):
+    anomaly, array, summary = images.data()
 
-    seg = IIO.read(self.fm.change_dir(DIR.SEG, path))
-    seg = tools.SegMask.vis_to_index(seg)
-    mw = seg == tools.SegMask.WALL  # wall mask
-    ma = mw & (ir > threshold)  # anomaly mask
-
-    self.axes.right.imshow(np.ma.MaskedArray(ir, ~ma),
-                           cmap=self._cmap,
+    self.axes.right.imshow(np.ma.MaskedArray(images.ir, ~anomaly),
+                           cmap=CMAP,
                            vmin=lim[0],
                            vmax=lim[1])
 
-    data = {'정상 영역': ir[mw & ~ma].ravel(), '이상 영역': ir[ma].ravel()}
-    sns.histplot(data=data, stat='probability', ax=self.axes.bottom)
+    array = {'정상 영역': array['normal'], '이상 영역': array['anomaly']}
+    sns.histplot(data=array, stat='probability', ax=self.axes.bottom)
     self.axes.bottom.set_xlim(*lim)
 
-    return {k: summarize(v) for k, v in data.items()}
+    return summary
 
-  def _plot_rgst(self, path: Path):
-    ir = IIO.read(self.fm.change_dir(DIR.IR, path))
-    vis = IIO.read(self.fm.change_dir(DIR.VIS, path))
+  def _plot_rgst(self, images: Images):
+    lim = _limit(images.ir)
+    self.axes.left.imshow(images.ir, cmap=CMAP, vmin=lim[0], vmax=lim[1])
+    self.axes.right.imshow(images.vis)
 
-    lim = _limit(ir)
-    self.axes.left.imshow(ir, cmap=self._cmap, vmin=lim[0], vmax=lim[1])
-    self.axes.right.imshow(vis)
-
-    if (p := self.fm.change_dir(DIR.RGST, path)).exists():
-      registered = IIO.read(p)
-      self._plot_rgst_compare(ir=ir, registered=registered)
+    try:
+      rgst = images.rgst()
+    except NotRegisteredError:
+      pass
+    else:
+      self._plot_rgst_compare(ir=images.ir, registered=rgst)
 
     self.draw()
 
-  def _plot_rgst_compare(self, ir: NDArray, registered: NDArray | None = None):
-    assert self._last_file is not None
-
-    if registered is None:
-      try:
-        registered = IIO.read(self.fm.change_dir(DIR.RGST, self._last_file))
-      except FileNotFoundError as e:
-        raise ValueError('정합 영상이 없음') from e
-
+  def _plot_rgst_compare(self, ir: NDArray, registered: NDArray):
     checkerboard = tools.prep_compare_images(ir,
                                              registered,
                                              norm=True,
@@ -335,16 +442,27 @@ class PlotController(_PanoPlotCtrl):
     trsf = transform.ProjectiveTransform()
     trsf.estimate(src=src, dst=dst)
 
-    ir = IIO.read(self.fm.change_dir(DIR.IR, self._last_file))
-    vis = IIO.read(self.fm.change_dir(DIR.VIS, self._last_file))
-
-    registered = transform.warp(image=vis,
+    image = Images(self._last_file, self.fm)
+    registered = transform.warp(image=image.vis,
                                 inverse_map=trsf.inverse,
-                                output_shape=ir.shape[:2],
+                                output_shape=image.ir.shape[:2],
                                 preserve_range=True)
 
-    self._plot_rgst_compare(ir=ir, registered=registered)
+    self._plot_rgst_compare(ir=image.ir, registered=registered)
 
     self.fm.subdir(DIR.RGST).mkdir(exist_ok=True)
-    IIO.save(path=self.fm.change_dir(DIR.RGST, self._last_file),
-             array=tools.uint8_image(registered))
+    ImageIO.save(path=self.fm.change_dir(DIR.RGST, self._last_file),
+                 array=tools.uint8_image(registered))
+
+  def _save(self, stem: str, dpi=300):
+    directory = self.fm.wd / '03 Report'  # TODO file manager
+    directory.mkdir(exist_ok=True)
+
+    axes = [self.axes.left, self.axes.right, self.axes.bottom]
+    suffixes = ['', '_anomaly', '_hist']
+
+    for ax, suffix in zip(axes, suffixes, strict=True):
+      path = directory / f'{stem}{suffix}.png'
+      bbox = _bbox(ax, full=suffix == '_hist').transformed(
+          self.fig.dpi_scale_trans.inverted())
+      self.fig.savefig(path, bbox_inches=bbox, dpi=dpi)

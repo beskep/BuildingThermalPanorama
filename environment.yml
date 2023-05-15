@@ -9,9 +9,8 @@ dependencies:
     - pip
     - pip:
           - webp
-          - PyQt5>=5.15 # or
-          # - PySide2>=5.15
-          # - matplotlib-backend-qtquick
+          - PyQt5>=5.15
+          - PyQtWebEngine
     # data analysis
     - numpy
     - nomkl

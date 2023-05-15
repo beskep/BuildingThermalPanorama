@@ -6,7 +6,7 @@ import re
 import numpy as np
 from PIL import Image
 
-from pano.misc import subprocess
+from pano.misc import sp
 
 T0 = -273.15
 
@@ -89,7 +89,7 @@ class IRSignal:
     rsf = (meta.PlanckR1 / (meta.PlanckR2 * (signal + meta.PlanckO)) +
            meta.PlanckF)
 
-    mask = rsf <= 0.0
+    mask = rsf <= 0
     if np.any(mask):
       rsf[mask] = np.e
     else:
@@ -104,7 +104,7 @@ class IRSignal:
   @classmethod
   def _signal(cls, raw: np.ndarray, meta: FlirExif):
     e = meta.Emissivity
-    IRT = meta.IRWindowTransmission
+    irt = meta.IRWindowTransmission
     tau1, tau2 = cls._transmission(meta)
 
     signal_reflected = (
@@ -112,12 +112,12 @@ class IRSignal:
 
     atms = cls.temp2signal(meta.AtmosphericTemperature, meta)
     signal_atm1 = atms * (1 - tau1) / (e * tau1)
-    signal_atm2 = atms * (1 - tau2) / (e * tau1 * tau2 * IRT)
+    signal_atm2 = atms * (1 - tau2) / (e * tau1 * tau2 * irt)
 
-    signal_wind = (cls.temp2signal(meta.IRWindowTemperature, meta) * (1 - IRT) /
-                   (e * tau1 * IRT))
+    signal_wind = (cls.temp2signal(meta.IRWindowTemperature, meta) * (1 - irt) /
+                   (e * tau1 * irt))
 
-    signal_obj = ((raw / (e * tau1 * tau2 * IRT)) -
+    signal_obj = ((raw / (e * tau1 * tau2 * irt)) -
                   (signal_atm1 + signal_atm2 + signal_wind + signal_reflected))
 
     return signal_obj, signal_reflected
@@ -165,13 +165,13 @@ class FlirExtractor:
 
   @cached_property
   def meta(self):
-    meta = subprocess.get_exif(files=self._path, tags=self.TAGS)[0]
+    meta = sp.get_exif(files=self._path, tags=self.TAGS)[0]
     meta.pop('SourceFile')
 
     return FlirExif(**meta)
 
   def ir(self):
-    raw_bytes = subprocess.get_exif_binary(self.path, '-RawThermalImage')
+    raw_bytes = sp.get_exif_binary(self.path, '-RawThermalImage')
     raw_image = np.array(Image.open(BytesIO(raw_bytes)))
 
     if self.meta.RawThermalImageType == 'PNG':
@@ -189,13 +189,13 @@ class FlirExtractor:
     else:
       tag = '-EmbeddedImage'
 
-    vis_bytes = subprocess.get_exif_binary(self.path, tag)
+    vis_bytes = sp.get_exif_binary(self.path, tag)
     vis_image = Image.open(BytesIO(vis_bytes))
 
     return np.array(vis_image)
 
   def exif(self):
-    return subprocess.get_exif(self.path)[0]
+    return sp.get_exif(self.path)[0]
 
   def extract(self):
     ir, signal_reflected = self.ir()

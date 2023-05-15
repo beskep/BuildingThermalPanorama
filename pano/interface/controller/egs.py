@@ -1,25 +1,92 @@
 from contextlib import suppress
+import dataclasses as dc
+from enum import IntEnum
 import multiprocessing as mp
 from pathlib import Path
+from shutil import copy2
 from typing import Iterable
 
+from loguru import logger
 from omegaconf import DictConfig
+from toolz import dicttoolz
 
+from pano.flir.extractor import FlirExtractor
 import pano.interface.common.pano_files as pf
 import pano.interface.controller.controller as con
 from pano.interface.mbq import QtCore
 from pano.interface.mbq import QtGui
-from pano.interface.plot_controller.egs import AnomalyThresholdNotSetError
+from pano.interface.plot_controller.egs import DataNotFoundError
+from pano.interface.plot_controller.egs import Images
 from pano.interface.plot_controller.egs import PlotController
+from pano.misc.sp import wkhtmltopdf
+from pano.utils import DIR
+
+# ruff: noqa: FBT003
 
 
 class Window(con.Window):
 
-  def panel_funtion(self, fn: str, *args):
-    p = self._window.get_panel()
-    assert p is not None
-    f = getattr(p, fn)
-    return f(*args)
+  def __init__(self, window: QtGui.QWindow) -> None:
+    super().__init__(window)
+    self._panel = self._window.property('panel')
+
+  @property
+  def panel(self):
+    return self._panel
+
+
+class Mode(IntEnum):
+  RAW = 0
+  REGISTRATION = 1
+  ANOMALY = 2
+  REPORT = 3
+
+
+@dc.dataclass
+class ProjectData:
+  location: str = ''
+  building: str = ''
+  date: str = ''
+  part: str = ''
+  etc: str = ''
+
+  def replace(self, **kwargs):
+    return dc.replace(self, **kwargs)
+
+  def asdict(self):
+    return dc.asdict(self)
+
+
+@dc.dataclass
+class IRParameter:
+  Emissivity: float
+  ReflectedApparentTemperature: float
+  SubjectDistance: float
+  RelativeHumidity: float
+  AtmosphericTemperature: float
+
+  @classmethod
+  def fields(cls):
+    return dc.fields(cls)
+
+  @classmethod
+  def from_file(cls, path):
+    meta = FlirExtractor(str(path)).meta
+    return cls(**{f.name: getattr(meta, f.name) for f in cls.fields()})
+
+  def aslist(self):
+    return [
+        round(self.Emissivity, 4),
+        f'{self.ReflectedApparentTemperature} ℃',
+        f'{self.SubjectDistance} m',
+        f'{self.RelativeHumidity:.1%}',
+        f'{self.AtmosphericTemperature} ℃',
+    ]
+
+  def asdict(self):
+    return {
+        f.name: x for f, x in zip(self.fields(), self.aslist(), strict=True)
+    }
 
 
 class Controller(QtCore.QObject):
@@ -40,6 +107,9 @@ class Controller(QtCore.QObject):
     self._pc = PlotController()
     self._config: DictConfig | None = None
 
+    self._prj_data = ProjectData()
+    self._summary: dict[Path, dict] = {}
+
   @property
   def win(self) -> Window:
     return self._win
@@ -57,6 +127,10 @@ class Controller(QtCore.QObject):
   @QtCore.Slot(str)
   def log(self, message: str):
     con.log(message=message)
+
+  @QtCore.Slot(str, str)
+  def set_project_data(self, key, value):
+    self._prj_data = self._prj_data.replace(**{key: value})
 
   def command(self, commands: str | Iterable[str], name: str | None = None):
     if self._wd is None:
@@ -93,7 +167,7 @@ class Controller(QtCore.QObject):
 
   def update_image_view(self):
     files = [con.path2uri(x) for x in self.fm.files(pf.DIR.RAW)]
-    self.win.panel_funtion('update_image_view', files)
+    self.win.panel.update_image_view(files)
 
   @QtCore.Slot(str)
   def select_working_dir(self, path):
@@ -119,30 +193,97 @@ class Controller(QtCore.QObject):
       self.pc.update_threshold()
 
   @QtCore.Slot(str, int)
-  def plot(self, uri, mode):
+  def display(self, uri, mode):
     self.pc.reset()
-    if not uri:
+
+    path = con.uri2path(uri) if uri else None
+    self.display_params(path if mode == Mode.RAW else None)
+
+    if not path:
       return
 
-    self.pc.rgst = mode == 1
+    if mode == Mode.REPORT:
+      try:
+        self.display_report(path)
+      except DataNotFoundError as e:
+        logger.debug(f'{e} | path="{e.path}"')
+        self.win.popup('Error', str(e))
 
-    summary = None
-    try:
-      summary = self.pc.plot(path=con.uri2path(uri),
-                             mode=('raw', 'registration', 'anomaly')[mode])
-    except FileNotFoundError:
-      self.win.popup('Error', '파일을 먼저 추출해주세요.')
-    except AnomalyThresholdNotSetError:
-      self.win.popup('Error', '이상 영역을 먼저 검출해주세요.')
+      return
 
+    summary = self.plot(path=path, mode=mode)
     if summary is not None:
-      self.win.panel_funtion('clear_table')
-      for c, d in summary.items():
-        row = {
-            k: (v if isinstance(v, str) else f'{v:.2f}') for k, v in d.items()
-        }
-        row['class'] = c
-        self.win.panel_funtion('append_table_row', row)
+      self._summary[path] = summary
+      self.display_stat(summary)
+
+  def plot(self, path: Path, mode: int):
+    self.pc.rgst = mode == Mode.REGISTRATION
+    summary = None
+
+    try:
+      summary = self.pc.plot(path=path, mode=Mode(mode).name.lower())
+    except DataNotFoundError as e:
+      logger.debug(f'{e} | path="{e.path}"')
+      self.win.popup('Error', str(e))
+
+    return summary
+
+  def display_params(self, path):
+    if path:
+      params = IRParameter.from_file(path).aslist()
+    else:
+      params = ['' for _ in IRParameter.fields()]
+
+    parameter = self.win.panel.property('parameter')
+    parameter.display(params)
+
+  def display_stat(self, summary: dict[str, dict[str, float]]):
+    self.win.panel.clear_stat()
+    for c, d in summary.items():
+      row = {k: (v if isinstance(v, str) else f'{v:.2f}') for k, v in d.items()}
+      row['class'] = {'normal': '정상 영역', 'anomaly': '이상 영역'}[c]
+      self.win.panel.append_stat_row(row)
+
+  def _report(self, image: Path, template: Path, dst: Path) -> str:
+    prj = self._prj_data.asdict()
+    params = IRParameter.from_file(image).asdict()
+
+    _, _, summary = Images(image, self.fm).data()
+    stat = {
+        f'{x}_{y}': summary[x][y] for x in ['normal', 'anomaly']
+        for y in ['avg', 'min', 'max']
+    }
+
+    images = {
+        'IR': dst / f'{image.stem}.png',
+        'AnomalyPlot': dst / f'{image.stem}_anomaly.png',
+        'Histogram': dst / f'{image.stem}_hist.png'
+    }
+
+    fmt = dicttoolz.merge(
+        prj,
+        params,
+        {k: f'{v:.1f} ℃' for k, v in stat.items()},
+        {k: v.as_posix() for k, v in images.items()},
+    )
+
+    return template.read_text(encoding='UTF-8').format_map(fmt)
+
+  def display_report(self, path: Path):
+    assert self._wd is not None
+
+    src = DIR.RESOURCE / 'report'
+    dst = self._wd / '03 Report'  # TODO file manager
+    dst.mkdir(exist_ok=True)
+
+    report = self._report(image=path, template=src / 'EGReport.html', dst=dst)
+    html = dst.joinpath(path.stem).with_suffix('.html')
+    html.write_text(report, encoding='UTF-8')
+
+    for css in src.glob('*.css'):
+      copy2(css, dst)
+
+    self.win.panel.web_view(html.as_posix())
 
   @QtCore.Slot(bool, bool)
   def plot_navigation(self, home, zoom):
@@ -151,3 +292,10 @@ class Controller(QtCore.QObject):
   @QtCore.Slot(str, str)
   def qml_command(self, commands: str, name: str):
     self.command(commands=map(str.strip, commands.split(',')), name=name)
+
+  @QtCore.Slot(str, str)
+  def save_report(self, html, pdf):
+    html = con.uri2path(html)
+    pdf = con.uri2path(pdf)
+    wkhtmltopdf(src=html, dst=pdf)
+    self.win.popup('Success', '보고서 저장 성공')

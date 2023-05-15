@@ -25,7 +25,7 @@ from pano.misc import tools
 from pano.misc.cmap import apply_colormap
 from pano.misc.imageio import ImageIO
 from pano.misc.imageio import load_webp_mask
-from pano.misc.subprocess import wkhtmltopdf
+from pano.misc.sp import wkhtmltopdf
 
 from .plot_controller import PanoPlotController
 from .plot_controller import QtGui
@@ -570,12 +570,12 @@ class AnalysisPlotController(PanoPlotController):
         for k, v in (summ_wall | summ_window).items()
     }
 
-    fmt = dict(exterior_temperature=self.images.teti[0],
-               interior_temperature=self.images.teti[1],
-               **self.correction_params.asdict(),
-               **summ_all)
-
-    return fmt
+    return {
+        'exterior_temperature': self.images.teti[0],
+        'interior_temperature': self.images.teti[1],
+        **self.correction_params.asdict(),
+        **summ_all
+    }
 
   def save_report(self):
     report = utils.DIR.RESOURCE / 'report'
@@ -594,6 +594,11 @@ class AnalysisPlotController(PanoPlotController):
       copy2(css, dst / 'source')
 
     wkhtmltopdf(html, html.with_suffix('.pdf'))
+
+    # unlink
+    html.unlink()
+    for css in dst.joinpath('source').glob('*.css'):
+      css.unlink()
 
   def save(self):
     self.images.save()

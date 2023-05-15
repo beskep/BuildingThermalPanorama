@@ -38,8 +38,12 @@
         <th style="width: 50%">실화상 (열적 이상부위)</th>
       </tr>
       <tr>
-        <td>{ir}</td>
-        <td>{vis}</td>
+        <td>
+          <img width="100%" src="{IR}" alt="IR" />
+        </td>
+        <td>
+          <img width="100%" src="{AnomalyPlot}" alt="AnomalyPlot" />
+        </td>
       </tr>
     </table>
     <br />
@@ -57,15 +61,15 @@
             <tr>
               <td rowspan="3">정상 영역</td>
               <td>최고 온도</td>
-              <td>{ordinary_max}</td>
+              <td>{normal_max}</td>
             </tr>
             <tr>
               <td>최저 온도</td>
-              <td>{ordinary_min}</td>
+              <td>{normal_min}</td>
             </tr>
             <tr>
               <td>평균 온도</td>
-              <td>{ordinary_avg}</td>
+              <td>{normal_avg}</td>
             </tr>
             <tr>
               <td rowspan="3">이상 영역</td>
@@ -91,27 +95,23 @@
             </tr>
             <tr>
               <td>방사율</td>
-              <td>{e}</td>
+              <td>{Emissivity}</td>
             </tr>
             <tr>
-              <td>기준 온도</td>
-              <td>{e}</td>
+              <td>반사 겉보기 온도</td>
+              <td>{ReflectedApparentTemperature}</td>
             </tr>
             <tr>
               <td>측정 거리</td>
-              <td>{distance}</td>
+              <td>{SubjectDistance}</td>
             </tr>
             <tr>
               <td>상대 습도</td>
-              <td>{RH}</td>
+              <td>{RelativeHumidity}</td>
             </tr>
             <tr>
               <td>대기 온도</td>
-              <td>{temperature}</td>
-            </tr>
-            <tr>
-              <td>반사율</td>
-              <td>{r}</td>
+              <td>{AtmosphericTemperature}</td>
             </tr>
           </table>
         </td>
@@ -126,7 +126,11 @@
         <th>측정 온도 분포</th>
       </tr>
       <tr>
-        <td>{distribution}</td>
+        <td>
+          <div class="plot" style="z-index: 1000; position: relative">
+            <img width="100%" src="{Histogram}" alt="Histogram" />
+          </div>
+        </td>
       </tr>
     </table>
     <br />

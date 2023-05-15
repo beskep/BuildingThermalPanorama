@@ -405,6 +405,8 @@ class SegMask:
   WINDOW = 2
   ETC = 3
 
+  # TODO index2vis, SCALE, read?
+
   @classmethod
   def index_to_vis(cls, array: np.ndarray):
     return array.astype(np.uint8) * cls.scale

@@ -1,4 +1,3 @@
-from pathlib import Path
 import subprocess as sp
 from typing import Iterable
 
@@ -11,24 +10,14 @@ class PATH:
   BIN = DIR.RESOURCE / 'bin'
   EXIFTOOL = BIN / 'exiftool.exe'
   WKHTMLTOPDF = BIN / 'wkhtmltopdf.exe'
-
-
-def _check_exists(path: Path):
-  if not path.exists():
-    raise FileNotFoundError(path)
-
-
-_check_exists(PATH.EXIFTOOL)
-_check_exists(PATH.WKHTMLTOPDF)
+  WKHTMLTOIMAGE = BIN / 'wkhtmltoimage.exe'
 
 
 def exiftool(*args) -> bytes:
-  """
-  ExifTool 프로그램을 통해 영상 파일의 메타 데이터 (Exif) 추출
-  """
-  args = (str(PATH.EXIFTOOL), *args)
-
-  return sp.check_output(args, stderr=sp.DEVNULL)
+  """ExifTool 프로그램을 통해 영상 파일의 메타 데이터 (Exif) 추출."""
+  PATH.EXIFTOOL.stat()
+  args = (PATH.EXIFTOOL, *args)
+  return sp.check_output(list(map(str, args)), stderr=sp.DEVNULL)
 
 
 def get_exif(files: str | list[str],
@@ -53,19 +42,17 @@ def get_exif(files: str | list[str],
   tags = [(x if x.startswith('-') else '-' + x) for x in tags or []]
 
   exifs_byte = exiftool('-j', *tags, *files)
-  exifs = yaml.safe_load(exifs_byte.decode())
-
-  return exifs
+  return yaml.safe_load(exifs_byte.decode())
 
 
-def get_exif_binary(image_path: str, tag: str) -> bytes:
-  """
-  Exif 정보로부터 binary 데이터 추출.
+def get_exif_binary(path: str, tag: str) -> bytes:
+  """Exif 정보로부터 binary 데이터 추출.
+
   FLIR 촬영 파일의 열화상, 실화상 정보 추출에 이용.
 
   Parameters
   ----------
-  image_path : str
+  path : str
       파일 경로
   tag : str
       추출 대상 태그
@@ -74,15 +61,10 @@ def get_exif_binary(image_path: str, tag: str) -> bytes:
   -------
   bytes
   """
-  return exiftool(tag, '-b', image_path)
+  return exiftool(tag, '-b', path)
 
 
-def wkhtmltopdf(src, dst):
-  args = (
-      str(PATH.WKHTMLTOPDF),
-      '--enable-local-file-access',
-      str(src),
-      str(dst),
-  )
-
-  sp.check_output(args)
+def wkhtmltopdf(src, dst, *, capture=False):
+  PATH.WKHTMLTOPDF.stat()
+  args = (PATH.WKHTMLTOPDF, '--enable-local-file-access', src, dst)
+  sp.check_output(list(map(str, args)), stderr=None if capture else sp.DEVNULL)

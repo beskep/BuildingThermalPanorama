@@ -3,5 +3,5 @@
 from . import cmap
 from . import edgelet
 from . import imageio
-from . import subprocess
+from . import sp
 from . import tools

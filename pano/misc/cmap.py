@@ -8,7 +8,7 @@ from matplotlib.colors import Colormap
 from matplotlib.colors import ListedColormap
 import numpy as np
 
-from pano.misc import subprocess
+from pano.misc import sp
 from pano.misc import tools
 
 
@@ -31,7 +31,7 @@ def extract_flir_colormap(image_path: str,
   if color_space not in {'rgb', 'ycrcb'}:
     raise ValueError(f'{color_space} not in {{"rgb", "ycrcb"}}')
 
-  palette = subprocess.get_exif_binary(image_path=image_path, tag='-Palette')
+  palette = sp.get_exif_binary(path=image_path, tag='-Palette')
   palette_array = np.array(list(palette)).reshape([1, -1, 3]).astype(np.uint8)
 
   if color_space == 'rgb':
@@ -87,7 +87,7 @@ class FLIRColormap(ListedColormap):
     -------
     ListedColormap
     """
-    palette = subprocess.get_exif_binary(image_path=path, tag='-Palette')
+    palette = sp.get_exif_binary(path=path, tag='-Palette')
     colors = np.array(list(palette)).astype(np.uint8)
     return cls.from_uint8_colors(colors=colors, color_space='ycrcb')
 

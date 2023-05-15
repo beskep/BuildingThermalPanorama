@@ -9,13 +9,12 @@ from pano.flir import FlirExif
 from pano.flir import FlirExtractor
 
 # ruff: noqa: N803, N806
+# TODO misc로
 
 
 def _read_meta(path: Path):
   with path.open('r', encoding='UTF-8-SIG') as f:
-    meta = yaml.safe_load(f)
-
-  return meta
+    return yaml.safe_load(f)
 
 
 def _representative(values, name: str, threshold=0.1):
@@ -74,7 +73,9 @@ def summarize(array: np.ndarray):
   return {
       'avg': np.average(arr),
       'std': np.std(arr),
+      'min': np.min(arr),
       'q1': np.quantile(arr, 0.25),
       'median': np.median(arr),
       'q3': np.quantile(arr, 0.75),
+      'max': np.max(arr)
   }

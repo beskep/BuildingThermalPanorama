@@ -9,7 +9,7 @@ from skimage.color import rgb2hsv
 from skimage.exposure import rescale_intensity
 from skimage.io import imread
 from skimage.io import imsave
-import webp
+import webp  # TODO PIL로 대체
 import yaml
 
 from pano.utils import StrPath
@@ -60,17 +60,16 @@ class ImageIO:
 
     suffix = path.suffix.lower()
     if suffix == cls.NPY_EXT:
-      image = np.load(file=path.as_posix())
+      image = np.load(file=path)
     elif suffix == cls.CSV_EXT:
-      image = np.loadtxt(fname=path.as_posix(), delimiter=cls.DELIMITER)
+      image = np.loadtxt(fname=path, delimiter=cls.DELIMITER)
     elif suffix == cls.XLSX_EXT:
-      df = pd.read_excel(path.as_posix(), na_values='---')
-      image = np.array(df)
+      image = np.array(pd.read_excel(path, na_values='---'))
     elif suffix == cls.WEBP_EXT:
       pil_image = webp.load_image(path.as_posix())
       image = np.array(pil_image)
     else:
-      image = imread(fname=path.as_posix())
+      image = imread(fname=path)
 
     return image
 
@@ -101,7 +100,7 @@ class ImageIO:
 
     meta_path = cls.meta_path(path)
     if meta_path.exists():
-      with open(meta_path, 'r', encoding=cls.ENCODING) as f:
+      with open(meta_path, encoding=cls.ENCODING) as f:
         meta = yaml.safe_load(f)
     else:
       meta = None
@@ -123,7 +122,7 @@ class ImageIO:
     return image, meta
 
   @classmethod
-  def save(cls, path: StrPath, array: np.ndarray, check_contrast=False):
+  def save(cls, path: StrPath, array: np.ndarray, *, check_contrast=False):
     """
     주어진 path의 확장자에 따라 영상 파일 저장
 
