@@ -1,7 +1,7 @@
 """학습 데이터 증강 (enhancement)"""
 
+from collections.abc import Iterable, Iterator
 from itertools import product
-from typing import Iterable, Iterator, Tuple
 
 import numpy as np
 from numpy.linalg import inv
@@ -87,9 +87,7 @@ class ImageEnhance:
     mtx = trsf.SimilarityTransform(
         scale=scale, rotation=rotation, translation=translation
     ).params
-    mtx_at_center = self.transform_matrix_at_center(mtx)
-
-    return mtx_at_center
+    return self.transform_matrix_at_center(mtx)
 
   def transformed_image(self, scale=1, rotation=0, translation=(0, 0)) -> np.ndarray:
     """
@@ -112,13 +110,11 @@ class ImageEnhance:
     mtx = self.similarity_matrix_at_center(
         scale=scale, rotation=rotation, translation=translation
     )
-    transformed_image = trsf.warp(self._image, inverse_map=inv(mtx))
-
-    return transformed_image
+    return trsf.warp(self._image, inverse_map=inv(mtx))
 
   def transformed_images(
       self,
-  ) -> Iterator[Tuple[np.ndarray, float, float, np.ndarray]]:
+  ) -> Iterator[tuple[np.ndarray, float, float, np.ndarray]]:
     """
     입력한 scale, rotation, translation 조합 (product)을 적용한 영상의 iterator
 

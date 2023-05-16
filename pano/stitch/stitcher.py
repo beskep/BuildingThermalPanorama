@@ -1,9 +1,9 @@
 """영상을 stitch하고 파노라마를 생성"""
 
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from enum import IntEnum
 from itertools import repeat
-from typing import Callable, Iterable, List, Optional, Tuple, Union
 
 import cv2 as cv
 import numpy as np
@@ -55,8 +55,8 @@ class Panorama:
   graph: str
   indices: list
   cameras: list
-  crop_range: Optional[CropRange]
-  image_names: List[str]
+  crop_range: CropRange | None
+  image_names: list[str]
 
   def included(self):
     return [self.image_names[x] for x in sorted(self.indices)]
@@ -79,7 +79,7 @@ class Panorama:
 
 class StitchingImages:
 
-  def __init__(self, arrays: List[np.ndarray], preprocess: Optional[Callable] = None):
+  def __init__(self, arrays: list[np.ndarray], preprocess: Callable | None = None):
     """Stitching 대상 이미지
 
     Parameters
@@ -109,12 +109,12 @@ class StitchingImages:
     self._in_range = (np.min(minmax[:, 0]), np.max(minmax[:, 1]))
 
   @property
-  def arrays(self) -> List[np.ndarray]:
+  def arrays(self) -> list[np.ndarray]:
     """영상 원본"""
     return self._arrays
 
   @arrays.setter
-  def arrays(self, value: List[np.ndarray]):
+  def arrays(self, value: list[np.ndarray]):
     ndim = value[0].ndim
     if not all(x.ndim == ndim for x in value):
       raise ValueError('영상의 채널 수가 동일하지 않음')
@@ -162,8 +162,7 @@ class StitchingImages:
     -------
     np.ndarray
     """
-    res = rescale_intensity(image=image, in_range=self._in_range, out_range=out_range)
-    return res
+    return rescale_intensity(image=image, in_range=self._in_range, out_range=out_range)
 
   def unscale(self, image: np.ndarray, out_range='image') -> np.ndarray:
     """
@@ -180,10 +179,9 @@ class StitchingImages:
     -------
     np.ndarray
     """
-    res = rescale_intensity(image=image, in_range=out_range, out_range=self._in_range)
-    return res
+    return rescale_intensity(image=image, in_range=out_range, out_range=self._in_range)
 
-  def preprocess(self) -> Tuple[List[np.ndarray], List[Optional[np.ndarray]]]:
+  def preprocess(self) -> tuple[list[np.ndarray], list[np.ndarray | None]]:
     """
     전처리 함수를 적용한 영상과 대상 영역 마스크 반환
 
@@ -196,7 +194,7 @@ class StitchingImages:
     """
     if self._preprocess is None:
       images = self.arrays
-      masks: List[Optional[np.ndarray]] = [None for _ in range(self.count)]
+      masks: list[np.ndarray | None] = [None for _ in range(self.count)]
     else:
       prep = [self._preprocess(x.copy()) for x in self.arrays]
       images = [x[0] for x in prep]
@@ -213,10 +211,11 @@ class Stitcher:
   def __init__(
       self,
       mode='pano',
-      features_finder: Optional[cv.Feature2D] = None,
+      features_finder: cv.Feature2D | None = None,
       compose_scale=1.0,
       work_scale=1.0,
       warp_threshold=20.0,
+      *,
       try_cuda=False,
   ):
     """
@@ -264,6 +263,7 @@ class Stitcher:
   def estimator(self) -> cv.detail_Estimator:
     """
     정합/영상 변환을 위한 Camera parameter 추정 방법.
+
     `mode`에 따라 결정됨 (`set_mode` 참조).
     """
     return self._estimator
@@ -318,6 +318,7 @@ class Stitcher:
   def warper(self) -> cv.PyRotationWarper:
     """
     파노라마를 구성하는 영상의 변형 (warp) 방법.
+
     3차원 공간에 위치한 영상을 평면에 투영하는 방법을 결정함.
     `warper_type`, `set_warper`를 통해 설정.
     """
@@ -327,7 +328,7 @@ class Stitcher:
     return self._warper
 
   @property
-  def warper_type(self) -> Optional[str]:
+  def warper_type(self) -> str | None:
     """
     `warper`의 종류. `available_warper_types` 중에서 선택 가능함.
 
@@ -358,11 +359,12 @@ class Stitcher:
     return self._blend_type
 
   @blend_type.setter
-  def blend_type(self, value: Union[bool, str]):
+  def blend_type(self, value: bool | str):
     if isinstance(value, str):
       value = value.lower()
       if value not in ('multiband', 'feather', 'no'):
-        raise ValueError(f'invalid blend_type: "{value}"')
+        msg = f'invalid blend_type: "{value}"'
+        raise ValueError(msg)
     else:
       value = 'feather' if value else 'no'
 
@@ -375,8 +377,9 @@ class Stitcher:
 
   @blend_strength.setter
   def blend_strength(self, value: float):
-    if not 0.0 <= value <= 1.0:
-      raise ValueError(f'blender strength not in [0, 1]: {value}')
+    if not 0 <= value <= 1:
+      msg = f'blender strength not in [0, 1]: {value}'
+      raise ValueError(msg)
 
     self._blend_strength = value
 
@@ -385,13 +388,14 @@ class Stitcher:
     return self._interp
 
   @interp.setter
-  def interp(self, value: Union[int, Interpolation]):
+  def interp(self, value: int | Interpolation):
     self._interp = int(value)
 
   def set_features_matcher(
-      self, matcher='affine', confidence: Optional[float] = None, range_width=-1
+      self, matcher='affine', confidence: float | None = None, range_width=-1
   ):
-    """
+    """Set features matcher.
+
     Parameters
     ----------
     matcher : str
@@ -425,7 +429,7 @@ class Stitcher:
     self.features_matcher = matcher
 
   def set_bundle_adjuster_refine_mask(
-      self, fx=True, skew=True, ppx=True, aspect=True, ppy=True
+      self, *, fx=True, skew=True, ppx=True, aspect=True, ppy=True
   ):
     """Set refinement mask for bundle adjustment"""
     refine_mask = np.zeros([3, 3], dtype=np.uint8)
@@ -433,7 +437,7 @@ class Stitcher:
     masks = [fx, skew, ppx, aspect, ppy]
     rows = [0, 0, 0, 1, 1]
     cols = [0, 1, 2, 1, 2]
-    for mask, row, col in zip(masks, rows, cols):
+    for mask, row, col in zip(masks, rows, cols, strict=True):
       if mask:
         refine_mask[row, col] = 1
 
@@ -459,7 +463,7 @@ class Stitcher:
 
     self._mode = mode
 
-  def find_features(self, image: np.ndarray, mask: Optional[np.ndarray]):
+  def find_features(self, image: np.ndarray, mask: np.ndarray | None):
     """
     대상 영상의 특징점 추출
 
@@ -477,17 +481,16 @@ class Stitcher:
     if self.features_finder is None:
       raise ValueError('features_finder가 지정되지 않음')
 
-    features = cv.detail.computeImageFeatures2(
+    return cv.detail.computeImageFeatures2(
         featuresFinder=self.features_finder, image=image, mask=mask
     )
-
-    return features
 
   def stitch(
       self,
       images: StitchingImages,
-      masks: Optional[List[Optional[np.ndarray]]] = None,
-      names: Optional[List[str]] = None,
+      masks: list[np.ndarray | None] | None = None,
+      names: list[str] | None = None,
+      *,
       crop=True,
   ) -> Panorama:
     """
@@ -546,7 +549,7 @@ class Stitcher:
       if crop_range.cropped:
         panorama = crop_range.crop(panorama)
 
-    pano = Panorama(
+    return Panorama(
         panorama=panorama,
         mask=panorama_mask,
         graph=matches_graph,
@@ -556,22 +559,18 @@ class Stitcher:
         image_names=names,
     )
 
-    return pano
-
   @staticmethod
   def _merge_mask(masks1, masks2=None):
     if masks2 is None:
       return masks1
 
-    masks = [np.logical_and(x, y) for x, y in zip(masks1, masks2)]
-
-    return masks
+    return [np.logical_and(x, y) for x, y in zip(masks1, masks2)]
 
   def calculate_camera_matrix(
       self,
-      images: List[np.ndarray],
-      image_names: List[str],
-  ) -> Tuple[List[cv.detail_CameraParams], List[int], str]:
+      images: list[np.ndarray],
+      image_names: list[str],
+  ) -> tuple[list[cv.detail_CameraParams], list[int], str]:
     """
     영상의 특성 추출/매칭을 통해 camera matrix 추정
 
@@ -604,7 +603,8 @@ class Stitcher:
     )
     indices: list = indices_arr.ravel().tolist()
     if len(indices) < 2:
-      raise StitchError('Need more images (valid images are less than two)')
+      msg = 'Need more images (valid images are less than two)'
+      raise StitchError(msg)
 
     logger.trace('Matches graph')
     matches_graph: str = cv.detail.matchesGraphAsString(
@@ -616,7 +616,8 @@ class Stitcher:
         features=features, pairwise_matches=pairwise_matches, cameras=None
     )
     if not estimate_status:
-      raise StitchError('Homography estimation failed')
+      msg = 'Homography estimation failed'
+      raise StitchError(msg)
 
     logger.trace('Bundle adjust')
     self.bundle_adjuster.setConfThresh(1)
@@ -629,7 +630,8 @@ class Stitcher:
         features=features, pairwise_matches=pairwise_matches, cameras=cameras
     )
     if not adjuster_status:
-      raise StitchError('Camera parameters adjusting failed')
+      msg = 'Camera parameters adjusting failed'
+      raise StitchError(msg)
 
     logger.trace('Wave correction')
     Rs = [np.copy(camera.R) for camera in cameras]
@@ -638,7 +640,7 @@ class Stitcher:
     except cv.error:
       logger.debug('Wave correction failed')
     else:
-      for camera, R in zip(cameras, Rs):
+      for camera, R in zip(cameras, Rs, strict=True):
         camera.R = R
 
     return cameras, indices, matches_graph
@@ -646,9 +648,9 @@ class Stitcher:
   def _warp_image(
       self,
       image: np.ndarray,
-      mask: Optional[np.ndarray],
+      mask: np.ndarray | None,
       camera: cv.detail_CameraParams,
-  ) -> Tuple[np.ndarray, np.ndarray, Tuple[int, int, int, int]]:
+  ) -> tuple[np.ndarray, np.ndarray, tuple[int, int, int, int]]:
     """
     Camera parameter에 따라 영상을 변형.
 
@@ -686,7 +688,7 @@ class Stitcher:
     )
     kmat = camera.K().astype(np.float32)
     rmat = camera.R
-    roi: Tuple[int, int, int, int] = self.warper.warpRoi(src_size=size, K=kmat, R=rmat)
+    roi: tuple[int, int, int, int] = self.warper.warpRoi(src_size=size, K=kmat, R=rmat)
 
     warped_shape = (roi[2] - roi[0], roi[3] - roi[1])
     if any(image.shape[x] * self._warp_threshold < warped_shape[x] for x in range(2)):
@@ -711,7 +713,7 @@ class Stitcher:
     else:
       img = image
 
-    # note: (roi[0], roi[1]) == corner
+    # `NOTE (roi[0], roi[1]) == corner
     corner, warped_image = self.warper.warp(
         src=img,
         K=kmat,
@@ -736,13 +738,14 @@ class Stitcher:
   def _warp_images(
       self,
       images: Iterable[np.ndarray],
-      cameras: List[cv.detail_CameraParams],
-      masks: Optional[Iterable[Optional[np.ndarray]]] = None,
-      names: Optional[Iterable[str]] = None,
-  ) -> Tuple[List[np.ndarray], List[np.ndarray], np.ndarray, List[int]]:
+      cameras: list[cv.detail_CameraParams],
+      masks: Iterable[np.ndarray | None] | None = None,
+      names: Iterable[str] | None = None,
+  ) -> tuple[list[np.ndarray], list[np.ndarray], np.ndarray, list[int]]:
     """
-    대상 영상들을 Camera parameter에 따라 변형. 과도한 변형이 일어나는 경우
-    오류로 판단하고 파노라마를 구성하는 영상에서 제외함.
+    대상 영상들을 Camera parameter에 따라 변형.
+
+    과도한 변형이 일어나는 경우 오류로 판단하고 파노라마를 구성하는 영상에서 제외함.
 
     Parameters
     ----------
@@ -778,7 +781,7 @@ class Stitcher:
     warped_masks = []
     rois = []
     indices = []
-    for idx, args in enumerate(zip(images, masks, cameras, names)):
+    for idx, args in enumerate(zip(images, masks, cameras, names, strict=True)):
       try:
         wi, wm, roi = self._warp_image(*args[:3])
       except cv.error:
@@ -793,10 +796,10 @@ class Stitcher:
 
   def _blend(
       self,
-      images: List[np.ndarray],
-      masks: List[np.ndarray],
+      images: list[np.ndarray],
+      masks: list[np.ndarray],
       rois: np.ndarray,
-  ) -> Tuple[np.ndarray, np.ndarray]:
+  ) -> tuple[np.ndarray, np.ndarray]:
     """
     파노라마를 구성하는 영상들의 밝기 조정
 
@@ -842,7 +845,7 @@ class Stitcher:
 
     # blend
     blender.prepare(dst_size)
-    for image, mask, corner in zip(images, masks, corners):
+    for image, mask, corner in zip(images, masks, corners, strict=True):
       if image.ndim == 2:
         img = np.repeat(image[:, :, np.newaxis], repeats=3, axis=2)
       else:
@@ -857,10 +860,10 @@ class Stitcher:
   def warp_and_blend(
       self,
       images: StitchingImages,
-      cameras: List[cv.detail_CameraParams],
-      masks: Optional[Iterable[Optional[np.ndarray]]] = None,
-      names: Optional[Iterable[str]] = None,
-  ) -> Tuple[np.ndarray, np.ndarray, List[int]]:
+      cameras: list[cv.detail_CameraParams],
+      masks: Iterable[np.ndarray | None] | None = None,
+      names: Iterable[str] | None = None,
+  ) -> tuple[np.ndarray, np.ndarray, list[int]]:
     # warp each image
     warped_images, warped_masks, rois, indices = self._warp_images(
         images=images.arrays, cameras=cameras, masks=masks, names=names

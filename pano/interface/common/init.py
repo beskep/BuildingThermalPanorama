@@ -22,7 +22,7 @@ def ascii_tempdir():
     os.environ[t] = str(tmpdir)
 
 
-def init_project(qt: bool):
+def init_project(*, qt: bool):
   ascii_tempdir()
 
   # pylint: disable=import-outside-toplevel

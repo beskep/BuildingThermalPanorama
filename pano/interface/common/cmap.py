@@ -1,6 +1,5 @@
 """추출해둔 FLIR 컬러맵, 또는 `matplotlib` 컬러맵 설정"""
 
-from typing import Union
 
 import numpy as np
 from loguru import logger
@@ -24,8 +23,7 @@ _CMAP_PATH = DIR.RESOURCE.joinpath('iron_colormap_rgb.txt')
 
 def get_iron_colormap() -> ListedColormap:
   """
-  기존에 추출하고 저장한 컬러맵 파일 (`data/colormap_rgb.txt`)로부터 FLIR iron
-  컬러맵 생성
+  기존에 추출하고 저장한 컬러맵 파일로부터 FLIR iron 컬러맵 생성
 
   Returns
   -------
@@ -38,15 +36,17 @@ def get_iron_colormap() -> ListedColormap:
       파일이 존재하지 않는 경우
   """
   if not _CMAP_PATH.exists():
-    raise FileNotFoundError(f'컬러맵 파일이 존재하지 않습니다. ({_CMAP_PATH})')
+    msg = f'컬러맵 파일이 존재하지 않습니다. ({_CMAP_PATH})'
+    raise FileNotFoundError(msg)
 
   return FLIRColormap.from_uint8_text_file(path=_CMAP_PATH)
 
 
 def get_mpl_colormap(name: str) -> Colormap:
   """
-  matplotlib 컬러맵 반환. 유효하지 않은 컬러맵 name을 입력한 경우, 기본 컬러맵
-  (inferno)를 적용
+  matplotlib 컬러맵 반환.
+
+  유효하지 않은 컬러맵 name을 입력한 경우, 기본 컬러맵 (inferno)를 적용
 
   Parameters
   ----------
@@ -99,7 +99,7 @@ def get_thermal_colormap(name='iron') -> Colormap:
   return cmap
 
 
-def save_colormap(path, cmap: Union[str, Colormap] = 'iron', num=101):
+def save_colormap(path, cmap: str | Colormap = 'iron', num=101):
   if isinstance(cmap, str):
     cmap = get_thermal_colormap(cmap)
 

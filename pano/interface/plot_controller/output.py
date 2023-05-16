@@ -1,6 +1,7 @@
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Iterable, Literal, Optional, Union
+from typing import Any, Literal
 
 import numpy as np
 from matplotlib.image import AxesImage
@@ -16,7 +17,7 @@ from pano.interface.common.pano_files import DIR, SP, ThermalPanoramaFileManager
 from pano.interface.mbq import FigureCanvas
 from pano.misc import edgelet as edge
 from pano.misc.edgelet import Edgelets
-from pano.misc.imageio import ImageIO as IIO
+from pano.misc.imageio import ImageIO
 from pano.misc.tools import SegMask, normalize_image
 
 from .plot_controller import PanoPlotController, QtGui, WorkingDirNotSetError
@@ -26,7 +27,7 @@ def _suppress_edgelets(
     edgelets: Edgelets,
     distance_threshold=10,
     angle_threshold=10,
-    repeat: Optional[int] = None,
+    repeat: int | None = None,
 ):
   repeat = repeat or edgelets.count
   angle_threshold = np.deg2rad(angle_threshold)
@@ -79,8 +80,7 @@ def _edgelets_between_edgelets(edgelets: Edgelets, weight=0.5):
 
 def extend_lines(n: Any, p: Any, xlim: Any, ylim: Any) -> tuple[tuple, tuple]:
   """
-  주어진 선 `dot(n, (X-p))=0`을 x, y 범위가 xlim, ylim인
-  직사각형의 경계까지 확장하는 점 두개 반환.
+  선 `dot(n, (X-p))=0`을 직사각형의 경계까지 확장하는 점 두개 반환.
 
   Parameters
   ----------
@@ -131,8 +131,8 @@ class SegmentsSummary:
 
   def __init__(
       self,
-      functions: Optional[Iterable[Callable]] = None,
-      names: Optional[Iterable[str]] = None,
+      functions: Iterable[Callable] | None = None,
+      names: Iterable[str] | None = None,
   ) -> None:
     if functions is None:
       functions = (np.nanmean, np.nanmedian, np.nanmin, np.nanmax)
@@ -227,11 +227,11 @@ def _save_segments(
   stats, label = seg_summ(arr=arr, coords=coords, num=num)
 
   for k, v in stats.items():
-    IIO.save(path=subdir.joinpath(f'{fname}-{k.title()}.csv'), array=v)
+    ImageIO.save(path=subdir.joinpath(f'{fname}-{k.title()}.csv'), array=v)
 
   if num <= label_thold:
     arr[np.isnan(arr)] = np.nanmin(arr)
-    IIO.save(
+    ImageIO.save(
         path=subdir.joinpath(f'{fname}-Label.png'),
         array=label2rgb(label, image=normalize_image(arr)),
     )
@@ -239,15 +239,15 @@ def _save_segments(
 
 class LinesSelector(_SelectorWidget):
   DIST_THOLD = 10
-  PROPS = dict(
-      alpha=0.6,
-      animated=False,
-      color='k',
-      label='Floor Edgelet',
-      linestyle='-',
-      marker='D',
-  )
-  PROPS_FIXED = PROPS | dict(alpha=0.8, color='steelblue', label='Window Edgelet')
+  PROPS = {
+      'alpha': 0.6,
+      'animated': False,
+      'color': 'k',
+      'label': 'Floor Edgelet',
+      'linestyle': '-',
+      'marker': 'D',
+  }
+  PROPS_FIXED = PROPS | {'alpha': 0.8, 'color': 'steelblue', 'label': 'Window Edgelet'}
 
   def __init__(self, ax, useblit=False, update=None) -> None:
     super().__init__(ax, onselect=lambda *args, **kwargs: None, useblit=useblit)
@@ -256,7 +256,7 @@ class LinesSelector(_SelectorWidget):
     self._fixed_lines: list[Line2D] = []  # 마우스로 수정 불가능한 선
 
     self._extend = False
-    self._current_line: Optional[Line2D] = None  # 마우스 클릭으로 생성 중인 line
+    self._current_line: Line2D | None = None  # 마우스 클릭으로 생성 중인 line
     self._active_index = (-1, -1)  # line index, point index
 
     self._update = update or super().update
@@ -276,7 +276,7 @@ class LinesSelector(_SelectorWidget):
       self.extend_lines()
     self._update()
 
-  def make_line(self, xs=None, ys=None, editable=True):
+  def make_line(self, xs=None, ys=None, *, editable=True):
     xs = xs if xs is not None else [np.nan]
     ys = ys if ys is not None else [np.nan]
     props = self.PROPS if editable else self.PROPS_FIXED
@@ -298,11 +298,11 @@ class LinesSelector(_SelectorWidget):
     self._lines = []
     self._fixed_lines = []
 
-  def add_lines(self, xs_arr: np.ndarray, ys_arr: np.ndarray, editable=True):
+  def add_lines(self, xs_arr: np.ndarray, ys_arr: np.ndarray, *, editable=True):
     for xs, ys in zip(xs_arr, ys_arr, strict=True):
-      self.make_line(xs, ys, editable)
+      self.make_line(xs, ys, editable=editable)
 
-  def add_edgelets(self, edgelets: Edgelets, editable=True):
+  def add_edgelets(self, edgelets: Edgelets, *, editable=True):
     half = edgelets.strengths.reshape([-1, 1]) / 2.0
     pt1 = edgelets.locations - edgelets.directions * half  # [[x1, y1], ...]
     pt2 = edgelets.locations + edgelets.directions * half  # [[x2, y2], ...]
@@ -318,7 +318,7 @@ class LinesSelector(_SelectorWidget):
 
     # Line2D.get_data() -> [[x1, x2], [y1, y2]]
     # points -> [[x1, y1], [x2, y2], [x3, y3], ...]
-    points = np.vstack([np.array(l.get_data()).T for l in self._lines])
+    points = np.vstack([np.array(line.get_data()).T for line in self._lines])
     points = self.ax.transData.transform(points)  # 화면 좌표
 
     dist_sq = np.sum(np.square(points - pt), axis=1)
@@ -444,7 +444,7 @@ class LinesSelector(_SelectorWidget):
     #   [[[x1, y1],
     #     [x2, y2]],
     #    ...       ]
-    coords = [np.array(l.get_data()).T for l in self._lines]
+    coords = [np.array(line.get_data()).T for line in self._lines]
 
     # 세로 방향 정렬
     argsort = np.argsort([np.average(x[:, 1]) for x in coords])
@@ -486,7 +486,7 @@ class Images:
     return np.deg2rad(np.linspace(-thold, thold, int(thold * 2 + 1)) + 90.0)
 
   def read(self, sp: SP):
-    image = IIO.read(self._fm.panorama_path(DIR.ANLY, sp))
+    image = ImageIO.read(self._fm.panorama_path(DIR.ANLY, sp))
     if sp is SP.MASK:
       image = image.astype(bool)
     return image
@@ -508,7 +508,7 @@ class Images:
     return self._canny_option
 
   @canny_option.setter
-  def canny_option(self, value: Union[dict, edge.CannyOptions]):
+  def canny_option(self, value: dict | edge.CannyOptions):
     if not isinstance(value, edge.CannyOptions):
       value = edge.CannyOptions(**value)
 
@@ -520,7 +520,7 @@ class Images:
     return self._hough_option
 
   @hough_option.setter
-  def hough_option(self, value: Union[dict, edge.HoughOptions]):
+  def hough_option(self, value: dict | edge.HoughOptions):
     if not isinstance(value, edge.HoughOptions):
       value = edge.HoughOptions(**value)
     value.theta = self._theta()
@@ -531,7 +531,7 @@ class Images:
     return self._edgelet_option
 
   @edgelet_option.setter
-  def edgelet_option(self, value: Union[dict, EdgeletsOption]):
+  def edgelet_option(self, value: dict | EdgeletsOption):
     if not isinstance(value, EdgeletsOption):
       value = EdgeletsOption(**value)
     self._edgelet_option = value
@@ -577,11 +577,11 @@ class OutputPlotController(PanoPlotController):
   def __init__(self, parent=None) -> None:
     super().__init__(parent=parent)
 
-    self._images: Optional[Images] = None
-    self._axes_image: Optional[AxesImage] = None
+    self._images: Images | None = None
+    self._axes_image: AxesImage | None = None
     self._legend = None
 
-    self._lines: Optional[LinesSelector] = None
+    self._lines: LinesSelector | None = None
     self._setting = PlotSetting()
 
   def init(self, app: QtGui.QGuiApplication, canvas: FigureCanvas):
@@ -670,7 +670,7 @@ class OutputPlotController(PanoPlotController):
 
     # 열화상 (온도 행렬)
     ir = self.images.ir
-    IIO.save(subdir.joinpath('Temperature.csv'), np.round(ir, 2))
+    ImageIO.save(subdir.joinpath('Temperature.csv'), np.round(ir, 2))
 
     # 층 구분 이미지
     self.fig.savefig(subdir.joinpath('Edgelets.jpg'), dpi=150)
@@ -702,7 +702,7 @@ class OutputPlotController(PanoPlotController):
     )
 
     # 벽+창문 factor
-    factor = IIO.read(self.fm.panorama_path(DIR.ANLY, SP.TF))
+    factor = ImageIO.read(self.fm.panorama_path(DIR.ANLY, SP.TF))
     _save_segments(
         subdir=subdir, fname=SP.TF.value, arr=factor, coords=coords, num=segments
     )

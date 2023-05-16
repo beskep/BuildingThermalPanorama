@@ -1,16 +1,17 @@
 """경로 및 로거 설정"""
 
 import sys
+from collections.abc import Iterable, Sequence
 from logging import LogRecord
 from operator import length_hint
 from os import PathLike
 from pathlib import Path
-from typing import Iterable, Optional, Sequence, TypeVar, Union
+from typing import TypeVar, Union
 
 try:
   import winsound
 except ImportError:
-  winsound = None  # type: ignore
+  winsound = None  # type: ignore[assignment]
 
 from loguru import logger
 from rich.console import Console
@@ -54,32 +55,29 @@ class _Handler(RichHandler):
     return super().emit(record)
 
 
-StrPath = Union[str, PathLike]
+StrPath = str | PathLike
 console = Console(theme=Theme({'logging.level.success': 'blue'}))
 _handler = _Handler(console=console, log_time_format='[%X]')
 
 
-def set_logger(level: Union[int, str] = 20, name='pano'):
+def set_logger(level: int | str = 20, name='pano'):
   if isinstance(level, str):
     try:
       level = _Handler.LVLS[level.upper()]
     except KeyError as e:
-      raise KeyError(f'`{level}` not in {list(_Handler.LVLS.keys())}') from e
+      msg = f'`{level}` not in {list(_Handler.LVLS.keys())}'
+      raise KeyError(msg) from e
 
-  if getattr(logger, 'lvl', -1) != level:
-    logger.remove()
-
-    logger.add(_handler, level=level, format='{message}', backtrace=False, enqueue=True)
-    logger.add(
-        f'{name}.log',
-        level='DEBUG',
-        rotation='1 month',
-        retention='1 year',
-        encoding='UTF-8-SIG',
-        enqueue=True,
-    )
-
-    setattr(logger, 'lvl', level)
+  logger.remove()
+  logger.add(_handler, level=level, format='{message}', backtrace=False, enqueue=True)
+  logger.add(
+      f'{name}.log',
+      level='DEBUG',
+      rotation='1 month',
+      retention='1 year',
+      encoding='UTF-8-SIG',
+      enqueue=True,
+  )
 
   try:
     logger.level('BLANK')
@@ -94,7 +92,8 @@ T = TypeVar('T')
 def track(
     sequence: Iterable[T] | Sequence[T],
     description='Working...',
-    total: Optional[float] = None,
+    total: float | None = None,
+    *,
     transient=True,
     **kwargs,
 ):
@@ -112,18 +111,22 @@ def track(
 def ptrack(
     sequence: Iterable[T] | Sequence[T],
     description='Working...',
-    total: Optional[float] = None,
+    total: float | None = None,
+    *,
     transient=True,
     **kwargs,
 ):
   """
   Track progress on console by iterating over a sequence.
+
   Yield progress ratio and value.
   """
   if total is None:
     total = length_hint(sequence)
+
   if not total:
-    raise ValueError(f'Invalid total value: {total}')
+    msg = f'Invalid total value: {total}'
+    raise ValueError(msg)
 
   for idx, value in _track(
       sequence=enumerate(sequence),

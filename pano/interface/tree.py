@@ -26,7 +26,6 @@ def walk_directory(directory: Path, tree: Tree) -> None:
         branch = tree.add(f'📁 {escape(path.name)}')
     else:
       icon = '🖼️' if path.suffix in ('.png', '.jpg') else '📄'
-      # icon = '📷' if path.suffix in ('.png', '.jpg') else '📄'
       text = Text(icon + ' ' + path.name)
       tree.add(text)
 

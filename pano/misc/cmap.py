@@ -1,7 +1,6 @@
 """FLIR 촬영 영상에 저장된 colormap 추출 및 영상 데이터에 적용"""
 
 from pathlib import Path
-from typing import Union
 
 import cv2 as cv
 import numpy as np
@@ -25,7 +24,8 @@ def extract_flir_colormap(image_path: str, save_path: str, color_space: str = 'R
   """
   color_space = color_space.lower()
   if color_space not in {'rgb', 'ycrcb'}:
-    raise ValueError(f'{color_space} not in {{"rgb", "ycrcb"}}')
+    msg = f'{color_space} not in {{"rgb", "ycrcb"}}'
+    raise ValueError(msg)
 
   palette = sp.get_exif_binary(path=image_path, tag='-Palette')
   palette_array = np.array(list(palette)).reshape([1, -1, 3]).astype(np.uint8)
@@ -65,9 +65,7 @@ class FLIRColormap(ListedColormap):
       colors = cv.cvtColor(colors, code=cv.COLOR_YCrCb2RGB)
 
     colors = colors.astype('float').reshape([-1, 3]) / 255.0
-    instance = cls(colors=colors)
-
-    return instance
+    return cls(colors=colors)
 
   @classmethod
   def from_flir_file(cls, path: str) -> ListedColormap:
@@ -88,9 +86,7 @@ class FLIRColormap(ListedColormap):
     return cls.from_uint8_colors(colors=colors, color_space='ycrcb')
 
   @classmethod
-  def from_uint8_text_file(
-      cls, path: Union[str, Path], color_space='RGB'
-  ) -> ListedColormap:
+  def from_uint8_text_file(cls, path: str | Path, color_space='RGB') -> ListedColormap:
     """
     `extract_flir_colormap` 함수로 추출/저장한 텍스트 파일로부터 colormap 생성
 
@@ -109,9 +105,10 @@ class FLIRColormap(ListedColormap):
     return cls.from_uint8_colors(colors=colors, color_space=color_space)
 
 
-def apply_colormap(image: np.ndarray, cmap: Colormap, na=False) -> np.ndarray:
+def apply_colormap(image: np.ndarray, cmap: Colormap, *, na=False) -> np.ndarray:
   """
   대상 영상에 지정한 colormap을 적용한 영상 반환.
+
   Normalize ([0, 1]) -> cmap() -> rescale to uint8
 
   Parameters

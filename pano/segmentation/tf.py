@@ -1,7 +1,6 @@
 """DeepLabV3+"""
 
 from pathlib import Path
-from typing import List, Optional, Tuple, Union
 
 import numpy as np
 import PIL.Image
@@ -17,14 +16,12 @@ from skimage.transform import resize as _resize
 def tf_gpu_memory_config():
   config = tf.ConfigProto()
   config.gpu_options.allow_growth = True
-  sess = tf.Session(config=config)
-
-  return sess
+  return tf.Session(config=config)
 
 
 def create_pascal_label_colormap() -> np.ndarray:
   """
-  Creates a label colormap used in PASCAL VOC segmentation benchmark.
+  Create a label colormap used in PASCAL VOC segmentation benchmark.
 
   Returns
   -------
@@ -44,7 +41,7 @@ def create_pascal_label_colormap() -> np.ndarray:
 
 def label_to_color_image(label: np.ndarray, cmap='pascal') -> np.ndarray:
   """
-  Adds color defined by the dataset colormap to the label.
+  Add color defined by the dataset colormap to the label.
 
   Parameters
   ----------
@@ -87,8 +84,8 @@ FULL_LABEL_MAP = np.arange(len(LABEL_NAMES)).reshape(len(LABEL_NAMES), 1)
 
 
 def vis_segmentation(
-    image: Union[np.ndarray, PILImage], seg_map: np.ndarray, show=False, cmap='pascal'
-) -> Tuple[plt.Figure, np.ndarray]:
+    image: np.ndarray | PILImage, seg_map: np.ndarray, *, show=False, cmap='pascal'
+) -> tuple[plt.Figure, np.ndarray]:
   """
   Visualizes input image, segmentation map and overlay view.
 
@@ -150,10 +147,10 @@ def vis_segmentation(
 
 def predict(
     model_path: str,
-    images: List[np.ndarray],
+    images: list[np.ndarray],
     output: Path,
     cmap='Dark2',
-    names: Optional[List[str]] = None,
+    names: list[str] | None = None,
 ):
   """
   입력받은 각 영상을 DeepLabV3+ 모델을 통해 segment하고 결과를 저장.
@@ -207,7 +204,7 @@ class DeepLabModel:
   FROZEN_GRAPH_NAME = 'frozen_inference_graph'
 
   def __init__(self, graph_path):
-    """Creates and loads pretrained deeplab model."""
+    """Create and loads pretrained deeplab model."""
     self.graph = tf.Graph()
 
     try:
@@ -223,9 +220,9 @@ class DeepLabModel:
 
     self.sess = tf.Session(graph=self.graph)
 
-  def run(self, image: PILImage) -> Tuple[PILImage, np.ndarray]:
+  def run(self, image: PILImage) -> tuple[PILImage, np.ndarray]:
     """
-    Runs inference on a single image.
+    Run inference on a single image.
 
     Parameters
     ----------
@@ -252,8 +249,8 @@ class DeepLabModel:
     return resized_image, seg_map
 
   def predict_and_visualize(
-      self, image: np.ndarray, cmap='Dark2', resize=True
-  ) -> Tuple[np.ndarray, np.ndarray, plt.Figure]:
+      self, image: np.ndarray, cmap='Dark2', *, resize=True
+  ) -> tuple[np.ndarray, np.ndarray, plt.Figure]:
     """
     주어진 영상으로 segmentation 예측 및 시각화
 

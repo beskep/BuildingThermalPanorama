@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Optional
 
 import numpy as np
 from loguru import logger
@@ -11,7 +10,7 @@ from skimage.exposure import equalize_hist
 from pano.interface.common.pano_files import DIR, FN, SP
 from pano.interface.mbq import FigureCanvas
 from pano.misc import tools
-from pano.misc.imageio import ImageIO as IIO
+from pano.misc.imageio import ImageIO
 from pano.misc.tools import INTRP
 
 from .egs import MousePoints, NavigationToolbar
@@ -38,12 +37,12 @@ class RegistrationPlotController(PanoPlotController):
     self._points = MousePoints()
     self._grid = False
 
-    self._images: Optional[tuple] = None
-    self._matrices: Optional[dict] = None
+    self._images: tuple | None = None
+    self._matrices: dict | None = None
 
-    self._file: Optional[Path] = None
-    self._matrix: Optional[np.ndarray] = None  # 선택된 영상의 수동 정합 matrix
-    self._registered_image: Optional[np.ndarray] = None
+    self._file: Path | None = None
+    self._matrix: np.ndarray | None = None  # 선택된 영상의 수동 정합 matrix
+    self._registered_image: np.ndarray | None = None
 
   @property
   def matrices(self) -> dict:
@@ -53,7 +52,7 @@ class RegistrationPlotController(PanoPlotController):
         npz = np.load(path)
         self._matrices = {f: npz[f] for f in npz.files}
       else:
-        self._matrices = dict()
+        self._matrices = {}
 
     return self._matrices
 
@@ -148,8 +147,8 @@ class RegistrationPlotController(PanoPlotController):
   def plot(self, file: Path):
     self._file = file
 
-    ir = IIO.read(self.fm.change_dir(DIR.IR, file))
-    vis = IIO.read(self.fm.change_dir(DIR.VIS, file))
+    ir = ImageIO.read(self.fm.change_dir(DIR.IR, file))
+    vis = ImageIO.read(self.fm.change_dir(DIR.VIS, file))
 
     self.set_images(ir, vis)
 
@@ -227,7 +226,7 @@ class RegistrationPlotController(PanoPlotController):
     assert self._registered_image is not None
 
     path = self.fm.change_dir(DIR.RGST, self._file)
-    IIO.save(path=path, array=tools.uint8_image(self._registered_image))
+    ImageIO.save(path=path, array=tools.uint8_image(self._registered_image))
 
     compare_path = path.with_name(f'{path.stem}{FN.RGST_MANUAL}{path.suffix}')
     self.fig.savefig(compare_path, dpi=300)
@@ -249,13 +248,13 @@ class RegistrationPlotController(PanoPlotController):
     _rename_file(seg, seg_unrgst)
 
     # vis 저장
-    IIO.save(path=vis, array=tools.uint8_image(self._registered_image))
+    ImageIO.save(path=vis, array=tools.uint8_image(self._registered_image))
 
     # seg 저장
     shape = self._images[0].shape[:2]
     trsf = transform.ProjectiveTransform(matrix=self._matrix)
     seg_resized = transform.resize(
-        IIO.read(seg_unrgst), order=INTRP.NearestNeighbor, output_shape=shape
+        ImageIO.read(seg_unrgst), order=INTRP.NearestNeighbor, output_shape=shape
     )
     seg_rgst = transform.warp(
         image=seg_resized,
@@ -264,9 +263,9 @@ class RegistrationPlotController(PanoPlotController):
         order=INTRP.NearestNeighbor,
         preserve_range=True,
     )
-    IIO.save(path=seg, array=tools.uint8_image(seg_rgst))
+    ImageIO.save(path=seg, array=tools.uint8_image(seg_rgst))
 
-  def save(self, panorama: bool):
+  def save(self, *, panorama: bool):
     if self._registered_image is None:
       logger.warning('저장할 정합 결과가 없습니다.')
       return

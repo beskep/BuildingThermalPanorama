@@ -1,6 +1,6 @@
 from collections import defaultdict
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, Tuple
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -52,7 +52,7 @@ class BaseEvaluation:
       mi: RegisteringImage,
       df: defaultdict,
       **kwargs,
-  ) -> Tuple[RegisteringImage, dict]:
+  ) -> tuple[RegisteringImage, dict]:
     try:
       rgst_image, register, matrix = self._registrator.register(
           fixed_image=fi.prep_image(), moving_image=mi.prep_image(), **kwargs

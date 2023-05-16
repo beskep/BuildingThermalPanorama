@@ -1,5 +1,5 @@
 import dataclasses as dc
-from typing import Generator
+from collections.abc import Generator
 
 from .analysis import AnalysisPlotController
 from .output import OutputPlotController

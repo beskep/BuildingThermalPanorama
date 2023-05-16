@@ -1,4 +1,5 @@
-"""
+"""For test.
+
 Alemán-Flores, M., Alvarez, L., Gomez, L., & Santana-Cedrés, D. (2014).
 Automatic Lens Distortion Correction Using One-Parameter Division Models.
 Image Processing On Line, 4, 327–343. https://doi.org/10.5201/ipol.2014.106
@@ -6,11 +7,9 @@ Image Processing On Line, 4, 327–343. https://doi.org/10.5201/ipol.2014.106
 Bukhari, F., & Dailey, M. N. (2013). Automatic Radial Distortion Estimation
 from a Single Image. Journal of Mathematical Imaging and Vision, 45(1), 31–45.
 https://doi.org/10.1007/s10851-012-0342-2
-
-테스트
 """
 
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 from rich.progress import track
@@ -23,7 +22,7 @@ from skimage.restoration import denoise_bilateral
 from pano import utils
 from pano.misc import tools
 
-# ruff: noqa: N806
+# ruff: noqa
 
 
 class AbsResidualCircleModel(CircleModel):
@@ -177,10 +176,12 @@ class RadialDistortion:
     self._levels = levels
     self._clip_limit = clip_limit
 
-    self._ransac_circle_args: dict[str, Any] = dict(
-        min_samples=3, residual_threshold=5, max_trials=1000
-    )
-    self._ransac_distort_args = dict(min_sample=4)
+    self._ransac_circle_args: dict[str, Any] = {
+        'min_samples': 3,
+        'residual_threshold': 5,
+        'max_trials': 1000,
+    }
+    self._ransac_distort_args = {'min_sample': 4}
 
   def set_circle_ransac_options(
       self, min_samples=10, residual_threshold=5, max_trials=10000, **kwargs
@@ -192,7 +193,7 @@ class RadialDistortion:
         kwargs=kwargs,
     )
 
-  def preprocess(self, image: np.ndarray, mask: Optional[np.ndarray] = None):
+  def preprocess(self, image: np.ndarray, mask: np.ndarray | None = None):
     image = equalize_adapthist(image, clip_limit=self._clip_limit)
     image = denoise_bilateral(image=image, sigma_color=0.05, sigma_spatial=1)
 

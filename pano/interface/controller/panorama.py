@@ -2,7 +2,6 @@ import json
 import multiprocessing as mp
 from contextlib import suppress
 from pathlib import Path
-from typing import Optional
 
 import numpy as np
 from loguru import logger
@@ -16,7 +15,7 @@ from pano.interface.common.config import update_config
 from pano.interface.common.pano_files import DIR, SP
 from pano.interface.mbq import QtCore, QtGui
 from pano.interface.tree import tree_string
-from pano.misc.imageio import ImageIO as IIO
+from pano.misc.imageio import ImageIO
 
 
 def _save_manual_correction(
@@ -25,7 +24,7 @@ def _save_manual_correction(
     subdir: str,
     viewing_angle: float,
     angles: tuple,
-    crop_range: Optional[np.ndarray],
+    crop_range: np.ndarray | None,
 ):
   try:
     pc.save_manual_correction(wd, subdir, viewing_angle, angles, crop_range)
@@ -37,7 +36,11 @@ def _save_manual_correction(
 
 
 def _segments(
-    flag_count: bool, seg_count: int, seg_length: float, building_width: float
+    *,
+    flag_count: bool,
+    seg_count: int,
+    seg_length: float,
+    building_width: float,
 ) -> int:
   if flag_count:
     segments = seg_count
@@ -53,10 +56,12 @@ def _segments(
 
 class Window(con.Window):
 
-  def panel_funtion(self, panel: str, fn: str, *args):
+  def panel_function(self, panel: str, fn: str, *args):
+    # TODO property()로 변경
     p = self._window.get_panel(panel)
     if p is None:
-      raise ValueError(f'Invalid panel name: {panel}')
+      msg = f'Invalid panel name: {panel}'
+      raise ValueError(msg)
 
     f = getattr(p, fn)
 
@@ -86,10 +91,10 @@ class Controller(QtCore.QObject):
     self._consumer.update.connect(self.win.pb_value)
     self._consumer.fail.connect(self.win.error_popup)
 
-    self._wd: Optional[Path] = None
-    self._fm: Optional[pf.ThermalPanoramaFileManager] = None
-    self._pc = pc.PlotControllers(None, None, None, None, None)  # type: ignore
-    self._config: Optional[DictConfig] = None
+    self._wd: Path | None = None
+    self._fm: pf.ThermalPanoramaFileManager | None = None
+    self._pc = pc.PlotControllers(None, None, None, None, None)  # type: ignore[arg-type]
+    self._config: DictConfig | None = None
 
   @property
   def win(self) -> Window:
@@ -135,7 +140,7 @@ class Controller(QtCore.QObject):
 
     for controller in self.pc.controllers():
       controller.fm = self._fm
-    self.pc.analysis.show_point_temperature = lambda x: self.win.panel_funtion(
+    self.pc.analysis.show_point_temperature = lambda x: self.win.panel_function(
         'analysis', 'show_point_temperature', x
     )
 
@@ -146,7 +151,7 @@ class Controller(QtCore.QObject):
 
   def prj_update_project_tree(self):
     tree = tree_string(self._wd, width=40)
-    self.win.panel_funtion('project', 'update_project_tree', tree)
+    self.win.panel_function('project', 'update_project_tree', tree)
 
   @QtCore.Slot(str)
   def prj_select_vis_images(self, files: str):
@@ -179,7 +184,7 @@ class Controller(QtCore.QObject):
         self.pc.panorama.plot(
             d=(DIR.PANO if command == 'panorama' else DIR.COR), sp=SP.IR
         )
-        self.win.panel_funtion('panorama', 'reset')
+        self.win.panel_function('panorama', 'reset')
       elif command == 'register':
         self.pc.registration.reset()
         self.pc.registration.reset_matrices()
@@ -269,7 +274,7 @@ class Controller(QtCore.QObject):
 
     for panel in panels:
       files = vis_files if panel == 'segmentation' else raw_files
-      self.win.panel_funtion(panel, 'update_image_view', files)
+      self.win.panel_function(panel, 'update_image_view', files)
 
   @QtCore.Slot(str)
   def rgst_plot(self, url):
@@ -395,14 +400,14 @@ class Controller(QtCore.QObject):
 
     # XXX 해상도 낮추기?
     self.pc.registration.set_images(
-        fixed_image=IIO.read(ir), moving_image=IIO.read(vis)
+        fixed_image=ImageIO.read(ir), moving_image=ImageIO.read(vis)
     )
     self.pc.registration.draw()
 
   @QtCore.Slot(bool, bool, bool, bool)
-  def analysis_plot(self, factor, segmentaion, vulnerable, distribution):
+  def analysis_plot(self, factor, segmentation, vulnerable, distribution):
     self.pc.analysis.setting.factor = factor
-    self.pc.analysis.setting.segmentation = segmentaion
+    self.pc.analysis.setting.segmentation = segmentation
     self.pc.analysis.setting.vulnerable = vulnerable
     self.pc.analysis.setting.distribution = distribution
 
@@ -416,7 +421,7 @@ class Controller(QtCore.QObject):
       logger.exception(e)
       self.win.popup('Error', str(e))
     else:
-      self.win.panel_funtion(
+      self.win.panel_function(
           'analysis',
           'set_temperature_range',
           *self.pc.analysis.images.temperature_range(),
@@ -476,7 +481,7 @@ class Controller(QtCore.QObject):
     self.pc.analysis.correction_params.e_wall = wall
     self.pc.analysis.correction_params.e_window = window
 
-    self.win.panel_funtion(
+    self.win.panel_function(
         'analysis',
         'set_temperature_range',
         *self.pc.analysis.images.temperature_range(),
@@ -498,8 +503,8 @@ class Controller(QtCore.QObject):
       self.pc.analysis.images.ir = ir
       self.pc.analysis.correction_params.delta_temperature = delta
 
-      self.win.panel_funtion('analysis', 'show_point_temperature', temperature)
-      self.win.panel_funtion(
+      self.win.panel_function('analysis', 'show_point_temperature', temperature)
+      self.win.panel_function(
           'analysis',
           'set_temperature_range',
           *self.pc.analysis.images.temperature_range(),
@@ -515,11 +520,11 @@ class Controller(QtCore.QObject):
     self._analysis_summarize()
 
   def _analysis_summarize(self):
-    self.win.panel_funtion('analysis', 'clear_table')
+    self.win.panel_function('analysis', 'clear_table')
     for cls, summary in self.pc.analysis.images.summarize().items():
       row = {k: v if isinstance(v, str) else f'{v:.2f}' for k, v in summary.items()}
       row['class'] = cls
-      self.win.panel_funtion('analysis', 'add_table_row', row)
+      self.win.panel_function('analysis', 'add_table_row', row)
 
   @QtCore.Slot()
   def analysis_save(self):

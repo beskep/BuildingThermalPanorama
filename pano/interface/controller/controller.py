@@ -1,6 +1,6 @@
 import multiprocessing as mp
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable, Optional
 
 from loguru import logger
 
@@ -89,7 +89,7 @@ class Consumer(QtCore.QThread):
 
   def __init__(self) -> None:
     super().__init__()
-    self._queue: Optional[mp.Queue] = None
+    self._queue: mp.Queue | None = None
 
   @property
   def queue(self):
@@ -136,7 +136,7 @@ class Window:
   def pb_state(self, indeterminate: bool):
     self._window.pb_state(indeterminate)
 
-  def popup(self, title: str, message: str, timeout: Optional[int] = None):
+  def popup(self, title: str, message: str, timeout: int | None = None):
     ok = title.lower() != 'error'
     if not timeout:
       timeout = 2000 if ok else 10000

@@ -1,5 +1,4 @@
 import dataclasses as dc
-from typing import Optional
 
 import numpy as np
 from skimage.exposure.exposure import equalize_hist
@@ -11,7 +10,8 @@ from pano.misc import tools
 
 @dc.dataclass
 class Edgelets:
-  """
+  """Edgelets.
+
   Parameters
   ----------
   locations : np.ndarray
@@ -43,7 +43,8 @@ class Edgelets:
       arr: np.ndarray = getattr(self, var)
       dim = (count, 2) if ndim == 2 else (count,)
       if arr.shape != dim:
-        raise ValueError(f'Invalid {var} shape {arr.shape}')
+        msg = f'Invalid {var} shape {arr.shape}'
+        raise ValueError(msg)
 
   @property
   def count(self):
@@ -74,8 +75,8 @@ class CannyOptions:
   """`skimage.feature.canny` 옵션"""
 
   sigma: float = 1.0
-  low_threshold: Optional[float] = None
-  high_threshold: Optional[float] = None
+  low_threshold: float | None = None
+  high_threshold: float | None = None
   use_quantiles: bool = False
 
 
@@ -86,11 +87,11 @@ class HoughOptions:
   threshold: int = 10
   line_length: int = 50
   line_gap: int = 10
-  theta: Optional[np.ndarray] = None
-  seed: Optional[int] = None
+  theta: np.ndarray | None = None
+  seed: int | None = None
 
 
-def edge_preprocess(image: np.ndarray, eqhist=True) -> np.ndarray:
+def edge_preprocess(image: np.ndarray, *, eqhist=True) -> np.ndarray:
   """전처리 (회색 변환 및 히스토그램 평활화)"""
   na = np.isnan(image)
   image[na] = np.nanmin(image)
@@ -104,8 +105,9 @@ def edge_preprocess(image: np.ndarray, eqhist=True) -> np.ndarray:
 
 def image2edges(
     image: np.ndarray,
-    mask: Optional[np.ndarray] = None,
-    canny_option: Optional[CannyOptions] = None,
+    mask: np.ndarray | None = None,
+    canny_option: CannyOptions | None = None,
+    *,
     eqhist=True,
 ) -> np.ndarray:
   if image.ndim != 2:
@@ -116,15 +118,11 @@ def image2edges(
   if canny_option is None:
     canny_option = CannyOptions()
 
-  edges = canny(
-      image=tools.normalize_image(image), mask=mask, **dc.asdict(canny_option)
-  )
-
-  return edges
+  return canny(image=tools.normalize_image(image), mask=mask, **dc.asdict(canny_option))
 
 
 def edge2edgelets(
-    edges: np.ndarray, hough_option: Optional[HoughOptions] = None
+    edges: np.ndarray, hough_option: HoughOptions | None = None
 ) -> Edgelets:
   kwargs = {} if hough_option is None else dc.asdict(hough_option)
   lines = np.array(probabilistic_hough_line(edges, **kwargs))
@@ -139,9 +137,10 @@ def edge2edgelets(
 
 def image2edgelets(
     image: np.ndarray,
-    mask: Optional[np.ndarray] = None,
-    canny_option: Optional[CannyOptions] = None,
-    hough_option: Optional[HoughOptions] = None,
+    mask: np.ndarray | None = None,
+    canny_option: CannyOptions | None = None,
+    hough_option: HoughOptions | None = None,
+    *,
     eqhist=True,
 ):
   edges = image2edges(image=image, mask=mask, canny_option=canny_option, eqhist=eqhist)

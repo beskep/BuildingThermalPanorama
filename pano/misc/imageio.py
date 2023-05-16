@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -73,10 +72,11 @@ class ImageIO:
 
   @classmethod
   def read_with_meta(
-      cls, path: StrPath, scale=False
-  ) -> Tuple[np.ndarray, Optional[dict]]:
+      cls, path: StrPath, *, scale=False
+  ) -> tuple[np.ndarray, dict | None]:
     """
     주어진 path의 확장자에 따라 영상 파일 및 메타 정보 해석.
+
     조건에 따라 영상의 픽셀 값을 메타 정보에 기록된 원 범위로 scale함.
 
     Parameters
@@ -185,11 +185,12 @@ class ImageIO:
       path: StrPath,
       array: np.ndarray,
       exts: list,
-      meta: Optional[dict] = None,
-      dtype: Optional[str] = None,
+      meta: dict | None = None,
+      dtype: str | None = None,
   ):
     """
     주어진 path와 각 확장자 (`exts`)에 따라 영상 파일 저장.
+
     조건에 따라 주어진 메타 정보를 함께 저장하며, 영상 확장자 (`.png` 등) 파일은
     영상 파일 형식에 맞게 픽셀 값의 범위를 조정함.
 
@@ -241,7 +242,7 @@ class ImageIO:
         yaml.safe_dump(meta, f, indent=4, sort_keys=True)
 
 
-def save_webp_images(*images: Union[str, Path], path: str):
+def save_webp_images(*images: str | Path, path: str):
   webp.save_images(
       imgs=[PIL.Image.open(x) for x in images], file_path=path, fps=1, lossless=True
   )
@@ -266,6 +267,7 @@ def load_webp_mask(path: str):
   images = [_mask_image(x) for x in pil_images]
 
   if (count := sum(1 for x in images if x is not None)) != 1:
-    raise ValueError(f'대상 파일에 gray scale 영상이 {count}개 존재합니다.', count)
+    msg = f'대상 파일에 gray scale 영상이 {count}개 존재합니다.'
+    raise ValueError(msg, count)
 
   return next(x for x in images if x is not None)

@@ -1,4 +1,4 @@
-from typing import Iterable
+from collections.abc import Iterable
 
 import numpy as np
 from loguru import logger
@@ -27,7 +27,8 @@ def gaussian_mixture(array: NDArray, ks: Iterable[int], **kwargs):
 def anomaly_threshold(
     array: NDArray, kmax=8, **kwargs
 ) -> tuple[float, GaussianMixture]:
-  """
+  """Calculate anomaly threshold.
+
   Kim, C., Choi, J.-S., Jang, H., & Kim, E.-J. (2021).
   Automatic Detection of Linear Thermal Bridges from Infrared Thermal Images
   Using Neural Network. Applied Sciences, 11(3), 931. https://doi.org/10.3390/app11030931

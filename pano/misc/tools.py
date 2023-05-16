@@ -2,7 +2,6 @@
 
 import dataclasses as dc
 from enum import IntEnum
-from typing import List, Optional, Tuple, Union
 
 import cv2 as cv
 import matplotlib.pyplot as plt
@@ -12,6 +11,8 @@ from skimage.color import rgb2gray, rgba2rgb
 from skimage.exposure import equalize_hist, rescale_intensity
 from skimage.transform import resize
 from skimage.util import compare_images
+
+# ruff: noqa: PLR2004, EM101
 
 
 def normalize_image(image: np.ndarray) -> np.ndarray:
@@ -55,16 +56,12 @@ def normalize_rgb_image_hist(image: np.ndarray) -> np.ndarray:
   image_yuv[:, :, 0] = cv.normalize(
       image_yuv[:, :, 0], dst=None, alpha=0, beta=255, norm_type=cv.NORM_MINMAX
   )
-  equalized = cv.cvtColor(image_yuv, cv.COLOR_YUV2RGB)
-
-  return equalized
+  return cv.cvtColor(image_yuv, cv.COLOR_YUV2RGB)
 
 
 def erode(image: np.ndarray, iterations=1) -> np.ndarray:
   kernel = cv.getStructuringElement(cv.MORPH_RECT, (3, 3))
-  eroded = cv.erode(image, kernel, iterations=iterations)
-
-  return eroded
+  return cv.erode(image, kernel, iterations=iterations)
 
 
 def _mask_range(mask, axis):
@@ -75,7 +72,7 @@ def _mask_range(mask, axis):
   return int(c1), int(c2)
 
 
-def mask_bbox(mask: np.ndarray, morphology_open=True) -> Tuple[int, int, int, int]:
+def mask_bbox(mask: np.ndarray, *, morphology_open=True) -> tuple[int, int, int, int]:
   """
   마스크 영상 중 True인 영역의 bounding box 좌표를 찾음
 
@@ -132,7 +129,7 @@ class CropRange:
   def as_tuple(self):
     return (self.x_min, self.x_max, self.y_min, self.y_max)
 
-  def crop(self, image: np.ndarray, strict=True):
+  def crop(self, image: np.ndarray, *, strict=True):
     if image.shape[:2] != self.image_shape[:2]:
       msg = (
           f'CropRange image shape {self.image_shape[:2]} '
@@ -148,7 +145,9 @@ class CropRange:
     return image[self.y_min : self.y_max, self.x_min : self.x_max]
 
 
-def crop_mask(mask: np.ndarray, morphology_open=True) -> Tuple[CropRange, np.ndarray]:
+def crop_mask(
+    mask: np.ndarray, *, morphology_open=True
+) -> tuple[CropRange, np.ndarray]:
   bbox = mask_bbox(mask=mask.astype(bool), morphology_open=morphology_open)
   cr = CropRange(*bbox, mask.shape[:2])
 
@@ -157,11 +156,10 @@ def crop_mask(mask: np.ndarray, morphology_open=True) -> Tuple[CropRange, np.nda
   return cr, cropped
 
 
-def bin_size(
-    image1: np.ndarray, image2: Optional[np.ndarray] = None, bins='auto'
-) -> int:
+def bin_size(image1: np.ndarray, image2: np.ndarray | None = None, bins='auto') -> int:
   """
   영상의 histogram, entropy 계산을 위한 적정 bin 개수 추정.
+
   `numpy.histogram_bin_edges`함수를 이용함.
 
   Parameters
@@ -191,6 +189,7 @@ def bin_size(
 def gray_image(image: np.ndarray) -> np.ndarray:
   """
   RGB, RGBA 영상을 gray scale로 변환.
+
   2채널 흑백 영상은 원본 그대로 반환.
 
   Parameters
@@ -220,8 +219,8 @@ def gray_image(image: np.ndarray) -> np.ndarray:
 
 
 def _check_and_prep(
-    image1: np.ndarray, image2: np.ndarray, normalize: bool, eq_hist: bool
-) -> Tuple[np.ndarray, np.ndarray]:
+    image1: np.ndarray, image2: np.ndarray, *, normalize: bool, eq_hist: bool
+) -> tuple[np.ndarray, np.ndarray]:
   image1 = gray_image(image1)
   image2 = gray_image(image2)
 
@@ -246,13 +245,15 @@ def _check_and_prep(
 def prep_compare_images(
     image1: np.ndarray,
     image2: np.ndarray,
+    *,
     norm=False,
     eq_hist=True,
-    method: Union[str, List[str]] = 'checkerboard',
+    method: str | list[str] = 'checkerboard',
     n_tiles=(8, 8),
-) -> Union[np.ndarray, List[np.ndarray]]:
+) -> np.ndarray | list[np.ndarray]:
   """
   두 영상의 전처리 및 비교 영상 생성.
+
   두 영상 모두 2차원 (gray image)이며 해상도 (ndarray.shape)이 동일해야 함.
 
   Parameters
@@ -295,8 +296,9 @@ def prep_compare_images(
 
 
 def prep_compare_fig(
-    images: Tuple[np.ndarray, np.ndarray],
+    images: tuple[np.ndarray, np.ndarray],
     titles=('Image 1', 'Image 2', 'Compare (checkerboard)', 'Compare (difference)'),
+    *,
     norm=False,
     eq_hist=True,
     n_tiles=(8, 8),
@@ -304,6 +306,7 @@ def prep_compare_fig(
 ):
   """
   두 영상의 전처리 및 비교 영상 생성.
+
   두 영상 모두 2차원 (gray image)이며 해상도 (ndarray.shape)이 동일해야 함.
 
   Parameters
@@ -370,7 +373,7 @@ INTRP = Interpolation
 
 
 def limit_image_size(
-    image: np.ndarray, limit: int, order=INTRP.BiCubic, anti_aliasing=True
+    image: np.ndarray, limit: int, order=INTRP.BiCubic, *, anti_aliasing=True
 ) -> np.ndarray:
   max_shape = np.max(image.shape[:2]).astype(float)
   if max_shape <= limit:
@@ -420,11 +423,11 @@ class OutlierArray:
     self.upper = q3 + k * iqr
     self.data = data
 
-  def mask(self, data: Optional[np.ndarray] = None) -> np.ndarray:
+  def mask(self, data: np.ndarray | None = None) -> np.ndarray:
     d = self.data if data is None else data
     return (d < self.lower) | (self.upper < d)
 
-  def reject_outliers(self, data: Optional[np.ndarray] = None) -> np.ndarray:
+  def reject_outliers(self, data: np.ndarray | None = None) -> np.ndarray:
     d = self.data if data is None else data
     d = d[~np.isnan(d)]
     return d[~self.mask(d)]

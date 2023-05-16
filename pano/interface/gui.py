@@ -12,7 +12,7 @@ from pano.interface.common.init import init_project
 init_project(qt=True)
 
 # pylint: disable=wrong-import-position
-# ruff: noqa: E402
+# ruff: noqa: E402 PLR2004
 from pano import utils
 from pano.interface.controller.panorama import Controller
 from pano.interface.mbq import FigureCanvas, QtCore, QtGui, QtQml

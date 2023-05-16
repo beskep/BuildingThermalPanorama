@@ -1,5 +1,5 @@
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable, Optional
 
 import numpy as np
 import yaml
@@ -26,7 +26,7 @@ def _representative(values, name: str, threshold=0.1):
 
 
 def correct_emissivity(
-    image: np.ndarray, meta_files: Iterable[Path], e1: float, e0: Optional[float] = None
+    image: np.ndarray, meta_files: Iterable[Path], e1: float, e0: float | None = None
 ):
   meta_list = [_read_meta(x) for x in meta_files]
 

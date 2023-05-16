@@ -1,5 +1,3 @@
-from typing import Optional
-
 import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.cm import get_cmap
@@ -22,13 +20,13 @@ class PanoramaPlotController(PanoPlotController):
   def __init__(self, parent=None) -> None:
     super().__init__(parent=parent)
 
-    self._cax: Optional[Axes] = None
-    self._prj: Optional[ImageProjection] = None
-    self._toolbar: Optional[CropToolbar] = None
+    self._cax: Axes | None = None
+    self._prj: ImageProjection | None = None
+    self._toolbar: CropToolbar | None = None
 
     self._dir = DIR.PANO
     self._sp = SP.IR
-    self._angles: Optional[np.ndarray] = None
+    self._angles: np.ndarray | None = None
     self._va = np.deg2rad(42.0)
 
     self._cmap = get_cmap('inferno')
@@ -51,7 +49,8 @@ class PanoramaPlotController(PanoPlotController):
 
   @viewing_angle.setter
   def viewing_angle(self, value):
-    """
+    """viewing_angle
+
     Parameters
     ----------
     value : float
@@ -90,7 +89,8 @@ class PanoramaPlotController(PanoPlotController):
       self._toolbar.none()
 
   def crop_range(self) -> np.ndarray:
-    """
+    """crop_range
+
     Returns
     -------
     np.ndarray
@@ -191,7 +191,7 @@ class PanoramaPlotController(PanoPlotController):
 
 
 def save_manual_correction(
-    wd, subdir, viewing_angle, angles, crop_range: Optional[np.ndarray]
+    wd, subdir, viewing_angle, angles, crop_range: np.ndarray | None
 ):
   # FIXME 영상 시점 어긋나는 문제
   tp = ThermalPanorama(wd, init_loglevel='TRACE')

@@ -40,7 +40,7 @@ class SegmentationPlotController(PanoPlotController):
         ax.set_title(title)
       ax.set_axis_off()
 
-  def plot(self, file: Path, separate: bool):
+  def plot(self, file: Path, *, separate: bool):
     vis_path = self.fm.change_dir((DIR.VIS if separate else DIR.RGST), file)
     mask_path = self.fm.change_dir(DIR.SEG, file)
 

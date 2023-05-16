@@ -1,7 +1,7 @@
 from collections import defaultdict
+from collections.abc import Callable
 from itertools import product
 from pathlib import Path
-from typing import Callable, List
 
 import pandas as pd
 from loguru import logger
@@ -41,9 +41,9 @@ class SITKEvaluation(BaseEvaluation):
       self,
       output_dir,
       fname,
-      trsfs: List[rsitk.Transformation],
-      metric_opts: List[dict],
-      preps: List[RegistrationPreprocess],
+      trsfs: list[rsitk.Transformation],
+      metric_opts: list[dict],
+      preps: list[RegistrationPreprocess],
       **kwargs,
   ):
     df = defaultdict(list)

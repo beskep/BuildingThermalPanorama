@@ -12,12 +12,13 @@ References
     Intelligent Robots and Systems. IEEE, 2012.
 """
 
-from typing import Optional, Tuple
 
 import numpy as np
 from loguru import logger
 from skimage.feature import canny
 from skimage.transform import probabilistic_hough_line, warp
+
+# ruff: noqa: N806 D401
 
 
 def compute_edgelets(image, sigma=3):
@@ -183,7 +184,7 @@ def ransac_vanishing_point(edgelets, num_ransac_iter=2000, threshold_inlier=5):
 
 def ransac_3_line(
     edgelets, focal_length, num_ransac_iter=2000, threshold_inlier=5
-) -> Tuple[Optional[np.ndarray], Optional[np.ndarray]]:
+) -> tuple[np.ndarray | None, np.ndarray | None]:
   """Estimate orthogonal vanishing points using 3 line Ransac algorithm.
 
   Assumes camera has been calibrated and its focal length is known.
@@ -335,7 +336,9 @@ def remove_inliers(model, edgelets, threshold_inlier=10):
   return edgelets
 
 
-def compute_homography_and_warp(image, vp1, vp2, clip=True, clip_factor=3):
+def compute_homography_and_warp(
+    image, vp1, vp2, clip=True, clip_factor=3
+) -> np.ndarray:
   """Compute homography from vanishing points and warp the image.
 
   It is assumed that vp1 and vp2 correspond to horizontal and vertical
@@ -439,9 +442,7 @@ def compute_homography_and_warp(image, vp1, vp2, clip=True, clip_factor=3):
 
   final_homography = np.dot(T, inter_matrix)
 
-  warped_img = warp(image, np.linalg.inv(final_homography), output_shape=(max_y, max_x))
-
-  return warped_img
+  return warp(image, np.linalg.inv(final_homography), output_shape=(max_y, max_x))
 
 
 def vis_edgelets(image, edgelets, show=True):
@@ -546,6 +547,4 @@ def rectify_image(
     raise KeyError("Parameter 'algorithm' has to be one of {'3-line', 'independent'}")
 
   # Compute the homography and warp
-  warped_img = compute_homography_and_warp(image, vp1, vp2, clip_factor=clip_factor)
-
-  return warped_img
+  return compute_homography_and_warp(image, vp1, vp2, clip_factor=clip_factor)

@@ -1,7 +1,6 @@
 """외피 열화상 파노라마 영상처리 알고리즘의 CLI 인터페이스"""
 
 from pathlib import Path
-from typing import List, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,7 +14,7 @@ from pano.distortion import perspective as persp
 from pano.flir import FlirExtractor
 from pano.misc import sp, tools
 from pano.misc.anomaly import anomaly_threshold
-from pano.misc.imageio import ImageIO as IIO
+from pano.misc.imageio import ImageIO as IIO  # noqa: N817
 from pano.misc.imageio import save_webp_images
 from pano.segmentation.onnx import SmpModel
 
@@ -27,7 +26,11 @@ from .common.pano_files import DIR, FN, SP, ThermalPanoramaFileManager, init_dir
 class ThermalPanorama:
 
   def __init__(
-      self, directory: Union[str, Path], default_config=False, init_loglevel='INFO'
+      self,
+      directory: str | Path,
+      *,
+      default_config=False,
+      init_loglevel='INFO',
   ) -> None:
     # working directory
     wd = Path(directory).resolve()
@@ -60,8 +63,8 @@ class ThermalPanorama:
   def cmap(self):
     return self._cmap
 
-  def update_config(self, config: Union[utils.StrPath, dict, DictConfig]):
-    if isinstance(config, (str, Path)):
+  def update_config(self, config: utils.StrPath | dict | DictConfig):
+    if isinstance(config, str | Path):
       config = OmegaConf.load(config)
 
     self._config = update_config(self._wd, config)
@@ -77,11 +80,12 @@ class ThermalPanorama:
     elif flir_files:
       manufacturer = 'FLIR'
     else:
-      raise ValueError('지원하지 않는 Raw 파일 형식입니다.')
+      msg = '지원하지 않는 Raw 파일 형식입니다.'
+      raise ValueError(msg)
 
     return manufacturer
 
-  def _check_camera_model(self) -> Optional[str]:
+  def _check_camera_model(self) -> str | None:
     tags = ['Model', 'CameraModel']
     raw_files = self._fm.raw_files()
 
@@ -123,7 +127,8 @@ class ThermalPanorama:
       try:
         k = {'CW': 3, 'CCW': 1}[force_horizontal]
       except IndexError as e:
-        raise ValueError('force_horizontal must be one of {"CW", "CCW"}') from e
+        msg = 'force_horizontal must be one of {"CW", "CCW"}'
+        raise ValueError(msg) from e
 
       logger.debug('Rotate "{}" (k={})', path.name, k)
       data.ir = np.rot90(data.ir, k=k, axes=(0, 1))
@@ -147,7 +152,11 @@ class ThermalPanorama:
     return ir, vis
 
   def _save_extracted_image(
-      self, fname: str, ir: np.ndarray, vis: np.ndarray, meta: Optional[dict] = None
+      self,
+      fname: str,
+      ir: np.ndarray,
+      vis: np.ndarray,
+      meta: dict | None = None,
   ):
     """추출한 열/실화상을 각 폴더에 저장"""
     ir_path = self._fm.change_dir(DIR.IR, file=fname)
@@ -220,7 +229,7 @@ class ThermalPanorama:
   def _size_limit(self):
     return self._config['file']['size_limit']
 
-  def limit_size(self, image: np.ndarray, aa=True) -> np.ndarray:
+  def limit_size(self, image: np.ndarray, *, aa=True) -> np.ndarray:
     if aa:  # noqa: SIM108
       order = tools.INTRP.BiCubic
     else:
@@ -344,14 +353,14 @@ class ThermalPanorama:
       try:
         files = self._fm.files(DIR.RGST)
       except FileNotFoundError as e:
-        raise FileNotFoundError(
-            '대상 경로를 찾을 수 없습니다. 열화상-실화상 정합을 먼저 시행해주세요.'
-        ) from e
+        msg = '대상 경로를 찾을 수 없습니다. 열화상-실화상 정합을 먼저 시행해주세요.'
+        raise FileNotFoundError(msg) from e
 
     try:
       path = self._fm.segment_model_path()
     except FileNotFoundError as e:
-      raise FileNotFoundError('부위 인식 모델 파일을 불러올 수 없습니다.') from e
+      msg = '부위 인식 모델 파일을 불러올 수 없습니다.'
+      raise FileNotFoundError(msg) from e
 
     model = SmpModel(str(path))
 
@@ -406,8 +415,8 @@ class ThermalPanorama:
   def _stitch(
       self,
       stitcher: stitch.Stitcher,
-      images: List[np.ndarray],
-      names: List[str],
+      images: list[np.ndarray],
+      names: list[str],
       spectrum: str,
   ) -> stitch.Panorama:
     popt: DictConfig = self._config['panorama']['preprocess'][spectrum]
@@ -430,17 +439,20 @@ class ThermalPanorama:
     logger.trace('Stitch 대상 영상 & 전처리 설정')
 
     with utils.console.status('Stitching...'):
-      res = stitcher.stitch(
+      return stitcher.stitch(
           images=stitching_images,
           masks=None,
           names=names,
           crop=self._config['panorama']['stitch']['crop'],
       )
 
-    return res
-
   def _save_panorama(
-      self, spectrum: SP, panorama: stitch.Panorama, save_mask=True, save_meta=True
+      self,
+      spectrum: SP,
+      panorama: stitch.Panorama,
+      *,
+      save_mask=True,
+      save_meta=True,
   ):
     self._fm.subdir(DIR.PANO, mkdir=True)
 
@@ -489,14 +501,16 @@ class ThermalPanorama:
         )
 
   def _stitch_others(
-      self, stitcher: stitch.Stitcher, panorama: stitch.Panorama, sp: SP
+      self,
+      stitcher: stitch.Stitcher,
+      panorama: stitch.Panorama,
+      sp: SP,
   ):
     try:
-      files = self._fm.files(DIR[sp.name], error=(sp is SP.IR))
+      files = self._fm.files(DIR[sp.name], error=sp is SP.IR)
     except FileNotFoundError as e:
-      raise FileNotFoundError(
-          f'대상 파일을 찾을 수 없습니다. {sp.value} 파노라마를 생성할 수 없습니다.'
-      ) from e
+      msg = f'대상 파일을 찾을 수 없습니다. {sp.value} 파노라마를 생성할 수 없습니다.'
+      raise FileNotFoundError(msg) from e
 
     files = [files[x] for x in panorama.indices]
     images = [IIO.read(x) for x in files]
@@ -563,7 +577,7 @@ class ThermalPanorama:
     self._stitch_others(stitcher=stitcher, panorama=pano, sp=SP[sp2])
 
     # segmention mask 저장
-    stitcher.blend_type = False  # type: ignore
+    stitcher.blend_type = False  # type: ignore[assignment]
     stitcher.interp = stitch.Interpolation.NEAREST
     self._stitch_others(stitcher=stitcher, panorama=pano, sp=SP.SEG)
 
@@ -608,7 +622,7 @@ class ThermalPanorama:
       self._save_panorama(spectrum=SP.VIS, panorama=vis_pano, save_mask=False)
 
       # segmentation mask
-      stitcher.blend_type = False  # type: ignore
+      stitcher.blend_type = False  # type: ignore[assignment]
       stitcher.interp = stitch.Interpolation.NEAREST
       self._stitch_others(stitcher=stitcher, panorama=vis_pano, sp=SP.SEG)
 
@@ -635,12 +649,13 @@ class ThermalPanorama:
       self,
       correction: persp.Correction,
       spectrum: SP,
-      crop_range: Optional[tools.CropRange] = None,
+      crop_range: tools.CropRange | None = None,
   ):
     try:
       path = self._fm.panorama_path(DIR.PANO, spectrum, error=True)
     except FileNotFoundError as e:
-      raise FileNotFoundError(f'{spectrum.value} 파노라마가 존재하지 않습니다.') from e
+      msg = f'{spectrum.value} 파노라마가 존재하지 않습니다.'
+      raise FileNotFoundError(msg) from e
 
     pano = IIO.read(path=path)
 
@@ -654,7 +669,7 @@ class ThermalPanorama:
       pano = crop_range.crop(pano)
 
     pano_corrected = correction.correct(pano, order=order)[0].astype(np.uint8)
-    pano_limited = self.limit_size(pano_corrected, aa=(spectrum is not SP.SEG))
+    pano_limited = self.limit_size(pano_corrected, aa=spectrum is not SP.SEG)
 
     if spectrum is SP.SEG:
       pano_limited = tools.SegMask.index_to_vis(pano_limited)
@@ -666,7 +681,8 @@ class ThermalPanorama:
     try:
       ir_path = self._fm.panorama_path(DIR.PANO, SP.IR, error=True)
     except FileNotFoundError as e:
-      raise FileNotFoundError('생성된 파노라마 파일이 없습니다.') from e
+      msg = '생성된 파노라마 파일이 없습니다.'
+      raise FileNotFoundError(msg) from e
 
     pc = self._init_perspective_correction()
     logger.trace('Init perspective correction')
@@ -680,9 +696,8 @@ class ThermalPanorama:
 
     seg = IIO.read(self._fm.panorama_path(DIR.PANO, SP.SEG))
     if pano.shape[:2] != seg.shape[:2]:
-      raise ValueError(
-          '열·실화상 파노라마의 크기가 다릅니다. 파노라마 정합을 먼저 시행해주세요.'
-      )
+      msg = '열·실화상 파노라마의 크기가 다릅니다. 파노라마 정합을 먼저 시행해주세요.'
+      raise ValueError(msg)
 
     # wall, window 영역만 추출
     seg = tools.SegMask.vis_to_index(seg[:, :, 0])
@@ -696,10 +711,11 @@ class ThermalPanorama:
     try:
       crct = pc.perspective_correct(image=pano, mask=mask)
     except persp.NotEnoughEdgeletsError as e:
-      raise persp.NotEnoughEdgeletsError(
-          '시점 왜곡을 추정할 edge의 개수가 부족합니다. '
-          'Edge 추출 옵션을 변경하거나 높은 해상도의 파노라마를 사용하세요.'
-      ) from e
+      msg = (
+          '시점 왜곡을 추정할 edge의 개수가 부족합니다. Edge 추출 옵션을 변경하거나'
+          ' 높은 해상도의 파노라마를 사용하세요.'
+      )
+      raise persp.NotEnoughEdgeletsError(msg) from e
 
     # plot 저장
     self._fm.subdir(DIR.COR, mkdir=True)
@@ -708,9 +724,8 @@ class ThermalPanorama:
     plt.close(fig)
 
     if not crct.success():
-      raise ValueError(
-          'IR 파노라마 왜곡 보정 중 오류 발생. 저장된 plot을 참고해주세요.'
-      )
+      msg = 'IR 파노라마 왜곡 보정 중 오류 발생. 저장된 plot을 참고해주세요.'
+      raise ValueError(msg)
 
     logger.debug('IR 파노라마 왜곡 보정 완료')
 

@@ -1,4 +1,4 @@
-from typing import Callable
+from collections.abc import Callable
 
 from matplotlib import pyplot as plt
 from misc.imageio import ImageIO

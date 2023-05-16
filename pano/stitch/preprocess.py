@@ -1,6 +1,5 @@
 """Stitcher용 전처리 함수, 클래스"""
 
-from typing import Optional, Tuple
 
 import cv2 as cv
 import numpy as np
@@ -13,19 +12,18 @@ from pano.misc.tools import normalize_rgb_image_hist
 
 
 class PanoramaPreprocess:
-  """
-  파노라마 생성을 위한 열화상, 실화상의 전처리
-  """
 
   def __init__(
       self,
+      *,
       is_numeric: bool,
       fillna: float = 0.0,
-      mask_threshold: Optional[float] = -30.0,
-      contrast: Optional[str] = 'equalization',
-      denoise: Optional[str] = 'bilateral',
+      mask_threshold: float | None = -30.0,
+      contrast: str | None = 'equalization',
+      denoise: str | None = 'bilateral',
   ):
-    """
+    """파노라마 생성을 위한 열화상, 실화상의 전처리
+
     Parameters
     ----------
     is_numeric : bool
@@ -78,12 +76,13 @@ class PanoramaPreprocess:
   def mask_threshold(self):
     """
     영상의 마스킹을 위한 기준 픽셀값.
+
     `mask_threshold` 미만의 영역은 파노라마 생성 영역에서 제외됨.
     """
     return self._mask_threshold
 
   @mask_threshold.setter
-  def mask_threshold(self, value: Optional[float]):
+  def mask_threshold(self, value: float | None):
     self._mask_threshold = value
 
   @property
@@ -97,6 +96,7 @@ class PanoramaPreprocess:
   def set_bilateral_args(self, d=-1, sigmaColor=20, sigmaSpace=10):
     """
     uint8로 변환한 영상에 적용하는 Bilateral filter의 arguments 설정.
+
     `cv2.bilateralFilter` 참조.
     """
     self._bilateral_args = {
@@ -108,6 +108,7 @@ class PanoramaPreprocess:
   def set_gaussian_args(self, ksize=(5, 5), sigmaX=0):
     """
     uint8로 변환한 영상에 적용하는 Gaussian filter의 arguments 설정.
+
     `cv2.GaussianBlur` 참조.
     """
     self._gaussian_args = {'ksize': tuple(ksize), 'sigmaX': sigmaX}
@@ -118,9 +119,10 @@ class PanoramaPreprocess:
   def _gaussian_filter(self, image: np.ndarray) -> np.ndarray:
     return cv.GaussianBlur(image, **self._gaussian_args)
 
-  def masking(self, image: np.ndarray) -> Tuple[np.ndarray, Optional[np.ndarray]]:
+  def masking(self, image: np.ndarray) -> tuple[np.ndarray, np.ndarray | None]:
     """
     영상의 픽셀값에 따라 마스킹하고 영상과 마스크 반환.
+
     대상 영상이 열화상이 아닌 경우 (not `is_numeric`) 마스크는 `None` 반환.
 
     Parameters
@@ -153,7 +155,9 @@ class PanoramaPreprocess:
 
   def adjust_contrast(self, image: np.ndarray) -> np.ndarray:
     """
-    선택한 명암 개선 알고리즘 적용. 열화상의 경우 `normalization`을 선택 시
+    선택한 명암 개선 알고리즘 적용.
+
+    열화상의 경우 `normalization`을 선택 시
     Histogram normalization을 적용하지 않고 경고 메세지. 실화상의 경우
     `equalization` 선택 시 알고리즘은 적용하지만 경고 메세지를 보냄.
 
@@ -212,7 +216,7 @@ class PanoramaPreprocess:
 
     return res
 
-  def __call__(self, image: np.ndarray) -> Tuple[np.ndarray, Optional[np.ndarray]]:
+  def __call__(self, image: np.ndarray) -> tuple[np.ndarray, np.ndarray | None]:
     """
     마스킹, 명암비 개선, 잡음 제거 알고리즘 순차적으로 적용
 

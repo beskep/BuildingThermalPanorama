@@ -1,10 +1,10 @@
 import dataclasses as dc
 import multiprocessing as mp
+from collections.abc import Iterable
 from contextlib import suppress
 from enum import IntEnum
 from pathlib import Path
 from shutil import copy2
-from typing import Iterable
 
 from loguru import logger
 from omegaconf import DictConfig

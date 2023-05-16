@@ -70,9 +70,9 @@ class HoughLineFeatureDetector(BaseDetector):
   def detect(self, image, canny_kwargs=None, hough_kwargs=None):
     # pylint: disable=arguments-differ
     if canny_kwargs is None:
-      canny_kwargs = dict()
+      canny_kwargs = {}
     if hough_kwargs is None:
-      hough_kwargs = dict()
+      hough_kwargs = {}
 
     image_canny = feature.canny(image=image, **canny_kwargs)
     lines = transform.probabilistic_hough_line(image=image_canny, **hough_kwargs)
@@ -184,9 +184,9 @@ class FeatureBasedRegistrator(BaseRegistrator):
         raise ValueError
 
     if fixed_kwargs is None:
-      fixed_kwargs = dict()
+      fixed_kwargs = {}
     if moving_kwargs is None:
-      moving_kwargs = dict()
+      moving_kwargs = {}
 
     self._fixed_kwargs = fixed_kwargs
     self._moving_kwargs = moving_kwargs
@@ -257,7 +257,7 @@ class FeatureBasedRegistrator(BaseRegistrator):
 
     if self._hough_transform and isinstance(self.detector, HoughLineFeatureDetector):
       delta_avg = np.average(
-          (fixed_dscs[matches[:, 0], 4] - moving_dscs[matches[:, 1], 4])
+          fixed_dscs[matches[:, 0], 4] - moving_dscs[matches[:, 1], 4]
       )
       hough_trsf = transform.SimilarityTransform(
           rotation=delta_avg

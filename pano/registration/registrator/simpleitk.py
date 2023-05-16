@@ -1,7 +1,7 @@
 """SimpleITK 라이브러리와 수치적 최적화를 통해 영상 정합"""
 
 import enum
-from typing import Callable, Optional, Tuple, Union
+from collections.abc import Callable
 
 import numpy as np
 import SimpleITK as sitk  # noqa: N813
@@ -33,7 +33,7 @@ class Transformation(enum.Enum):
   Affine = enum.auto()
 
 
-def to_sitk_image(image: np.ndarray, set_origin=False) -> sitk.Image:
+def to_sitk_image(image: np.ndarray, *, set_origin=False) -> sitk.Image:
   """
   SimpleITK 형식 image로 변환
 
@@ -64,7 +64,7 @@ class SITKRegistrator(BaseRegistrator):
       transformation=Transformation.Similarity,
       metric=Metric.JointHistMI,
       optimizer='powell',
-      bins: Union[str, int] = 'auto',
+      bins: str | int = 'auto',
   ) -> None:
     """
     SimpleITK 라이브러리와 수치적 최적화를 통해 영상 정합
@@ -88,8 +88,8 @@ class SITKRegistrator(BaseRegistrator):
     self._metric: Metric = metric
     self._bins = bins
 
-    self._scale0: Optional[float] = None  # initial scale factor
-    self._trnsl0: Optional[tuple] = None  # inital translation factor
+    self._scale0: float | None = None  # initial scale factor
+    self._trnsl0: tuple | None = None  # inital translation factor
 
     self._metric_options = {}
     if isinstance(bins, int):
@@ -119,7 +119,8 @@ class SITKRegistrator(BaseRegistrator):
           maximumStepSizeInPhysicalUnits=2,
       )
     else:
-      raise ValueError(f'Optimizer `{optimizer}` not in ["powell", "gradient_descent"]')
+      msg = f'Optimizer `{optimizer}` not in ["powell", "gradient_descent"]'
+      raise ValueError(msg)
 
     # 각 parameter의 scaling factor 결정 방법
     self._method.SetOptimizerScalesFromPhysicalShift()
@@ -163,7 +164,7 @@ class SITKRegistrator(BaseRegistrator):
       raise ValueError(metric)
 
   def set_metric(
-      self, metric: Metric, bins: Union[int, str] = 'auto', pdf_var=1.5, ants_radius=2
+      self, metric: Metric, bins: int | str = 'auto', pdf_var=1.5, ants_radius=2
   ):
     self._metric = metric
     self._bins = bins
@@ -185,8 +186,8 @@ class SITKRegistrator(BaseRegistrator):
   @staticmethod
   def _get_transformation(
       transformation: Transformation,
-      scale: Optional[float] = None,
-      translation: Optional[tuple] = None,
+      scale: float | None = None,
+      translation: tuple | None = None,
   ):
     if scale is None:
       logger.warning(
@@ -198,7 +199,7 @@ class SITKRegistrator(BaseRegistrator):
 
     # 초기 scale 설정
     if transformation is Transformation.Similarity:
-      # params: (scale, angle, translation0, translation1)
+      # `params: (scale, angle, translation0, translation1)
       trsf = sitk.Similarity2DTransform()
 
       trsf.SetScale(scale)
@@ -241,9 +242,7 @@ class SITKRegistrator(BaseRegistrator):
     dst = np.array([transform.TransformPoint(x) for x in src])
     ttype = 'similarity' if len(params) == 4 else 'affine'
     trsf = estimate_transform(ttype=ttype, src=src, dst=dst)
-    matrix = inv(trsf.params)
-
-    return matrix
+    return inv(trsf.params)  # matrix
 
   def set_multi_resolution(self, shrink_factors=(4, 2, 1), smoothing_sigmas=(2, 1, 0)):
     self.method.SetShrinkFactorsPerLevel(shrink_factors)
@@ -252,10 +251,10 @@ class SITKRegistrator(BaseRegistrator):
 
   def set_initial_params(
       self,
-      scale: Optional[float] = None,
-      fixed_alpha: Optional[float] = None,
-      moving_alpha: Optional[float] = None,
-      translation: Optional[list] = None,
+      scale: float | None = None,
+      fixed_alpha: float | None = None,
+      moving_alpha: float | None = None,
+      translation: list | None = None,
   ):
     """
     정합을 위한 translation의 초기 패러미터 지정.
@@ -293,8 +292,9 @@ class SITKRegistrator(BaseRegistrator):
       fixed_simg: sitk.Image,
       moving_simg: sitk.Image,
       trsf: sitk.Transform,
+      *,
       set_origin: bool,
-  ) -> Tuple[np.ndarray, Optional[Callable], Optional[np.ndarray]]:
+  ) -> tuple[np.ndarray, Callable | None, np.ndarray | None]:
     # 정합된 영상 추출
     registered = sitk.Resample(
         image1=moving_simg,
@@ -332,9 +332,7 @@ class SITKRegistrator(BaseRegistrator):
           defaultPixelValue=0.0,
           outputPixelType=moving_simg.GetPixelID(),
       )
-      registered_image = sitk.GetArrayFromImage(registered_simg)
-
-      return registered_image
+      return sitk.GetArrayFromImage(registered_simg)
 
     return registered_image, register, matrix
 
@@ -343,7 +341,7 @@ class SITKRegistrator(BaseRegistrator):
       fixed_image: np.ndarray,
       moving_image: np.ndarray,
       **kwargs,
-  ) -> Tuple[np.ndarray, Optional[Callable], Optional[np.ndarray]]:
+  ) -> tuple[np.ndarray, Callable | None, np.ndarray | None]:
     """
     Register image
 

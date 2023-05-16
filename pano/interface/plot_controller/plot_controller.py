@@ -1,5 +1,4 @@
 from collections.abc import Iterable
-from typing import Optional
 
 import numpy as np
 from matplotlib.axes import Axes
@@ -38,10 +37,10 @@ class PlotController(QtCore.QObject):
   def __init__(self, parent=None) -> None:
     super().__init__(parent=parent)
 
-    self._app: Optional[QtGui.QGuiApplication] = None
-    self._canvas: Optional[FigureCanvas] = None
-    self._fig: Optional[Figure] = None
-    self._axes: Optional[Axes] = None
+    self._app: QtGui.QGuiApplication | None = None
+    self._canvas: FigureCanvas | None = None
+    self._fig: Figure | None = None
+    self._axes: Axes | None = None
 
   @property
   def app(self) -> QtGui.QGuiApplication:
@@ -100,7 +99,7 @@ class PanoPlotController(PlotController):
 
   def __init__(self, parent=None) -> None:
     super().__init__(parent=parent)
-    self._fm: Optional[ThermalPanoramaFileManager] = None
+    self._fm: ThermalPanoramaFileManager | None = None
 
   @property
   def fm(self) -> ThermalPanoramaFileManager:

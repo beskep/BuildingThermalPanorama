@@ -3,7 +3,6 @@
 import json
 from collections import defaultdict
 from pathlib import Path
-from typing import List, Tuple, Union
 from warnings import warn
 
 import numpy as np
@@ -23,9 +22,9 @@ class VIAProject:
 
   def __init__(
       self,
-      path: Union[str, Path],
+      path: str | Path,
       attribute_name: str,
-      attributes_ids: List[str],
+      attributes_ids: list[str],
   ):
     """
     VIA로 annotate한 영상의 영역 정보 해석
@@ -71,9 +70,7 @@ class VIAProject:
     return self._image_metadata[key]
 
   def regions(self, fname: str):
-    """
-    대상 파일에 지정된 영역의 클래스 이름과 polygon 좌표 정보 generate
-    """
+    """대상 파일에 지정된 영역의 클래스 이름과 polygon 좌표 정보 generate"""
     meta_data = self.meta_data(self.fname_key(fname))
     regions = meta_data['regions']
 
@@ -97,9 +94,9 @@ class VIAProject:
 
   def write_masks(
       self,
-      fname: Union[str, Path],
-      save_dir: Union[str, Path],
-      shape: Tuple[int, int],
+      fname: str | Path,
+      save_dir: str | Path,
+      shape: tuple[int, int],
   ):
     """
     VIA로 지정한 영역 정보를 png 파일 형태 mask로 저장

@@ -1,6 +1,5 @@
 """지정한 roll, yaw, pitch를 적용한 영상 projection"""
 
-from typing import Optional
 
 import numpy as np
 from skimage import transform
@@ -172,6 +171,8 @@ class ImageProjection:
 
   def __init__(self, image: np.ndarray, viewing_angle: float) -> None:
     """
+    ImageProjection
+
     Parameters
     ----------
     image : np.ndarray
@@ -223,9 +224,10 @@ class ImageProjection:
       roll=0.0,
       pitch=0.0,
       yaw=0.0,
+      *,
       scale=True,
       cval=None,
-      image: Optional[np.ndarray] = None,
+      image: np.ndarray | None = None,
   ) -> np.ndarray:
     if image is None:
       image = self._image
@@ -243,7 +245,7 @@ class ImageProjection:
     vertex = transform.matrix_transform(self._vertex0, mtx)
     shape = np.max(vertex, axis=0) - np.min(vertex, axis=0)
 
-    projected = transform.warp(
+    return transform.warp(
         image=image,
         inverse_map=np.linalg.inv(mtx),
         output_shape=np.ceil(shape)[[1, 0]],
@@ -251,8 +253,6 @@ class ImageProjection:
         clip=False,
         preserve_range=True,
     )
-
-    return projected
 
 
 if __name__ == '__main__':

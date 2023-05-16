@@ -2,7 +2,6 @@
 
 from pathlib import Path
 from shutil import copy2
-from typing import Union
 
 from loguru import logger
 from omegaconf import DictConfig, OmegaConf
@@ -14,7 +13,7 @@ CONFIG_FNAME = 'config.yaml'
 DEFAULT_CONFIG_PATH = DIR.RESOURCE.joinpath(CONFIG_FNAME)
 
 
-def set_config(directory: Path, read_only=True, default=False) -> DictConfig:
+def set_config(directory: Path, *, read_only=True, default=False) -> DictConfig:
   """
   config 파일 로드하고 유효한 config 설정 파일 저장.
 
@@ -50,19 +49,19 @@ def set_config(directory: Path, read_only=True, default=False) -> DictConfig:
     copy2(src=DEFAULT_CONFIG_PATH, dst=config_path)
 
   if read_only:
-    OmegaConf.set_readonly(config, True)
+    OmegaConf.set_readonly(config, value=True)
 
   assert isinstance(config, DictConfig)
 
   return config
 
 
-def update_config(directory: Union[str, Path], *configs) -> DictConfig:
+def update_config(directory: str | Path, *configs) -> DictConfig:
   path = Path(directory).joinpath(CONFIG_FNAME)
   base = OmegaConf.load(path)
 
   # struct -> base에 없는 항목을 지정하려 하면 오류 발생
-  OmegaConf.set_struct(base, True)
+  OmegaConf.set_struct(base, value=True)
 
   updated = OmegaConf.merge(base, *configs)
   assert isinstance(updated, DictConfig)

@@ -1,7 +1,6 @@
 """segmentation-models-pytorch 학습, onnx export한 DeepLabV3+ 모델"""
 
 from pathlib import Path
-from typing import Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -25,10 +24,11 @@ class SmpModel:
 
     self._cmap = get_cmap(self.CMAP)
     self._handles = [
-        Patch(facecolor=self._cmap(i), label=l) for i, l in enumerate(self.LABELS)
+        Patch(facecolor=self._cmap(i), label=label)
+        for i, label in enumerate(self.LABELS)
     ]
 
-  def predict(self, src: Union[str, bytes, Path]):
+  def predict(self, src: str | bytes | Path):
     image = Image.open(src)
     inputs = np.array(image.resize(self.IMG_SIZE, resample=RSMP.LANCZOS))
     inputs = np.moveaxis(inputs, -1, 0).astype(np.float32)  # HWC -> CHW
@@ -39,10 +39,8 @@ class SmpModel:
 
     return np.array(resized)
 
-  def visualization(
-      self, src: Union[str, Path, Image.Image, np.ndarray], mask: np.ndarray
-  ):
-    if isinstance(src, (Image.Image, np.ndarray)):  # noqa: SIM108
+  def visualization(self, src: str | Path | Image.Image | np.ndarray, mask: np.ndarray):
+    if isinstance(src, Image.Image | np.ndarray):  # noqa: SIM108
       image = src
     else:
       image = Image.open(src)

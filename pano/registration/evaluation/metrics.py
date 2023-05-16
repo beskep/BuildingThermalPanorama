@@ -1,7 +1,6 @@
 """두 영상의 유사도/정합 정확도 평가"""
 
 from functools import cached_property
-from typing import Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,7 +14,7 @@ def _check_shape(image1: np.ndarray, image2: np.ndarray):
     raise ValueError('shape1 != shape2')
 
 
-def compute_sse(image1: np.ndarray, image2: np.ndarray, norm=True):
+def compute_sse(image1: np.ndarray, image2: np.ndarray, *, norm=True):
   """
   Compute SSE (Sum of Squared Error) of image1 and image 2.
 
@@ -39,12 +38,10 @@ def compute_sse(image1: np.ndarray, image2: np.ndarray, norm=True):
     image1 = normalize_image(image1)
     image2 = normalize_image(image2)
 
-  sse = np.sum(np.square(image1 - image2))
-
-  return sse
+  return np.sum(np.square(image1 - image2))
 
 
-def compute_rmse(image1: np.ndarray, image2: np.ndarray, norm=True):
+def compute_rmse(image1: np.ndarray, image2: np.ndarray, *, norm=True):
   """
   Compute RMSE (Root Mean Squared Error) of image1 and image 2.
 
@@ -63,9 +60,7 @@ def compute_rmse(image1: np.ndarray, image2: np.ndarray, norm=True):
       Root Mean Squared Error
   """
   sse = compute_sse(image1=image1, image2=image2, norm=norm)
-  rmse = np.sqrt(sse / image1.size)
-
-  return rmse
+  return np.sqrt(sse / image1.size)
 
 
 def compute_ncc(image1: np.ndarray, image2: np.ndarray):
@@ -95,16 +90,14 @@ def compute_ncc(image1: np.ndarray, image2: np.ndarray):
 
   img1 = image1 - np.average(image1)
   img2 = image2 - np.average(image2)
-  ncc = np.sum(img1 * img2) / np.sqrt(np.sum(np.square(img1)) * np.sum(np.square(img2)))
-
-  return ncc
+  return np.sum(img1 * img2) / np.sqrt(
+      np.sum(np.square(img1)) * np.sum(np.square(img2))
+  )
 
 
 def image_entropy(image: np.ndarray, bins: int, base=2) -> float:
   hist, edges = np.histogram(image.ravel(), bins=bins)
-  entropy = calculate_entropy(hist, base=base)
-
-  return entropy
+  return calculate_entropy(hist, base=base)
 
 
 class MutualInformation:
@@ -140,7 +133,7 @@ class MutualInformation:
       self,
       image1: np.ndarray,
       image2: np.ndarray,
-      bins: Union[int, str] = 'auto',
+      bins: int | str = 'auto',
       base=2,
   ) -> None:
     _check_shape(image1, image2)
@@ -195,8 +188,9 @@ class MutualInformation:
   @cached_property
   def joint_entropy(self) -> float:
     """
-    Image 1, 2의 joint entropy. Histogram의 bin 개수, log의 밑은 초기
-    설정값을 따름.
+    Image 1, 2의 joint entropy.
+
+    Histogram의 bin 개수, log의 밑은 초기 설정값을 따름.
 
     Returns
     -------
@@ -228,6 +222,7 @@ class MutualInformation:
   def mattes_mutual_information(self):
     """
     Mattes Mutual Information 계산.
+
     mutual_information()과 결과 동일함.
 
     Returns
@@ -248,11 +243,9 @@ class MutualInformation:
     py = np.sum(pxy, axis=1).reshape([-1, 1])
 
     pxy_pxpy = np.divide(pxy, px * py, out=np.ones_like(pxy), where=pxy != 0)
-    mmi = np.sum(pxy * np.log2(pxy_pxpy)) / np.log2(self.base)
+    return np.sum(pxy * np.log2(pxy_pxpy)) / np.log2(self.base)
 
-    return mmi
-
-  def mi_plot(self) -> Tuple[plt.Figure, np.ndarray]:
+  def mi_plot(self) -> tuple[plt.Figure, np.ndarray]:
     """
     두 영상, joint histogram을 plot
 
@@ -276,7 +269,7 @@ class MutualInformation:
 
 
 def calculate_all_metrics(
-    image1: np.ndarray, image2: np.ndarray, bins: Union[int, str] = 'auto', base=2
+    image1: np.ndarray, image2: np.ndarray, bins: int | str = 'auto', base=2
 ) -> dict:
   """
   지원하는 모든 metric을 계산
@@ -302,12 +295,10 @@ def calculate_all_metrics(
   rmse = compute_rmse(image1, image2)
   ncc = compute_ncc(image1, image2)
 
-  metrics = {
+  return {
       'RMSE': rmse,
       'NCC': ncc,
       'Entropy': mi.joint_entropy,
       'MI': mi.mutual_information,
       # 'MMI': mi.mattes_mutual_information,
   }
-
-  return metrics

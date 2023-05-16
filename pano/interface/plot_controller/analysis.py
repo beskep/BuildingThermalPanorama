@@ -1,7 +1,7 @@
 import dataclasses as dc
 from contextlib import suppress
 from shutil import copy2
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 import seaborn as sns
@@ -38,7 +38,7 @@ def _read_image(fm, sp):
   return ImageIO.read(fm.panorama_path(DIR.COR, sp))
 
 
-def _get_cmap(factor=False, segmentation=False, vulnerable=False):
+def _get_cmap(*, factor=False, segmentation=False, vulnerable=False):
   if segmentation or vulnerable:
     name = 'gist_gray'
   elif factor:
@@ -81,13 +81,13 @@ class Images:
   def __init__(self, fm: ThermalPanoramaFileManager) -> None:
     self._fm = fm
 
-    self._ir: Optional[np.ndarray] = None  # IR image
-    self._seg: Optional[np.ndarray] = None  # segmentation mask
+    self._ir: np.ndarray | None = None  # IR image
+    self._seg: np.ndarray | None = None  # segmentation mask
 
     self._teti = (np.nan, np.nan)  # (exterior, interior temperature)
     self._threshold = 0.8  # 초기 취약부위 임계치
     self._multilayer = False
-    self._crop: Optional[tuple[tools.CropRange, np.ndarray]] = None
+    self._crop: tuple[tools.CropRange, np.ndarray] | None = None
 
     self.k = 2.0  # IQR 이상치 제거 변수
 
@@ -119,7 +119,7 @@ class Images:
   @threshold.setter
   def threshold(self, value: float):
     v = float(value)
-    if not (0.0 <= v <= 1.0):
+    if not (0 <= v <= 1):
       raise ValueError
 
     self._threshold = v
@@ -156,7 +156,8 @@ class Images:
   def ir(self):
     if self._ir is None:
       self._read_ir()
-    return self._ir.copy()  # type: ignore
+    assert self._ir is not None
+    return self._ir.copy()
 
   @ir.setter
   def ir(self, value: np.ndarray):
@@ -188,7 +189,7 @@ class Images:
 
     return np.absolute((self.ir - self.teti[0]) / (self.teti[1] - self.teti[0]))
 
-  def vulnerable_area(self, window=True):
+  def vulnerable_area(self, *, window=True):
     if window:  # noqa: SIM108
       mask = np.isin(self.seg, [1, 2])
     else:
@@ -205,10 +206,10 @@ class Images:
     cr, cp = tools.crop_mask(mask=polygon, morphology_open=False)
 
     self._ir = cr.crop(self.ir)
-    self._ir[~cp] = np.nan  # type: ignore
+    self._ir[~cp] = np.nan  # type: ignore[index]
 
     self._seg = cr.crop(self.seg)
-    self._seg[~cp] = False  # type: ignore
+    self._seg[~cp] = False  # type: ignore[index]
 
     self._crop = (cr, cp)
 
@@ -223,7 +224,7 @@ class Images:
         'Window': _summarize(self.ir, self.seg, self.threshold, factor, index=2),
     }
 
-  def _path(self, sp, color=False):
+  def _path(self, sp, *, color=False):
     path = self._fm.panorama_path(DIR.ANLY, sp, error=False)
     if color:
       path = self._fm.color_path(path)
@@ -264,11 +265,11 @@ class Images:
 
 class PointSelector(_SelectorWidget):
 
-  def __init__(self, ax, onselect, markerprops: Optional[dict] = None) -> None:
+  def __init__(self, ax, onselect, markerprops: dict | None = None) -> None:
     super().__init__(ax, onselect)
 
     self._marker = None
-    self._markerprops = markerprops or dict(s=80, c='k', marker='x', alpha=0.8)
+    self._markerprops = markerprops or {'s': 80, 'c': 'k', 'marker': 'x', 'alpha': 0.8}
 
   @property
   def artists(self):
@@ -317,14 +318,14 @@ class AnalysisPlotController(PanoPlotController):
 
   def __init__(self, parent=None) -> None:
     super().__init__(parent=parent)
-    self._cax: Optional[Axes] = None
-    self._axes_image: Optional[AxesImage] = None
+    self._cax: Axes | None = None
+    self._axes_image: AxesImage | None = None
 
     self._images: Any = None
     self._setting = PlotSetting()
 
     self._coord = (-1, -1)  # 선택 지점 좌표 (y, x)
-    self._selector: Optional[_SelectorWidget] = None
+    self._selector: _SelectorWidget | None = None
     self._seg_legend = None
 
     self.show_point_temperature = lambda x: x / 0
@@ -366,7 +367,7 @@ class AnalysisPlotController(PanoPlotController):
     self._setting.segmentation = True
     self.plot()
 
-  def set_selector(self, point: Optional[bool] = None, remove=False):
+  def set_selector(self, point: bool | None = None, *, remove=False):
     if self._fm is None:
       self._selector = None
       return
@@ -436,7 +437,7 @@ class AnalysisPlotController(PanoPlotController):
     self.images.on_polygon_select(vertices=vertices)
     self.plot()
 
-  def _plot_image(self, factor=False, segmentation=False, vulnerable=False):
+  def _plot_image(self, *, factor=False, segmentation=False, vulnerable=False):
     factor = factor or vulnerable
 
     if factor:
@@ -518,7 +519,7 @@ class AnalysisPlotController(PanoPlotController):
     self.draw()
     self.summarize()
 
-  def set_clim(self, vmin: Optional[float] = None, vmax: Optional[float] = None):
+  def set_clim(self, vmin: float | None = None, vmax: float | None = None):
     if self._axes_image is None:
       raise ValueError
 

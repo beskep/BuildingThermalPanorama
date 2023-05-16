@@ -1,7 +1,7 @@
 """두 영상의 정합을 위한 전처리 및 Registrator 클래스"""
 
 import abc
-from typing import Callable, Optional, Tuple, Union
+from collections.abc import Callable
 
 import numpy as np
 from numpy.linalg import inv
@@ -18,10 +18,10 @@ class RegistrationPreprocess:
   def __init__(
       self,
       shape: tuple,
-      fillnan: Optional[float] = 0.0,
-      eqhist: Union[bool, Tuple[bool, bool]] = True,
-      unsharp: Union[bool, Tuple[bool, bool]] = False,
-      edge: Union[bool, Tuple[bool, bool]] = False,
+      fillnan: float | None = 0.0,
+      eqhist: bool | tuple[bool, bool] = True,
+      unsharp: bool | tuple[bool, bool] = False,
+      edge: bool | tuple[bool, bool] = False,
   ) -> None:
     """
     영상 정합을 위한 전처리 방법.
@@ -55,7 +55,7 @@ class RegistrationPreprocess:
     self._edge = edge
 
   def parameters(self):
-    value: Union[bool, tuple[bool, bool]]
+    value: bool | tuple[bool, bool]
     for name, value in zip(['eqhist', 'unsharp'], [self._eqhist, self._unsharp]):
       if isinstance(value, tuple) and value[0] == value[1]:
         value = value[0]
@@ -105,8 +105,8 @@ class RegisteringImage:
   def __init__(
       self,
       image: np.ndarray,
-      shape: Optional[tuple] = None,
-      preprocess: Optional[Callable] = None,
+      shape: tuple | None = None,
+      preprocess: Callable | None = None,
   ) -> None:
     """
     정합 대상 영상 및 전처리 방법
@@ -124,10 +124,10 @@ class RegisteringImage:
     self._shape = shape
     self._prep = preprocess
 
-    self._prep_image: Optional[np.ndarray] = None
+    self._prep_image: np.ndarray | None = None
 
-    self._trsf_mtx: Optional[np.ndarray] = None
-    self._trsf_fn: Optional[Callable] = None
+    self._trsf_mtx: np.ndarray | None = None
+    self._trsf_fn: Callable | None = None
 
   @property
   def matrix(self):
@@ -189,8 +189,8 @@ class RegisteringImage:
 
   def set_registration(
       self,
-      transform_matrix: Optional[np.ndarray] = None,
-      transform_function: Optional[Callable[[np.ndarray], np.ndarray]] = None,
+      transform_matrix: np.ndarray | None = None,
+      transform_function: Callable[[np.ndarray], np.ndarray] | None = None,
   ):
     """
     Moving image의 registration 방법 설정
@@ -304,7 +304,7 @@ class BaseRegistrator(abc.ABC):
       fixed_image: np.ndarray,
       moving_image: np.ndarray,
       **kwargs,
-  ) -> Tuple[np.ndarray, Optional[Callable], Optional[np.ndarray]]:
+  ) -> tuple[np.ndarray, Callable | None, np.ndarray | None]:
     """
     Register image
 
@@ -330,7 +330,7 @@ class BaseRegistrator(abc.ABC):
       moving_image: np.ndarray,
       preprocess: RegistrationPreprocess,
       **kwargs,
-  ) -> Tuple[RegisteringImage, RegisteringImage]:
+  ) -> tuple[RegisteringImage, RegisteringImage]:
     fri = RegisteringImage(
         image=fixed_image, shape=None, preprocess=preprocess.fixed_preprocess
     )

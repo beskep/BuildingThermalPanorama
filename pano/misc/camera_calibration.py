@@ -1,7 +1,6 @@
 """카메라 렌즈의 왜곡 보정"""
 
 from pathlib import Path
-from typing import List, Union
 
 import cv2 as cv
 import numpy as np
@@ -74,7 +73,7 @@ def _calibrate_camera(object_points, image_points, image_size, save_dir: Path):
 
 
 def compute_camera_matrix(
-    files: List[Union[str, Path]], save_dir: Union[str, Path], pattern_size=(3, 3)
+    files: list[str | Path], save_dir: str | Path, pattern_size=(3, 3)
 ):
   """
   주어진 영상으로부터 Chessboard 패턴을 검출하고 카메라 보정 패러미터 산정.
@@ -121,12 +120,10 @@ def compute_camera_matrix(
 
 
 class CameraCalibration:
-  """
-  추출한 Camera Calibration 패러미터를 읽고 주어진 영상을 calibrate하는 클래스
-  """
 
-  def __init__(self, params_path: Union[str, Path]):
-    """
+  def __init__(self, params_path: str | Path):
+    """추출한 Camera Calibration 패러미터를 읽고 주어진 영상을 calibrate
+
     Parameters
     ----------
     params_path : Union[str, Path]
@@ -145,7 +142,7 @@ class CameraCalibration:
       self._matrix = npz_file['matrix']
       self._dist_coeff = npz_file['dist_coeff']
     elif ext in ['.yaml', '.yml']:
-      with open(params_path, 'r', encoding=_ENC) as f:
+      with open(params_path, encoding=_ENC) as f:
         params = yaml.safe_load(f)
 
       self._img_size = tuple(params['image_size'])
@@ -188,15 +185,13 @@ class CameraCalibration:
         newImgSize=self._img_size,
     )
 
-    calibrated = cv.undistort(
+    return cv.undistort(
         image,
         cameraMatrix=self._matrix,
         distCoeffs=self._dist_coeff,
         dst=None,
         newCameraMatrix=new_matrix,
     )
-
-    return calibrated
 
   def mask(self) -> np.ndarray:
     """
@@ -207,6 +202,4 @@ class CameraCalibration:
     np.ndarray
     """
     blank = np.full(shape=self._img_size[::-1], fill_value=255, dtype=np.uint8)
-    mask = self.calibrate(blank)
-
-    return mask
+    return self.calibrate(blank)

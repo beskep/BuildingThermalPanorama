@@ -50,7 +50,6 @@ ProjectDir
 from enum import Enum
 from pathlib import Path
 from shutil import copy2
-from typing import List, Union
 
 from loguru import logger
 from omegaconf import DictConfig
@@ -100,7 +99,7 @@ class SP(Enum):
   TF = 'TemperatureFactor'
 
 
-def _dir(d: Union[str, DIR]) -> DIR:
+def _dir(d: str | DIR) -> DIR:
   if isinstance(d, str):
     d = DIR[d]
 
@@ -132,7 +131,7 @@ class ThermalPanoramaFileManager:
   def raw_pattern(self, value: str):
     self._raw_pattern = value
 
-  def subdir(self, d: Union[str, DIR], mkdir=False):
+  def subdir(self, d: str | DIR, *, mkdir=False):
     d = _dir(d)
 
     subdir = self._wd.joinpath(d.value)
@@ -141,18 +140,19 @@ class ThermalPanoramaFileManager:
 
     return subdir
 
-  def glob(self, d: Union[str, DIR], pattern: str):
+  def glob(self, d: str | DIR, pattern: str):
     return list(self.subdir(d=d).glob(pattern=pattern))
 
-  def raw_files(self) -> List[Path]:
+  def raw_files(self) -> list[Path]:
     if self._raw_pattern is None:
       raise ValueError('Raw pattern not set')
 
     return self.glob(d=DIR.RAW, pattern=self._raw_pattern)
 
-  def files(self, d: Union[str, DIR], error=True) -> List[Path]:
+  def files(self, d: str | DIR, *, error=True) -> list[Path]:
     """
     프로젝트 경로 내 각 경로 중 수치 정보를 담고 있는 파일 목록.
+
     `error`가 `True`이고 Raw 파일 목록과 대응하는 파일이
     하나라도 존재하지 않으면 오류 발생.
 
@@ -177,7 +177,8 @@ class ThermalPanoramaFileManager:
     """
     d = _dir(d)
     if d not in (DIR.RAW, DIR.IR, DIR.VIS, DIR.RGST, DIR.SEG):
-      raise ValueError(f'Available folders: {{RAW, IR, VIS, RGST, SEG}}, got {d}')
+      msg = f'Available folders: {{RAW, IR, VIS, RGST, SEG}}, got {d}'
+      raise ValueError(msg)
 
     raw_files = self.raw_files()
     if d is DIR.RAW:
@@ -197,22 +198,24 @@ class ThermalPanoramaFileManager:
     elif d in (DIR.VIS, DIR.SEG) and any(not x.exists() for x in files):
       # 다른 실화상을 입력한 경우, VIS/SEG 폴더에 존재하는 영상 목록 반환
       exts = {'.png'} if d is DIR.SEG else {'.png', '.jpg', '.webp'}
-      files = list(
+      files = [
           x
           for x in subdir.glob('*')
           if x.is_file()
           and x.suffix.lower() in exts
           and not x.name.endswith('_fig.png')
-      )
+      ]
 
     if not files:
-      raise FileNotFoundError(f'no file in {subdir}', subdir)
+      msg = f'no file in {subdir}'
+      raise FileNotFoundError(msg, subdir)
 
     return files
 
-  def change_dir(self, d: Union[str, DIR], file: Union[str, Path]) -> Path:
+  def change_dir(self, d: str | DIR, file: str | Path) -> Path:
     """
     다른 directory의 대응되는 파일 경로 반환.
+
     이미지 처리 결과를 저장할 때 사용.
 
     Parameters
@@ -234,7 +237,8 @@ class ThermalPanoramaFileManager:
     """
     d = _dir(d)
     if d not in (DIR.IR, DIR.VIS, DIR.RGST, DIR.SEG):
-      raise ValueError(f'Available folders: {{IR, VIS, RGST, SEG}}, got {d}')
+      msg = f'Available folders: {{IR, VIS, RGST, SEG}}, got {d}'
+      raise ValueError(msg)
 
     subdir = self.subdir(d=d)
     ext = FN.NPY if d is DIR.IR else FN.LL
@@ -250,6 +254,7 @@ class ThermalPanoramaFileManager:
   def rgst_matrix_path(self):
     """
     자동 열/실화상 정합 결과인 transform matrix 저장 경로.
+
     실화상을 열화상 크기에 맞게 resize 후 matrix를 적용 필요.
     """
     return self.subdir(DIR.RGST).joinpath('transformation_matrix.npz')
@@ -261,7 +266,7 @@ class ThermalPanoramaFileManager:
 
     return MODEL_PATH
 
-  def panorama_path(self, d: DIR, sp: SP, error=False):
+  def panorama_path(self, d: DIR, sp: SP, *, error=False):
     subdir = self.subdir(d)
     prefix = '' if sp is SP.TF else 'Panorama'
     ext = self.SP_EXT[sp]
@@ -283,7 +288,7 @@ class ImageNotFoundError(FileNotFoundError):
   pass
 
 
-def init_directory(directory: Path, default=False) -> DictConfig:
+def init_directory(directory: Path, *, default=False) -> DictConfig:
   """
   Working directory 초기화.
 
@@ -311,10 +316,8 @@ def init_directory(directory: Path, default=False) -> DictConfig:
     try:
       _, files = peek(files)
     except StopIteration:
-      raise ImageNotFoundError(
-          '영상 파일이 발견되지 않았습니다.',
-          str(directory),
-      ) from None
+      msg = '영상 파일이 발견되지 않았습니다.'
+      raise ImageNotFoundError(msg, str(directory)) from None
 
     raw_dir.mkdir()
     for file in files:

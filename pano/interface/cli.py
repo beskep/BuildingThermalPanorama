@@ -11,7 +11,7 @@ init_project(qt=False)
 commands = {'init', 'extract', 'register', 'segment', 'panorama', 'correct', 'run'}
 
 
-@click.command(context_settings=dict(help_option_names=['-h', '--help']))
+@click.command(context_settings={'help_option_names': ['-h', '--help']})
 @click.argument('path', required=True)
 @click.argument('command', default='run')
 @click.option('--default', is_flag=True, help='기본 설정 사용')
@@ -42,7 +42,7 @@ def cli(
     panorama  파노라마 생성
     correct   파노라마 왜곡 보정
     run       모든 command 순차 실행
-  """
+  """  # ruff: noqa: D301
   level = min(loglevel, (10 if debug else 20))
   utils.set_logger(level=level)
 
