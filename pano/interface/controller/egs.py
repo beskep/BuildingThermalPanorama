@@ -45,7 +45,6 @@ class ProjectData:
   building: str = ''
   date: str = ''
   part: str = ''
-  etc: str = ''
 
   def replace(self, **kwargs):
     return dc.replace(self, **kwargs)
@@ -279,6 +278,9 @@ class Controller(QtCore.QObject):
     for css in src.glob('*.css'):
       copy2(css, dst)
 
+    if not (dst / (logo := 'EGSolutionsLogoKR.svg')).exists():
+      copy2(DIR.RESOURCE / logo, dst)
+
     self.win.panel.web_view(html.as_posix())
 
   @QtCore.Slot(bool, bool)
@@ -293,5 +295,5 @@ class Controller(QtCore.QObject):
   def save_report(self, html, pdf):
     html = con.uri2path(html)
     pdf = con.uri2path(pdf)
-    wkhtmltopdf(src=html, dst=pdf)
+    wkhtmltopdf(src=html, dst=pdf, capture=True)
     self.win.popup('Success', '보고서 저장 성공')

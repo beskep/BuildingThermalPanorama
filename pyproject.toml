@@ -25,6 +25,7 @@ ignore = [
     'Q',
     'S101',
     'TCH',
+    'TD',
     'TRY',
 ]
 exclude = ['mbq', 'script']
