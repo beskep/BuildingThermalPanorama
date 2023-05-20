@@ -781,7 +781,7 @@ class Stitcher:
     warped_masks = []
     rois = []
     indices = []
-    for idx, args in enumerate(zip(images, masks, cameras, names, strict=True)):
+    for idx, args in enumerate(zip(images, masks, cameras, names, strict=False)):
       try:
         wi, wm, roi = self._warp_image(*args[:3])
       except cv.error:
