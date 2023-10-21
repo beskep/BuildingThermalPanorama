@@ -1,4 +1,5 @@
 from collections.abc import Callable, Iterable
+from contextlib import suppress
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
@@ -486,9 +487,14 @@ class Images:
     return np.deg2rad(np.linspace(-thold, thold, int(thold * 2 + 1)) + 90.0)
 
   def read(self, sp: SP):
-    image = ImageIO.read(self._fm.panorama_path(DIR.ANLY, sp))
+    path = self._fm.panorama_path(DIR.ANLY, sp)
+    if sp is not SP.IR:
+      path = path.parent / 'source' / path.name
+
+    image = ImageIO.read(path)
     if sp is SP.MASK:
       image = image.astype(bool)
+
     return image
 
   @property
@@ -500,7 +506,7 @@ class Images:
   @property
   def seg(self) -> np.ndarray:
     if self._seg is None:
-      self._seg = SegMask.vis_to_index(self.read(SP.SEG)).astype(float)
+      self._seg = SegMask.vis2index(self.read(SP.SEG)).astype(float)
     return self._seg
 
   @property
@@ -621,7 +627,8 @@ class OutputPlotController(PanoPlotController):
 
   def plot(self):
     if self._axes_image is not None:
-      self._axes_image.remove()
+      with suppress(ValueError):
+        self._axes_image.remove()
 
     seg = self.images.edgelet_option.segmentation
     if seg and self._legend is None:

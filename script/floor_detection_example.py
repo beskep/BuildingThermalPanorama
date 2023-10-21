@@ -108,7 +108,7 @@ def draw_edgelets(
 def example(path, img_cmap='gray'):
   image = IIO.read(path)
   edges, wedge, fedge = _edgelets(image)
-  wl = WindowLine(SegMask.vis_to_index(image))  # FIXME
+  wl = WindowLine(SegMask.vis2index(image))  # FIXME
 
   fig = plt.figure()
   gs = gridspec.GridSpec(2, 2)

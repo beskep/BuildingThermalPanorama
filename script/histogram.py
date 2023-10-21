@@ -77,7 +77,7 @@ def main(directory, ir, mask, seg, ks):
     seg_arr = ImageIO.read(seg)
     if seg_arr.ndim == 3:
       seg_arr = seg_arr[:, :, 0]
-    seg_arr = SegMask.vis_to_index(seg_arr)
+    seg_arr = SegMask.vis2index(seg_arr)
   else:
     seg_arr = None
 

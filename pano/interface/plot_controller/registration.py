@@ -256,14 +256,14 @@ class RegistrationPlotController(PanoPlotController):
     seg_resized = transform.resize(
         ImageIO.read(seg_unrgst), order=INTRP.NearestNeighbor, output_shape=shape
     )
-    seg_rgst = transform.warp(
+    seg_rgst: np.ndarray = transform.warp(
         image=seg_resized,
         inverse_map=trsf.inverse,
         output_shape=shape,
         order=INTRP.NearestNeighbor,
         preserve_range=True,
     )
-    ImageIO.save(path=seg, array=tools.uint8_image(seg_rgst))
+    ImageIO.save(path=seg, array=seg_rgst.astype(np.uint8))
 
   def save(self, *, panorama: bool):
     if self._registered_image is None:

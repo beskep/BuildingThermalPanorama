@@ -52,11 +52,37 @@ class SmpModel:
     axes[1].imshow(image)
     axes[1].imshow(mask_cmap, alpha=0.75)
     axes[2].imshow(mask_cmap)
-    for ax, title in zip(axes, self.TITLES):
+    for ax, title in zip(axes, self.TITLES, strict=True):
       ax.set_axis_off()
       ax.set_title(title)
 
-    fig.legend(handles=self._handles, loc='lower center', ncol=len(self.LABELS))
+    fig.legend(handles=self._handles, loc='lower center', ncol=5)  # TODO cmap 개수
     fig.tight_layout()
 
     return fig, axes
+
+
+class SmpModel9(SmpModel):
+  LABELS = (
+      'Background',
+      'Wall',
+      'Window',
+      'etc.',
+      'Tree',
+      'Lamp',
+      'Car',
+      'Banner',
+      'Canopy',
+  )
+
+  def predict(self, src: str | bytes | Path):
+    mask = super().predict(src)
+
+    # 5번이었던 `etc` index를 3으로 당기기
+    #    background, wall, window, tree, lamp, etc, car, banner, canopy
+    # -> background, wall, window, etc, tree, lamp, car, banner, canopy
+    etc = mask == 5  # noqa: PLR2004
+    mask[np.isin(mask, [3, 4])] += 1
+    mask[etc] = 3
+
+    return mask

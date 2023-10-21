@@ -549,7 +549,7 @@ class Controller(QtCore.QObject):
     except pc.WorkingDirNotSetError:
       pass
     except FileNotFoundError as e:
-      logger.debug('FileNotFound: "{}"', e)
+      logger.exception(e)
 
   @QtCore.Slot()
   def output_clear_lines(self):

@@ -1,24 +1,35 @@
 from pathlib import Path
 
 import numpy as np
-from matplotlib.cm import get_cmap
+from matplotlib.colors import ListedColormap
 from matplotlib.patches import Patch
 
 from pano.interface.common.pano_files import DIR
 from pano.interface.mbq import FigureCanvas
 from pano.misc.imageio import ImageIO
 from pano.misc.tools import SegMask
+from pano.segmentation.onnx import SmpModel9
 
 from .plot_controller import PanoPlotController, QtGui
 
 
 class SegmentationPlotController(PanoPlotController):
-  _TITLES = ('실화상', '부위 인식 결과')
-  _CLASSES = ('Background', 'Wall', 'Window', 'etc.')
+  TITLES = ('실화상', '부위 인식 결과')
+  COLORS = (
+      '#999999',  # background
+      '#1b9e77',  # wall
+      '#377eb8',  # window
+      '#984ea3',  # etc
+      '#fdd0a2',  # tree
+      '#fdae6b',  # lamp
+      '#fd8d3c',  # car
+      '#e6550d',  # banner
+      '#a63603',  # canopy
+  )
 
   def __init__(self, parent=None) -> None:
     super().__init__(parent=parent)
-    self._cmap = get_cmap('Dark2')
+    self._cmap = ListedColormap(self.COLORS)
     self._legend = None
 
   @property
@@ -35,7 +46,7 @@ class SegmentationPlotController(PanoPlotController):
     self.draw()
 
   def _set_style(self):
-    for ax, title in zip(self.axes.ravel(), self._TITLES, strict=True):
+    for ax, title in zip(self.axes.ravel(), self.TITLES, strict=True):
       if ax.has_data():
         ax.set_title(title)
       ax.set_axis_off()
@@ -49,7 +60,7 @@ class SegmentationPlotController(PanoPlotController):
 
     vis = ImageIO.read(vis_path)
     mask_vis = ImageIO.read(mask_path)
-    mask = SegMask.vis_to_index(mask_vis)
+    mask = SegMask.vis2index(mask_vis)
     mask_cmap = self._cmap(mask)
 
     self.axes[0].clear()
@@ -62,7 +73,7 @@ class SegmentationPlotController(PanoPlotController):
     if self._legend is None:
       patches = [
           Patch(color=self._cmap(i), label=label)
-          for i, label in enumerate(self._CLASSES)
+          for i, label in enumerate(SmpModel9.LABELS)
       ]
       self._legend = self.fig.legend(
           handles=patches,

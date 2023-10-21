@@ -6,7 +6,7 @@ from logging import LogRecord
 from operator import length_hint
 from os import PathLike
 from pathlib import Path
-from typing import TypeVar, Union
+from typing import TypeVar
 
 try:
   import winsound

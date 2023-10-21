@@ -12,7 +12,7 @@ from skimage.exposure import equalize_hist, rescale_intensity
 from skimage.transform import resize
 from skimage.util import compare_images
 
-# ruff: noqa: PLR2004, EM101
+# ruff: noqa: PLR2004 EM101
 
 
 def normalize_image(image: np.ndarray) -> np.ndarray:
@@ -396,21 +396,19 @@ def limit_image_size(
 
 
 class SegMask:
-  scale = 80
+  SCALE = 25
   BG = 0
   WALL = 1
   WINDOW = 2
   ETC = 3
 
-  # TODO index2vis, SCALE, read?
+  @classmethod
+  def index2vis(cls, array: np.ndarray):
+    return array.astype(np.uint8) * cls.SCALE
 
   @classmethod
-  def index_to_vis(cls, array: np.ndarray):
-    return array.astype(np.uint8) * cls.scale
-
-  @classmethod
-  def vis_to_index(cls, array: np.ndarray):
-    return np.round(array / cls.scale).astype(np.uint8)
+  def vis2index(cls, array: np.ndarray):
+    return np.round(array / cls.SCALE).astype(np.uint8)
 
 
 class OutlierArray:

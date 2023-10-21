@@ -70,11 +70,11 @@ def summarize(array: np.ndarray):
   arr = array[np.logical_not(np.isnan(array))]
 
   return {
-      'avg': np.average(arr),
-      'std': np.std(arr),
-      'min': np.min(arr),
-      'q1': np.quantile(arr, 0.25),
-      'median': np.median(arr),
-      'q3': np.quantile(arr, 0.75),
-      'max': np.max(arr),
+      'avg': np.nanmean(arr),
+      'std': np.nanstd(arr),
+      'min': np.nanmin(arr),
+      'q1': np.nanquantile(arr, 0.25),
+      'median': np.nanmedian(arr),
+      'q3': np.nanquantile(arr, 0.75),
+      'max': np.nanmax(arr),
   }

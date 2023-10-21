@@ -92,7 +92,7 @@ class Images:
     except FileNotFoundError as e:
       raise NotSegmentedError(e.args[0]) from e
 
-    return tools.SegMask.vis_to_index(array)
+    return tools.SegMask.vis2index(array)
 
   def threshold(self):
     try:

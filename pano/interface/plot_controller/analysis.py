@@ -8,7 +8,7 @@ import seaborn as sns
 from matplotlib.axes import Axes
 from matplotlib.cm import get_cmap
 from matplotlib.colorbar import make_axes_gridspec
-from matplotlib.colors import BoundaryNorm
+from matplotlib.colors import BoundaryNorm, ListedColormap
 from matplotlib.image import AxesImage
 from matplotlib.patches import Patch
 from matplotlib.widgets import PolygonSelector, _SelectorWidget
@@ -24,8 +24,9 @@ from pano.misc.imageio import ImageIO, load_webp_mask
 from pano.misc.sp import wkhtmltopdf
 
 from .plot_controller import PanoPlotController, QtGui
+from .segmentation import SegmentationPlotController
 
-SEG_CMAP = get_cmap('Dark2')
+SEG_CMAP = ListedColormap(SegmentationPlotController.COLORS)
 
 
 def _axes(fig):
@@ -134,7 +135,7 @@ class Images:
   def _read_seg(self):
     if not self._multilayer:
       seg = _read_image(self._fm, SP.SEG)[:, :, 0]
-      seg = tools.SegMask.vis_to_index(seg)
+      seg = tools.SegMask.vis2index(seg)
     else:
       path = self._fm.subdir(DIR.COR).joinpath('Panorama.webp')
 
@@ -237,7 +238,7 @@ class Images:
     self._path(SP.SEG).parent.mkdir(parents=True, exist_ok=True)
 
     # SEG
-    ImageIO.save(self._path(SP.SEG), tools.SegMask.index_to_vis(self.seg))
+    ImageIO.save(self._path(SP.SEG), tools.SegMask.index2vis(self.seg))
 
     # IR
     ImageIO.save(self._path(SP.IR), self.ir)
@@ -527,6 +528,7 @@ class AnalysisPlotController(PanoPlotController):
     self.draw()
 
   def save_plot(self):
+    # FIXME panorama_path와 일치시키기
     subdir = self.fm.subdir(DIR.ANLY) / 'source'
     subdir.mkdir(parents=True, exist_ok=True)
     distribution = self.setting.distribution

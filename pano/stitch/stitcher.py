@@ -608,7 +608,7 @@ class Stitcher:
 
     logger.trace('Matches graph')
     matches_graph: str = cv.detail.matchesGraphAsString(
-        pathes=image_names, pairwise_matches=pairwise_matches, conf_threshold=1.0
+        image_names, pairwise_matches=pairwise_matches, conf_threshold=1.0
     )
 
     logger.trace('Estimate camera')

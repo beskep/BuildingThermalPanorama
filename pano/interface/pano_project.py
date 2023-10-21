@@ -16,7 +16,7 @@ from pano.misc import sp, tools
 from pano.misc.anomaly import anomaly_threshold
 from pano.misc.imageio import ImageIO as IIO  # noqa: N817
 from pano.misc.imageio import save_webp_images
-from pano.segmentation.onnx import SmpModel
+from pano.segmentation.onnx import SmpModel9
 
 from .common.cmap import apply_colormap, get_thermal_colormap
 from .common.config import DictConfig, update_config
@@ -107,10 +107,8 @@ class ThermalPanorama:
 
     if any(models[0] != x for x in models[1:]):
       logger.warning(
-          (
-              '다수의 카메라로 촬영된 Raw 파일을 입력했습니다 ({}). '
-              '카메라 기종을 추정할 수 없습니다.'
-          ),
+          '다수의 카메라로 촬영된 Raw 파일을 입력했습니다 ({}). '
+          '카메라 기종을 추정할 수 없습니다.',
           set(models),
       )
       return None
@@ -362,16 +360,16 @@ class ThermalPanorama:
       msg = '부위 인식 모델 파일을 불러올 수 없습니다.'
       raise FileNotFoundError(msg) from e
 
-    model = SmpModel(str(path))
+    model = SmpModel9(str(path))
 
     return files, model
 
-  def _segment(self, model: SmpModel, file):
+  def _segment(self, model: SmpModel9, file):
     mask = model.predict(file)
     fig, _ = model.visualization(src=file, mask=mask)
 
     path = self._fm.change_dir(DIR.SEG, file)
-    IIO.save(path=path, array=tools.SegMask.index_to_vis(mask))
+    IIO.save(path=path, array=tools.SegMask.index2vis(mask))
 
     fig_path = path.with_name(f'{path.stem}{FN.SEG_FIG}{FN.LL}')
     fig.savefig(fig_path, dpi=300)
@@ -530,7 +528,7 @@ class ThermalPanorama:
       pano = pano[:, :, 0]
       pano = pano.astype(np.float16)
     elif sp is SP.SEG:
-      pano = tools.SegMask.index_to_vis(np.round(pano / tools.SegMask.scale))
+      pano = tools.SegMask.index2vis(np.round(pano / tools.SegMask.SCALE))
     else:
       pano = np.round(pano).astype(np.uint8)
 
@@ -660,7 +658,7 @@ class ThermalPanorama:
     pano = IIO.read(path=path)
 
     if spectrum is SP.SEG:
-      pano = tools.SegMask.vis_to_index(pano)
+      pano = tools.SegMask.vis2index(pano)
       order = tools.INTRP.NearestNeighbor
     else:
       order = tools.INTRP.BiCubic
@@ -672,7 +670,7 @@ class ThermalPanorama:
     pano_limited = self.limit_size(pano_corrected, aa=spectrum is not SP.SEG)
 
     if spectrum is SP.SEG:
-      pano_limited = tools.SegMask.index_to_vis(pano_limited)
+      pano_limited = tools.SegMask.index2vis(pano_limited)
 
     IIO.save(path=self._fm.panorama_path(DIR.COR, spectrum), array=pano_limited)
     logger.debug('{} 파노라마 왜곡 보정 저장', spectrum.value)
@@ -700,7 +698,7 @@ class ThermalPanorama:
       raise ValueError(msg)
 
     # wall, window 영역만 추출
-    seg = tools.SegMask.vis_to_index(seg[:, :, 0])
+    seg = tools.SegMask.vis2index(seg[:, :, 0])
     seg_mask = np.logical_and(mask, np.logical_or(seg == 1, seg == 2))
     crop_range, _ = tools.crop_mask(seg_mask)
     if crop_range.cropped:
@@ -801,7 +799,7 @@ class ThermalPanorama:
     ):
       ir = IIO.read(fi)
       mask = IIO.read(fm)
-      mask = tools.SegMask.vis_to_index(mask)
+      mask = tools.SegMask.vis2index(mask)
 
       arr = ir[mask == tools.SegMask.WALL]
       t, model = anomaly_threshold(array=arr)

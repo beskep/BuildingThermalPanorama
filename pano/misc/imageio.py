@@ -114,10 +114,8 @@ class ImageIO:
           img_range = (meta['range']['min'], meta['range']['max'])
         except KeyError:
           logger.warning(
-              (
-                  '메타 정보 파일 ({})에 영상의 밝기 정보가 없습니다. '
-                  '영상의 밝기 범위를 변경하지 않습니다.'
-              ),
+              '메타 정보 파일 ({})에 영상의 밝기 정보가 없습니다. '
+              '영상의 밝기 범위를 변경하지 않습니다.',
               meta_path.name,
           )
         else:

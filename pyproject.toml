@@ -7,6 +7,7 @@ preview = true
 profile = 'black'
 
 [tool.ruff]
+target-version = 'py311'
 select = ['ALL']
 ignore = [
     'ANN',
@@ -20,6 +21,7 @@ ignore = [
     'D106',
     'D107',
     'D400',
+    'FIX',
     'I',
     'PTH123',
     'Q',
@@ -48,6 +50,7 @@ disable = [
     'missing-class-docstring',
     'missing-function-docstring',
     'missing-module-docstring',
+    'no-name-in-module',
     'redefined-outer-name',
     'too-few-public-methods',
     'too-many-arguments',
@@ -69,3 +72,6 @@ cache_dir = '.cache/mypy'
 [tool.pytest.ini_options]
 addopts = '-v'
 cache_dir = '.cache/pytest'
+
+[tool.typos.default.extend-words]
+ANLY = 'ANLY'
