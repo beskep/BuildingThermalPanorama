@@ -57,7 +57,7 @@ class BaseEvaluation:
       rgst_image, register, matrix = self._registrator.register(
           fixed_image=fi.prep_image(), moving_image=mi.prep_image(), **kwargs
       )
-    except (RuntimeError, ValueError, OSError) as e:
+    except (RuntimeError, ValueError, OSError):
       logger.error(f'Case `{case}` failed')
       rgst_image = None
       register = None
@@ -157,7 +157,7 @@ class BaseEvaluation:
         self.execute_once(
             case=case, ff=ff, mf=mf, df=df, output_dir=output_dir, **kwargs
         )
-      except (RuntimeError, ValueError, TypeError) as e:
+      except (RuntimeError, ValueError, TypeError):
         logger.error(f'FAIL: {case}')
         continue
 

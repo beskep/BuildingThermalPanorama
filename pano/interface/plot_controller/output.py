@@ -2,9 +2,10 @@ from collections.abc import Callable, Iterable
 from contextlib import suppress
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, ClassVar, Literal
 
 import numpy as np
+from matplotlib.backend_bases import MouseButton
 from matplotlib.image import AxesImage
 from matplotlib.lines import Line2D
 from matplotlib.widgets import _SelectorWidget
@@ -238,9 +239,13 @@ def _save_segments(
     )
 
 
+def _do_nothing(*_args, **_kwargs):
+  return None
+
+
 class LinesSelector(_SelectorWidget):
   DIST_THOLD = 10
-  PROPS = {
+  PROPS: ClassVar[dict] = {
       'alpha': 0.6,
       'animated': False,
       'color': 'k',
@@ -248,10 +253,14 @@ class LinesSelector(_SelectorWidget):
       'linestyle': '-',
       'marker': 'D',
   }
-  PROPS_FIXED = PROPS | {'alpha': 0.8, 'color': 'steelblue', 'label': 'Window Edgelet'}
+  PROPS_FIXED: ClassVar[dict] = PROPS | {
+      'alpha': 0.8,
+      'color': 'steelblue',
+      'label': 'Window Edgelet',
+  }
 
   def __init__(self, ax, useblit=False, update=None) -> None:
-    super().__init__(ax, onselect=lambda *args, **kwargs: None, useblit=useblit)
+    super().__init__(ax, onselect=_do_nothing, useblit=useblit)
 
     self._lines: list[Line2D] = []
     self._fixed_lines: list[Line2D] = []  # 마우스로 수정 불가능한 선
@@ -385,7 +394,7 @@ class LinesSelector(_SelectorWidget):
         self._new_point(event)
       else:
         self._active_index = (-1, -1)
-    elif event.button == 3 and active >= 0:
+    elif event.button == MouseButton.RIGHT and active >= 0:
       # right click -> 가장 가까운 선 삭제
       self._lines[active].remove()
       self._lines.pop(active)

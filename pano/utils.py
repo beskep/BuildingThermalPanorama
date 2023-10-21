@@ -6,7 +6,7 @@ from logging import LogRecord
 from operator import length_hint
 from os import PathLike
 from pathlib import Path
-from typing import TypeVar
+from typing import ClassVar, TypeVar
 
 try:
   import winsound
@@ -36,7 +36,7 @@ class DIR:
 
 
 class _Handler(RichHandler):
-  LVLS = {
+  LVLS: ClassVar[dict[str, int]] = {
       'TRACE': 5,
       'DEBUG': 10,
       'INFO': 20,
@@ -46,7 +46,7 @@ class _Handler(RichHandler):
       'CRITICAL': 50,
   }
   BLANK_NO = 21
-  _NEW_LVLS = {5: 'TRACE', 25: 'SUCCESS', BLANK_NO: ''}
+  _NEW_LVLS: ClassVar[dict[int, str]] = {5: 'TRACE', 25: 'SUCCESS', BLANK_NO: ''}
 
   def emit(self, record: LogRecord) -> None:
     if record.levelno in self._NEW_LVLS:
@@ -139,7 +139,7 @@ def ptrack(
     yield (idx + 1) / total, value
 
 
-def play_sound(ok=True):
+def play_sound(*, ok=True):
   if hasattr(winsound, 'MessageBeep'):
     t = winsound.MB_OK if ok else winsound.MB_ICONHAND
     winsound.MessageBeep(t)

@@ -1,5 +1,7 @@
 """영상을 stitch하고 파노라마를 생성"""
 
+# ruff: noqa: PLR2004
+
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from enum import IntEnum
@@ -30,6 +32,18 @@ _AVAILABLE_WARPER = {
     'stereographic',
     'transverseMercator',
 }
+
+
+def _merge_mask(m1: np.ndarray | None, m2: np.ndarray | None):
+  match m1, m2:
+    case None, None:
+      return None
+    case _, None:
+      return m1
+    case None, _:
+      return m2
+
+  return np.logical_and(m1, m2)
 
 
 class StitchError(ValueError):
@@ -515,7 +529,11 @@ class Stitcher:
       names = [f'Image {x+1}' for x in range(images.count)]
 
     prep_images, prep_masks = images.preprocess()
-    masks = self._merge_mask(prep_masks, masks)
+
+    if masks is None:
+      masks = prep_masks
+    else:
+      masks = [_merge_mask(m1, m2) for m1, m2 in zip(masks, prep_masks, strict=True)]
 
     # camera matrix 계산
     cameras, indices, matches_graph = self.calculate_camera_matrix(
@@ -558,13 +576,6 @@ class Stitcher:
         crop_range=crop_range,
         image_names=names,
     )
-
-  @staticmethod
-  def _merge_mask(masks1, masks2=None):
-    if masks2 is None:
-      return masks1
-
-    return [np.logical_and(x, y) for x, y in zip(masks1, masks2)]
 
   def calculate_camera_matrix(
       self,
@@ -634,14 +645,15 @@ class Stitcher:
       raise StitchError(msg)
 
     logger.trace('Wave correction')
-    Rs = [np.copy(camera.R) for camera in cameras]
+    rs = [np.copy(camera.R) for camera in cameras]
+
     try:
-      cv.detail.waveCorrect(Rs, cv.detail.WAVE_CORRECT_HORIZ)
+      cv.detail.waveCorrect(rs, cv.detail.WAVE_CORRECT_HORIZ)
     except cv.error:
       logger.debug('Wave correction failed')
     else:
-      for camera, R in zip(cameras, Rs, strict=True):
-        camera.R = R
+      for camera, r in zip(cameras, rs, strict=True):
+        camera.R = r
 
     return cameras, indices, matches_graph
 

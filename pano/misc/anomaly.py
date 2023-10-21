@@ -14,7 +14,7 @@ def gaussian_mixture(array: NDArray, ks: Iterable[int], **kwargs):
     gm.fit(array)
 
   bic = [gm.bic(array) for gm in gms]
-  logger.debug('BIC: {}', dict(zip(ks, (f'{x:.4e}' for x in bic))))
+  logger.debug('BIC: {}', dict(zip(ks, (f'{x:.4e}' for x in bic), strict=True)))
 
   model = gms[int(np.argmin(bic))]
   logger.debug('Selected k: {}', model.n_components)

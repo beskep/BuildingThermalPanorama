@@ -453,7 +453,7 @@ class AnalysisPlotController(PanoPlotController):
     cmap = _get_cmap(factor=factor, segmentation=segmentation, vulnerable=vulnerable)
     self._axes_image = self.axes.imshow(image, cmap=cmap, norm=norm)
 
-    self.cax.set_visible(True)
+    self.cax.set_visible(b=True)
     self.fig.colorbar(
         self._axes_image,
         cax=self.cax,
@@ -481,11 +481,11 @@ class AnalysisPlotController(PanoPlotController):
       self.axes.imshow(va, cmap='inferno', vmin=0, vmax=1)
 
   def _plot_distribution(self):
-    self.cax.set_visible(False)
+    self.cax.set_visible(b=False)
 
     data = {
-        'Wall': self.images.ir[self.images.seg == 1],
-        'Window': self.images.ir[self.images.seg == 2],
+        'Wall': self.images.ir[self.images.seg == tools.SegMask.WALL],
+        'Window': self.images.ir[self.images.seg == tools.SegMask.WINDOW],
     }
     data = {
         k: tools.OutlierArray(v, k=self.images.k).reject_outliers()
@@ -528,7 +528,6 @@ class AnalysisPlotController(PanoPlotController):
     self.draw()
 
   def save_plot(self):
-    # FIXME panorama_path와 일치시키기
     subdir = self.fm.subdir(DIR.ANLY) / 'source'
     subdir.mkdir(parents=True, exist_ok=True)
     distribution = self.setting.distribution

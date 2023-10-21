@@ -3,6 +3,7 @@ from collections.abc import Iterable
 from functools import cached_property
 from itertools import chain
 from pathlib import Path
+from typing import ClassVar
 
 import numpy as np
 import seaborn as sns
@@ -206,7 +207,7 @@ class NavigationToolbar(NavigationToolbar2QtQuick):
   def zoom_mode(self):
     return bool(self.mode)  # default mode: '', zoom mode: 'zoom rect'
 
-  def zoom(self, value: bool) -> None:
+  def zoom(self, *, value: bool) -> None:
     if self.zoom_mode == bool(value):
       return
 
@@ -215,7 +216,7 @@ class NavigationToolbar(NavigationToolbar2QtQuick):
 
 class MousePoints:
   _REQUIRED = 4
-  _SCATTER_ARGS = {'s': 50, 'edgecolors': 'w', 'linewidths': 1}
+  _SCATTER_ARGS: ClassVar[dict] = {'s': 50, 'edgecolors': 'w', 'linewidths': 1}
 
   def __init__(self) -> None:
     self._points = defaultdict(list)  # 선택된 점들의 mpl 오브젝트
@@ -246,7 +247,7 @@ class MousePoints:
       self._remove_points(ax_)
 
   def all_selected(self):
-    return len(self._coords) >= 2 and all(
+    return len(self._coords) >= 2 and all(  # noqa: PLR2004
         len(x) >= self._REQUIRED for x in self._coords.values()
     )
 
@@ -359,7 +360,7 @@ class PlotController(_PanoPlotCtrl):
       self._toolbar.home()
       return
 
-    self._toolbar.zoom(zoom)
+    self._toolbar.zoom(value=zoom)
 
   def plot(self, path: Path, mode: str):
     modes = {'raw', 'registration', 'anomaly'}

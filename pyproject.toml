@@ -21,6 +21,7 @@ ignore = [
     'D106',
     'D107',
     'D400',
+    'EM101',
     'FIX',
     'I',
     'PTH123',
@@ -39,27 +40,6 @@ convention = 'numpy'
 
 [tool.ruff.pylint]
 max-args = 7
-
-[tool.pylint.messages_control]
-disable = [
-    'bad-indentation',
-    'c-extension-no-member',
-    'fixme',
-    'import-error',
-    'invalid-name',
-    'missing-class-docstring',
-    'missing-function-docstring',
-    'missing-module-docstring',
-    'no-name-in-module',
-    'redefined-outer-name',
-    'too-few-public-methods',
-    'too-many-arguments',
-    'trailing-whitespace',
-    'unused-argument',
-    'unused-import',
-    'unused-variable',
-    'wrong-import-order',
-]
 
 [tool.mypy]
 disable_error_code = ['var-annotated', 'import']

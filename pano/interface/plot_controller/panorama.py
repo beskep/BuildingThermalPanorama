@@ -81,7 +81,7 @@ class PanoramaPlotController(PanoPlotController):
       assert self._toolbar is not None
       self._toolbar.home()
 
-  def crop_mode(self, value: bool):
+  def crop_mode(self, *, value: bool):
     assert self._toolbar is not None
     if value:
       self._toolbar.crop()

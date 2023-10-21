@@ -19,12 +19,14 @@ class RegistrationPreprocess:
       self,
       shape: tuple,
       fillnan: float | None = 0.0,
+      *,
       eqhist: bool | tuple[bool, bool] = True,
       unsharp: bool | tuple[bool, bool] = False,
       edge: bool | tuple[bool, bool] = False,
   ) -> None:
     """
     영상 정합을 위한 전처리 방법.
+
     `eqhist`, `unsharp`는 상응하는 전처리 방법 적용 여부.
     tuple로 입력한 경우 (e.g. (`True`, `False`)), 각각 `fixed_preprocess`와
     `moving_preprocess`에 적용.
@@ -56,11 +58,11 @@ class RegistrationPreprocess:
 
   def parameters(self):
     value: bool | tuple[bool, bool]
-    for name, value in zip(['eqhist', 'unsharp'], [self._eqhist, self._unsharp]):
-      if isinstance(value, tuple) and value[0] == value[1]:
-        value = value[0]
-
-      yield name, value
+    for name, value in zip(
+        ['eqhist', 'unsharp'], [self._eqhist, self._unsharp], strict=True
+    ):
+      v = value[0] if isinstance(value, tuple) and value[0] == value[1] else value
+      yield name, v
 
   def fixed_preprocess(self, image: np.ndarray) -> np.ndarray:
     if self._fillnan is not None:
@@ -80,7 +82,7 @@ class RegistrationPreprocess:
     return image
 
   def moving_preprocess(self, image: np.ndarray) -> np.ndarray:
-    if image.ndim == 3:
+    if image.ndim == 3:  # noqa: PLR2004
       image = rgb2gray(image)
 
     if self._fillnan is not None:
@@ -144,7 +146,7 @@ class RegisteringImage:
     self._resized_image = None
     self._prep_image = None
 
-  def resized_image(self, gray=True) -> np.ndarray:
+  def resized_image(self, *, gray=True) -> np.ndarray:
     """
     지정한 shape으로 영상의 크기 조정.
 
@@ -160,7 +162,7 @@ class RegisteringImage:
     -------
     np.ndarray
     """
-    if gray and self.orig_image.ndim == 3:
+    if gray and self.orig_image.ndim == 3:  # noqa: PLR2004
       img = rgb2gray(self.orig_image)
     else:
       img = self.orig_image
@@ -201,7 +203,7 @@ class RegisteringImage:
         변환 행렬, by default None
     transform_function : Optional[Callable[[np.ndarray], np.ndarray]], optional
         변환 함수 (f: np.ndarray -> np.ndarray), by default None
-    """
+    """  # noqa: D401
     self._trsf_mtx = transform_matrix
     self._trsf_fn = transform_function
 
@@ -238,9 +240,7 @@ class RegisteringImage:
       raise ValueError('shape error')
 
     assert self._trsf_mtx is not None
-    trsf_image = warp(image, inverse_map=inv(self._trsf_mtx))
-
-    return trsf_image
+    return warp(image, inverse_map=inv(self._trsf_mtx))
 
   def transform(self, image: np.ndarray) -> np.ndarray:
     """

@@ -6,7 +6,7 @@ from pano.utils import DIR, is_frozen
 
 
 def is_ascii(s: str):
-  return all(ord(c) < 128 for c in s)
+  return all(ord(c) < 128 for c in s)  # noqa: PLR2004
 
 
 def ascii_tempdir():

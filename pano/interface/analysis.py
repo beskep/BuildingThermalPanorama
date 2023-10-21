@@ -1,3 +1,5 @@
+# ruff: noqa: N803 N806
+
 from collections.abc import Iterable
 from pathlib import Path
 
@@ -7,7 +9,6 @@ from loguru import logger
 
 from pano.flir import FlirExif, FlirExtractor
 
-# ruff: noqa: N803, N806
 # TODO misc로
 
 

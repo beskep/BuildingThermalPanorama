@@ -41,9 +41,7 @@ class ProjectionMatrix:
     np.ndarray
     """
     rot = self.rotate(roll=roll, pitch=pitch, yaw=yaw)
-    mtx = np.linalg.multi_dot([self._cam_mtx, rot, self._inv_cam_mtx])
-
-    return mtx
+    return np.linalg.multi_dot([self._cam_mtx, rot, self._inv_cam_mtx])  # matrix
 
   @staticmethod
   def camera_matrix(image_shape: tuple, viewing_angle: float) -> np.ndarray:
@@ -162,9 +160,7 @@ class ProjectionMatrix:
     mtx_roll = cls.roll(angle=roll)
     mtx_pitch = cls.pitch(angle=pitch)
     mtx_yaw = cls.yaw(angle=yaw)
-    mtx = np.linalg.multi_dot([mtx_yaw, mtx_pitch, mtx_roll])
-
-    return mtx
+    return np.linalg.multi_dot([mtx_yaw, mtx_pitch, mtx_roll])
 
 
 class ImageProjection:
@@ -195,7 +191,7 @@ class ImageProjection:
   def image(self):
     return self._image
 
-  def _rotate_matrix(self, roll=0.0, pitch=0.0, yaw=0.0, scale=True):
+  def _rotate_matrix(self, roll=0.0, pitch=0.0, yaw=0.0, *, scale=True):
     mtx_rot = self._prj_mtx(roll=roll, pitch=pitch, yaw=yaw)
 
     # 영상 원점을 맞추기 위한 translation
@@ -237,7 +233,7 @@ class ImageProjection:
     if cval is None:
       cval = np.nan
 
-    if all(x == 0.0 for x in [roll, pitch, yaw]):
+    if all(x == 0 for x in [roll, pitch, yaw]):
       return image
 
     mtx = self._rotate_matrix(roll=roll, pitch=pitch, yaw=yaw, scale=scale)
@@ -260,9 +256,9 @@ if __name__ == '__main__':
   import matplotlib.pyplot as plt
   from skimage import data, img_as_float
 
-  image = img_as_float(data.chelsea())
+  img = img_as_float(data.chelsea())
 
-  prj = ImageProjection(image=image, viewing_angle=np.deg2rad(42.0))
+  prj = ImageProjection(image=img, viewing_angle=np.deg2rad(42.0))
   angles = (2, 0.1, 0.7)
 
   img_rot = prj.project(*angles, scale=False)
@@ -270,7 +266,7 @@ if __name__ == '__main__':
 
   fig, axes = plt.subplots(1, 3)
 
-  axes[0].imshow(image)
+  axes[0].imshow(img)
   axes[1].imshow(img_rot)
   axes[2].imshow(img_fit)
 

@@ -50,6 +50,7 @@ ProjectDir
 from enum import Enum
 from pathlib import Path
 from shutil import copy2
+from typing import ClassVar
 
 from loguru import logger
 from omegaconf import DictConfig
@@ -107,7 +108,7 @@ def _dir(d: str | DIR) -> DIR:
 
 
 class ThermalPanoramaFileManager:
-  SP_EXT = {
+  SP_EXT: ClassVar[dict[SP, str]] = {
       SP.IR: FN.NPY,
       SP.VIS: FN.LS,
       SP.SEG: FN.LL,
@@ -281,7 +282,7 @@ class ThermalPanoramaFileManager:
     return self.subdir(DIR.COR).joinpath(f'CorrectionProcess{FN.LS}')
 
   def anomaly_path(self):
-    return self._wd / 'AnomalyThrehold.yaml'
+    return self._wd / 'AnomalyThreshold.yaml'
 
 
 class ImageNotFoundError(FileNotFoundError):

@@ -1,3 +1,5 @@
+# ruff: noqa: S603
+
 import subprocess as sp
 from collections.abc import Iterable
 

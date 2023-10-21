@@ -1,5 +1,6 @@
 """
 두 영상의 특징점 추출/매칭을 통해 정합하는 코드.
+
 SimpleITK를 이용한 최적화 방법이 정확도가 더 높음.
 """
 
@@ -12,9 +13,7 @@ from .registrator import BaseRegistrator
 
 
 class BaseDetector(_fu.DescriptorExtractor, _fu.FeatureDetector):
-  """
-  특징점 추출 클래스
-  """
+  """특징점 추출 클래스"""
 
   def __init__(self):
     super().__init__()
@@ -30,21 +29,19 @@ class BaseDetector(_fu.DescriptorExtractor, _fu.FeatureDetector):
     return self.descriptors_
 
   def detect(self, image):
-    raise NotImplementedError()
+    raise NotImplementedError
 
   def extract(self, image, keypoints):
-    raise NotImplementedError()
+    raise NotImplementedError
 
   def detect_and_extract(self, image, *args, **kwargs):
-    raise NotImplementedError()
+    raise NotImplementedError
 
 
 class HoughLineFeatureDetector(BaseDetector):
-  """
-  `probabilistic_hough_line`을 통해 추출한 선분을 특징점으로 삼는 detector
-  """
+  """`probabilistic_hough_line`을 통해 추출한 선분을 특징점으로 삼는 detector"""
 
-  def __init__(self, hough=True, length=True, normalize=True):
+  def __init__(self, *, hough=True, length=True, normalize=True):
     super().__init__()
     self._lines: np.ndarray = None
     self._hough = hough
@@ -121,15 +118,15 @@ class HoughLineFeatureDetector(BaseDetector):
 
 
 class ORBDetector(feature.ORB):
-  """
-  ORB detector
+  """ORB detector
+
   https://docs.opencv.org/4.5.2/d1/d89/tutorial_py_orb.html
   """
 
 
 class BRIEFDetector(BaseDetector):
-  """
-  BRIEF detector
+  """BRIEF detector
+
   https://docs.opencv.org/4.5.2/dc/d7d/tutorial_py_brief.html
   """
 
@@ -160,14 +157,15 @@ class BRIEFDetector(BaseDetector):
 
 
 class FeatureBasedRegistrator(BaseRegistrator):
-  """
-  지정한 detector를 통해 특징점을 추출, RANSAC 알고리즘을 통해 매칭하고
-  두 영상을 정합
+  """Feature 기반 정합
+
+  지정한 detector를 통해 특징점을 추출, RANSAC 알고리즘을 통해 매칭하고 두 영상을 정합
   """
 
   def __init__(
       self,
       detector: BaseDetector = None,
+      *,
       hough_transform=False,
       fixed_kwargs=None,
       moving_kwargs=None,

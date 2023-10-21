@@ -1,3 +1,5 @@
+# ruff: noqa: FBT001 FBT003
+
 import multiprocessing as mp
 from collections.abc import Iterable
 from pathlib import Path
@@ -116,7 +118,7 @@ class Consumer(QtCore.QThread):
           continue
 
         assert isinstance(value, float)
-        if value >= 1.0:
+        if value >= 1:
           self.done.emit()
           break
 

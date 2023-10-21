@@ -28,7 +28,7 @@ _qt_message = {
 }
 
 
-def _qt_message_handler(mode, context, message):
+def _qt_message_handler(mode, _context, message):
   level = _qt_message.get(mode, 'INFO')
   logger.log(level, message)
 
@@ -57,7 +57,7 @@ def _init(loglevel):
 )
 @click.option('-d', '--debug', is_flag=True)
 @click.option('-l', '--loglevel', default=20)
-def main(debug=False, loglevel=20):
+def main(*, debug=False, loglevel=20):
   freeze_support()
   loglevel = min(loglevel, (10 if debug else 20))
   _init(loglevel=loglevel)

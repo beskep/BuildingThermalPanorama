@@ -89,7 +89,7 @@ class SITKRegistrator(BaseRegistrator):
     self._bins = bins
 
     self._scale0: float | None = None  # initial scale factor
-    self._trnsl0: tuple | None = None  # inital translation factor
+    self._trnsl0: tuple | None = None  # initial translation factor
 
     self._metric_options = {}
     if isinstance(bins, int):
@@ -233,14 +233,19 @@ class SITKRegistrator(BaseRegistrator):
     np.ndarray
         Transform matrix
     """
-    params = transform.GetParameters()
-    assert len(params) in (4, 6)  # similarity의 경우 4개, affine은 6개
+    match len(params := transform.GetParameters()):
+      case 4:
+        ttype = 'similarity'
+      case 6:
+        ttype = 'affine'
+      case _:
+        raise ValueError(params)
 
-    # 수치적으로 tranform matrix 추정
+    # 수치적으로 transform matrix 추정
     # (simpleitk의 문서가 부실해서 parameter를 해석할 수 없음)
     src = np.array([[0, 0], [1, 0], [0, 1], [1, 1]], dtype='float')
     dst = np.array([transform.TransformPoint(x) for x in src])
-    ttype = 'similarity' if len(params) == 4 else 'affine'
+
     trsf = estimate_transform(ttype=ttype, src=src, dst=dst)
     return inv(trsf.params)  # matrix
 
@@ -275,7 +280,7 @@ class SITKRegistrator(BaseRegistrator):
     moving_alpha : Optional[float], optional
         AOV of moving image [radian]
     translation : Optional[tuple], optional
-        Inital translation
+        Initial translation
     """
     if scale is not None:
       self._scale0 = scale

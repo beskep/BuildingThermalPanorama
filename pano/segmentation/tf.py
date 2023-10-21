@@ -1,5 +1,7 @@
 """DeepLabV3+"""
 
+# ruff: noqa
+
 from pathlib import Path
 
 import numpy as np

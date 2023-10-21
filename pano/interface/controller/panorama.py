@@ -1,7 +1,10 @@
+# ruff: noqa: FBT003
+
 import json
 import multiprocessing as mp
 from contextlib import suppress
 from pathlib import Path
+from typing import ClassVar
 
 import numpy as np
 from loguru import logger
@@ -72,7 +75,7 @@ class Window(con.Window):
 
 
 class Controller(QtCore.QObject):
-  _CMD_KR = {
+  _CMD_KR: ClassVar[dict[str, str]] = {
       'extract': '열화상 추출',
       'register': '열화상-실화상 정합',
       'segment': '외피 부위 인식',
@@ -257,9 +260,9 @@ class Controller(QtCore.QObject):
         f.unlink()
 
     # plot 리셋
-    for pc in self.pc.controllers():
-      pc.reset()
-      pc.draw()
+    for controller in self.pc.controllers():
+      controller.reset()
+      controller.draw()
 
   def update_image_view(self, panels=('project', 'registration', 'segmentation')):
     raw_files = [con.path2uri(x) for x in self.fm.raw_files()]
@@ -299,7 +302,7 @@ class Controller(QtCore.QObject):
 
   @QtCore.Slot(bool)
   def rgst_set_grid(self, grid):
-    self.pc.registration.set_grid(grid)
+    self.pc.registration.set_grid(grid=grid)
 
   @QtCore.Slot()
   def rgst_home(self):
@@ -307,7 +310,7 @@ class Controller(QtCore.QObject):
 
   @QtCore.Slot(bool)
   def rgst_zoom(self, value):
-    self.pc.registration.zoom(value)
+    self.pc.registration.zoom(value=value)
 
   @QtCore.Slot(str)
   def seg_plot(self, url):
@@ -354,7 +357,7 @@ class Controller(QtCore.QObject):
 
   @QtCore.Slot(bool)
   def pano_crop_mode(self, value):
-    self.pc.panorama.crop_mode(value)
+    self.pc.panorama.crop_mode(value=value)
 
   @QtCore.Slot(float, float, float)
   def pano_save_manual_correction(self, roll, pitch, yaw):
@@ -469,7 +472,7 @@ class Controller(QtCore.QObject):
 
     meta_files = list(self.fm.subdir(DIR.IR).glob('*.yaml'))
 
-    for idx, e1 in zip([1, 2], [wall, window]):
+    for idx, e1 in zip([1, 2], [wall, window], strict=True):
       ir0 = np.full_like(ir, np.nan)
       mask = seg == idx
 

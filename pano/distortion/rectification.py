@@ -12,6 +12,9 @@ References
     Intelligent Robots and Systems. IEEE, 2012.
 """
 
+# ruff: noqa: NPY002
+
+from typing import Any
 
 import numpy as np
 from loguru import logger
@@ -56,7 +59,7 @@ def compute_edgelets(image, sigma=3):
 
 
 def edgelet_lines(edgelets):
-  """Compute lines in homogenous system for edgelets.
+  """Compute lines in homogeneous system for edgelets.
 
   Parameters
   ----------
@@ -66,16 +69,14 @@ def edgelet_lines(edgelets):
   Returns
   -------
   lines: ndarray of shape (n_edgelets, 3)
-      Lines at each of edgelet locations in homogenous system.
+      Lines at each of edgelet locations in homogeneous system.
   """
   locations, directions, _ = edgelets
   normals = np.zeros_like(directions)
   normals[:, 0] = directions[:, 1]
   normals[:, 1] = -directions[:, 0]
   p = -np.sum(locations * normals, axis=1)
-  lines = np.concatenate((normals, p[:, np.newaxis]), axis=1)
-
-  return lines
+  return np.concatenate((normals, p[:, np.newaxis]), axis=1)  # lines
 
 
 def compute_votes(edgelets, model, threshold_inlier=5):
@@ -89,7 +90,7 @@ def compute_votes(edgelets, model, threshold_inlier=5):
   edgelets: tuple of ndarrays
       (locations, directions, strengths) as computed by `compute_edgelets`.
   model: ndarray of shape (3,)
-      Vanishing point model in homogenous cordinate system.
+      Vanishing point model in homogeneous cordinate system.
   threshold_inlier: float
       Threshold to be used for computing inliers in degrees. Angle between
       edgelet direction and line connecting the  Vanishing point model and
@@ -244,7 +245,7 @@ def ransac_3_line(
     # The vanishing line polar to v1
     # h = np.dot(vp1, [1 / focal_length**2, 1 / focal_length**2, 1])
     # h = [vp1[0] * invfsq, vp1[1] * invfsq, vp1[2]]
-    h = vp1 * farr
+    h: Any = vp1 * farr
     vp2 = np.cross(h, l3)
 
     if np.sum(vp1**2) < 1 or vp1[2] == 0:
@@ -279,7 +280,7 @@ def reestimate_model(model, edgelets, threshold_reestimate=5):
   Parameters
   ----------
   model: ndarray of shape (3,)
-      Vanishing point model in homogenous coordinates which is to be
+      Vanishing point model in homogeneous coordinates which is to be
       reestimated.
   edgelets: tuple of ndarrays
       (locations, directions, strengths) as computed by `compute_edgelets`.
@@ -290,7 +291,7 @@ def reestimate_model(model, edgelets, threshold_reestimate=5):
   Returns
   -------
   reestimated_model: ndarray of shape (3,)
-      Reestimated model for vanishing point in homogenous coordinates.
+      Reestimated model for vanishing point in homogeneous coordinates.
   """
   locations, directions, strengths = edgelets
 
@@ -314,7 +315,7 @@ def remove_inliers(model, edgelets, threshold_inlier=10):
   Parameters
   ----------
   model: ndarray of shape (3,)
-      Vanishing point model in homogenous coordinates which is to be
+      Vanishing point model in homogeneous coordinates which is to be
       reestimated.
   edgelets: tuple of ndarrays
       (locations, directions, strengths) as computed by `compute_edgelets`.
@@ -331,13 +332,11 @@ def remove_inliers(model, edgelets, threshold_inlier=10):
   locations = locations[~inliers]
   directions = directions[~inliers]
   strengths = strengths[~inliers]
-  edgelets = (locations, directions, strengths)
-
-  return edgelets
+  return (locations, directions, strengths)
 
 
 def compute_homography_and_warp(
-    image, vp1, vp2, clip=True, clip_factor=3
+    image, vp1, vp2, *, clip=True, clip_factor=3
 ) -> np.ndarray:
   """Compute homography from vanishing points and warp the image.
 
@@ -354,9 +353,9 @@ def compute_homography_and_warp(
   image: ndarray
       Image which has to be wrapped.
   vp1: ndarray of shape (3, )
-      First vanishing point in homogenous coordinate system.
+      First vanishing point in homogeneous coordinate system.
   vp2: ndarray of shape (3, )
-      Second vanishing point in homogenous coordinate system.
+      Second vanishing point in homogeneous coordinate system.
   clip: bool, optional
       If True, image is clipped to clip_factor.
   clip_factor: float, optional
@@ -445,7 +444,7 @@ def compute_homography_and_warp(
   return warp(image, np.linalg.inv(final_homography), output_shape=(max_y, max_x))
 
 
-def vis_edgelets(image, edgelets, show=True):
+def vis_edgelets(image, edgelets, *, show=True):
   """Helper function to visualize edgelets."""
   import matplotlib.pyplot as plt
 
@@ -469,7 +468,7 @@ def vis_edgelets(image, edgelets, show=True):
     plt.show()
 
 
-def vis_model(image, model, show=True):
+def vis_model(image, model, *, show=True):
   """Helper function to visualize computed model."""
   import matplotlib.pyplot as plt
 
@@ -479,7 +478,7 @@ def vis_model(image, model, show=True):
 
   edgelets = (locations[inliers], directions[inliers], strengths[inliers])
   locations, directions, strengths = edgelets
-  vis_edgelets(image, edgelets, False)
+  vis_edgelets(image, edgelets, show=False)
   vp = model / model[2]
   plt.plot(vp[0], vp[1], 'bo')
 
@@ -493,7 +492,7 @@ def vis_model(image, model, show=True):
 
 
 def rectify_image(
-    image: np.ndarray, clip_factor=6, algorithm='independent', reestimate=False
+    image: np.ndarray, clip_factor=6, algorithm='independent', *, reestimate=False
 ):
   """Rectified image with vanishing point computed using ransac.
 
@@ -518,7 +517,7 @@ def rectify_image(
   warped_img: ndarray
       Rectified image.
   """
-  if image.ndim != 2:
+  if image.ndim != 2:  # noqa: PLR2004
     raise ValueError
 
   # Compute all edgelets.

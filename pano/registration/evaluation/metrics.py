@@ -300,5 +300,4 @@ def calculate_all_metrics(
       'NCC': ncc,
       'Entropy': mi.joint_entropy,
       'MI': mi.mutual_information,
-      # 'MMI': mi.mattes_mutual_information,
   }

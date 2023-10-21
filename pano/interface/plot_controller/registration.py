@@ -83,8 +83,8 @@ class RegistrationPlotController(PanoPlotController):
     if self._images is not None:
       self._toolbar.home()
 
-  def zoom(self, value: bool):
-    self._toolbar.zoom(value)
+  def zoom(self, *, value: bool):
+    self._toolbar.zoom(value=value)
 
   def _set_style(self):
     for ax, title in zip(self.axes.ravel(), self._TITLES, strict=True):
@@ -100,7 +100,7 @@ class RegistrationPlotController(PanoPlotController):
         ax.set_axis_on()
         ax.tick_params(axis='both', which='both', **TICK_PARAMS)
 
-  def set_grid(self, grid: bool):
+  def set_grid(self, *, grid: bool):
     if not self._grid ^ grid:
       return
 

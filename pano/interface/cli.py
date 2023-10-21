@@ -22,6 +22,7 @@ commands = {'init', 'extract', 'register', 'segment', 'panorama', 'correct', 'ru
 @click.option('--raise', 'flag_raise', is_flag=True)
 @click.option('-l', '--loglevel', default=20, help='로깅 레벨')
 def cli(
+    *,
     path: str,
     command: str,
     config: str,
@@ -30,7 +31,7 @@ def cli(
     flag_raise: bool,
     loglevel: int,
 ):
-  """
+  r"""
   PATH: 대상 프로젝트 경로
 
   \b
@@ -82,5 +83,5 @@ def cli(
 
 
 if __name__ == '__main__':
-  # pylint: disable=no-value-for-parameter
+  # pylint: disable=missing-kwoa
   cli()

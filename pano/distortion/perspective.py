@@ -1,6 +1,7 @@
 """시점 왜곡 보정"""
 
 import dataclasses as dc
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -51,10 +52,10 @@ class VanishingPoint:
   VERT = 2
   DIAG = 3
 
-  SOFT = {HORIZ, VERT, DIAG}
-  STRICT = {HORIZ, VERT}
+  SOFT: ClassVar[set[int]] = {HORIZ, VERT, DIAG}
+  STRICT: ClassVar[set[int]] = {HORIZ, VERT}
 
-  _POS_DICT = {
+  _POS_DICT: ClassVar[dict[tuple[bool, bool], int]] = {
       (True, True): DIAG,
       (True, False): HORIZ,
       (False, True): VERT,
@@ -99,7 +100,7 @@ class VanishingPoint:
 
 
 class _Rectify:
-  """rectification warpper"""
+  """rectification warper"""
 
   @staticmethod
   def ransac_vanishing_point(
@@ -298,6 +299,7 @@ class Correction:
 
 
 class PerspectiveCorrection:
+  MIN_EDGELETS = 10
 
   def __init__(
       self,
@@ -362,9 +364,7 @@ class PerspectiveCorrection:
     if np.linalg.det(A1) < 0:
       A1[:, 0] = -A1[:, 0]
 
-    A = np.linalg.inv(A1)
-
-    return A
+    return np.linalg.inv(A1)
 
   @staticmethod
   def _compute_translate(H: np.ndarray, shape: tuple[int, ...], clip_factor: float):
@@ -482,7 +482,7 @@ class PerspectiveCorrection:
     vp = None
     for idx in range(self._opt.vp_iter + 1):
       logger.debug('Vanishing point iter {}', idx)
-      if edgelets.count < 10:
+      if edgelets.count < self.MIN_EDGELETS:
         raise NotEnoughEdgeletsError('Not enough edgelets')
 
       vp = _Rectify.ransac_vanishing_point(

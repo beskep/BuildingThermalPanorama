@@ -1,5 +1,7 @@
 """Stitcher용 전처리 함수, 클래스"""
 
+# ruff: noqa: N803
+
 
 import cv2 as cv
 import numpy as np
@@ -7,8 +9,6 @@ from loguru import logger
 from skimage.exposure import equalize_hist, rescale_intensity
 
 from pano.misc.tools import normalize_rgb_image_hist
-
-# ruff: noqa: N803
 
 
 class PanoramaPreprocess:

@@ -5,7 +5,6 @@ from misc.imageio import ImageIO
 from skimage.color import rgb2gray
 
 from ..registrator import feature_match as fm
-from ..registrator.registrator import RegisteringImage
 from ._evaluation import BaseEvaluation
 
 

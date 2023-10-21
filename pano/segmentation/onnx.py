@@ -15,8 +15,8 @@ RSMP = Image.Resampling
 class SmpModel:
   CMAP = 'Dark2'
   IMG_SIZE = (640, 640)
-  LABELS = ('Background', 'Wall', 'Window', 'etc.')
   TITLES = ('Input Image', 'Segmentation Overlay', 'Segmentation Map')
+  LABELS: tuple[str, ...] = ('Background', 'Wall', 'Window', 'etc.')
 
   def __init__(self, path: str) -> None:
     self._sess = InferenceSession(path, providers=['CPUExecutionProvider'])

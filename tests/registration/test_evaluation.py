@@ -51,8 +51,7 @@ class TestMI:
   base = 2
   mi = metrics.MutualInformation(img1, img2, bins, base)
 
-  # expected_entropy = -2 * 0.5 * np.log2(0.5)
-  expected_entropy = 1.0
+  expected_entropy = 1.0  # -2 * 0.5 * np.log2(0.5)
 
   def test_np_histogram(self):
     hist, edges = np.histogram(self.img1.ravel(), bins=self.bins)
@@ -62,7 +61,7 @@ class TestMI:
   def test_np_histogram2d(self):
     H, xedges, yedges = np.histogram2d(x=self.img1.ravel(), y=self.img2.ravel(), bins=2)
     expected = np.array([[0, 2], [2, 0]])
-    assert H == pytest.approx(expected)
+    assert pytest.approx(expected) == H
 
   def test_np_mmi(self):
     pxy = np.array([[1, 2], [3, 4]])

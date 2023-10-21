@@ -96,7 +96,7 @@ class RadialDistortionModel:
       raise ValueError
 
     data = np.array(data)
-    x0, y0, k1 = self.params
+    x0, y0, _ = self.params
     error = self.static_residuals(data=data, x0=x0, y0=y0)
 
     return error

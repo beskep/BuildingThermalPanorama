@@ -39,9 +39,11 @@ class Edgelets:
   def __post_init__(self):
     count = self.locations.shape[0]
 
-    for var, ndim in zip(['locations', 'directions', 'strengths'], [2, 2, 1]):
+    for var, ndim in zip(
+        ['locations', 'directions', 'strengths'], [2, 2, 1], strict=True
+    ):
       arr: np.ndarray = getattr(self, var)
-      dim = (count, 2) if ndim == 2 else (count,)
+      dim = (count, 2) if ndim == 2 else (count,)  # noqa: PLR2004
       if arr.shape != dim:
         msg = f'Invalid {var} shape {arr.shape}'
         raise ValueError(msg)
@@ -88,7 +90,7 @@ class HoughOptions:
   line_length: int = 50
   line_gap: int = 10
   theta: np.ndarray | None = None
-  seed: int | None = None
+  rng: int | None = None
 
 
 def edge_preprocess(image: np.ndarray, *, eqhist=True) -> np.ndarray:
@@ -110,7 +112,7 @@ def image2edges(
     *,
     eqhist=True,
 ) -> np.ndarray:
-  if image.ndim != 2:
+  if image.ndim != 2:  # noqa: PLR2004
     raise ValueError('image.ndim != 2')
 
   image = edge_preprocess(image, eqhist=eqhist)

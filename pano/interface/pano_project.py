@@ -16,6 +16,7 @@ from pano.misc import sp, tools
 from pano.misc.anomaly import anomaly_threshold
 from pano.misc.imageio import ImageIO as IIO  # noqa: N817
 from pano.misc.imageio import save_webp_images
+from pano.misc.tools import SegMask
 from pano.segmentation.onnx import SmpModel9
 
 from .common.cmap import apply_colormap, get_thermal_colormap
@@ -134,9 +135,8 @@ class ThermalPanorama:
 
     # FLIR One로 찍은 사진은 수직으로 촬영해도 orientation 번호가
     # `1` (`Horizontal (normal)`)로 표시되어서 아래 정보가 쓸모가 없음...
-
-    # tag = exif.get_exif_tags(path.as_posix(), '-Orientation', '-n')
-    # orientation = tag['Orientation']
+    # `tag = exif.get_exif_tags(path.as_posix(), '-Orientation', '-n')``
+    # `orientation = tag['Orientation']`
 
     return data.ir, data.vis, meta
 
@@ -369,7 +369,7 @@ class ThermalPanorama:
     fig, _ = model.visualization(src=file, mask=mask)
 
     path = self._fm.change_dir(DIR.SEG, file)
-    IIO.save(path=path, array=tools.SegMask.index2vis(mask))
+    IIO.save(path=path, array=SegMask.index2vis(mask))
 
     fig_path = path.with_name(f'{path.stem}{FN.SEG_FIG}{FN.LL}')
     fig.savefig(fig_path, dpi=300)
@@ -421,7 +421,7 @@ class ThermalPanorama:
 
     # 전처리 정의
     prep = stitch.PanoramaPreprocess(
-        is_numeric=(images[0].ndim == 2),
+        is_numeric=(images[0].ndim == 2),  # noqa: PLR2004
         mask_threshold=popt['masking_threshold'],
         contrast=popt['contrast'],
         denoise=popt['denoise'],
@@ -528,7 +528,7 @@ class ThermalPanorama:
       pano = pano[:, :, 0]
       pano = pano.astype(np.float16)
     elif sp is SP.SEG:
-      pano = tools.SegMask.index2vis(np.round(pano / tools.SegMask.SCALE))
+      pano = SegMask.index2vis(np.round(pano / SegMask.SCALE))
     else:
       pano = np.round(pano).astype(np.uint8)
 
@@ -658,7 +658,7 @@ class ThermalPanorama:
     pano = IIO.read(path=path)
 
     if spectrum is SP.SEG:
-      pano = tools.SegMask.vis2index(pano)
+      pano = SegMask.vis2index(pano)
       order = tools.INTRP.NearestNeighbor
     else:
       order = tools.INTRP.BiCubic
@@ -670,7 +670,7 @@ class ThermalPanorama:
     pano_limited = self.limit_size(pano_corrected, aa=spectrum is not SP.SEG)
 
     if spectrum is SP.SEG:
-      pano_limited = tools.SegMask.index2vis(pano_limited)
+      pano_limited = SegMask.index2vis(pano_limited)
 
     IIO.save(path=self._fm.panorama_path(DIR.COR, spectrum), array=pano_limited)
     logger.debug('{} 파노라마 왜곡 보정 저장', spectrum.value)
@@ -698,8 +698,8 @@ class ThermalPanorama:
       raise ValueError(msg)
 
     # wall, window 영역만 추출
-    seg = tools.SegMask.vis2index(seg[:, :, 0])
-    seg_mask = np.logical_and(mask, np.logical_or(seg == 1, seg == 2))
+    seg = SegMask.vis2index(seg[:, :, 0])
+    seg_mask = np.logical_and(mask, np.isin(seg, [SegMask.WALL, SegMask.WINDOW]))
     crop_range, _ = tools.crop_mask(seg_mask)
     if crop_range.cropped:
       pano = crop_range.crop(pano)

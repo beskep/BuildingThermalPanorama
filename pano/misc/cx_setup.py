@@ -53,9 +53,9 @@ def build():
   bins = ['ITK']
   lib_bin = Path(sys.base_prefix).joinpath('Library/bin')
   for b in bins:
-    files = list(lib_bin.glob(f'*{b}*'))
-    for file in files:
-      include_files.append((file.as_posix(), f'lib/{file.name}'))
+    include_files.extend(
+        [(f.as_posix(), f'lib/{f.name}') for f in lib_bin.glob(f'*{b}*')]
+    )
 
   options = {
       'build_exe': {
