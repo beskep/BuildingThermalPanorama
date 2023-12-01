@@ -24,15 +24,15 @@ def _detect_chessboard(file: Path, save_dir: Path, img_size, pattern_size, crite
   ret, corners = cv.findChessboardCorners(gray, patternSize=pattern_size, corners=None)
   if ret:
     corners2 = cv.cornerSubPix(
-        gray,
-        corners=corners,
-        winSize=(11, 11),
-        zeroZone=(-1, -1),
-        criteria=criteria,
+      gray,
+      corners=corners,
+      winSize=(11, 11),
+      zeroZone=(-1, -1),
+      criteria=criteria,
     )
 
     cv.drawChessboardCorners(
-        image, patternSize=pattern_size, corners=corners2, patternWasFound=ret
+      image, patternSize=pattern_size, corners=corners2, patternWasFound=ret
     )
 
     path = save_dir.joinpath(file.with_suffix('.jpg').name)
@@ -44,36 +44,38 @@ def _detect_chessboard(file: Path, save_dir: Path, img_size, pattern_size, crite
 def _calibrate_camera(object_points, image_points, image_size, save_dir: Path):
   """카메라 패러미터 산정, 저장"""
   ret, mtx, dist_coeff, rvecs, tvecs = cv.calibrateCamera(
-      objectPoints=object_points,
-      imagePoints=image_points,
-      imageSize=image_size,
-      cameraMatrix=None,
-      distCoeffs=None,
+    objectPoints=object_points,
+    imagePoints=image_points,
+    imageSize=image_size,
+    cameraMatrix=None,
+    distCoeffs=None,
   )
 
   res_dict = {
-      'image_size': list(image_size),
-      'ret': ret,
-      'matrix': mtx.tolist(),
-      'dist_coeff': dist_coeff.tolist(),
-      'rvecs': np.array(rvecs).tolist(),
-      'tvecs': np.array(tvecs).tolist(),
+    'image_size': list(image_size),
+    'ret': ret,
+    'matrix': mtx.tolist(),
+    'dist_coeff': dist_coeff.tolist(),
+    'rvecs': np.array(rvecs).tolist(),
+    'tvecs': np.array(tvecs).tolist(),
   }
   with open(save_dir.joinpath('parameters.yaml'), 'w', encoding=_ENC) as f:
     yaml.dump(res_dict, stream=f)
 
   np.savez(
-      file=save_dir.joinpath('parameters'),
-      image_size=image_size,
-      matrix=mtx,
-      dist_coeff=dist_coeff,
-      rvecs=np.array(rvecs),
-      tvecs=np.array(tvecs),
+    file=save_dir.joinpath('parameters'),
+    image_size=image_size,
+    matrix=mtx,
+    dist_coeff=dist_coeff,
+    rvecs=np.array(rvecs),
+    tvecs=np.array(tvecs),
   )
 
 
 def compute_camera_matrix(
-    files: list[str | Path], save_dir: str | Path, pattern_size=(3, 3)
+  files: list[str | Path],
+  save_dir: str | Path,
+  pattern_size=(3, 3),
 ):
   """
   주어진 영상으로부터 Chessboard 패턴을 검출하고 카메라 보정 패러미터 산정.
@@ -98,11 +100,11 @@ def compute_camera_matrix(
   img_size = None
   for file in files:
     img_size, ret, corners = _detect_chessboard(
-        file=Path(file),
-        save_dir=save_dir,
-        img_size=img_size,
-        pattern_size=pattern_size,
-        criteria=criteria,
+      file=Path(file),
+      save_dir=save_dir,
+      img_size=img_size,
+      pattern_size=pattern_size,
+      criteria=criteria,
     )
     if ret:
       obj_points.append(objp)
@@ -112,15 +114,14 @@ def compute_camera_matrix(
     raise ValueError('Chessboard 추출 실패')
 
   _calibrate_camera(
-      object_points=obj_points,
-      image_points=img_points,
-      image_size=img_size,
-      save_dir=save_dir,
+    object_points=obj_points,
+    image_points=img_points,
+    image_size=img_size,
+    save_dir=save_dir,
   )
 
 
 class CameraCalibration:
-
   def __init__(self, params_path: str | Path):
     """추출한 Camera Calibration 패러미터를 읽고 주어진 영상을 calibrate
 
@@ -141,7 +142,7 @@ class CameraCalibration:
       self._img_size = tuple(npz_file['image_size'])
       self._matrix = npz_file['matrix']
       self._dist_coeff = npz_file['dist_coeff']
-    elif ext in ['.yaml', '.yml']:
+    elif ext in {'.yaml', '.yml'}:
       with open(params_path, encoding=_ENC) as f:
         params = yaml.safe_load(f)
 
@@ -177,20 +178,20 @@ class CameraCalibration:
     np.ndarray
         보정된 영상.
     """
-    new_matrix, roi = cv.getOptimalNewCameraMatrix(
-        cameraMatrix=self._matrix,
-        distCoeffs=self._dist_coeff,
-        imageSize=self._img_size,
-        alpha=1,
-        newImgSize=self._img_size,
+    new_matrix, _roi = cv.getOptimalNewCameraMatrix(
+      cameraMatrix=self._matrix,
+      distCoeffs=self._dist_coeff,
+      imageSize=self._img_size,
+      alpha=1,
+      newImgSize=self._img_size,
     )
 
     return cv.undistort(
-        image,
-        cameraMatrix=self._matrix,
-        distCoeffs=self._dist_coeff,
-        dst=None,
-        newCameraMatrix=new_matrix,
+      image,
+      cameraMatrix=self._matrix,
+      distCoeffs=self._dist_coeff,
+      dst=None,
+      newCameraMatrix=new_matrix,
     )
 
   def mask(self) -> np.ndarray:

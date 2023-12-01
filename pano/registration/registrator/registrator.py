@@ -14,15 +14,14 @@ from pano.misc.tools import normalize_image
 
 
 class RegistrationPreprocess:
-
   def __init__(
-      self,
-      shape: tuple,
-      fillnan: float | None = 0.0,
-      *,
-      eqhist: bool | tuple[bool, bool] = True,
-      unsharp: bool | tuple[bool, bool] = False,
-      edge: bool | tuple[bool, bool] = False,
+    self,
+    shape: tuple,
+    fillnan: float | None = 0.0,
+    *,
+    eqhist: bool | tuple[bool, bool] = True,
+    unsharp: bool | tuple[bool, bool] = False,
+    edge: bool | tuple[bool, bool] = False,
   ) -> None:
     """
     영상 정합을 위한 전처리 방법.
@@ -59,7 +58,9 @@ class RegistrationPreprocess:
   def parameters(self):
     value: bool | tuple[bool, bool]
     for name, value in zip(
-        ['eqhist', 'unsharp'], [self._eqhist, self._unsharp], strict=True
+      ['eqhist', 'unsharp'],
+      [self._eqhist, self._unsharp],
+      strict=True,
     ):
       v = value[0] if isinstance(value, tuple) and value[0] == value[1] else value
       yield name, v
@@ -103,12 +104,11 @@ class RegistrationPreprocess:
 
 
 class RegisteringImage:
-
   def __init__(
-      self,
-      image: np.ndarray,
-      shape: tuple | None = None,
-      preprocess: Callable | None = None,
+    self,
+    image: np.ndarray,
+    shape: tuple | None = None,
+    preprocess: Callable | None = None,
   ) -> None:
     """
     정합 대상 영상 및 전처리 방법
@@ -190,9 +190,9 @@ class RegisteringImage:
     return self._prep_image
 
   def set_registration(
-      self,
-      transform_matrix: np.ndarray | None = None,
-      transform_function: Callable[[np.ndarray], np.ndarray] | None = None,
+    self,
+    transform_matrix: np.ndarray | None = None,
+    transform_function: Callable[[np.ndarray], np.ndarray] | None = None,
   ):
     """
     Moving image의 registration 방법 설정
@@ -203,7 +203,7 @@ class RegisteringImage:
         변환 행렬, by default None
     transform_function : Optional[Callable[[np.ndarray], np.ndarray]], optional
         변환 함수 (f: np.ndarray -> np.ndarray), by default None
-    """  # noqa: D401
+    """
     self._trsf_mtx = transform_matrix
     self._trsf_fn = transform_function
 
@@ -269,8 +269,8 @@ class RegisteringImage:
         trsf_image = self._trsf_fn(image)
       except RuntimeError:
         trsf_image = np.stack(
-            [self._trsf_fn(image[:, :, x]) for x in range(image.shape[-1])],
-            axis=-1,
+          [self._trsf_fn(image[:, :, x]) for x in range(image.shape[-1])],
+          axis=-1,
         )
 
     return trsf_image
@@ -297,13 +297,12 @@ class RegisteringImage:
 
 
 class BaseRegistrator(abc.ABC):
-
   @abc.abstractmethod
   def register(
-      self,
-      fixed_image: np.ndarray,
-      moving_image: np.ndarray,
-      **kwargs,
+    self,
+    fixed_image: np.ndarray,
+    moving_image: np.ndarray,
+    **kwargs,
   ) -> tuple[np.ndarray, Callable | None, np.ndarray | None]:
     """
     Register image
@@ -325,23 +324,23 @@ class BaseRegistrator(abc.ABC):
     """
 
   def prep_and_register(
-      self,
-      fixed_image: np.ndarray,
-      moving_image: np.ndarray,
-      preprocess: RegistrationPreprocess,
-      **kwargs,
+    self,
+    fixed_image: np.ndarray,
+    moving_image: np.ndarray,
+    preprocess: RegistrationPreprocess,
+    **kwargs,
   ) -> tuple[RegisteringImage, RegisteringImage]:
     fri = RegisteringImage(
-        image=fixed_image, shape=None, preprocess=preprocess.fixed_preprocess
+      image=fixed_image, shape=None, preprocess=preprocess.fixed_preprocess
     )
     mri = RegisteringImage(
-        image=moving_image,
-        shape=fixed_image.shape,
-        preprocess=preprocess.moving_preprocess,
+      image=moving_image,
+      shape=fixed_image.shape,
+      preprocess=preprocess.moving_preprocess,
     )
 
     _, register, matrix = self.register(
-        fixed_image=fri.prep_image(), moving_image=mri.prep_image(), **kwargs
+      fixed_image=fri.prep_image(), moving_image=mri.prep_image(), **kwargs
     )
     mri.set_registration(transform_matrix=matrix, transform_function=register)
 

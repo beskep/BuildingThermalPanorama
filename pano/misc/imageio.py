@@ -10,8 +10,6 @@ from skimage.color import rgb2hsv
 from skimage.exposure import rescale_intensity
 from skimage.io import imread, imsave
 
-from pano.utils import StrPath
-
 from .tools import uint8_image, uint16_image
 
 
@@ -32,7 +30,7 @@ class ImageIO:
     return path.with_name(f'{path.stem}{cls.META_SUFFIX}{cls.META_EXT}')
 
   @classmethod
-  def read(cls, path: StrPath) -> np.ndarray:
+  def read(cls, path: str | Path) -> np.ndarray:
     """
     주어진 path의 확장자에 따라 영상 파일 해석
 
@@ -72,7 +70,7 @@ class ImageIO:
 
   @classmethod
   def read_with_meta(
-      cls, path: StrPath, *, scale=False
+    cls, path: str | Path, *, scale=False
   ) -> tuple[np.ndarray, dict | None]:
     """
     주어진 path의 확장자에 따라 영상 파일 및 메타 정보 해석.
@@ -103,20 +101,21 @@ class ImageIO:
     else:
       meta = None
 
-    if scale and path.suffix.lower() not in ('.csv', '.npy'):
+    if scale and path.suffix.lower() not in {'.csv', '.npy'}:
       if meta is None:
         logger.warning(
-            '메타 정보 파일 ({})이 존재하지 않습니다. 영상의 밝기 범위를 변경하지 않습니다.',
-            meta_path.name,
+          '메타 정보 파일 ({})이 존재하지 않습니다. '
+          '영상의 밝기 범위를 변경하지 않습니다.',
+          meta_path.name,
         )
       else:
         try:
           img_range = (meta['range']['min'], meta['range']['max'])
         except KeyError:
           logger.warning(
-              '메타 정보 파일 ({})에 영상의 밝기 정보가 없습니다. '
-              '영상의 밝기 범위를 변경하지 않습니다.',
-              meta_path.name,
+            '메타 정보 파일 ({})에 영상의 밝기 정보가 없습니다. '
+            '영상의 밝기 범위를 변경하지 않습니다.',
+            meta_path.name,
           )
         else:
           image = rescale_intensity(image=image, out_range=img_range)
@@ -124,7 +123,7 @@ class ImageIO:
     return image, meta
 
   @classmethod
-  def save(cls, path: StrPath, array: np.ndarray, *, check_contrast=False):
+  def save(cls, path: str | Path, array: np.ndarray, *, check_contrast=False):
     """
     주어진 path의 확장자에 따라 영상 파일 저장
 
@@ -154,16 +153,16 @@ class ImageIO:
   def _scale_and_save(array: np.ndarray, path: Path, exts: list, dtype='uint8'):
     if not exts:
       return
-    if dtype not in ('uint8', 'uint16'):
+    if dtype not in {'uint8', 'uint16'}:
       raise ValueError
 
     if dtype == 'uint8':
       image = uint8_image(array)
       for ext in exts:
         imsave(
-            fname=path.with_suffix(ext).as_posix(),
-            arr=image,
-            check_contrast=False,
+          fname=path.with_suffix(ext).as_posix(),
+          arr=image,
+          check_contrast=False,
         )
     else:
       image = uint16_image(array)
@@ -179,12 +178,12 @@ class ImageIO:
 
   @classmethod
   def save_with_meta(
-      cls,
-      path: StrPath,
-      array: np.ndarray,
-      exts: list,
-      meta: dict | None = None,
-      dtype: str | None = None,
+    cls,
+    path: str | Path,
+    array: np.ndarray,
+    exts: list,
+    meta: dict | None = None,
+    dtype: str | None = None,
   ):
     """
     주어진 path와 각 확장자 (`exts`)에 따라 영상 파일 저장.
@@ -217,9 +216,9 @@ class ImageIO:
     # csv 저장
     if cls.CSV_EXT in exts:
       np.savetxt(
-          fname=path.with_suffix(cls.CSV_EXT).as_posix(),
-          X=array,
-          delimiter=cls.DELIMITER,
+        fname=path.with_suffix(cls.CSV_EXT).as_posix(),
+        X=array,
+        delimiter=cls.DELIMITER,
       )
       exts.remove(cls.CSV_EXT)
 
@@ -232,8 +231,8 @@ class ImageIO:
     # 메타 데이터 저장
     if meta is not None:
       meta['range'] = {
-          'min': np.around(np.nanmin(array).item(), 4).item(),
-          'max': np.around(np.nanmax(array).item(), 4).item(),
+        'min': np.around(np.nanmin(array).item(), 4).item(),
+        'max': np.around(np.nanmax(array).item(), 4).item(),
       }
       meta_path = cls.meta_path(path)
       with open(meta_path, 'w', encoding=cls.ENCODING) as f:
@@ -242,7 +241,10 @@ class ImageIO:
 
 def save_webp_images(*images: str | Path, path: str):
   webp.save_images(
-      imgs=[PIL.Image.open(x) for x in images], file_path=path, fps=1, lossless=True
+    imgs=[PIL.Image.open(x) for x in images],
+    file_path=path,
+    fps=1,
+    lossless=True,
   )
 
 

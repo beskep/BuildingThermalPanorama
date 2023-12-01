@@ -2,7 +2,6 @@
 
 # ruff: noqa: N803
 
-
 import cv2 as cv
 import numpy as np
 from loguru import logger
@@ -12,15 +11,14 @@ from pano.misc.tools import normalize_rgb_image_hist
 
 
 class PanoramaPreprocess:
-
   def __init__(
-      self,
-      *,
-      is_numeric: bool,
-      fillna: float = 0.0,
-      mask_threshold: float | None = -30.0,
-      contrast: str | None = 'equalization',
-      denoise: str | None = 'bilateral',
+    self,
+    *,
+    is_numeric: bool,
+    fillna: float = 0.0,
+    mask_threshold: float | None = -30.0,
+    contrast: str | None = 'equalization',
+    denoise: str | None = 'bilateral',
   ):
     """파노라마 생성을 위한 열화상, 실화상의 전처리
 
@@ -58,9 +56,9 @@ class PanoramaPreprocess:
     ValueError
         전처리 방법 인자 설정 오류
     """
-    if contrast not in (None, 'equalization', 'normalization'):
+    if contrast not in {None, 'equalization', 'normalization'}:
       raise ValueError
-    if denoise not in (None, 'bilateral', 'gaussian'):
+    if denoise not in {None, 'bilateral', 'gaussian'}:
       raise ValueError
 
     self._is_numeric = is_numeric
@@ -100,9 +98,9 @@ class PanoramaPreprocess:
     `cv2.bilateralFilter` 참조.
     """
     self._bilateral_args = {
-        'd': d,
-        'sigmaColor': sigmaColor,
-        'sigmaSpace': sigmaSpace,
+      'd': d,
+      'sigmaColor': sigmaColor,
+      'sigmaSpace': sigmaSpace,
     }
 
   def set_gaussian_args(self, ksize=(5, 5), sigmaX=0):
@@ -173,8 +171,8 @@ class PanoramaPreprocess:
     if self._contrast_type == 'equalization':
       if not self._is_numeric:
         logger.warning(
-            '실화상에 Histogram equalization을 적용합니다. '
-            '예상치 못한 오류가 발생할 수 있습니다.'
+          '실화상에 Histogram equalization을 적용합니다. '
+          '예상치 못한 오류가 발생할 수 있습니다.'
         )
 
       res = equalize_hist(image)
@@ -185,8 +183,8 @@ class PanoramaPreprocess:
       else:
         res = image
         logger.warning(
-            '열화상에 Histogram normalization을 적용할 수 없습니다. '
-            '명암 보정을 적용하지 않습니다'
+          '열화상에 Histogram normalization을 적용할 수 없습니다. '
+          '명암 보정을 적용하지 않습니다'
         )
 
     else:

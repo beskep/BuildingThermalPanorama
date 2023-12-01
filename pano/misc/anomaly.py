@@ -25,7 +25,7 @@ def gaussian_mixture(array: NDArray, ks: Iterable[int], **kwargs):
 
 
 def anomaly_threshold(
-    array: NDArray, kmax=8, **kwargs
+  array: NDArray, kmax=8, **kwargs
 ) -> tuple[float, GaussianMixture]:
   """Calculate anomaly threshold.
 
@@ -46,7 +46,7 @@ def anomaly_threshold(
       anomaly threshold, model
   """
   model, mask = gaussian_mixture(
-      array.reshape([-1, 1]), ks=range(2, kmax + 1), **kwargs
+    array.reshape([-1, 1]), ks=range(2, kmax + 1), **kwargs
   )
   counts = [np.sum(mask == i) for i in range(model.n_components)]
   ref = int(np.argmax(counts))  # 면적이 가장 많은 군집

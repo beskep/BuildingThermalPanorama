@@ -70,7 +70,7 @@ def _summarize(ir, seg, threshold, factor, index: int):
     summ['vulnerable'] = '-'
   else:
     v = _vulnerable_area_ratio(
-        factor=factor, vulnerable=(factor >= threshold), mask=mask
+      factor=factor, vulnerable=(factor >= threshold), mask=mask
     )
     summ['vulnerable'] = f'{v:.2%}'
 
@@ -78,7 +78,6 @@ def _summarize(ir, seg, threshold, factor, index: int):
 
 
 class Images:
-
   def __init__(self, fm: ThermalPanoramaFileManager) -> None:
     self._fm = fm
 
@@ -180,8 +179,8 @@ class Images:
     data = tools.OutlierArray(self.ir[mask], self.k).reject_outliers()
 
     return (
-        np.floor(np.nanmin(data)).item(),
-        np.ceil(np.nanmax(data)).item(),
+      np.floor(np.nanmin(data)).item(),
+      np.ceil(np.nanmax(data)).item(),
     )
 
   def temperature_factor(self):
@@ -221,8 +220,8 @@ class Images:
       factor = None
 
     return {
-        'Wall': _summarize(self.ir, self.seg, self.threshold, factor, index=1),
-        'Window': _summarize(self.ir, self.seg, self.threshold, factor, index=2),
+      'Wall': _summarize(self.ir, self.seg, self.threshold, factor, index=1),
+      'Window': _summarize(self.ir, self.seg, self.threshold, factor, index=2),
     }
 
   def _path(self, sp, *, color=False):
@@ -243,8 +242,8 @@ class Images:
     # IR
     ImageIO.save(self._path(SP.IR), self.ir)
     ImageIO.save(
-        self._path(SP.IR, color=True),
-        apply_colormap(self.ir, cmap=_get_cmap(), na=True),
+      self._path(SP.IR, color=True),
+      apply_colormap(self.ir, cmap=_get_cmap(), na=True),
     )
 
     # temperature factor
@@ -265,12 +264,16 @@ class Images:
 
 
 class PointSelector(_SelectorWidget):
-
   def __init__(self, ax, onselect, markerprops: dict | None = None) -> None:
     super().__init__(ax, onselect)
 
     self._marker = None
-    self._markerprops = markerprops or {'s': 80, 'c': 'k', 'marker': 'x', 'alpha': 0.8}
+    self._markerprops = markerprops or {
+      's': 80,
+      'c': 'k',
+      'marker': 'x',
+      'alpha': 0.8,
+    }
 
   @property
   def artists(self):
@@ -316,7 +319,6 @@ class CorrectionParams:
 
 
 class AnalysisPlotController(PanoPlotController):
-
   def __init__(self, parent=None) -> None:
     super().__init__(parent=parent)
     self._cax: Axes | None = None
@@ -368,7 +370,7 @@ class AnalysisPlotController(PanoPlotController):
     self._setting.segmentation = True
     self.plot()
 
-  def set_selector(self, point: bool | None = None, *, remove=False):
+  def set_selector(self, *, point: bool | None = None, remove=False):
     if self._fm is None:
       self._selector = None
       return
@@ -455,10 +457,10 @@ class AnalysisPlotController(PanoPlotController):
 
     self.cax.set_visible(b=True)
     self.fig.colorbar(
-        self._axes_image,
-        cax=self.cax,
-        ax=self.axes,
-        extend=('both' if factor else 'neither'),
+      self._axes_image,
+      cax=self.cax,
+      ax=self.axes,
+      extend=('both' if factor else 'neither'),
     )
     self.cax.set_ylabel('Temperature ' + ('Factor' if factor else '[℃]'), rotation=90)
 
@@ -469,11 +471,11 @@ class AnalysisPlotController(PanoPlotController):
       self.axes.imshow(seg, alpha=0.5)
 
       patches = [
-          Patch(color=SEG_CMAP(i + 1), label=x)
-          for i, x in enumerate(['Wall', 'Window', 'etc.'])
+        Patch(color=SEG_CMAP(i + 1), label=x)
+        for i, x in enumerate(['Wall', 'Window', 'etc.'])
       ]
       self._seg_legend = self.fig.legend(
-          handles=patches, ncol=len(patches), loc='lower right'
+        handles=patches, ncol=len(patches), loc='lower right'
       )
 
     if vulnerable:
@@ -484,20 +486,20 @@ class AnalysisPlotController(PanoPlotController):
     self.cax.set_visible(b=False)
 
     data = {
-        'Wall': self.images.ir[self.images.seg == tools.SegMask.WALL],
-        'Window': self.images.ir[self.images.seg == tools.SegMask.WINDOW],
+      'Wall': self.images.ir[self.images.seg == tools.SegMask.WALL],
+      'Window': self.images.ir[self.images.seg == tools.SegMask.WINDOW],
     }
     data = {
-        k: tools.OutlierArray(v, k=self.images.k).reject_outliers()
-        for k, v in data.items()
+      k: tools.OutlierArray(v, k=self.images.k).reject_outliers()
+      for k, v in data.items()
     }
     data_range = (
-        min(np.min(x) for x in data.values()),
-        max(np.max(x) for x in data.values()),
+      min(np.min(x) for x in data.values()),
+      max(np.max(x) for x in data.values()),
     )
 
     sns.histplot(
-        data=data, stat='probability', element='step', binwidth=0.2, ax=self.axes
+      data=data, stat='probability', element='step', binwidth=0.2, ax=self.axes
     )
     self.axes.set_xlim(*data_range)
     self.axes.set_xlabel('Temperature [℃]')
@@ -511,9 +513,9 @@ class AnalysisPlotController(PanoPlotController):
       self.set_selector(remove=True)
     else:
       self._plot_image(
-          factor=self.setting.factor,
-          segmentation=self.setting.segmentation,
-          vulnerable=self.setting.vulnerable,
+        factor=self.setting.factor,
+        segmentation=self.setting.segmentation,
+        vulnerable=self.setting.vulnerable,
       )
       self.set_selector()
 
@@ -559,15 +561,15 @@ class AnalysisPlotController(PanoPlotController):
     summ_wall = {f'{k}_wall': v for k, v in summ['Wall'].items()}
     summ_window = {f'{k}_window': v for k, v in summ['Window'].items()}
     summ_all = {
-        k: v if isinstance(v, str) else f'{v:.2f}℃'
-        for k, v in (summ_wall | summ_window).items()
+      k: v if isinstance(v, str) else f'{v:.2f}℃'
+      for k, v in (summ_wall | summ_window).items()
     }
 
     return {
-        'exterior_temperature': self.images.teti[0],
-        'interior_temperature': self.images.teti[1],
-        **self.correction_params.asdict(),
-        **summ_all,
+      'exterior_temperature': self.images.teti[0],
+      'interior_temperature': self.images.teti[1],
+      **self.correction_params.asdict(),
+      **summ_all,
     }
 
   def save_report(self):

@@ -109,11 +109,11 @@ def _dir(d: str | DIR) -> DIR:
 
 class ThermalPanoramaFileManager:
   SP_EXT: ClassVar[dict[SP, str]] = {
-      SP.IR: FN.NPY,
-      SP.VIS: FN.LS,
-      SP.SEG: FN.LL,
-      SP.MASK: FN.LL,
-      SP.TF: FN.NPY,
+    SP.IR: FN.NPY,
+    SP.VIS: FN.LS,
+    SP.SEG: FN.LL,
+    SP.MASK: FN.LL,
+    SP.TF: FN.NPY,
   }
 
   def __init__(self, directory, raw_pattern='*.jpg') -> None:
@@ -177,7 +177,7 @@ class ThermalPanoramaFileManager:
         if d or any file not exist
     """
     d = _dir(d)
-    if d not in (DIR.RAW, DIR.IR, DIR.VIS, DIR.RGST, DIR.SEG):
+    if d not in {DIR.RAW, DIR.IR, DIR.VIS, DIR.RGST, DIR.SEG}:
       msg = f'Available folders: {{RAW, IR, VIS, RGST, SEG}}, got {d}'
       raise ValueError(msg)
 
@@ -196,15 +196,13 @@ class ThermalPanoramaFileManager:
       for file in files:
         if not file.exists():
           raise FileNotFoundError(file)
-    elif d in (DIR.VIS, DIR.SEG) and any(not x.exists() for x in files):
+    elif d in {DIR.VIS, DIR.SEG} and any(not x.exists() for x in files):
       # 다른 실화상을 입력한 경우, VIS/SEG 폴더에 존재하는 영상 목록 반환
       exts = {'.png'} if d is DIR.SEG else {'.png', '.jpg', '.webp'}
       files = [
-          x
-          for x in subdir.glob('*')
-          if x.is_file()
-          and x.suffix.lower() in exts
-          and not x.name.endswith('_fig.png')
+        x
+        for x in subdir.glob('*')
+        if x.is_file() and x.suffix.lower() in exts and not x.name.endswith('_fig.png')
       ]
 
     if not files:
@@ -237,7 +235,7 @@ class ThermalPanoramaFileManager:
         if d not in (DIR.IR, DIR.VIS, DIR.RGST, DIR.SEG)
     """
     d = _dir(d)
-    if d not in (DIR.IR, DIR.VIS, DIR.RGST, DIR.SEG):
+    if d not in {DIR.IR, DIR.VIS, DIR.RGST, DIR.SEG}:
       msg = f'Available folders: {{IR, VIS, RGST, SEG}}, got {d}'
       raise ValueError(msg)
 

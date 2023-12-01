@@ -26,7 +26,6 @@ from pano.misc import tools
 
 
 class AbsResidualCircleModel(CircleModel):
-
   def residuals(self, data):
     residuals = np.abs(super().residuals(data))
 
@@ -34,7 +33,6 @@ class AbsResidualCircleModel(CircleModel):
 
 
 class RadialDistortionModel:
-
   def __init__(self) -> None:
     self.params = None
 
@@ -47,12 +45,10 @@ class RadialDistortionModel:
 
     A = 2 * data[:, :2]  # (2*xc, 2*yc)
     B = np.average(
-        np.square(data),
-        axis=1,
-        weights=[1, 1, -1],
-    ).reshape(
-        [-1, 1]
-    )  # (xc^2 + yc^2 - r^2)
+      np.square(data),
+      axis=1,
+      weights=[1, 1, -1],
+    ).reshape([-1, 1])  # (xc^2 + yc^2 - r^2)
 
     rows = [*range(1, data.shape[0]), 0]
     Ap = A - A[rows]
@@ -73,7 +69,7 @@ class RadialDistortionModel:
     M[:, 1] -= y0  # [xc - x0, yc - y0, r]
     invk1s = np.average(np.square(M), axis=1, weights=[1, 1, -1])
     k1s = np.true_divide(
-        1.0, invk1s, out=np.full_like(invk1s, np.nan), where=invk1s != 0
+      1.0, invk1s, out=np.full_like(invk1s, np.nan), where=invk1s != 0
     )
     k1 = np.nanmean(k1s)
 
@@ -112,10 +108,10 @@ class RadialDistortionModel:
     k1rdsq = self.params[2] * rdsq  # k_1 * (r_d)^2
 
     rr = np.divide(
-        1 - np.sqrt(1 - 4 * k1rdsq),
-        2 * k1rdsq,
-        out=np.ones_like(k1rdsq),
-        where=k1rdsq != 0,
+      1 - np.sqrt(1 - 4 * k1rdsq),
+      2 * k1rdsq,
+      out=np.ones_like(k1rdsq),
+      where=k1rdsq != 0,
     )
     assert np.all(rr >= 0.0)
 
@@ -138,10 +134,10 @@ def inv_radial_distort_map(xdyd: np.ndarray, k1: float, center) -> np.ndarray:
   #   # barrel distortion
 
   c = np.divide(
-      1 - np.sqrt(1 - 4 * k1rdsq),
-      2 * k1rdsq,
-      out=np.ones_like(k1rdsq),
-      where=k1rdsq != 0,
+    1 - np.sqrt(1 - 4 * k1rdsq),
+    2 * k1rdsq,
+    out=np.ones_like(k1rdsq),
+    where=k1rdsq != 0,
   )
   assert np.all(c >= 0.0)
 
@@ -170,27 +166,26 @@ def radial_distort_map(xuyu: np.ndarray, k1: float, center) -> np.ndarray:
 
 
 class RadialDistortion:
-
   def __init__(self, perimeter_threshold: float, levels: list, clip_limit=0.05) -> None:
     self._perimeter_threshold = perimeter_threshold
     self._levels = levels
     self._clip_limit = clip_limit
 
     self._ransac_circle_args: dict[str, Any] = {
-        'min_samples': 3,
-        'residual_threshold': 5,
-        'max_trials': 1000,
+      'min_samples': 3,
+      'residual_threshold': 5,
+      'max_trials': 1000,
     }
     self._ransac_distort_args = {'min_sample': 4}
 
   def set_circle_ransac_options(
-      self, min_samples=10, residual_threshold=5, max_trials=10000, **kwargs
+    self, min_samples=10, residual_threshold=5, max_trials=10000, **kwargs
   ):
     self._ransac_circle_args.update(
-        min_samples=min_samples,
-        residual_threshold=residual_threshold,
-        max_trials=max_trials,
-        kwargs=kwargs,
+      min_samples=min_samples,
+      residual_threshold=residual_threshold,
+      max_trials=max_trials,
+      kwargs=kwargs,
     )
 
   def preprocess(self, image: np.ndarray, mask: np.ndarray | None = None):
@@ -206,7 +201,7 @@ class RadialDistortion:
 
   def _iterate_contours(self, image: np.ndarray, threshold: float):
     for level in track(
-        self._levels, description='Extracting contours...', console=utils.console
+      self._levels, description='Extracting contours...', console=utils.console
     ):
       contours = find_contours(image=image, level=level)
 
@@ -226,7 +221,9 @@ class RadialDistortion:
 
     for contour, level in self._iterate_contours(image=image, threshold=threshold):
       model, inliers = ransac(
-          data=contour, model_class=AbsResidualCircleModel, **self._ransac_circle_args
+        data=contour,
+        model_class=AbsResidualCircleModel,
+        **self._ransac_circle_args,
       )
 
       yield level, contour, model, inliers

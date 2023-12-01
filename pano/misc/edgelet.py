@@ -31,16 +31,16 @@ class Edgelets:
       index = [index]
 
     return Edgelets(
-        locations=self.locations[index],
-        directions=self.directions[index],
-        strengths=self.strengths[index],
+      locations=self.locations[index],
+      directions=self.directions[index],
+      strengths=self.strengths[index],
     )
 
   def __post_init__(self):
     count = self.locations.shape[0]
 
     for var, ndim in zip(
-        ['locations', 'directions', 'strengths'], [2, 2, 1], strict=True
+      ['locations', 'directions', 'strengths'], [2, 2, 1], strict=True
     ):
       arr: np.ndarray = getattr(self, var)
       dim = (count, 2) if ndim == 2 else (count,)  # noqa: PLR2004
@@ -60,9 +60,9 @@ class Edgelets:
 
   def copy(self):
     return Edgelets(
-        locations=self.locations.copy(),
-        directions=self.directions.copy(),
-        strengths=self.strengths.copy(),
+      locations=self.locations.copy(),
+      directions=self.directions.copy(),
+      strengths=self.strengths.copy(),
     )
 
   def sort(self):
@@ -90,7 +90,6 @@ class HoughOptions:
   line_length: int = 50
   line_gap: int = 10
   theta: np.ndarray | None = None
-  rng: int | None = None
 
 
 def edge_preprocess(image: np.ndarray, *, eqhist=True) -> np.ndarray:
@@ -106,11 +105,11 @@ def edge_preprocess(image: np.ndarray, *, eqhist=True) -> np.ndarray:
 
 
 def image2edges(
-    image: np.ndarray,
-    mask: np.ndarray | None = None,
-    canny_option: CannyOptions | None = None,
-    *,
-    eqhist=True,
+  image: np.ndarray,
+  mask: np.ndarray | None = None,
+  canny_option: CannyOptions | None = None,
+  *,
+  eqhist=True,
 ) -> np.ndarray:
   if image.ndim != 2:  # noqa: PLR2004
     raise ValueError('image.ndim != 2')
@@ -124,7 +123,7 @@ def image2edges(
 
 
 def edge2edgelets(
-    edges: np.ndarray, hough_option: HoughOptions | None = None
+  edges: np.ndarray, hough_option: HoughOptions | None = None
 ) -> Edgelets:
   kwargs = {} if hough_option is None else dc.asdict(hough_option)
   lines = np.array(probabilistic_hough_line(edges, **kwargs))
@@ -138,12 +137,12 @@ def edge2edgelets(
 
 
 def image2edgelets(
-    image: np.ndarray,
-    mask: np.ndarray | None = None,
-    canny_option: CannyOptions | None = None,
-    hough_option: HoughOptions | None = None,
-    *,
-    eqhist=True,
+  image: np.ndarray,
+  mask: np.ndarray | None = None,
+  canny_option: CannyOptions | None = None,
+  hough_option: HoughOptions | None = None,
+  *,
+  eqhist=True,
 ):
   edges = image2edges(image=image, mask=mask, canny_option=canny_option, eqhist=eqhist)
   edgelets = edge2edgelets(edges=edges, hough_option=hough_option)

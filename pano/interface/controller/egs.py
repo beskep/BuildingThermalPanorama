@@ -22,7 +22,6 @@ from pano.utils import DIR
 
 
 class Window(con.Window):
-
   def __init__(self, window: QtGui.QWindow) -> None:
     super().__init__(window)
     self._panel = self._window.property('panel')
@@ -72,11 +71,11 @@ class IRParameter:
 
   def aslist(self):
     return [
-        round(self.Emissivity, 4),
-        f'{self.ReflectedApparentTemperature} ℃',
-        f'{self.SubjectDistance} m',
-        f'{self.RelativeHumidity:.1%}',
-        f'{self.AtmosphericTemperature} ℃',
+      round(self.Emissivity, 4),
+      f'{self.ReflectedApparentTemperature} ℃',
+      f'{self.SubjectDistance} m',
+      f'{self.RelativeHumidity:.1%}',
+      f'{self.AtmosphericTemperature} ℃',
     ]
 
   def asdict(self):
@@ -84,7 +83,6 @@ class IRParameter:
 
 
 class Controller(QtCore.QObject):
-
   def __init__(self, win: QtGui.QWindow, loglevel=20) -> None:
     super().__init__()
 
@@ -119,7 +117,7 @@ class Controller(QtCore.QObject):
     return self._pc
 
   @QtCore.Slot(str)
-  def log(self, message: str):
+  def log(self, message: str):  # noqa: PLR6301
     con.log(message=message)
 
   @QtCore.Slot(str, str)
@@ -153,9 +151,9 @@ class Controller(QtCore.QObject):
     self._consumer.start()
 
     process = mp.Process(
-        name=name,
-        target=con.producer,
-        args=(queue, self._wd, commands, self._loglevel, 'AnomalyDetection'),
+      name=name,
+      target=con.producer,
+      args=(queue, self._wd, commands, self._loglevel, 'AnomalyDetection'),
     )
     process.start()
 
@@ -244,22 +242,22 @@ class Controller(QtCore.QObject):
 
     _, _, summary = Images(image, self.fm).data()
     stat = {
-        f'{x}_{y}': summary[x][y]
-        for x in ['normal', 'anomaly']
-        for y in ['avg', 'min', 'max']
+      f'{x}_{y}': summary[x][y]
+      for x in ['normal', 'anomaly']
+      for y in ['avg', 'min', 'max']
     }
 
     images = {
-        'IR': dst / f'{image.stem}.png',
-        'AnomalyPlot': dst / f'{image.stem}_anomaly.png',
-        'Histogram': dst / f'{image.stem}_hist.png',
+      'IR': dst / f'{image.stem}.png',
+      'AnomalyPlot': dst / f'{image.stem}_anomaly.png',
+      'Histogram': dst / f'{image.stem}_hist.png',
     }
 
     fmt = dicttoolz.merge(
-        prj,
-        params,
-        {k: f'{v:.1f} ℃' for k, v in stat.items()},
-        {k: v.as_posix() for k, v in images.items()},
+      prj,
+      params,
+      {k: f'{v:.1f} ℃' for k, v in stat.items()},
+      {k: v.as_posix() for k, v in images.items()},
     )
 
     return template.read_text(encoding='UTF-8').format_map(fmt)

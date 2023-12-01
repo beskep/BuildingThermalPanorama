@@ -16,15 +16,15 @@ from .plot_controller import PanoPlotController, QtGui
 class SegmentationPlotController(PanoPlotController):
   TITLES = ('실화상', '부위 인식 결과')
   COLORS = (
-      '#999999',  # background
-      '#1b9e77',  # wall
-      '#377eb8',  # window
-      '#984ea3',  # etc
-      '#fdd0a2',  # tree
-      '#fdae6b',  # lamp
-      '#fd8d3c',  # car
-      '#e6550d',  # banner
-      '#a63603',  # canopy
+    '#999999',  # background
+    '#1b9e77',  # wall
+    '#377eb8',  # window
+    '#984ea3',  # etc
+    '#fdd0a2',  # tree
+    '#fdae6b',  # lamp
+    '#fd8d3c',  # car
+    '#e6550d',  # banner
+    '#a63603',  # canopy
   )
 
   def __init__(self, parent=None) -> None:
@@ -72,14 +72,14 @@ class SegmentationPlotController(PanoPlotController):
 
     if self._legend is None:
       patches = [
-          Patch(color=self._cmap(i), label=label)
-          for i, label in enumerate(SmpModel9.LABELS)
+        Patch(color=self._cmap(i), label=label)
+        for i, label in enumerate(SmpModel9.LABELS)
       ]
       self._legend = self.fig.legend(
-          handles=patches,
-          ncol=len(patches),
-          loc='lower center',
-          bbox_to_anchor=(0.5, 0.01),
+        handles=patches,
+        ncol=len(patches),
+        loc='lower center',
+        bbox_to_anchor=(0.5, 0.01),
       )
       self.fig.tight_layout()
 

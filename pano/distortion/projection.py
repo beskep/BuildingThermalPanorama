@@ -1,12 +1,10 @@
 """지정한 roll, yaw, pitch를 적용한 영상 projection"""
 
-
 import numpy as np
 from skimage import transform
 
 
 class ProjectionMatrix:
-
   def __init__(self, image_shape: tuple, viewing_angle: float) -> None:
     """
     영상 시야각과 회전 각도로부터 projection matrix 계산
@@ -19,7 +17,7 @@ class ProjectionMatrix:
         Viewing angle of camera [rad]
     """
     self._cam_mtx = self.camera_matrix(
-        image_shape=image_shape, viewing_angle=viewing_angle
+      image_shape=image_shape, viewing_angle=viewing_angle
     )
     self._inv_cam_mtx = np.linalg.inv(self._cam_mtx)
 
@@ -79,11 +77,13 @@ class ProjectionMatrix:
     np.ndarray
     """
     if angle:
-      mtx = np.array([
+      mtx = np.array(
+        [
           [np.cos(angle), -np.sin(angle), 0],
           [np.sin(angle), np.cos(angle), 0],
           [0.0, 0.0, 1.0],
-      ])
+        ]
+      )
     else:
       mtx = np.identity(n=3)
 
@@ -104,11 +104,13 @@ class ProjectionMatrix:
     np.ndarray
     """
     if angle:
-      mtx_lr = np.array([
+      mtx_lr = np.array(
+        [
           [np.cos(angle), 0.0, np.sin(angle)],
           [0.0, 1.0, 0.0],
           [-np.sin(angle), 0.0, np.cos(angle)],
-      ])
+        ]
+      )
     else:
       mtx_lr = np.identity(n=3)
 
@@ -129,11 +131,13 @@ class ProjectionMatrix:
     np.ndarray
     """
     if angle:
-      mtx_ud = np.array([
+      mtx_ud = np.array(
+        [
           [1.0, 0.0, 0.0],
           [0.0, np.cos(angle), -np.sin(angle)],
           [0.0, np.sin(angle), np.cos(angle)],
-      ])
+        ]
+      )
     else:
       mtx_ud = np.identity(n=3)
 
@@ -164,7 +168,6 @@ class ProjectionMatrix:
 
 
 class ImageProjection:
-
   def __init__(self, image: np.ndarray, viewing_angle: float) -> None:
     """
     ImageProjection
@@ -177,15 +180,17 @@ class ImageProjection:
     """
     self._image = image
     self._prj_mtx = ProjectionMatrix(
-        image_shape=image.shape[:2], viewing_angle=viewing_angle
+      image_shape=image.shape[:2], viewing_angle=viewing_angle
     )
 
-    self._vertex0 = np.array([
+    self._vertex0 = np.array(
+      [
         [0, 0],
         [image.shape[1], 0],
         [image.shape[1], image.shape[0]],
         [0, image.shape[0]],
-    ])
+      ]
+    )
 
   @property
   def image(self):
@@ -203,27 +208,27 @@ class ImageProjection:
       scale_factor = 1.0
     else:
       rotated_area = 0.5 * np.abs(
-          np.dot(rotated_vertex[:, 0], np.roll(rotated_vertex[:, 1], 1))
-          - np.dot(rotated_vertex[:, 1], np.roll(rotated_vertex[:, 0], 1))
+        np.dot(rotated_vertex[:, 0], np.roll(rotated_vertex[:, 1], 1))
+        - np.dot(rotated_vertex[:, 1], np.roll(rotated_vertex[:, 0], 1))
       )
       scale_factor = np.sqrt(self._image.shape[0] * self._image.shape[1] / rotated_area)
 
     mtx_fit = transform.AffineTransform(
-        scale=scale_factor,
-        translation=(translation * scale_factor),
+      scale=scale_factor,
+      translation=(translation * scale_factor),
     ).params
 
     return np.matmul(mtx_fit, mtx_rot)
 
   def project(
-      self,
-      roll=0.0,
-      pitch=0.0,
-      yaw=0.0,
-      *,
-      scale=True,
-      cval=None,
-      image: np.ndarray | None = None,
+    self,
+    roll=0.0,
+    pitch=0.0,
+    yaw=0.0,
+    *,
+    scale=True,
+    cval=None,
+    image: np.ndarray | None = None,
   ) -> np.ndarray:
     if image is None:
       image = self._image
@@ -242,12 +247,12 @@ class ImageProjection:
     shape = np.max(vertex, axis=0) - np.min(vertex, axis=0)
 
     return transform.warp(
-        image=image,
-        inverse_map=np.linalg.inv(mtx),
-        output_shape=np.ceil(shape)[[1, 0]],
-        cval=cval,
-        clip=False,
-        preserve_range=True,
+      image=image,
+      inverse_map=np.linalg.inv(mtx),
+      output_shape=np.ceil(shape)[[1, 0]],
+      cval=cval,
+      clip=False,
+      preserve_range=True,
     )
 
 

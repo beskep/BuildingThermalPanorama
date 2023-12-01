@@ -26,10 +26,10 @@ from .plot_controller import PanoPlotController, QtGui, WorkingDirNotSetError
 
 
 def _suppress_edgelets(
-    edgelets: Edgelets,
-    distance_threshold=10,
-    angle_threshold=10,
-    repeat: int | None = None,
+  edgelets: Edgelets,
+  distance_threshold=10,
+  angle_threshold=10,
+  repeat: int | None = None,
 ):
   repeat = repeat or edgelets.count
   angle_threshold = np.deg2rad(angle_threshold)
@@ -63,7 +63,7 @@ def _edgelets_between_edgelets(edgelets: Edgelets, weight=0.5):
 
   # 수직 방향 인접한 edgelet의 위치 평균. weight가 낮을수록 아래 edgelet과 가까움
   locations = np.average(
-      [e.locations[:-1, :], e.locations[1:, :]], axis=0, weights=(weight, 1 - weight)
+    [e.locations[:-1, :], e.locations[1:, :]], axis=0, weights=(weight, 1 - weight)
   )
 
   # 왼쪽 방향 벡터에 -1 곱하기
@@ -107,10 +107,10 @@ def extend_lines(n: Any, p: Any, xlim: Any, ylim: Any) -> tuple[tuple, tuple]:
 
   with np.errstate(divide='ignore'):
     points = [
-        (x0, py - np.divide(nx * (x0 - px), ny)),  # x=x0 선과 만나는 지점
-        (x1, py - np.divide(nx * (x1 - px), ny)),  # x=x1 선과 만나는 지점
-        (px - np.divide(ny * (y0 - py), nx), y0),  # y=y0 선과 만나는 지점
-        (px - np.divide(ny * (y1 - py), nx), y1),  # y=y1 선과 만나는 지점
+      (x0, py - np.divide(nx * (x0 - px), ny)),  # x=x0 선과 만나는 지점
+      (x1, py - np.divide(nx * (x1 - px), ny)),  # x=x1 선과 만나는 지점
+      (px - np.divide(ny * (y0 - py), nx), y0),  # y=y0 선과 만나는 지점
+      (px - np.divide(ny * (y1 - py), nx), y1),  # y=y1 선과 만나는 지점
     ]
 
   points = sorted(points, key=lambda x: x[0])
@@ -130,11 +130,10 @@ def _segment_mask(storey_mask: np.ndarray, num: int):
 
 
 class SegmentsSummary:
-
   def __init__(
-      self,
-      functions: Iterable[Callable] | None = None,
-      names: Iterable[str] | None = None,
+    self,
+    functions: Iterable[Callable] | None = None,
+    names: Iterable[str] | None = None,
   ) -> None:
     if functions is None:
       functions = (np.nanmean, np.nanmedian, np.nanmin, np.nanmax)
@@ -162,10 +161,10 @@ class SegmentsSummary:
     return draw.polygon2mask(image_shape=image_shape, polygon=polygon)
 
   def __call__(
-      self,
-      arr: NDArray,
-      coords: NDArray,
-      num: int,
+    self,
+    arr: NDArray,
+    coords: NDArray,
+    num: int,
   ) -> tuple[dict[str, NDArray], NDArray]:
     """
     층별로 `num`개의 조각에 대해 `__init__`에서 지정한 stat 계산
@@ -218,12 +217,12 @@ class SegmentsSummary:
 
 
 def _save_segments(
-    subdir: Path,
-    fname: str,
-    arr: np.ndarray,
-    coords: np.ndarray,
-    num: int,
-    label_thold=50,
+  subdir: Path,
+  fname: str,
+  arr: np.ndarray,
+  coords: np.ndarray,
+  num: int,
+  label_thold=50,
 ):
   seg_summ = SegmentsSummary()
   stats, label = seg_summ(arr=arr, coords=coords, num=num)
@@ -234,8 +233,8 @@ def _save_segments(
   if num <= label_thold:
     arr[np.isnan(arr)] = np.nanmin(arr)
     ImageIO.save(
-        path=subdir.joinpath(f'{fname}-Label.png'),
-        array=label2rgb(label, image=normalize_image(arr)),
+      path=subdir.joinpath(f'{fname}-Label.png'),
+      array=label2rgb(label, image=normalize_image(arr)),
     )
 
 
@@ -246,20 +245,20 @@ def _do_nothing(*_args, **_kwargs):
 class LinesSelector(_SelectorWidget):
   DIST_THOLD = 10
   PROPS: ClassVar[dict] = {
-      'alpha': 0.6,
-      'animated': False,
-      'color': 'k',
-      'label': 'Floor Edgelet',
-      'linestyle': '-',
-      'marker': 'D',
+    'alpha': 0.6,
+    'animated': False,
+    'color': 'k',
+    'label': 'Floor Edgelet',
+    'linestyle': '-',
+    'marker': 'D',
   }
   PROPS_FIXED: ClassVar[dict] = PROPS | {
-      'alpha': 0.8,
-      'color': 'steelblue',
-      'label': 'Window Edgelet',
+    'alpha': 0.8,
+    'color': 'steelblue',
+    'label': 'Window Edgelet',
   }
 
-  def __init__(self, ax, useblit=False, update=None) -> None:
+  def __init__(self, ax, *, useblit=False, update=None) -> None:
     super().__init__(ax, onselect=_do_nothing, useblit=useblit)
 
     self._lines: list[Line2D] = []
@@ -350,10 +349,10 @@ class LinesSelector(_SelectorWidget):
 
   def _onmove(self, event):
     if (
-        event.button != 1
-        or self._current_line is not None
-        or self._active_index[0] < 0
-        or not self._lines
+      event.button != 1
+      or self._current_line is not None
+      or self._active_index[0] < 0
+      or not self._lines
     ):
       return
 
@@ -426,10 +425,10 @@ class LinesSelector(_SelectorWidget):
 
       # edgelet이 지나는 좌표
       lxs, lys = draw.line(
-          r0=clip(ys[0], 1),
-          c0=clip(xs[0], 0),
-          r1=clip(ys[1], 1),
-          c1=clip(xs[1], 0),
+        r0=clip(ys[0], 1),
+        c0=clip(xs[0], 0),
+        r1=clip(ys[1], 1),
+        c1=clip(xs[1], 0),
       )
 
       pixels = seg[lxs, lys]
@@ -478,7 +477,6 @@ class EdgeletsOption:
 
 
 class Images:
-
   def __init__(self, fm: ThermalPanoramaFileManager) -> None:
     self._fm = fm
 
@@ -557,9 +555,9 @@ class Images:
     if self._edges is None:
       image = self.seg if self.edgelet_option.segmentation else self.ir
       self._edges = edge.image2edges(
-          image=image.copy(),
-          mask=self.read(SP.MASK),
-          canny_option=self.canny_option,
+        image=image.copy(),
+        mask=self.read(SP.MASK),
+        canny_option=self.canny_option,
       )
     return self._edges
 
@@ -569,9 +567,9 @@ class Images:
 
     # 가까운 edgelet 중 길이가 더 긴 것 선택
     edgelets = _suppress_edgelets(
-        edgelets,
-        distance_threshold=opt.distance_threshold,
-        angle_threshold=opt.angle_threshold,
+      edgelets,
+      distance_threshold=opt.distance_threshold,
+      angle_threshold=opt.angle_threshold,
     )
 
     # 최대 n개 선택
@@ -588,7 +586,6 @@ class PlotSetting:
 
 
 class OutputPlotController(PanoPlotController):
-
   def __init__(self, parent=None) -> None:
     super().__init__(parent=parent)
 
@@ -698,11 +695,11 @@ class OutputPlotController(PanoPlotController):
     wall = ir.copy()
     wall[self.images.seg != SegMask.WALL] = np.nan
     _save_segments(
-        subdir=subdir,
-        fname='TemperatureWall',
-        arr=wall,
-        coords=coords,
-        num=segments,
+      subdir=subdir,
+      fname='TemperatureWall',
+      arr=wall,
+      coords=coords,
+      num=segments,
     )
 
     # 벽+창문 온도
@@ -710,17 +707,17 @@ class OutputPlotController(PanoPlotController):
     mask = np.isin(self.images.seg, [SegMask.WALL, SegMask.WINDOW])
     building[~mask] = np.nan
     _save_segments(
-        subdir=subdir,
-        fname='TemperatureBuilding',
-        arr=building,
-        coords=coords,
-        num=segments,
+      subdir=subdir,
+      fname='TemperatureBuilding',
+      arr=building,
+      coords=coords,
+      num=segments,
     )
 
     # 벽+창문 factor
     factor = ImageIO.read(self.fm.panorama_path(DIR.ANLY, SP.TF))
     _save_segments(
-        subdir=subdir, fname=SP.TF.value, arr=factor, coords=coords, num=segments
+      subdir=subdir, fname=SP.TF.value, arr=factor, coords=coords, num=segments
     )
 
     # 컬러맵

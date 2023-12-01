@@ -1,5 +1,7 @@
 """기타 영상 처리 함수들"""
 
+# ruff: noqa: PLR2004 EM101
+
 import dataclasses as dc
 from enum import IntEnum
 
@@ -11,8 +13,6 @@ from skimage.color import rgb2gray, rgba2rgb
 from skimage.exposure import equalize_hist, rescale_intensity
 from skimage.transform import resize
 from skimage.util import compare_images
-
-# ruff: noqa: PLR2004 EM101
 
 
 def normalize_image(image: np.ndarray) -> np.ndarray:
@@ -54,7 +54,7 @@ def normalize_rgb_image_hist(image: np.ndarray) -> np.ndarray:
   """
   image_yuv = cv.cvtColor(image, cv.COLOR_RGB2YUV)
   image_yuv[:, :, 0] = cv.normalize(
-      image_yuv[:, :, 0], dst=None, alpha=0, beta=255, norm_type=cv.NORM_MINMAX
+    image_yuv[:, :, 0], dst=None, alpha=0, beta=255, norm_type=cv.NORM_MINMAX
   )
   return cv.cvtColor(image_yuv, cv.COLOR_YUV2RGB)
 
@@ -123,7 +123,7 @@ class CropRange:
 
   def __post_init__(self):
     self.cropped = (self.x_min > 0 or self.x_max < self.image_shape[1]) and (
-        self.y_min > 0 or self.y_min < self.image_shape[0]
+      self.y_min > 0 or self.y_min < self.image_shape[0]
     )
 
   def as_tuple(self):
@@ -132,8 +132,8 @@ class CropRange:
   def crop(self, image: np.ndarray, *, strict=True):
     if image.shape[:2] != self.image_shape[:2]:
       msg = (
-          f'CropRange image shape {self.image_shape[:2]} '
-          f'!= Input image shape {image.shape[:2]}'
+        f'CropRange image shape {self.image_shape[:2]} '
+        f'!= Input image shape {image.shape[:2]}'
       )
 
       if strict:
@@ -146,7 +146,7 @@ class CropRange:
 
 
 def crop_mask(
-    mask: np.ndarray, *, morphology_open=True
+  mask: np.ndarray, *, morphology_open=True
 ) -> tuple[CropRange, np.ndarray]:
   bbox = mask_bbox(mask=mask.astype(bool), morphology_open=morphology_open)
   cr = CropRange(*bbox, mask.shape[:2])
@@ -219,7 +219,7 @@ def gray_image(image: np.ndarray) -> np.ndarray:
 
 
 def _check_and_prep(
-    image1: np.ndarray, image2: np.ndarray, *, normalize: bool, eq_hist: bool
+  image1: np.ndarray, image2: np.ndarray, *, normalize: bool, eq_hist: bool
 ) -> tuple[np.ndarray, np.ndarray]:
   image1 = gray_image(image1)
   image2 = gray_image(image2)
@@ -243,13 +243,13 @@ def _check_and_prep(
 
 
 def prep_compare_images(
-    image1: np.ndarray,
-    image2: np.ndarray,
-    *,
-    norm=False,
-    eq_hist=True,
-    method: str | list[str] = 'checkerboard',
-    n_tiles=(8, 8),
+  image1: np.ndarray,
+  image2: np.ndarray,
+  *,
+  norm=False,
+  eq_hist=True,
+  method: str | list[str] = 'checkerboard',
+  n_tiles=(8, 8),
 ) -> np.ndarray | list[np.ndarray]:
   """
   두 영상의 전처리 및 비교 영상 생성.
@@ -282,7 +282,7 @@ def prep_compare_images(
       두 영상의 해상도 (shape)이 다르거나 2차원이 아닌 경우
   """
   img1, img2 = _check_and_prep(
-      image1=image1, image2=image2, normalize=norm, eq_hist=eq_hist
+    image1=image1, image2=image2, normalize=norm, eq_hist=eq_hist
   )
   if isinstance(method, str):
     res = compare_images(img1, img2, method=method, n_tiles=n_tiles)
@@ -296,13 +296,13 @@ def prep_compare_images(
 
 
 def prep_compare_fig(
-    images: tuple[np.ndarray, np.ndarray],
-    titles=('Image 1', 'Image 2', 'Compare (checkerboard)', 'Compare (difference)'),
-    *,
-    norm=False,
-    eq_hist=True,
-    n_tiles=(8, 8),
-    cmap=None,
+  images: tuple[np.ndarray, np.ndarray],
+  titles=('Image 1', 'Image 2', 'Compare (checkerboard)', 'Compare (difference)'),
+  *,
+  norm=False,
+  eq_hist=True,
+  n_tiles=(8, 8),
+  cmap=None,
 ):
   """
   두 영상의 전처리 및 비교 영상 생성.
@@ -337,7 +337,10 @@ def prep_compare_fig(
       두 영상의 해상도 (shape)이 다르거나 2차원이 아닌 경우
   """
   img1, img2 = _check_and_prep(
-      image1=images[0], image2=images[1], normalize=norm, eq_hist=eq_hist
+    image1=images[0],
+    image2=images[1],
+    normalize=norm,
+    eq_hist=eq_hist,
   )
 
   fig, axes = plt.subplots(2, 2, figsize=(16, 9))
@@ -373,7 +376,11 @@ INTRP = Interpolation
 
 
 def limit_image_size(
-    image: np.ndarray, limit: int, order=INTRP.BiCubic, *, anti_aliasing=True
+  image: np.ndarray,
+  limit: int,
+  order=INTRP.BiCubic,
+  *,
+  anti_aliasing=True,
 ) -> np.ndarray:
   max_shape = np.max(image.shape[:2]).astype(float)
   if max_shape <= limit:
@@ -385,11 +392,11 @@ def limit_image_size(
   target_shape = (int(image.shape[0] * ratio), int(image.shape[1] * ratio))
 
   resized = resize(
-      image=image.astype(np.float32),
-      order=int(order),
-      output_shape=target_shape,
-      preserve_range=True,
-      anti_aliasing=anti_aliasing,
+    image=image.astype(np.float32),
+    order=int(order),
+    output_shape=target_shape,
+    preserve_range=True,
+    anti_aliasing=anti_aliasing,
   )
 
   return resized.astype(dtype)
@@ -412,7 +419,6 @@ class SegMask:
 
 
 class OutlierArray:
-
   def __init__(self, data: np.ndarray, k=1.5) -> None:
     q1, q3 = np.quantile(data[~np.isnan(data)], q=(0.25, 0.75))
     iqr = q3 - q1

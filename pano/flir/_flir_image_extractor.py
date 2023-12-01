@@ -20,7 +20,6 @@ class FlirExifNotFoundError(ValueError):
 
 
 class FlirImageExtractor:
-
   def __init__(self, exiftool_path='exiftool', is_debug=False):
     self.exiftool_path = exiftool_path
     self.is_debug = is_debug
@@ -51,7 +50,7 @@ class FlirImageExtractor:
 
     if not os.path.isfile(flir_img_filename):
       raise ValueError(
-          "Input file does not exist or this user don't have permission on this file"
+        "Input file does not exist or this user don't have permission on this file"
       )
 
     self.flir_img_filename = flir_img_filename
@@ -71,10 +70,10 @@ class FlirImageExtractor:
     """
     key = 'RawThermalImageType'
     args = [
-        self.exiftool_path,
-        ('-' + key),
-        '-j',
-        self.flir_img_filename,
+      self.exiftool_path,
+      ('-' + key),
+      '-j',
+      self.flir_img_filename,
     ]
     meta_json = subprocess.check_output(args, stderr=subprocess.DEVNULL)
     meta = json.loads(meta_json.decode())[0]
@@ -108,10 +107,10 @@ class FlirImageExtractor:
       image_tag = '-ThumbnailImage'
 
     args = [
-        self.exiftool_path,
-        image_tag,
-        '-b',
-        self.flir_img_filename,
+      self.exiftool_path,
+      image_tag,
+      '-b',
+      self.flir_img_filename,
     ]
     visual_img_bytes = subprocess.check_output(args, stderr=subprocess.DEVNULL)
     visual_img_stream = io.BytesIO(visual_img_bytes)
@@ -133,31 +132,31 @@ class FlirImageExtractor:
     # E=1,SD=1,RTemp=20,ATemp=RTemp,IRWTemp=RTemp,IRT=1,RH=50,
     # PR1=21106.77,PB=1501,PF=1,PO=-7340,PR2=0.012545258
     meta_args = [
-        self.exiftool_path,
-        self.flir_img_filename,
-        '-Emissivity',
-        '-SubjectDistance',
-        '-AtmosphericTemperature',
-        '-ReflectedApparentTemperature',
-        '-IRWindowTemperature',
-        '-IRWindowTransmission',
-        '-RelativeHumidity',
-        '-PlanckR1',
-        '-PlanckB',
-        '-PlanckF',
-        '-PlanckO',
-        '-PlanckR2',
-        '-j',
+      self.exiftool_path,
+      self.flir_img_filename,
+      '-Emissivity',
+      '-SubjectDistance',
+      '-AtmosphericTemperature',
+      '-ReflectedApparentTemperature',
+      '-IRWindowTemperature',
+      '-IRWindowTransmission',
+      '-RelativeHumidity',
+      '-PlanckR1',
+      '-PlanckB',
+      '-PlanckF',
+      '-PlanckO',
+      '-PlanckR2',
+      '-j',
     ]
     meta_json = subprocess.check_output(meta_args, stderr=subprocess.DEVNULL)
     meta = json.loads(meta_json.decode())[0]
 
     # exifread can't extract the embedded thermal image, use exiftool instead
     img_args = [
-        self.exiftool_path,
-        '-RawThermalImage',
-        '-b',
-        self.flir_img_filename,
+      self.exiftool_path,
+      '-RawThermalImage',
+      '-b',
+      self.flir_img_filename,
     ]
     thermal_img_bytes = subprocess.check_output(img_args, stderr=subprocess.DEVNULL)
     thermal_img_stream = io.BytesIO(thermal_img_bytes)
@@ -175,38 +174,38 @@ class FlirImageExtractor:
       thermal_np = np.vectorize(lambda x: (x >> 8) + ((x & 0x00FF) << 8))(thermal_np)
 
     thermal_np = self.raw2temp(
-        thermal_np,
-        E=meta['Emissivity'],
-        OD=subject_distance,
-        RTemp=FlirImageExtractor.extract_float(meta['ReflectedApparentTemperature']),
-        ATemp=FlirImageExtractor.extract_float(meta['AtmosphericTemperature']),
-        IRWTemp=FlirImageExtractor.extract_float(meta['IRWindowTemperature']),
-        IRT=meta['IRWindowTransmission'],
-        RH=FlirImageExtractor.extract_float(meta['RelativeHumidity']),
-        PR1=meta['PlanckR1'],
-        PB=meta['PlanckB'],
-        PF=meta['PlanckF'],
-        PO=meta['PlanckO'],
-        PR2=meta['PlanckR2'],
+      thermal_np,
+      E=meta['Emissivity'],
+      OD=subject_distance,
+      RTemp=FlirImageExtractor.extract_float(meta['ReflectedApparentTemperature']),
+      ATemp=FlirImageExtractor.extract_float(meta['AtmosphericTemperature']),
+      IRWTemp=FlirImageExtractor.extract_float(meta['IRWindowTemperature']),
+      IRT=meta['IRWindowTransmission'],
+      RH=FlirImageExtractor.extract_float(meta['RelativeHumidity']),
+      PR1=meta['PlanckR1'],
+      PB=meta['PlanckB'],
+      PF=meta['PlanckF'],
+      PO=meta['PlanckO'],
+      PR2=meta['PlanckR2'],
     )
 
     return thermal_np
 
   @staticmethod
   def raw2temp(
-      raw,
-      E=1,
-      OD=1,
-      RTemp=20,
-      ATemp=20,
-      IRWTemp=20,
-      IRT=1,
-      RH=50,
-      PR1=21106.77,
-      PB=1501,
-      PF=1,
-      PO=-7340,
-      PR2=0.012545258,
+    raw,
+    E=1,
+    OD=1,
+    RTemp=20,
+    ATemp=20,
+    IRWTemp=20,
+    IRT=1,
+    RH=50,
+    PR1=21106.77,
+    PB=1501,
+    PF=1,
+    PO=-7340,
+    PR2=0.012545258,
   ):
     """
     convert raw values from the flir sensor to temperatures in C
@@ -228,18 +227,18 @@ class FlirImageExtractor:
 
     # transmission through the air
     h2o = (RH / 100) * np.exp(
-        1.5587
-        + 0.06939 * (ATemp)
-        - 0.00027816 * (ATemp) ** 2
-        + 0.00000068455 * (ATemp) ** 3
+      1.5587
+      + 0.06939 * (ATemp)
+      - 0.00027816 * (ATemp) ** 2
+      + 0.00000068455 * (ATemp) ** 3
     )
 
     tau1 = ATX * np.exp(-np.sqrt(OD / 2) * (ATA1 + ATB1 * np.sqrt(h2o))) + (
-        1 - ATX
+      1 - ATX
     ) * np.exp(-np.sqrt(OD / 2) * (ATA2 + ATB2 * np.sqrt(h2o)))
 
     tau2 = ATX * np.exp(-np.sqrt(OD / 2) * (ATA1 + ATB1 * np.sqrt(h2o))) + (
-        1 - ATX
+      1 - ATX
     ) * np.exp(-np.sqrt(OD / 2) * (ATA2 + ATB2 * np.sqrt(h2o)))
 
     # radiance from the environment
@@ -259,12 +258,12 @@ class FlirImageExtractor:
     raw_atm2_attn = (1 - tau2) / E / tau1 / IRT / tau2 * raw_atm2
 
     raw_obj = (
-        raw / E / tau1 / IRT / tau2
-        - raw_atm1_attn
-        - raw_atm2_attn
-        - raw_wind_attn
-        - raw_refl1_attn
-        - raw_refl2_attn
+      raw / E / tau1 / IRT / tau2
+      - raw_atm1_attn
+      - raw_atm2_attn
+      - raw_wind_attn
+      - raw_refl1_attn
+      - raw_refl2_attn
     )
 
     # temperature from radiance
@@ -303,7 +302,7 @@ class FlirImageExtractor:
 
     img_visual = Image.fromarray(rgb_np)
     thermal_normalized = (thermal_np - np.amin(thermal_np)) / (
-        np.amax(thermal_np) - np.amin(thermal_np)
+      np.amax(thermal_np) - np.amin(thermal_np)
     )
     img_thermal = Image.fromarray(np.uint8(cm.inferno(thermal_normalized) * 255))
 

@@ -33,7 +33,6 @@ dependencies:
   - toolz
   # dev
   - pytest
-  - pyink
   - pylint
   - mypy
   - ruff

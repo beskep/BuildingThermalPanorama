@@ -24,8 +24,7 @@ class SmpModel:
 
     self._cmap = get_cmap(self.CMAP)
     self._handles = [
-        Patch(facecolor=self._cmap(i), label=label)
-        for i, label in enumerate(self.LABELS)
+      Patch(facecolor=self._cmap(i), label=label) for i, label in enumerate(self.LABELS)
     ]
 
   def predict(self, src: str | bytes | Path):
@@ -64,15 +63,15 @@ class SmpModel:
 
 class SmpModel9(SmpModel):
   LABELS = (
-      'Background',
-      'Wall',
-      'Window',
-      'etc.',
-      'Tree',
-      'Lamp',
-      'Car',
-      'Banner',
-      'Canopy',
+    'Background',
+    'Wall',
+    'Window',
+    'etc.',
+    'Tree',
+    'Lamp',
+    'Car',
+    'Banner',
+    'Canopy',
   )
 
   def predict(self, src: str | bytes | Path):

@@ -1,39 +1,34 @@
-[tool.pyink]
-pyink-use-majority-quotes = true
-pyink-indentation = 2
-preview = true
-
-[tool.isort]
-profile = 'black'
-
 [tool.ruff]
 target-version = 'py311'
+preview = true
 select = ['ALL']
 ignore = [
     'ANN',
     'COM',
-    'D100',
-    'D101',
-    'D102',
-    'D103',
-    'D104',
-    'D105',
-    'D106',
-    'D107',
-    'D400',
+    'CPY',
+    'D1',
+    'D4',
+    'E1',
+    'E2',
     'EM101',
     'FIX',
-    'I',
+    'INP',
+    'ISC001',
     'PTH123',
     'Q',
     'S101',
-    'TCH',
+    'T20',
     'TD',
-    'TRY',
+    'TRY003',
 ]
-exclude = ['mbq', 'script']
+exclude = ['mbq', 'script', 'pano/registration/evaluation/_*']
 per-file-ignores = { '__init__.py' = ['F401'] }
+indent-width = 2
 cache-dir = '.cache/ruff'
+
+[tool.ruff.format]
+preview = true
+quote-style = 'single'
 
 [tool.ruff.pydocstyle]
 convention = 'numpy'

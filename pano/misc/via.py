@@ -19,12 +19,11 @@ def draw_mask(shape, rows, cols):
 
 
 class VIAProject:
-
   def __init__(
-      self,
-      path: str | Path,
-      attribute_name: str,
-      attributes_ids: list[str],
+    self,
+    path: str | Path,
+    attribute_name: str,
+    attributes_ids: list[str],
   ):
     """
     VIA로 annotate한 영상의 영역 정보 해석
@@ -52,8 +51,8 @@ class VIAProject:
 
     self._image_metadata = self._json['_via_img_metadata']
     self._fname_dict = {
-        Path(self._image_metadata[x]['filename']).resolve().as_posix(): x
-        for x in self._image_metadata
+      Path(self._image_metadata[x]['filename']).resolve().as_posix(): x
+      for x in self._image_metadata
     }
 
     self._attr_name = attribute_name
@@ -84,7 +83,7 @@ class VIAProject:
         continue
 
       for x in self._attr_ids:
-        if x in ra and ra[x]:
+        if ra.get(x):
           region_class = x
           break
       else:
@@ -93,10 +92,10 @@ class VIAProject:
       yield region_class, region_shape
 
   def write_masks(
-      self,
-      fname: str | Path,
-      save_dir: str | Path,
-      shape: tuple[int, int],
+    self,
+    fname: str | Path,
+    save_dir: str | Path,
+    shape: tuple[int, int],
   ):
     """
     VIA로 지정한 영역 정보를 png 파일 형태 mask로 저장
@@ -117,11 +116,11 @@ class VIAProject:
     for rclass, rshape in self.regions(fname.name):
       class_count[rclass] += 1
       mask = draw_mask(
-          shape=shape, rows=rshape['all_points_y'], cols=rshape['all_points_x']
+        shape=shape, rows=rshape['all_points_y'], cols=rshape['all_points_x']
       )
       mask = mask.astype('uint8') * 255
 
       path = save_dir.joinpath(
-          f'{fname.stem}_{rclass}_{class_count[rclass]}'
+        f'{fname.stem}_{rclass}_{class_count[rclass]}'
       ).with_suffix('.png')
       imsave(fname=path.as_posix(), arr=mask, check_contrast=False)

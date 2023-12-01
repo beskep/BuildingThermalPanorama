@@ -1,5 +1,7 @@
 """SimpleITK 라이브러리와 수치적 최적화를 통해 영상 정합"""
 
+# pylint: disable=unused-import
+
 import enum
 from collections.abc import Callable
 
@@ -11,9 +13,11 @@ from skimage.transform import estimate_transform
 
 from pano.misc.tools import bin_size
 
-from .registrator import RegisteringImage  # noqa: F401
-from .registrator import RegistrationPreprocess  # noqa: F401
-from .registrator import BaseRegistrator
+from .registrator import (
+  BaseRegistrator,
+  RegisteringImage,  # noqa: F401
+  RegistrationPreprocess,  # noqa: F401
+)
 
 
 class Metric(enum.Enum):
@@ -60,11 +64,11 @@ class SITKRegistrator(BaseRegistrator):
   # pylint: disable=no-member
 
   def __init__(
-      self,
-      transformation=Transformation.Similarity,
-      metric=Metric.JointHistMI,
-      optimizer='powell',
-      bins: str | int = 'auto',
+    self,
+    transformation=Transformation.Similarity,
+    metric=Metric.JointHistMI,
+    optimizer='powell',
+    bins: str | int = 'auto',
   ) -> None:
     """
     SimpleITK 라이브러리와 수치적 최적화를 통해 영상 정합
@@ -103,20 +107,20 @@ class SITKRegistrator(BaseRegistrator):
 
     if optimizer == 'powell':
       self._method.SetOptimizerAsPowell(
-          numberOfIterations=500,
-          maximumLineIterations=100,
-          stepLength=1,
-          stepTolerance=1e-8,
-          valueTolerance=1e-8,
+        numberOfIterations=500,
+        maximumLineIterations=100,
+        stepLength=1,
+        stepTolerance=1e-8,
+        valueTolerance=1e-8,
       )
     elif optimizer == 'gradient_descent':
       # TODO optimizer option 설정
       self._method.SetOptimizerAsGradientDescent(
-          learningRate=0.01,
-          numberOfIterations=500,
-          convergenceMinimumValue=1e-4,
-          convergenceWindowSize=20,
-          maximumStepSizeInPhysicalUnits=2,
+        learningRate=0.01,
+        numberOfIterations=500,
+        convergenceMinimumValue=1e-4,
+        convergenceWindowSize=20,
+        maximumStepSizeInPhysicalUnits=2,
       )
     else:
       msg = f'Optimizer `{optimizer}` not in ["powell", "gradient_descent"]'
@@ -156,7 +160,7 @@ class SITKRegistrator(BaseRegistrator):
       self.method.SetMetricAsANTSNeighborhoodCorrelation(radius=ants_radius)
     elif metric is Metric.JointHistMI:
       self.method.SetMetricAsJointHistogramMutualInformation(
-          numberOfHistogramBins=bins, varianceForJointPDFSmoothing=pdf_var
+        numberOfHistogramBins=bins, varianceForJointPDFSmoothing=pdf_var
       )
     elif metric is Metric.MattesMI:
       self.method.SetMetricAsMattesMutualInformation(numberOfHistogramBins=bins)
@@ -164,7 +168,11 @@ class SITKRegistrator(BaseRegistrator):
       raise ValueError(metric)
 
   def set_metric(
-      self, metric: Metric, bins: int | str = 'auto', pdf_var=1.5, ants_radius=2
+    self,
+    metric: Metric,
+    bins: int | str = 'auto',
+    pdf_var=1.5,
+    ants_radius=2,
   ):
     self._metric = metric
     self._bins = bins
@@ -172,7 +180,7 @@ class SITKRegistrator(BaseRegistrator):
 
     if isinstance(bins, int):
       self._set_method_metric(
-          metric=metric, bins=bins, pdf_var=pdf_var, ants_radius=ants_radius
+        metric=metric, bins=bins, pdf_var=pdf_var, ants_radius=ants_radius
       )
 
   @property
@@ -185,13 +193,13 @@ class SITKRegistrator(BaseRegistrator):
 
   @staticmethod
   def _get_transformation(
-      transformation: Transformation,
-      scale: float | None = None,
-      translation: tuple | None = None,
+    transformation: Transformation,
+    scale: float | None = None,
+    translation: tuple | None = None,
   ):
     if scale is None:
       logger.warning(
-          '초기 scale이 설정되지 않았습니다. 정합 결과가 부정확할 수 있습니다.'
+        '초기 scale이 설정되지 않았습니다. 정합 결과가 부정확할 수 있습니다.'
       )
       scale = 1.0
 
@@ -255,11 +263,11 @@ class SITKRegistrator(BaseRegistrator):
     self.method.SmoothingSigmasAreSpecifiedInPhysicalUnitsOn()
 
   def set_initial_params(
-      self,
-      scale: float | None = None,
-      fixed_alpha: float | None = None,
-      moving_alpha: float | None = None,
-      translation: list | None = None,
+    self,
+    scale: float | None = None,
+    fixed_alpha: float | None = None,
+    moving_alpha: float | None = None,
+    translation: list | None = None,
   ):
     """
     정합을 위한 translation의 초기 패러미터 지정.
@@ -293,21 +301,21 @@ class SITKRegistrator(BaseRegistrator):
     logger.debug('Initial scale: {} | translation: {}', self._scale0, self._trnsl0)
 
   def _registration_results(
-      self,
-      fixed_simg: sitk.Image,
-      moving_simg: sitk.Image,
-      trsf: sitk.Transform,
-      *,
-      set_origin: bool,
+    self,
+    fixed_simg: sitk.Image,
+    moving_simg: sitk.Image,
+    trsf: sitk.Transform,
+    *,
+    set_origin: bool,
   ) -> tuple[np.ndarray, Callable | None, np.ndarray | None]:
     # 정합된 영상 추출
     registered = sitk.Resample(
-        image1=moving_simg,
-        referenceImage=fixed_simg,
-        transform=trsf,
-        interpolator=sitk.sitkLinear,
-        defaultPixelValue=0.0,
-        outputPixelType=moving_simg.GetPixelID(),
+      image1=moving_simg,
+      referenceImage=fixed_simg,
+      transform=trsf,
+      interpolator=sitk.sitkLinear,
+      defaultPixelValue=0.0,
+      outputPixelType=moving_simg.GetPixelID(),
     )
     registered_image = sitk.GetArrayFromImage(registered)
 
@@ -330,22 +338,22 @@ class SITKRegistrator(BaseRegistrator):
       """
       simg = to_sitk_image(image, set_origin=set_origin)
       registered_simg = sitk.Resample(
-          simg,
-          referenceImage=fixed_simg,
-          transform=trsf,
-          interpolator=sitk.sitkLinear,
-          defaultPixelValue=0.0,
-          outputPixelType=moving_simg.GetPixelID(),
+        simg,
+        referenceImage=fixed_simg,
+        transform=trsf,
+        interpolator=sitk.sitkLinear,
+        defaultPixelValue=0.0,
+        outputPixelType=moving_simg.GetPixelID(),
       )
       return sitk.GetArrayFromImage(registered_simg)
 
     return registered_image, register, matrix
 
   def register(
-      self,
-      fixed_image: np.ndarray,
-      moving_image: np.ndarray,
-      **kwargs,
+    self,
+    fixed_image: np.ndarray,
+    moving_image: np.ndarray,
+    **kwargs,
   ) -> tuple[np.ndarray, Callable | None, np.ndarray | None]:
     """
     Register image
@@ -381,42 +389,30 @@ class SITKRegistrator(BaseRegistrator):
       self._set_method_metric(self.metric, bins=bins, **self._metric_options)
 
     trsf = self._get_transformation(
-        self._transformation, scale=self._scale0, translation=self._trnsl0
+      self._transformation, scale=self._scale0, translation=self._trnsl0
     )
 
     # 초기 transformation 설정
     # (`operationMode=GEOMETRY` -> 영상의 기하학적 중심을 초기 회전축으로 설정)
     initial_trsf = sitk.CenteredTransformInitializer(
-        fixedImage=fixed,
-        movingImage=moving,
-        transform=trsf,
-        operationMode=sitk.CenteredTransformInitializerFilter.GEOMETRY,
+      fixedImage=fixed,
+      movingImage=moving,
+      transform=trsf,
+      operationMode=sitk.CenteredTransformInitializerFilter.GEOMETRY,
     )
     self.method.SetInitialTransform(initial_trsf, inPlace=False)
 
     # 연산
     final_trsf: sitk.Transform = self.method.Execute(
-        sitk.Cast(fixed, sitk.sitkFloat32),
-        sitk.Cast(moving, sitk.sitkFloat32),
+      sitk.Cast(fixed, sitk.sitkFloat32),
+      sitk.Cast(moving, sitk.sitkFloat32),
     )
     logger.debug(
-        'Optimizer stopping condition: {}',
-        self.method.GetOptimizerStopConditionDescription(),
+      'Optimizer stopping condition: {}',
+      self.method.GetOptimizerStopConditionDescription(),
     )
     logger.debug('Final param: {}', np.round(final_trsf.GetParameters(), 3))
 
     return self._registration_results(
-        fixed_simg=fixed, moving_simg=moving, trsf=final_trsf, set_origin=set_origin
+      fixed_simg=fixed, moving_simg=moving, trsf=final_trsf, set_origin=set_origin
     )
-
-  # def prep_and_register(
-  #     self,
-  #     fixed_image: np.ndarray,
-  #     moving_image: np.ndarray,
-  #     preprocess: RegistrationPreprocess,
-  #     **kwargs,
-  # ) -> Tuple[RegisteringImage, RegisteringImage]:
-  #   return super().prep_and_register(fixed_image, moving_image, preprocess,
-  #                                    **kwargs)
-  #   return super().prep_and_register(fixed_image, moving_image, preprocess,
-  #                                    **kwargs)

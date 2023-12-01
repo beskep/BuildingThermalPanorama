@@ -9,14 +9,13 @@ from ._evaluation import BaseEvaluation
 
 
 class FeatureEvaluation(BaseEvaluation):
-
   def __init__(
-      self,
-      case_names: list,
-      fixed_files: list,
-      moving_files: list,
-      fixed_prep: Callable,
-      moving_prep: Callable,
+    self,
+    case_names: list,
+    fixed_files: list,
+    moving_files: list,
+    fixed_prep: Callable,
+    moving_prep: Callable,
   ) -> None:
     super().__init__(case_names, fixed_files, moving_files, fixed_prep, moving_prep)
     self._registrator = fm.FeatureBasedRegistrator()
@@ -35,16 +34,16 @@ class FeatureEvaluation(BaseEvaluation):
 
     mfig, maxes = plt.subplots(1, 1, figsize=(16, 9))
     mi, metrics = self.register_and_evaluate(
-        case=case, fi=fixed_image, mi=moving_image, df=df, ax=maxes
+      case=case, fi=fixed_image, mi=moving_image, df=df, ax=maxes
     )
     mfig.savefig(output_dir.joinpath(f'match_{case}.png'))
     mfig.tight_layout()
     plt.close(mfig)
 
     title = (
-        case
-        + ' | '
-        + ' | '.join([f'{key}: {value:.2f}' for key, value in metrics.items()])
+      case
+      + ' | '
+      + ' | '.join([f'{key}: {value:.2f}' for key, value in metrics.items()])
     )
     fig, axes, ci = self.plot(fi=fixed_image, mi=moving_image, title=title)
     fig.savefig(output_dir.joinpath(f'fig_{case}.png'))

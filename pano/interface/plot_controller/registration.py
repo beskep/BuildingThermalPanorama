@@ -109,13 +109,13 @@ class RegistrationPlotController(PanoPlotController):
 
   def _set_ticks(self, image: np.ndarray):
     ticks = tuple(
-        np.linspace(
-            0,
-            image.shape[x],
-            num=self._GRID_COUNTS[x],
-            endpoint=True,
-        )
-        for x in range(2)
+      np.linspace(
+        0,
+        image.shape[x],
+        num=self._GRID_COUNTS[x],
+        endpoint=True,
+      )
+      for x in range(2)
     )
 
     self.axes[0, 0].set_xticks(ticks[1])
@@ -135,7 +135,7 @@ class RegistrationPlotController(PanoPlotController):
 
     if fixed_image.shape[:2] != moving_image.shape[:2]:
       moving_image = transform.resize(
-          moving_image, output_shape=fixed_image.shape[:2], anti_aliasing=True
+        moving_image, output_shape=fixed_image.shape[:2], anti_aliasing=True
       )
 
     self._images = (fixed_image, moving_image)
@@ -168,7 +168,7 @@ class RegistrationPlotController(PanoPlotController):
       return
 
     axi = list(self.axes.ravel()).index(ax)
-    if axi not in (0, 1):
+    if axi not in {0, 1}:
       return
 
     if event.button == MouseButton.LEFT:
@@ -187,18 +187,18 @@ class RegistrationPlotController(PanoPlotController):
     assert self._images is not None
 
     registered = transform.warp(
-        image=self._images[1],
-        inverse_map=matrix,
-        output_shape=self._images[0].shape[:2],
-        preserve_range=True,
+      image=self._images[1],
+      inverse_map=matrix,
+      output_shape=self._images[0].shape[:2],
+      preserve_range=True,
     )
 
     cb, diff = tools.prep_compare_images(
-        image1=self._images[0],
-        image2=registered,
-        norm=True,
-        eq_hist=True,
-        method=['checkerboard', 'diff'],
+      image1=self._images[0],
+      image2=registered,
+      norm=True,
+      eq_hist=True,
+      method=['checkerboard', 'diff'],
     )
 
     self.axes[1, 0].imshow(cb)
@@ -254,14 +254,14 @@ class RegistrationPlotController(PanoPlotController):
     shape = self._images[0].shape[:2]
     trsf = transform.ProjectiveTransform(matrix=self._matrix)
     seg_resized = transform.resize(
-        ImageIO.read(seg_unrgst), order=INTRP.NearestNeighbor, output_shape=shape
+      ImageIO.read(seg_unrgst), order=INTRP.NearestNeighbor, output_shape=shape
     )
     seg_rgst: np.ndarray = transform.warp(
-        image=seg_resized,
-        inverse_map=trsf.inverse,
-        output_shape=shape,
-        order=INTRP.NearestNeighbor,
-        preserve_range=True,
+      image=seg_resized,
+      inverse_map=trsf.inverse,
+      output_shape=shape,
+      order=INTRP.NearestNeighbor,
+      preserve_range=True,
     )
     ImageIO.save(path=seg, array=seg_rgst.astype(np.uint8))
 

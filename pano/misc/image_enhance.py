@@ -9,13 +9,12 @@ from skimage import transform as trsf
 
 
 class ImageEnhance:
-
   def __init__(
-      self,
-      image: np.ndarray,
-      scales: Iterable[float] = (1.0,),
-      rotations: Iterable[float] = (0.0,),
-      translations: Iterable[Iterable[float]] = ((0.0, 0.0),),
+    self,
+    image: np.ndarray,
+    scales: Iterable[float] = (1.0,),
+    rotations: Iterable[float] = (0.0,),
+    translations: Iterable[Iterable[float]] = ((0.0, 0.0),),
   ) -> None:
     """
     대상 영상에 similarity transform을 적용한 이미지를 반환
@@ -65,7 +64,7 @@ class ImageEnhance:
     return self.mtx_from_center @ mtx @ self.mtx_to_center
 
   def similarity_matrix_at_center(
-      self, scale=1, rotation=0, translation=(0, 0)
+    self, scale=1, rotation=0, translation=(0, 0)
   ) -> np.ndarray:
     """
     원점을 기준으로 영상에 scale, rotation, translation을 적용하는 matrix
@@ -85,7 +84,7 @@ class ImageEnhance:
         Transformation matrix
     """
     mtx = trsf.SimilarityTransform(
-        scale=scale, rotation=rotation, translation=translation
+      scale=scale, rotation=rotation, translation=translation
     ).params
     return self.transform_matrix_at_center(mtx)
 
@@ -108,12 +107,12 @@ class ImageEnhance:
         Transformed image
     """
     mtx = self.similarity_matrix_at_center(
-        scale=scale, rotation=rotation, translation=translation
+      scale=scale, rotation=rotation, translation=translation
     )
     return trsf.warp(self._image, inverse_map=inv(mtx))
 
   def transformed_images(
-      self,
+    self,
   ) -> Iterator[tuple[np.ndarray, float, float, np.ndarray]]:
     """
     입력한 scale, rotation, translation 조합 (product)을 적용한 영상의 iterator
@@ -127,14 +126,14 @@ class ImageEnhance:
     translation : np.ndarray
     """
     for scale, rotation, translation in product(
-        self._scales,
-        self._rotations,
-        self._translations,
+      self._scales,
+      self._rotations,
+      self._translations,
     ):
       if scale == 1 and rotation == 0 and tuple(translation) == (0, 0):
         image = self._image.copy()
       else:
         image = self.transformed_image(
-            scale=scale, rotation=rotation, translation=translation
+          scale=scale, rotation=rotation, translation=translation
         )
       yield image, scale, rotation, translation

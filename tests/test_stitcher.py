@@ -15,8 +15,7 @@ def test_stitcher():
   arrays = [ImageIO.read(x) for x in files]
 
   def _prep(image):
-    mask = (image > -30.0).astype(np.uint8)
-    # mask = None
+    mask = (image > -30.0).astype(np.uint8)  # noqa: PLR2004
     image = skimage.exposure.equalize_hist(image)
     image = skimage.exposure.rescale_intensity(image=image, out_range='uint8')
     image = cv.bilateralFilter(image, d=-1, sigmaColor=20, sigmaSpace=10)
@@ -36,7 +35,3 @@ def test_stitcher():
 
   assert isinstance(stitched.graph, str)
   assert isinstance(stitched.indices, list)
-
-
-if __name__ == '__main__':
-  pytest.main(['-v', '-k', 'test_stitcher'])

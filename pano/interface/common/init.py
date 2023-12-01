@@ -1,3 +1,5 @@
+# ruff: noqa: PLC0415
+
 import os
 import sys
 from pathlib import Path
@@ -52,8 +54,8 @@ def init_project(*, qt: bool):
   fm.fontManager.ttflist.insert(0, fe)
 
   sns.set_theme(
-      context='notebook',
-      style='whitegrid',
-      font=font_name,
-      rc={'axes.edgecolor': '0.2', 'grid.color': '0.8', 'image.cmap': 'inferno'},
+    context='notebook',
+    style='whitegrid',
+    font=font_name,
+    rc={'axes.edgecolor': '0.2', 'grid.color': '0.8', 'image.cmap': 'inferno'},
   )

@@ -1,5 +1,6 @@
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from typing import ClassVar
 
 import numpy as np
 import pytest
@@ -11,14 +12,14 @@ class TestImageIO:
   arr = np.array([[0.0, 5.0], [5.0, 10.0]])
   test_dir = r'D:\test\tmp'
   fname = 'array'
-  meta = {'test': [1, 2]}
+  meta: ClassVar = {'test': [1, 2]}
 
   def save_image(self, directory):
     path = Path(directory).joinpath(self.fname)
     exts = ['.npy', '.csv', '.png']
 
     ImageIO.save_with_meta(
-        path=path, array=self.arr, exts=exts, meta=self.meta, dtype='uint16'
+      path=path, array=self.arr, exts=exts, meta=self.meta, dtype='uint16'
     )
 
     for ext in exts:
@@ -59,7 +60,3 @@ def test_webp():
     image_ = ImageIO.read(path=path)[:, :, :3]
 
   assert image_ == pytest.approx(image)
-
-
-if __name__ == '__main__':
-  pytest.main(['-v', '-k', 'test_imageio'])

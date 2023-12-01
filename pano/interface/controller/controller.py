@@ -51,16 +51,16 @@ def _command(queue: mp.Queue, tp, command: str, step: int, count: float):
 
 
 def producer(
-    queue: mp.Queue,
-    directory,
-    commands: str | Iterable[str],
-    loglevel: int,
-    logname='pano',
+  queue: mp.Queue,
+  directory,
+  commands: str | Iterable[str],
+  loglevel: int,
+  logname='pano',
 ):
   utils.set_logger(loglevel, logname)
 
   # pylint: disable=import-outside-toplevel
-  from pano.interface.pano_project import ThermalPanorama
+  from pano.interface.pano_project import ThermalPanorama  # noqa: PLC0415
 
   try:
     tp = ThermalPanorama(directory=directory)
@@ -128,7 +128,6 @@ class Consumer(QtCore.QThread):
 
 
 class Window:
-
   def __init__(self, window: QtGui.QWindow) -> None:
     self._window = window
 

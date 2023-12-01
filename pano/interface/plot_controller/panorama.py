@@ -144,8 +144,8 @@ class PanoramaPlotController(PanoPlotController):
 
   def _set_ticks(self, shape: tuple):
     ticks = tuple(
-        np.linspace(0, shape[x], num=self._GRID_COUNTS[x], endpoint=True)
-        for x in range(2)
+      np.linspace(0, shape[x], num=self._GRID_COUNTS[x], endpoint=True)
+      for x in range(2)
     )
 
     self.axes.set_xticks(ticks[1])
@@ -191,7 +191,7 @@ class PanoramaPlotController(PanoPlotController):
 
 
 def save_manual_correction(
-    wd, subdir, viewing_angle, angles, crop_range: np.ndarray | None
+  wd, subdir, viewing_angle, angles, crop_range: np.ndarray | None
 ):
   # FIXME 영상 시점 어긋나는 문제
   tp = ThermalPanorama(wd, init_loglevel='TRACE')
@@ -206,11 +206,11 @@ def save_manual_correction(
       image = ImageIO.read(tp.fm.panorama_path(subdir, sp))
 
     corrected = prj.project(
-        roll=angles[0],
-        pitch=angles[1],
-        yaw=angles[2],
-        cval=(None if sp is SP.IR else 0),
-        image=image,
+      roll=angles[0],
+      pitch=angles[1],
+      yaw=angles[2],
+      cval=(None if sp is SP.IR else 0),
+      image=image,
     )
     if sp is SP.MASK:
       corrected = uint8_image(corrected)
@@ -231,12 +231,12 @@ def save_manual_correction(
       ImageIO.save(path=path, array=corrected.astype(np.uint8))
     else:
       ImageIO.save_with_meta(
-          path=path, array=corrected, exts=[FN.NPY, FN.LL], dtype='uint16'
+        path=path, array=corrected, exts=[FN.NPY, FN.LL], dtype='uint16'
       )
       # colormap 버전
       ImageIO.save(
-          path=tp.fm.color_path(path),
-          array=apply_colormap(image=corrected, cmap=tp.cmap),
+        path=tp.fm.color_path(path),
+        array=apply_colormap(image=corrected, cmap=tp.cmap),
       )
 
   tp.save_multilayer_panorama()

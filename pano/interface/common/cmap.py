@@ -1,6 +1,5 @@
 """추출해둔 FLIR 컬러맵, 또는 `matplotlib` 컬러맵 설정"""
 
-
 import numpy as np
 from loguru import logger
 from matplotlib.cm import get_cmap
@@ -10,11 +9,11 @@ from pano.misc.cmap import FLIRColormap, apply_colormap
 from pano.utils import DIR
 
 __all__ = [
-    'apply_colormap',
-    'get_iron_colormap',
-    'get_mpl_colormap',
-    'get_thermal_colormap',
-    'save_colormap',
+  'apply_colormap',
+  'get_iron_colormap',
+  'get_mpl_colormap',
+  'get_thermal_colormap',
+  'save_colormap',
 ]
 
 DEFAULT_CMAP = 'inferno'
@@ -62,9 +61,9 @@ def get_mpl_colormap(name: str) -> Colormap:
     cmap = get_cmap(name=name)
   except ValueError:
     logger.warning(
-        '`{}`은/는 올바른 컬러맵 이름이 아닙니다. {}를 대신 적용합니다.',
-        name,
-        DEFAULT_CMAP,
+      '`{}`은/는 올바른 컬러맵 이름이 아닙니다. {}를 대신 적용합니다.',
+      name,
+      DEFAULT_CMAP,
     )
     cmap = get_cmap(DEFAULT_CMAP)
 

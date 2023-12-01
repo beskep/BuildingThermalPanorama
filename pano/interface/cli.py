@@ -16,20 +16,20 @@ commands = {'init', 'extract', 'register', 'segment', 'panorama', 'correct', 'ru
 @click.argument('command', default='run')
 @click.option('--default', is_flag=True, help='기본 설정 사용')
 @click.option(
-    '--config', help='설정 파일 경로', type=click.Path(exists=True, dir_okay=False)
+  '--config', help='설정 파일 경로', type=click.Path(exists=True, dir_okay=False)
 )
 @click.option('--debug', is_flag=True, help='디버그 메세지 출력')
 @click.option('--raise', 'flag_raise', is_flag=True)
 @click.option('-l', '--loglevel', default=20, help='로깅 레벨')
 def cli(
-    *,
-    path: str,
-    command: str,
-    config: str,
-    default: bool,
-    debug: bool,
-    flag_raise: bool,
-    loglevel: int,
+  *,
+  path: str,
+  command: str,
+  config: str,
+  default: bool,
+  debug: bool,
+  flag_raise: bool,
+  loglevel: int,
 ):
   r"""
   PATH: 대상 프로젝트 경로
@@ -58,7 +58,7 @@ def cli(
     default = True
 
   # pylint: disable=import-outside-toplevel
-  from pano.interface.pano_project import ThermalPanorama
+  from pano.interface.pano_project import ThermalPanorama  # noqa: PLC0415
 
   try:
     tp = ThermalPanorama(directory=path, default_config=default)

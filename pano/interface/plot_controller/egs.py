@@ -23,9 +23,8 @@ from pano.interface.mbq import NavigationToolbar2QtQuick
 from pano.misc import tools
 from pano.misc.imageio import ImageIO
 
-from .plot_controller import FigureCanvas
+from .plot_controller import FigureCanvas, QtGui
 from .plot_controller import PanoPlotController as _PanoPlotCtrl
-from .plot_controller import QtGui
 
 CMAP = get_cmap('inferno')
 
@@ -62,7 +61,6 @@ class AnomalyThresholdError(DataNotFoundError):
 
 
 class Images:
-
   def __init__(self, path: Path, fm: ThermalPanoramaFileManager) -> None:
     self._path = path
     self._fm = fm
@@ -108,8 +106,8 @@ class Images:
     wall = self.seg() == tools.SegMask.WALL
     anomaly = wall & (self.ir > self.threshold())
     array = {
-        'normal': self.ir[wall & ~anomaly].ravel(),
-        'anomaly': self.ir[anomaly].ravel(),
+      'normal': self.ir[wall & ~anomaly].ravel(),
+      'anomaly': self.ir[anomaly].ravel(),
     }
     summary = {k: summarize(v) for k, v in array.items()}
 
@@ -127,7 +125,7 @@ class _Axes:
     gs = GridSpec(2, 3, width_ratios=(1, 0.05, 1))
     self.gs = gs
     self._axes: tuple[Axes, ...] = tuple(
-        fig.add_subplot(x) for x in [gs[0, 0], gs[0, 1], gs[0, 2], gs[1, :]]
+      fig.add_subplot(x) for x in [gs[0, 0], gs[0, 1], gs[0, 2], gs[1, :]]
     )
 
     self.anomaly = False
@@ -199,7 +197,6 @@ class _Axes:
 
 
 class NavigationToolbar(NavigationToolbar2QtQuick):
-
   def save_figure(self, *_):
     pass
 
@@ -248,7 +245,7 @@ class MousePoints:
 
   def all_selected(self):
     return len(self._coords) >= 2 and all(  # noqa: PLR2004
-        len(x) >= self._REQUIRED for x in self._coords.values()
+      len(x) >= self._REQUIRED for x in self._coords.values()
     )
 
 
@@ -267,22 +264,21 @@ def _bbox(axes: Axes | Iterable[Axes], *, full=False):
     items = axes
   else:
     items = chain.from_iterable(
-        [
-            ax,
-            ax.title,
-            ax.xaxis.label,
-            ax.yaxis.label,
-            *ax.get_xticklabels(),
-            *ax.get_yticklabels(),
-        ]
-        for ax in axes
+      [
+        ax,
+        ax.title,
+        ax.xaxis.label,
+        ax.yaxis.label,
+        *ax.get_xticklabels(),
+        *ax.get_yticklabels(),
+      ]
+      for ax in axes
     )
 
   return Bbox.union([x.get_window_extent() for x in items])
 
 
 class PlotController(_PanoPlotCtrl):
-
   def __init__(self, parent=None) -> None:
     super().__init__(parent)
     self._axes: _Axes
@@ -405,7 +401,7 @@ class PlotController(_PanoPlotCtrl):
     anomaly, array, summary = images.data()
 
     self.axes.right.imshow(
-        np.ma.MaskedArray(images.ir, ~anomaly), cmap=CMAP, vmin=lim[0], vmax=lim[1]
+      np.ma.MaskedArray(images.ir, ~anomaly), cmap=CMAP, vmin=lim[0], vmax=lim[1]
     )
 
     array = {'정상 영역': array['normal'], '이상 영역': array['anomaly']}
@@ -430,7 +426,7 @@ class PlotController(_PanoPlotCtrl):
 
   def _plot_rgst_compare(self, ir: NDArray, registered: NDArray):
     checkerboard = tools.prep_compare_images(
-        ir, registered, norm=True, eq_hist=True, method='checkerboard'
+      ir, registered, norm=True, eq_hist=True, method='checkerboard'
     )
     self.axes.bottom.imshow(checkerboard)
 
@@ -445,18 +441,18 @@ class PlotController(_PanoPlotCtrl):
 
     image = Images(self._last_file, self.fm)
     registered = transform.warp(
-        image=image.vis,
-        inverse_map=trsf.inverse,
-        output_shape=image.ir.shape[:2],
-        preserve_range=True,
+      image=image.vis,
+      inverse_map=trsf.inverse,
+      output_shape=image.ir.shape[:2],
+      preserve_range=True,
     )
 
     self._plot_rgst_compare(ir=image.ir, registered=registered)
 
     self.fm.subdir(DIR.RGST).mkdir(exist_ok=True)
     ImageIO.save(
-        path=self.fm.change_dir(DIR.RGST, self._last_file),
-        array=tools.uint8_image(registered),
+      path=self.fm.change_dir(DIR.RGST, self._last_file),
+      array=tools.uint8_image(registered),
     )
 
   def _save(self, stem: str, dpi=300):
@@ -469,6 +465,6 @@ class PlotController(_PanoPlotCtrl):
     for ax, suffix in zip(axes, suffixes, strict=True):
       path = directory / f'{stem}{suffix}.png'
       bbox = _bbox(ax, full=suffix == '_hist').transformed(
-          self.fig.dpi_scale_trans.inverted()
+        self.fig.dpi_scale_trans.inverted()
       )
       self.fig.savefig(path, bbox_inches=bbox, dpi=dpi)

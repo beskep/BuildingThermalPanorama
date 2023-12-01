@@ -91,12 +91,12 @@ def compute_ncc(image1: np.ndarray, image2: np.ndarray):
   img1 = image1 - np.average(image1)
   img2 = image2 - np.average(image2)
   return np.sum(img1 * img2) / np.sqrt(
-      np.sum(np.square(img1)) * np.sum(np.square(img2))
+    np.sum(np.square(img1)) * np.sum(np.square(img2))
   )
 
 
 def image_entropy(image: np.ndarray, bins: int, base=2) -> float:
-  hist, edges = np.histogram(image.ravel(), bins=bins)
+  hist, _edges = np.histogram(image.ravel(), bins=bins)
   return calculate_entropy(hist, base=base)
 
 
@@ -130,11 +130,11 @@ class MutualInformation:
   """
 
   def __init__(
-      self,
-      image1: np.ndarray,
-      image2: np.ndarray,
-      bins: int | str = 'auto',
-      base=2,
+    self,
+    image1: np.ndarray,
+    image2: np.ndarray,
+    bins: int | str = 'auto',
+    base=2,
   ) -> None:
     _check_shape(image1, image2)
 
@@ -182,7 +182,7 @@ class MutualInformation:
         Joint histogram (shape: (bins, bins))
     """
     return np.histogram2d(
-        x=self._image1.ravel(), y=self._image2.ravel(), bins=self._bins
+      x=self._image1.ravel(), y=self._image2.ravel(), bins=self._bins
     )[0]
 
   @cached_property
@@ -262,14 +262,17 @@ class MutualInformation:
     axes[0].set_title(f'Image 1 | entropy: {self.image1_entropy:.3f}')
     axes[1].set_title(f'Image 2 | entropy: {self.image2_entropy:.3f}')
     axes[2].set_title(
-        f'Entropy: {self.joint_entropy:.3f} | MI: {self.mutual_information:.3f}'
+      f'Entropy: {self.joint_entropy:.3f} | MI: {self.mutual_information:.3f}'
     )
 
     return fig, axes
 
 
 def calculate_all_metrics(
-    image1: np.ndarray, image2: np.ndarray, bins: int | str = 'auto', base=2
+  image1: np.ndarray,
+  image2: np.ndarray,
+  bins: int | str = 'auto',
+  base=2,
 ) -> dict:
   """
   지원하는 모든 metric을 계산
@@ -296,8 +299,8 @@ def calculate_all_metrics(
   ncc = compute_ncc(image1, image2)
 
   return {
-      'RMSE': rmse,
-      'NCC': ncc,
-      'Entropy': mi.joint_entropy,
-      'MI': mi.mutual_information,
+    'RMSE': rmse,
+    'NCC': ncc,
+    'Entropy': mi.joint_entropy,
+    'MI': mi.mutual_information,
   }

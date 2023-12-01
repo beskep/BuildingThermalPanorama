@@ -9,7 +9,8 @@ from rich.tree import Tree
 def walk_directory(directory: Path, tree: Tree) -> None:
   """Recursively build a Tree with directory contents."""
   paths = sorted(
-      Path(directory).iterdir(), key=lambda path: (path.is_file(), path.name.lower())
+    Path(directory).iterdir(),
+    key=lambda path: (path.is_file(), path.name.lower()),
   )
 
   for path in paths:
@@ -25,7 +26,7 @@ def walk_directory(directory: Path, tree: Tree) -> None:
       else:
         branch = tree.add(f'📁 {escape(path.name)}')
     else:
-      icon = '🖼️' if path.suffix in ('.png', '.jpg') else '📄'
+      icon = '🖼️' if path.suffix in {'.png', '.jpg'} else '📄'
       text = Text(icon + ' ' + path.name)
       tree.add(text)
 

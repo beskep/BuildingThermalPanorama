@@ -5,7 +5,7 @@
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from enum import IntEnum
-from itertools import repeat
+from itertools import repeat, starmap
 
 import cv2 as cv
 import numpy as np
@@ -15,22 +15,22 @@ from skimage.exposure import rescale_intensity
 from pano.misc.tools import CropRange, crop_mask
 
 _AVAILABLE_WARPER = {
-    'affine',
-    'compressedPlaneA1.5B1',
-    'compressedPlaneA2B1',
-    'compressedPlanePortraitA1.5B1',
-    'compressedPlanePortraitA2B1',
-    'cylindrical',
-    'fisheye',
-    'mercator',
-    'paniniA1.5B1',
-    'paniniA2B1',
-    'paniniPortraitA1.5B1',
-    'paniniPortraitA2B1',
-    'plane',
-    'spherical',
-    'stereographic',
-    'transverseMercator',
+  'affine',
+  'compressedPlaneA1.5B1',
+  'compressedPlaneA2B1',
+  'compressedPlanePortraitA1.5B1',
+  'compressedPlanePortraitA2B1',
+  'cylindrical',
+  'fisheye',
+  'mercator',
+  'paniniA1.5B1',
+  'paniniA2B1',
+  'paniniPortraitA1.5B1',
+  'paniniPortraitA2B1',
+  'plane',
+  'spherical',
+  'stereographic',
+  'transverseMercator',
 }
 
 
@@ -42,6 +42,10 @@ def _merge_mask(m1: np.ndarray | None, m2: np.ndarray | None):
       return m1
     case None, _:
       return m2
+
+  # mypy
+  assert m1 is not None
+  assert m2 is not None
 
   return np.logical_and(m1, m2)
 
@@ -77,9 +81,7 @@ class Panorama:
 
   def not_included(self):
     ni = [
-        self.image_names[x]
-        for x in range(len(self.image_names))
-        if x not in self.indices
+      self.image_names[x] for x in range(len(self.image_names)) if x not in self.indices
     ]
     return ni if len(ni) else None
 
@@ -92,7 +94,6 @@ class Panorama:
 
 
 class StitchingImages:
-
   def __init__(self, arrays: list[np.ndarray], preprocess: Callable | None = None):
     """Stitching 대상 이미지
 
@@ -221,16 +222,15 @@ class StitchingImages:
 
 
 class Stitcher:
-
   def __init__(
-      self,
-      mode='pano',
-      features_finder: cv.Feature2D | None = None,
-      compose_scale=1.0,
-      work_scale=1.0,
-      warp_threshold=20.0,
-      *,
-      try_cuda=False,
+    self,
+    mode='pano',
+    features_finder: cv.Feature2D | None = None,
+    compose_scale=1.0,
+    work_scale=1.0,
+    warp_threshold=20.0,
+    *,
+    try_cuda=False,
   ):
     """
     파노라마 생성자
@@ -376,7 +376,7 @@ class Stitcher:
   def blend_type(self, value: bool | str):
     if isinstance(value, str):
       value = value.lower()
-      if value not in ('multiband', 'feather', 'no'):
+      if value not in {'multiband', 'feather', 'no'}:
         msg = f'invalid blend_type: "{value}"'
         raise ValueError(msg)
     else:
@@ -406,7 +406,10 @@ class Stitcher:
     self._interp = int(value)
 
   def set_features_matcher(
-      self, matcher='affine', confidence: float | None = None, range_width=-1
+    self,
+    matcher='affine',
+    confidence: float | None = None,
+    range_width=-1,
   ):
     """Set features matcher.
 
@@ -428,22 +431,22 @@ class Stitcher:
 
     if matcher == 'affine':
       matcher = cv.detail_AffineBestOf2NearestMatcher(
-          full_affine=False, try_use_gpu=self._try_cuda, match_conf=confidence
+        full_affine=False, try_use_gpu=self._try_cuda, match_conf=confidence
       )
     elif range_width == -1:
       matcher = cv.detail.BestOf2NearestMatcher_create(
-          try_use_gpu=self._try_cuda, match_conf=confidence
+        try_use_gpu=self._try_cuda, match_conf=confidence
       )
     else:
       matcher = cv.detail_BestOf2NearestRangeMatcher(
-          range_width=range_width,
-          try_use_gpu=self._try_cuda,
-          match_conf=confidence,
+        range_width=range_width,
+        try_use_gpu=self._try_cuda,
+        match_conf=confidence,
       )
     self.features_matcher = matcher
 
   def set_bundle_adjuster_refine_mask(
-      self, *, fx=True, skew=True, ppx=True, aspect=True, ppy=True
+    self, *, fx=True, skew=True, ppx=True, aspect=True, ppy=True
   ):
     """Set refinement mask for bundle adjustment"""
     refine_mask = np.zeros([3, 3], dtype=np.uint8)
@@ -496,16 +499,16 @@ class Stitcher:
       raise ValueError('features_finder가 지정되지 않음')
 
     return cv.detail.computeImageFeatures2(
-        featuresFinder=self.features_finder, image=image, mask=mask
+      featuresFinder=self.features_finder, image=image, mask=mask
     )
 
   def stitch(
-      self,
-      images: StitchingImages,
-      masks: list[np.ndarray | None] | None = None,
-      names: list[str] | None = None,
-      *,
-      crop=True,
+    self,
+    images: StitchingImages,
+    masks: list[np.ndarray | None] | None = None,
+    names: list[str] | None = None,
+    *,
+    crop=True,
   ) -> Panorama:
     """
     영상의 특징점을 기반으로 정합 (stitch)하여 파노라마 영상 생성
@@ -533,22 +536,22 @@ class Stitcher:
     if masks is None:
       masks = prep_masks
     else:
-      masks = [_merge_mask(m1, m2) for m1, m2 in zip(masks, prep_masks, strict=True)]
+      masks = list(starmap(_merge_mask, zip(masks, prep_masks, strict=True)))
 
     # camera matrix 계산
     cameras, indices, matches_graph = self.calculate_camera_matrix(
-        images=prep_images, image_names=names
+      images=prep_images, image_names=names
     )
 
     if len(indices) != len(prep_images):
       images.select_images(indices=indices)
       logger.info(
-          'Stitching에 필요 없는 이미지 제거 (indices: {})',
-          set(range(len(prep_images))) - set(indices),
+        'Stitching에 필요 없는 이미지 제거 (indices: {})',
+        set(range(len(prep_images))) - set(indices),
       )
 
     panorama, panorama_mask, warp_indices = self.warp_and_blend(
-        images=images, cameras=cameras, masks=masks, names=names
+      images=images, cameras=cameras, masks=masks, names=names
     )
     indices = [indices[x] for x in warp_indices]
 
@@ -568,19 +571,19 @@ class Stitcher:
         panorama = crop_range.crop(panorama)
 
     return Panorama(
-        panorama=panorama,
-        mask=panorama_mask,
-        graph=matches_graph,
-        indices=indices,
-        cameras=cameras,
-        crop_range=crop_range,
-        image_names=names,
+      panorama=panorama,
+      mask=panorama_mask,
+      graph=matches_graph,
+      indices=indices,
+      cameras=cameras,
+      crop_range=crop_range,
+      image_names=names,
     )
 
   def calculate_camera_matrix(
-      self,
-      images: list[np.ndarray],
-      image_names: list[str],
+    self,
+    images: list[np.ndarray],
+    image_names: list[str],
   ) -> tuple[list[cv.detail_CameraParams], list[int], str]:
     """
     영상의 특성 추출/매칭을 통해 camera matrix 추정
@@ -610,7 +613,7 @@ class Stitcher:
     self.features_matcher.collectGarbage()
 
     indices_arr: np.ndarray = cv.detail.leaveBiggestComponent(
-        features=features, pairwise_matches=pairwise_matches, conf_threshold=0.3
+      features=features, pairwise_matches=pairwise_matches, conf_threshold=0.3
     )
     indices: list = indices_arr.ravel().tolist()
     if len(indices) < 2:
@@ -619,12 +622,12 @@ class Stitcher:
 
     logger.trace('Matches graph')
     matches_graph: str = cv.detail.matchesGraphAsString(
-        image_names, pairwise_matches=pairwise_matches, conf_threshold=1.0
+      image_names, pairwise_matches=pairwise_matches, conf_threshold=1.0
     )
 
     logger.trace('Estimate camera')
     estimate_status, cameras = self.estimator.apply(
-        features=features, pairwise_matches=pairwise_matches, cameras=None
+      features=features, pairwise_matches=pairwise_matches, cameras=None
     )
     if not estimate_status:
       msg = 'Homography estimation failed'
@@ -638,7 +641,7 @@ class Stitcher:
       cam.R = cam.R.astype(np.float32)
 
     adjuster_status, cameras = self.bundle_adjuster.apply(
-        features=features, pairwise_matches=pairwise_matches, cameras=cameras
+      features=features, pairwise_matches=pairwise_matches, cameras=cameras
     )
     if not adjuster_status:
       msg = 'Camera parameters adjusting failed'
@@ -658,10 +661,10 @@ class Stitcher:
     return cameras, indices, matches_graph
 
   def _warp_image(
-      self,
-      image: np.ndarray,
-      mask: np.ndarray | None,
-      camera: cv.detail_CameraParams,
+    self,
+    image: np.ndarray,
+    mask: np.ndarray | None,
+    camera: cv.detail_CameraParams,
   ) -> tuple[np.ndarray, np.ndarray, tuple[int, int, int, int]]:
     """
     Camera parameter에 따라 영상을 변형.
@@ -695,8 +698,8 @@ class Stitcher:
       camera.ppy *= self._compose_work_aspect
 
     size = (
-        int(image.shape[1] * self._compose_scale),
-        int(image.shape[0] * self._compose_scale),
+      int(image.shape[1] * self._compose_scale),
+      int(image.shape[0] * self._compose_scale),
     )
     kmat = camera.K().astype(np.float32)
     rmat = camera.R
@@ -708,51 +711,51 @@ class Stitcher:
 
     if abs(self._compose_scale - 1) > 0.1:
       img = cv.resize(
-          src=image,
-          dsize=None,
-          fx=self._compose_scale,
-          fy=self._compose_scale,
-          interpolation=self._interp,
+        src=image,
+        dsize=None,
+        fx=self._compose_scale,
+        fy=self._compose_scale,
+        interpolation=self._interp,
       )
       if mask is not None:
         mask = cv.resize(
-            src=mask,
-            dsize=None,
-            fx=self._compose_scale,
-            fy=self._compose_scale,
-            interpolation=cv.INTER_NEAREST,
+          src=mask,
+          dsize=None,
+          fx=self._compose_scale,
+          fy=self._compose_scale,
+          interpolation=cv.INTER_NEAREST,
         )
     else:
       img = image
 
-    # `NOTE (roi[0], roi[1]) == corner
-    corner, warped_image = self.warper.warp(
-        src=img,
-        K=kmat,
-        R=rmat,
-        interp_mode=self._interp,
-        border_mode=cv.BORDER_CONSTANT,
+    # NOTE `(roi[0], roi[1]) == corner
+    _corner, warped_image = self.warper.warp(
+      src=img,
+      K=kmat,
+      R=rmat,
+      interp_mode=self._interp,
+      border_mode=cv.BORDER_CONSTANT,
     )
 
     if mask is None:
       mask = np.ones(shape=img.shape[:2], dtype=np.uint8)
 
     _, warped_mask = self.warper.warp(
-        src=mask,
-        K=kmat,
-        R=rmat,
-        interp_mode=cv.INTER_NEAREST,
-        border_mode=cv.BORDER_CONSTANT,
+      src=mask,
+      K=kmat,
+      R=rmat,
+      interp_mode=cv.INTER_NEAREST,
+      border_mode=cv.BORDER_CONSTANT,
     )
 
     return warped_image, warped_mask, roi
 
   def _warp_images(
-      self,
-      images: Iterable[np.ndarray],
-      cameras: list[cv.detail_CameraParams],
-      masks: Iterable[np.ndarray | None] | None = None,
-      names: Iterable[str] | None = None,
+    self,
+    images: Iterable[np.ndarray],
+    cameras: list[cv.detail_CameraParams],
+    masks: Iterable[np.ndarray | None] | None = None,
+    names: Iterable[str] | None = None,
   ) -> tuple[list[np.ndarray], list[np.ndarray], np.ndarray, list[int]]:
     """
     대상 영상들을 Camera parameter에 따라 변형.
@@ -807,10 +810,10 @@ class Stitcher:
     return warped_images, warped_masks, np.array(rois), indices
 
   def _blend(
-      self,
-      images: list[np.ndarray],
-      masks: list[np.ndarray],
-      rois: np.ndarray,
+    self,
+    images: list[np.ndarray],
+    masks: list[np.ndarray],
+    rois: np.ndarray,
   ) -> tuple[np.ndarray, np.ndarray]:
     """
     파노라마를 구성하는 영상들의 밝기 조정
@@ -843,7 +846,7 @@ class Stitcher:
     # blender 생성
     if blend_type == 'no':
       blender = cv.detail.Blender_createDefault(
-          type=cv.detail.Blender_NO, try_gpu=self._try_cuda
+        type=cv.detail.Blender_NO, try_gpu=self._try_cuda
       )
     elif blend_type == 'multiband':
       blender = cv.detail_MultiBandBlender()
@@ -870,15 +873,15 @@ class Stitcher:
     return stitched_image, stitched_mask
 
   def warp_and_blend(
-      self,
-      images: StitchingImages,
-      cameras: list[cv.detail_CameraParams],
-      masks: Iterable[np.ndarray | None] | None = None,
-      names: Iterable[str] | None = None,
+    self,
+    images: StitchingImages,
+    cameras: list[cv.detail_CameraParams],
+    masks: Iterable[np.ndarray | None] | None = None,
+    names: Iterable[str] | None = None,
   ) -> tuple[np.ndarray, np.ndarray, list[int]]:
     # warp each image
     warped_images, warped_masks, rois, indices = self._warp_images(
-        images=images.arrays, cameras=cameras, masks=masks, names=names
+      images=images.arrays, cameras=cameras, masks=masks, names=names
     )
 
     # stitch and blend
@@ -894,7 +897,7 @@ class Stitcher:
 
     scaled_images = [_scale(x) for x in warped_images]
     scaled_panorama, panorama_mask = self._blend(
-        images=scaled_images, masks=warped_masks, rois=rois
+      images=scaled_images, masks=warped_masks, rois=rois
     )
 
     panorama = images.unscale(image=scaled_panorama)

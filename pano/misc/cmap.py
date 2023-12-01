@@ -37,10 +37,9 @@ def extract_flir_colormap(image_path: str, save_path: str, color_space: str = 'R
 
 
 class FLIRColormap(ListedColormap):
-
   @classmethod
   def from_uint8_colors(
-      cls, colors: np.ndarray, color_space: str = 'RGB'
+    cls, colors: np.ndarray, color_space: str = 'RGB'
   ) -> ListedColormap:
     """
     unit8 형태 색상 정보로부터 matplotlib cmap 생성

@@ -86,7 +86,7 @@ FULL_LABEL_MAP = np.arange(len(LABEL_NAMES)).reshape(len(LABEL_NAMES), 1)
 
 
 def vis_segmentation(
-    image: np.ndarray | PILImage, seg_map: np.ndarray, *, show=False, cmap='pascal'
+  image: np.ndarray | PILImage, seg_map: np.ndarray, *, show=False, cmap='pascal'
 ) -> tuple[plt.Figure, np.ndarray]:
   """
   Visualizes input image, segmentation map and overlay view.
@@ -148,11 +148,11 @@ def vis_segmentation(
 
 
 def predict(
-    model_path: str,
-    images: list[np.ndarray],
-    output: Path,
-    cmap='Dark2',
-    names: list[str] | None = None,
+  model_path: str,
+  images: list[np.ndarray],
+  output: Path,
+  cmap='Dark2',
+  names: list[str] | None = None,
 ):
   """
   입력받은 각 영상을 DeepLabV3+ 모델을 통해 segment하고 결과를 저장.
@@ -243,15 +243,15 @@ class DeepLabModel:
     target_size = (int(resize_ratio * width), int(resize_ratio * height))
     resized_image = image.convert('RGB').resize(target_size, PIL.Image.ANTIALIAS)
     batch_seg_map = self.sess.run(
-        self.OUTPUT_TENSOR_NAME,
-        feed_dict={self.INPUT_TENSOR_NAME: [np.asarray(resized_image)]},
+      self.OUTPUT_TENSOR_NAME,
+      feed_dict={self.INPUT_TENSOR_NAME: [np.asarray(resized_image)]},
     )
     seg_map = batch_seg_map[0]
 
     return resized_image, seg_map
 
   def predict_and_visualize(
-      self, image: np.ndarray, cmap='Dark2', *, resize=True
+    self, image: np.ndarray, cmap='Dark2', *, resize=True
   ) -> tuple[np.ndarray, np.ndarray, plt.Figure]:
     """
     주어진 영상으로 segmentation 예측 및 시각화
@@ -284,16 +284,16 @@ class DeepLabModel:
     else:
       vis_image = image
       seg_map = _resize(
-          seg_map,
-          output_shape=image.shape[:2],
-          order=0,
-          preserve_range=True,
-          anti_aliasing=False,
+        seg_map,
+        output_shape=image.shape[:2],
+        order=0,
+        preserve_range=True,
+        anti_aliasing=False,
       )
       seg_map = np.round(seg_map).astype(np.uint8)
 
     fig, seg_image = vis_segmentation(
-        image=vis_image, seg_map=seg_map, show=False, cmap=cmap
+      image=vis_image, seg_map=seg_map, show=False, cmap=cmap
     )
 
     return seg_map, seg_image, fig

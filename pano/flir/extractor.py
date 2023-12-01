@@ -62,22 +62,22 @@ class IRSignal:
   @classmethod
   def _transmission(cls, meta: FlirExif):
     h2o = meta.RelativeHumidity * np.exp(
-        1.5587
-        + 0.06939 * meta.AtmosphericTemperature
-        - 0.00027816 * meta.AtmosphericTemperature**2
-        + 0.00000068455 * meta.AtmosphericTemperature**3
+      1.5587
+      + 0.06939 * meta.AtmosphericTemperature
+      - 0.00027816 * meta.AtmosphericTemperature**2
+      + 0.00000068455 * meta.AtmosphericTemperature**3
     )
 
     tau1 = cls.ATX * np.exp(
-        -np.sqrt(meta.SubjectDistance / 2) * (cls.ATA1 + cls.ATB1 * np.sqrt(h2o))
+      -np.sqrt(meta.SubjectDistance / 2) * (cls.ATA1 + cls.ATB1 * np.sqrt(h2o))
     ) + (1 - cls.ATX) * np.exp(
-        -np.sqrt(meta.SubjectDistance / 2) * (cls.ATA2 + cls.ATB2 * np.sqrt(h2o))
+      -np.sqrt(meta.SubjectDistance / 2) * (cls.ATA2 + cls.ATB2 * np.sqrt(h2o))
     )
 
     tau2 = cls.ATX * np.exp(
-        -np.sqrt(meta.SubjectDistance / 2) * (cls.ATA1 + cls.ATB1 * np.sqrt(h2o))
+      -np.sqrt(meta.SubjectDistance / 2) * (cls.ATA1 + cls.ATB1 * np.sqrt(h2o))
     ) + (1 - cls.ATX) * np.exp(
-        -np.sqrt(meta.SubjectDistance / 2) * (cls.ATA2 + cls.ATB2 * np.sqrt(h2o))
+      -np.sqrt(meta.SubjectDistance / 2) * (cls.ATA2 + cls.ATB2 * np.sqrt(h2o))
     )
 
     return tau1, tau2
@@ -111,7 +111,7 @@ class IRSignal:
     tau1, tau2 = cls._transmission(meta)
 
     signal_reflected = (
-        cls.temp2signal(meta.ReflectedApparentTemperature, meta) * (1 - e) / e
+      cls.temp2signal(meta.ReflectedApparentTemperature, meta) * (1 - e) / e
     )
 
     atms = cls.temp2signal(meta.AtmosphericTemperature, meta)
@@ -119,11 +119,11 @@ class IRSignal:
     signal_atm2 = atms * (1 - tau2) / (e * tau1 * tau2 * irt)
 
     signal_wind = (
-        cls.temp2signal(meta.IRWindowTemperature, meta) * (1 - irt) / (e * tau1 * irt)
+      cls.temp2signal(meta.IRWindowTemperature, meta) * (1 - irt) / (e * tau1 * irt)
     )
 
     signal_obj = (raw / (e * tau1 * tau2 * irt)) - (
-        signal_atm1 + signal_atm2 + signal_wind + signal_reflected
+      signal_atm1 + signal_atm2 + signal_wind + signal_reflected
     )
 
     return signal_obj, signal_reflected
@@ -146,19 +146,19 @@ class FlirData:
 
 class FlirExtractor:
   TAGS = (
-      '-AtmosphericTemperature',
-      '-Emissivity',
-      '-IRWindowTemperature',
-      '-IRWindowTransmission',
-      '-PlanckB',
-      '-PlanckF',
-      '-PlanckO',
-      '-PlanckR1',
-      '-PlanckR2',
-      '-RawThermalImageType',
-      '-ReflectedApparentTemperature',
-      '-RelativeHumidity',
-      '-SubjectDistance',
+    '-AtmosphericTemperature',
+    '-Emissivity',
+    '-IRWindowTemperature',
+    '-IRWindowTransmission',
+    '-PlanckB',
+    '-PlanckF',
+    '-PlanckO',
+    '-PlanckR1',
+    '-PlanckR2',
+    '-RawThermalImageType',
+    '-ReflectedApparentTemperature',
+    '-RelativeHumidity',
+    '-SubjectDistance',
   )
 
   def __init__(self, path: str) -> None:
@@ -205,16 +205,16 @@ class FlirExtractor:
     ir, signal_reflected = self.ir()
 
     return FlirData(
-        ir=ir, vis=self.vis(), signal_reflected=signal_reflected, exif=self.exif()
+      ir=ir, vis=self.vis(), signal_reflected=signal_reflected, exif=self.exif()
     )
 
   @staticmethod
   def correct_emissivity(
-      image: np.ndarray, meta: FlirExif, signal_reflected: float, e0: float, e1: float
+    image: np.ndarray, meta: FlirExif, signal_reflected: float, e0: float, e1: float
   ):
     signal_obj0 = IRSignal.temp2signal(image, meta=meta)
     signal_obj1 = ((signal_obj0 + signal_reflected) * e0 / e1) - (
-        signal_reflected * (e0 / (1 - e0)) * ((1 - e1) / e1)
+      signal_reflected * (e0 / (1 - e0)) * ((1 - e1) / e1)
     )
 
     return IRSignal.signal2temp(signal_obj1, meta)

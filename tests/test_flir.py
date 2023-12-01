@@ -2,28 +2,10 @@ import numpy as np
 import pytest
 
 from pano.flir import FlirExtractor
-from pano.flir.extract import FlirExtractor as DeprecatedExtractor
 from pano.utils import DIR
 
 image_dir = DIR.RESOURCE.joinpath('TestImage')
 images = ['FLIR0239.jpg', 'IR_2020-11-10_0122.jpg']
-
-
-@pytest.mark.parametrize('image', images)
-def test_flir_extractor(image):
-  path = image_dir.joinpath(image)
-
-  flir_data = FlirExtractor(path.as_posix()).extract()
-
-  assert isinstance(flir_data.ir, np.ndarray)
-  assert isinstance(flir_data.vis, np.ndarray)
-  assert isinstance(flir_data.signal_reflected, float)
-  assert isinstance(flir_data.exif, dict)
-
-  de = DeprecatedExtractor(path)
-
-  assert np.isclose(flir_data.ir, de.extract_ir(), rtol=0, atol=1e-4).all()
-  assert np.isclose(flir_data.vis, de.extract_vis()).all()
 
 
 @pytest.mark.parametrize('image', images)
@@ -42,13 +24,9 @@ def test_correct_emissivity(image, e0, e1):
   assert not np.isclose(ir0, ir1).any()
 
   corrected = FlirExtractor.correct_emissivity(
-      ir0, meta=extractor.meta, signal_reflected=signal_reflected, e0=e0, e1=e1
+    ir0, meta=extractor.meta, signal_reflected=signal_reflected, e0=e0, e1=e1
   )
 
   mask = np.isnan(corrected)
 
   assert np.isclose(corrected[~mask], ir1[~mask], rtol=0, atol=1e-4).all()
-
-
-if __name__ == '__main__':
-  pytest.main(['-v', '-k', 'test_flir'])
