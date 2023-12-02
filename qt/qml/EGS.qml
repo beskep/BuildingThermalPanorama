@@ -37,7 +37,7 @@ ApplicationWindow {
     FontLoader {
         id: mono
 
-        source: `${resource}/font/FiraCode-Regular.ttf`
+        source: `${resource}/font/iosevka-ss11-regular.ttf`
     }
 
     FontLoader {

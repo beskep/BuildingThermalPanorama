@@ -8,6 +8,7 @@ import "../Custom"
 
 Pane {
     property bool path_selected: false
+    property string file_dialog_mode: 'thermal' // thermal, visual
     property string _warning: ' <u>설정 변경 시 부위 인식 및 파노라마 생성 결과가 초기화됩니다.</u>'
 
     function init() {
@@ -55,25 +56,38 @@ Pane {
 
         ToolBar {
             RowLayout {
+                // TODO 옵션 전체 초기화 버튼
+
                 spacing: 0
 
                 ToolButton {
-                    text: qsTr('경로 선택')
+                    text: '프로젝트 폴더 선택'
                     icon: '\ue8a7'
                     onReleased: folder_dialog.open()
                     ToolTip.visible: hovered
                     ToolTip.delay: 500
-                    ToolTip.text: qsTr('열화상 파노라마가 저장된 작업 경로 선택')
+                    ToolTip.text: '열화상 파노라마가 저장된 작업 경로 선택'
                 }
-                // TODO 옵션 전체 초기화 버튼
 
                 ToolButton {
-                    text: qsTr('열화상 추출')
+                    text: '파일 선택'
+                    icon: '\ue43e'
+                    ToolTip.visible: hovered
+                    ToolTip.delay: 500
+                    ToolTip.text: '열화상 영상 파일 선택'
+                    onReleased: {
+                        file_dialog_mode = 'thermal';
+                        file_dialog.open();
+                    }
+                }
+
+                ToolButton {
+                    text: '열화상 추출'
                     icon: '\ue30d'
                     onReleased: con.command('extract')
                     ToolTip.visible: hovered
                     ToolTip.delay: 500
-                    ToolTip.text: qsTr('Raw 파일로부터 열화상과 실화상 데이터 추출')
+                    ToolTip.text: 'Raw 파일로부터 열화상과 실화상 데이터 추출'
                 }
 
                 ToolSeparator {
@@ -110,13 +124,16 @@ Pane {
                 }
 
                 ToolButton {
-                    text: qsTr('실화상 입력')
+                    text: '실화상 입력'
                     icon: '\ue439'
                     enabled: _separate.checked
-                    onReleased: file_dialog.open()
                     ToolTip.visible: hovered
                     ToolTip.delay: 500
-                    ToolTip.text: qsTr('[옵션] 열화상과 함께 촬영된 실화상이 아닌 별도의 실화상 입력')
+                    ToolTip.text: '[옵션] 열화상과 함께 촬영된 실화상이 아닌 별도의 실화상 입력'
+                    onReleased: {
+                        file_dialog_mode = 'visual';
+                        file_dialog.open();
+                    }
                 }
 
             }
@@ -143,7 +160,8 @@ Pane {
                         id: project_tree
 
                         anchors.fill: parent
-                        font.family: 'Fira Code'
+                        font.family: 'Iosevka SS11'
+                        font.pointSize: 10
                     }
 
                 }
@@ -191,7 +209,7 @@ Pane {
 
                             Text {
                                 text: file_name(path)
-                                font.family: 'Fira Code'
+                                font.family: 'Iosevka SS11'
                                 font.pointSize: 11
                                 anchors.horizontalCenter: parent.horizontalCenter
                             }
@@ -224,11 +242,12 @@ Pane {
         nameFilters: ['All files (*)']
         fileMode: FileDialog.OpenFiles
         onAccepted: {
-            let str = '';
-            for (var idx = 0; idx < files.length; ++idx) {
-                str += (files[idx].replace('file:///', '') + ';');
-            }
-            con.prj_select_vis_images(str);
+            if (file_dialog_mode === 'thermal')
+                con.prj_add_images(JSON.stringify(files));
+            else if (file_dialog_mode === 'visual')
+                con.prj_select_vis_images(JSON.stringify(files));
+            else
+                throw file_dialog_mode;
         }
     }
 

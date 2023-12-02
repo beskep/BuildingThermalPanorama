@@ -57,6 +57,10 @@ def _segments(
   return segments
 
 
+def _paths(text: str):
+  return (con.uri2path(x) for x in json.loads(text))
+
+
 class Window(con.Window):
   def panel_function(self, panel: str, fn: str, *args):
     # TODO property()로 변경
@@ -132,7 +136,7 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
       raise FileNotFoundError(wd)
 
     try:
-      self._config = pf.init_directory(directory=wd)
+      self._config = pf.init_directory(directory=wd, copy=True, raise_empty=False)
     except pf.ImageNotFoundError as e:
       self.win.popup('Error', f'{e.args[0]}\n({e.args[1]})')
       return
@@ -156,17 +160,29 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
     self.win.panel_function('project', 'update_project_tree', tree)
 
   @QtCore.Slot(str)
-  def prj_select_vis_images(self, files: str):
+  def prj_add_images(self, text: str):
+    try:
+      self.fm.add_images(_paths(text))
+    except OSError as e:
+      logger.exception(e)
+      self.win.error_popup(str(e))
+
+    self.prj_update_project_tree()
+    self.update_image_view()
+
+  @QtCore.Slot(str)
+  def prj_select_vis_images(self, text: str):
     if not self.fm.subdir(DIR.VIS).exists():
       self.win.popup('Warning', '열·실화상 데이터를 먼저 추출해주세요.', 5000)
       return
 
     try:
-      pf.replace_vis_images(fm=self.fm, files=files)
+      self.fm.replace_visual_images(_paths(text))
     except OSError as e:
       logger.exception(e)
-      self.win.popup('Error', str(e))
+      self.win.error_popup(str(e))
 
+    self.prj_update_project_tree()
     self.update_image_view()
 
   @QtCore.Slot(str)

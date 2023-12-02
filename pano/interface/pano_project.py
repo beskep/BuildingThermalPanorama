@@ -34,12 +34,11 @@ class ThermalPanorama:
     init_loglevel='INFO',
   ) -> None:
     # working directory
-    wd = Path(directory).resolve()
-    if not wd.exists():
+    if not (wd := Path(directory).resolve()).exists():
       raise FileNotFoundError(wd)
 
     self._wd = wd
-    self._config = init_directory(directory=wd, default=default_config)
+    self._config = init_directory(directory=wd, default_config=default_config)
     self._fm = ThermalPanoramaFileManager(directory=wd)
 
     # 제조사, Raw 파일 패턴

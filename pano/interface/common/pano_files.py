@@ -47,14 +47,15 @@ ProjectDir
 └── config.yaml
 """
 
+from collections.abc import Iterable
 from enum import Enum
 from pathlib import Path
 from shutil import copy2
 from typing import ClassVar
 
+import toolz
 from loguru import logger
 from omegaconf import DictConfig
-from toolz.itertoolz import peek
 
 from pano import utils
 
@@ -282,12 +283,53 @@ class ThermalPanoramaFileManager:
   def anomaly_path(self):
     return self._wd / 'AnomalyThreshold.yaml'
 
+  def add_images(self, paths: Iterable[str | Path]):
+    raw_dir = self.wd / DIR.RAW.value
+    raw_dir.mkdir(exist_ok=True)
+
+    for src in paths:
+      dst = raw_dir / Path(src).name
+
+      if dst.exists():
+        logger.warning('Raw 파일을 덮어씌웁니다: "{}"', dst)
+      else:
+        logger.debug('copy to "{}"', dst)
+
+      copy2(src, dst)
+
+  def replace_visual_images(self, paths: Iterable[str | Path]):
+    """동시 추출된 실화상 대신 새 실화상 입력."""
+    try:
+      _, paths = toolz.peek(paths)
+    except StopIteration:
+      raise FileNotFoundError('선택된 파일이 없습니다.') from None
+
+    p: str | Path
+
+    # 이미 추출된 실화상을 IR 폴더로 옮김
+    ir_dir = self.subdir(DIR.IR)
+    for p in self.files(DIR.VIS, error=False):
+      logger.debug('move "{}" to IR', p)
+      p.replace(ir_dir / f'{p.stem}_vis{p.suffix}')
+
+    # 새 실화상 파일 VIS 폴더에 복사
+    vis_dir = self.subdir(DIR.VIS)
+    for p in paths:
+      logger.debug('copy "{}" to VIS', p)
+      copy2(p, vis_dir)
+
 
 class ImageNotFoundError(FileNotFoundError):
   pass
 
 
-def init_directory(directory: Path, *, default=False) -> DictConfig:
+def init_directory(
+  directory: Path,
+  *,
+  default_config=False,
+  copy=True,
+  raise_empty=True,
+) -> DictConfig:
   """
   Working directory 초기화.
 
@@ -298,49 +340,43 @@ def init_directory(directory: Path, *, default=False) -> DictConfig:
   Parameters
   ----------
   directory : Path
-      Working directory
-  default : bool
-      if `True`, copy default setting.
+      작업 폴더
+  default_config : bool, optional
+      `True`면 기본 설정 적용.
+  copy : bool, optional
+      `True`면 영상 파일을 복사, `False`면 파일 이동.
+  raise_empty : bool, optional
+      `True`고 작업 폴더에 영상 파일이 없으면 `ImageNotFoundError` 발생.
 
   Returns
   -------
   DictConfig
-  """
-  raw_dir = directory.joinpath(DIR.RAW.value)
-  exts = {'.jpg', '.xlsx', '.png'}
 
-  if not raw_dir.exists():
-    files = (x for x in directory.glob('*') if x.is_file() and x.suffix.lower() in exts)
+  Raises
+  ------
+  ImageNotFoundError
+      `raise_empty`가 `True`고 작업 폴더에 영상 파일이 없는 경우 raise.
+  """
+  if not (raw_dir := directory / DIR.RAW.value).exists():
+    files: Iterable[Path] = (
+      x
+      for x in directory.glob('*')
+      if x.is_file() and x.suffix.lower() in {'.jpg', '.xlsx', '.png'}
+    )
 
     try:
-      _, files = peek(files)
+      _, files = toolz.peek(files)
     except StopIteration:
-      msg = '영상 파일이 발견되지 않았습니다.'
-      raise ImageNotFoundError(msg, str(directory)) from None
+      if raise_empty:
+        msg = '영상 파일이 발견되지 않았습니다.'
+        raise ImageNotFoundError(msg, str(directory)) from None
+    else:
+      raw_dir.mkdir()
 
-    raw_dir.mkdir()
     for file in files:
-      file.replace(raw_dir.joinpath(file.name))
+      if copy:
+        copy2(file, raw_dir / file.name)
+      else:
+        file.replace(raw_dir / file.name)
 
-  return set_config(directory=directory, default=default)
-
-
-def replace_vis_images(fm: ThermalPanoramaFileManager, files: str):
-  # 이미 추출된 실화상을 IR 폴더로 옮김
-  ir_dir = fm.subdir(DIR.IR)
-  for path in fm.files(DIR.VIS, error=False):
-    logger.debug('replace "{}" to IR', path)
-    path.replace(ir_dir.joinpath(f'{path.stem}_vis{path.suffix}'))
-
-  # 새 실화상 파일 VIS 폴더에 복사
-  vis_dir = fm.subdir(DIR.VIS)
-  paths = (Path(x) for x in files.strip(';').split(';'))
-
-  try:
-    _, paths = peek(paths)
-  except StopIteration:
-    raise FileNotFoundError('선택된 파일이 없습니다.') from None
-
-  for path in paths:
-    logger.info('copy "{}" to VIS', path)
-    copy2(path, vis_dir)
+  return set_config(directory=directory, default=default_config)

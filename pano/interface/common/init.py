@@ -24,7 +24,12 @@ def ascii_tempdir():
     os.environ[t] = str(tmpdir)
 
 
-def init_project(*, qt: bool):
+def init_project(
+  *,
+  qt: bool,
+  font_name='Source Han Sans KR',
+  font_file='SourceHanSansKR-Normal.otf',
+):
   ascii_tempdir()
 
   # pylint: disable=import-outside-toplevel
@@ -38,7 +43,7 @@ def init_project(*, qt: bool):
 
   if qt:
     if not is_frozen() and 'PySide2' in sys.modules:
-      import PySide2
+      import PySide2  # type: ignore[pyright]
 
       pyside_dir = Path(PySide2.__file__).parent
       os.environ['QT_PLUGIN_PATH'] = str(pyside_dir / 'plugins')
@@ -46,9 +51,8 @@ def init_project(*, qt: bool):
 
     mpl.use('Qt5Agg')
 
-  font_name = 'Source Han Sans KR'
-  font_path = DIR.RESOURCE.joinpath('font/SourceHanSansKR-Normal.otf')
-  assert font_path.exists(), font_path
+  if not (font_path := DIR.RESOURCE / 'font' / font_file).exists():
+    raise FileNotFoundError(font_path)
 
   fe = fm.FontEntry(fname=font_path.as_posix(), name=font_name)
   fm.fontManager.ttflist.insert(0, fe)
