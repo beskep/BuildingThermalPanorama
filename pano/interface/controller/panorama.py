@@ -1,10 +1,8 @@
-# ruff: noqa: FBT003
-
 import json
 import multiprocessing as mp
 from contextlib import suppress
 from pathlib import Path
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 import numpy as np
 from loguru import logger
@@ -61,16 +59,21 @@ def _paths(text: str):
   return (con.uri2path(x) for x in json.loads(text))
 
 
+_Panel = Literal[
+  'project', 'registration', 'segmentation', 'panorama', 'analysis', 'output', 'wwr'
+]
+
+
 class Window(con.Window):
-  def panel_function(self, panel: str, fn: str, *args):
-    # TODO property()로 변경
-    p = self._window.get_panel(panel)
-    if p is None:
+  def panel(self, value: _Panel, /):
+    return self._window.property(f'{value}_panel')
+
+  def panel_function(self, panel: _Panel, fn: str, *args):
+    if (p := self.panel(panel)) is None:
       msg = f'Invalid panel name: {panel}'
       raise ValueError(msg)
 
     f = getattr(p, fn)
-
     return f(*args)
 
   def update_config(self, config: DictConfig):
@@ -138,7 +141,7 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
     try:
       self._config = pf.init_directory(directory=wd, copy=True, raise_empty=False)
     except pf.ImageNotFoundError as e:
-      self.win.popup('Error', f'{e.args[0]}\n({e.args[1]})')
+      self.win.error_popup(e)
       return
 
     self._wd = wd
@@ -189,10 +192,10 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
   def command(self, command: str):
     if self._wd is None:
       self.win.popup('Warning', '경로가 선택되지 않았습니다.')
-      self.win.pb_state(False)
+      self.win.pb_state(indeterminate=False)
       return
 
-    self.win.pb_state(True)
+    self.win.pb_state(indeterminate=True)
 
     queue = mp.Queue()
     cmd_kr = self._CMD_KR[command]
@@ -208,7 +211,7 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
         self.pc.registration.reset_matrices()
 
       self.win.popup('Success', f'{cmd_kr} 완료')
-      self.win.pb_state(False)
+      self.win.pb_state(indeterminate=False)
       self.win.pb_value(1.0)
 
       with suppress(TypeError):
@@ -303,7 +306,7 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
       self.pc.registration.plot(path)
     except FileNotFoundError:
       logger.warning('Data not extracted: {}', path)
-      self.win.popup('Error', f'파일 {path.name}의 데이터가 추출되지 않았습니다.')
+      self.win.error_popup(f'파일 {path.name}의 데이터가 추출되지 않았습니다.')
 
   @QtCore.Slot()
   def rgst_save(self):
@@ -336,7 +339,7 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
     try:
       self.pc.segmentation.plot(path, separate=self._config['panorama']['separate'])
     except FileNotFoundError:
-      self.win.popup('Error', '부위 인식 결과가 없습니다.')
+      self.win.error_popup('부위 인식 결과가 없습니다.')
       logger.warning('File not found: {}', path)
 
   @QtCore.Slot(str, str)
@@ -376,11 +379,11 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
 
   @QtCore.Slot(float, float, float)
   def pano_save_manual_correction(self, roll, pitch, yaw):
-    self.win.pb_state(True)
+    self.win.pb_state(indeterminate=True)
 
     def _done():
       self.win.popup('Success', '저장 완료', timeout=1000)
-      self.win.pb_state(False)
+      self.win.pb_state(indeterminate=False)
       self.win.pb_value(1.0)
 
       with suppress(TypeError):
@@ -436,8 +439,7 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
     except FileNotFoundError as e:
       logger.debug('FileNotFound: "{}"', e)
     except ValueError as e:
-      logger.exception(e)
-      self.win.popup('Error', str(e))
+      self.win.error_popup(e)
     else:
       self.win.panel_function(
         'analysis',
@@ -457,8 +459,7 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
     try:
       self.pc.analysis.read_multilayer()
     except (OSError, ValueError) as e:
-      logger.exception(e)
-      self.win.popup('Error', str(e))
+      self.win.error_popup(e)
 
   @QtCore.Slot()
   def analysis_cancel_selection(self):
@@ -515,8 +516,7 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
         T1=temperature,
       )
     except ValueError as e:
-      logger.exception(e)
-      self.win.popup('Error', str(e))
+      self.win.error_popup(e)
     else:
       self.pc.analysis.images.ir = ir
       self.pc.analysis.correction_params.delta_temperature = delta
@@ -551,8 +551,7 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
     except pc.WorkingDirNotSetError:
       pass
     except ValueError as e:
-      logger.exception(e)
-      self.win.popup('Error', f'{e} 지표 및 분포 정보를 저장하지 못했습니다.')
+      self.win.error_popup(f'{e} 지표 및 분포 정보를 저장하지 못했습니다.')
       self.pc.analysis.plot()
     else:
       self.win.popup('Success', '저장 완료')
@@ -584,7 +583,7 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
     except pc.WorkingDirNotSetError:
       pass
     except FileNotFoundError as e:
-      self.win.popup('Error', str(e))
+      self.win.error_popup(e)
 
   @QtCore.Slot(bool)
   def output_extend_lines(self, value):
@@ -600,8 +599,7 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
         building_width=building_width,
       )
     except ValueError as e:
-      logger.exception(e)
-      self.win.popup('Error', str(e))
+      self.win.error_popup(e)
       segments = None
 
     logger.debug(
@@ -621,7 +619,6 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
     except pc.WorkingDirNotSetError:
       pass
     except (OSError, ValueError) as e:
-      logger.exception(e)
-      self.win.popup('Error', str(e))
+      self.win.error_popup(e)
     else:
       self.win.popup('Success', '저장 완료')

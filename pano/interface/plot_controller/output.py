@@ -496,7 +496,7 @@ class Images:
   def read(self, sp: SP):
     path = self._fm.panorama_path(DIR.ANLY, sp)
     if sp is not SP.IR:
-      path = path.parent / 'source' / path.name
+      path = path.parent / f'Image-{path.name}'
 
     image = ImageIO.read(path)
     if sp is SP.MASK:

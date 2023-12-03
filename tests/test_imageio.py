@@ -52,7 +52,8 @@ class TestImageIO:
 
 
 def test_webp():
-  image = np.random.randint(low=0, high=255, size=(2, 2, 3)).astype(np.uint8)
+  rng = np.random.default_rng(42)
+  image = rng.integers(low=0, high=255, size=(2, 2, 3), dtype=np.uint8)
 
   with TemporaryDirectory() as temp_dir:
     path = Path(temp_dir).joinpath('test.webp')

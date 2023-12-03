@@ -34,7 +34,7 @@ Pane {
     }
 
     function save_output() {
-        con.output_save(_split_count.checked, _segments_count.value, parseFloat(_segements_length.text), parseFloat(_building_width.text));
+        con.output_save(_split_count.checked, _segments_count.value, parseFloat(_segments_length.text), parseFloat(_building_width.text));
     }
 
     width: 1280
@@ -110,8 +110,6 @@ Pane {
 
                 anchors.fill: parent
                 objectName: 'output_plot'
-                Layout.fillHeight: true
-                Layout.fillWidth: true
                 dpi_ratio: Screen.devicePixelRatio
             }
 
@@ -243,7 +241,7 @@ Pane {
                                 }
 
                                 TextField {
-                                    id: _segements_length
+                                    id: _segments_length
 
                                     horizontalAlignment: TextInput.AlignRight
                                     text: '0.05'

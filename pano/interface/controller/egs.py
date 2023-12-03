@@ -199,7 +199,7 @@ class Controller(QtCore.QObject):
         self.display_report(path)
       except DataNotFoundError as e:
         logger.debug(f'{e} | path="{e.path}"')
-        self.win.popup('Error', str(e))
+        self.win.error_popup(e)
 
       return
 
@@ -216,7 +216,7 @@ class Controller(QtCore.QObject):
       summary = self.pc.plot(path=path, mode=Mode(mode).name.lower())
     except DataNotFoundError as e:
       logger.debug(f'{e} | path="{e.path}"')
-      self.win.popup('Error', str(e))
+      self.win.error_popup(e)
 
     return summary
 

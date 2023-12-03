@@ -12,6 +12,13 @@ ApplicationWindow {
     property ApplicationWindow app: app
     property bool separate_panorama: false
     property string fd: '../../resource/font/'
+    property alias project_panel: project_panel
+    property alias registration_panel: registration_panel
+    property alias segmentation_panel: segmentation_panel
+    property alias panorama_panel: panorama_panel
+    property alias analysis_panel: analysis_panel
+    property alias output_panel: output_panel
+    property alias wwr_panel: wwr_panel
 
     function pb_value(value) {
         _pb.value = value;
@@ -27,23 +34,6 @@ ApplicationWindow {
 
     function popup(title, message, timeout = 2000) {
         _popup.timeout_open(title, message, timeout);
-    }
-
-    function get_panel(name) {
-        switch (name) {
-        case 'project':
-            return project_panel;
-        case 'registration':
-            return registration_panel;
-        case 'segmentation':
-            return segmentation_panel;
-        case 'panorama':
-            return panorama_panel;
-        case 'analysis':
-            return analysis_panel;
-        default:
-            return null;
-        }
     }
 
     function set_separate_panorama(value) {
@@ -143,6 +133,11 @@ ApplicationWindow {
                     width: parent.width
                 }
 
+                TabButton {
+                    text: '창면적비 계산'
+                    width: parent.width
+                }
+
                 background: Rectangle {
                 }
 
@@ -154,8 +149,8 @@ ApplicationWindow {
 
                 StackLayout {
                     anchors.fill: parent
-                    // project, registration, segmentation, panorama, registration, panorama, analysis, output
-                    currentIndex: [0, 1, 2, 3, 1, 3, 4, 5][tab_bar.currentIndex]
+                    // project, registration, segmentation, panorama, registration, panorama, analysis, output, WWR
+                    currentIndex: [0, 1, 2, 3, 1, 3, 4, 5, 6][tab_bar.currentIndex]
                     onCurrentIndexChanged: itemAt(currentIndex).init()
 
                     ProjectPanel {
@@ -185,6 +180,10 @@ ApplicationWindow {
 
                     OutputPanel {
                         id: output_panel
+                    }
+
+                    WWRPanel {
+                        id: wwr_panel
                     }
 
                 }

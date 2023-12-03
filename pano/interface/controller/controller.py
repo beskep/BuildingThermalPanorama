@@ -150,7 +150,10 @@ class Window:
       msg = message.replace('\n', ' ')
       self._window.status_message(f'[{title}] {msg}')
 
-  def error_popup(self, message: str):
+  def error_popup(self, e: str | Exception):
+    if isinstance(e, Exception):
+      logger.exception(e)
+
     self.pb_state(False)
     self.pb_value(0.0)
-    self.popup(title='Error', message=message)
+    self.popup(title='Error', message=str(e))
