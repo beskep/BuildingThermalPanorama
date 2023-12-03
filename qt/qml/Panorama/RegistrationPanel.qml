@@ -206,18 +206,17 @@ Pane {
                 Layout.fillWidth: true
                 padding: 0
 
-                FigureCanvas {
-                    id: plot
-
+                ColumnLayout {
                     anchors.fill: parent
-                    objectName: 'registration_plot'
-                    Layout.fillHeight: true
-                    Layout.fillWidth: true
-                    dpi_ratio: Screen.devicePixelRatio
-                }
 
-                GridLayout {
-                    anchors.fill: parent
+                    FigureCanvas {
+                        id: plot
+
+                        Layout.fillHeight: true
+                        Layout.fillWidth: true
+                        objectName: 'registration_plot'
+                        dpi_ratio: Screen.devicePixelRatio
+                    }
 
                     RowLayout {
                         Layout.alignment: Qt.AlignRight | Qt.AlignBottom

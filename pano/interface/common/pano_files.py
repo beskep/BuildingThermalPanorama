@@ -368,8 +368,8 @@ def init_directory(
       _, files = toolz.peek(files)
     except StopIteration:
       if raise_empty:
-        msg = '영상 파일이 발견되지 않았습니다.'
-        raise ImageNotFoundError(msg, str(directory)) from None
+        msg = f'영상 파일이 발견되지 않았습니다.: "{directory}"'
+        raise ImageNotFoundError(msg) from None
     else:
       raw_dir.mkdir()
 

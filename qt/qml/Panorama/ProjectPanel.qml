@@ -98,6 +98,7 @@ Pane {
 
                     Label {
                         text: '열·실화상 파노라마 생성 설정'
+                        color: '#FAFAFA'
                         font.weight: Font.Medium
                     }
 

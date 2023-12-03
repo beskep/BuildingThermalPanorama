@@ -73,8 +73,8 @@ class RegistrationPlotController(PanoPlotController):
     self._toolbar = NavigationToolbar(canvas=canvas)
 
     self._fig = canvas.figure
+    self.fig.set_layout_engine('constrained')
     self._axes = self.fig.subplots(2, 2)
-    self._fig.tight_layout(pad=2)
 
     self.canvas.mpl_connect('button_press_event', self._on_click)
     self.draw()

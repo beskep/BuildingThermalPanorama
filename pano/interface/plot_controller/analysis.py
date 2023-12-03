@@ -575,6 +575,7 @@ class AnalysisPlotController(PanoPlotController):
   def save_report(self):
     report = utils.DIR.RESOURCE / 'report'
     dst = self.fm.subdir(DIR.ANLY)
+    source = dst / 'source'
 
     fmt = self._report_stats()
     text = report.joinpath('Report.html').read_text(encoding='utf-8')
@@ -586,14 +587,21 @@ class AnalysisPlotController(PanoPlotController):
 
     # pdf
     for css in report.glob('*.css'):
-      copy2(css, dst / 'source')
+      copy2(css, source)
 
     wkhtmltopdf(html, html.with_suffix('.pdf'))
 
     # unlink
     html.unlink()
-    for css in dst.joinpath('source').glob('*.css'):
+    for css in source.glob('*.css'):
       css.unlink()
+
+    # move images
+    for file in (x for x in source.glob('*') if x.suffix.lower() in {'.png', '.jpg'}):
+      file.replace(dst / f'Image-{file.name}')
+    if not any(True for _ in source.glob('*')):
+      with suppress(OSError):
+        source.unlink()
 
   def save(self):
     self.images.save()
