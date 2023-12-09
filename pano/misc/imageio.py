@@ -49,22 +49,21 @@ class ImageIO:
     FileNotFoundError
         대상 파일이 존재하지 않을 때
     """
-    path = Path(path).resolve()
-    if not path.exists():
+    if not (path := Path(path).resolve()).exists():
       raise FileNotFoundError(path)
 
-    suffix = path.suffix.lower()
-    if suffix == cls.NPY_EXT:
-      image = np.load(file=path)
-    elif suffix == cls.CSV_EXT:
-      image = np.loadtxt(fname=path, delimiter=cls.DELIMITER)
-    elif suffix == cls.XLSX_EXT:
-      image = np.array(pd.read_excel(path, na_values='---'))
-    elif suffix == cls.WEBP_EXT:
-      pil_image = webp.load_image(path.as_posix())
-      image = np.array(pil_image)
-    else:
-      image = imread(fname=path)
+    match path.suffix.lower():
+      case cls.NPY_EXT:
+        image = np.load(file=path)
+      case cls.CSV_EXT:
+        image = np.loadtxt(fname=path, delimiter=cls.DELIMITER)
+      case cls.XLSX_EXT:
+        image = np.array(pd.read_excel(path, na_values='---'))
+      case cls.WEBP_EXT:
+        pil_image = webp.load_image(path.as_posix())
+        image = np.array(pil_image)
+      case _:
+        image = imread(fname=path)
 
     return image
 
@@ -94,8 +93,7 @@ class ImageIO:
     path = Path(path).resolve()
     image = cls.read(path)
 
-    meta_path = cls.meta_path(path)
-    if meta_path.exists():
+    if (meta_path := cls.meta_path(path)).exists():
       with open(meta_path, encoding=cls.ENCODING) as f:
         meta = yaml.safe_load(f)
     else:
@@ -137,17 +135,16 @@ class ImageIO:
     check_contrast : bool, optional
         `True`인 경우, 영상 파일 확장자 저장 시 영상의 대비가 너무 낮으면 경고.
     """
-    path = Path(path).resolve()
-    suffix = path.suffix.lower()
-    if suffix == cls.NPY_EXT:
-      np.save(file=path.as_posix(), arr=array)
-    elif suffix == cls.CSV_EXT:
-      np.savetxt(fname=path.as_posix(), X=array, delimiter=cls.DELIMITER)
-    elif suffix == cls.WEBP_EXT:
-      image = PIL.Image.fromarray(array)
-      webp.save_image(img=image, file_path=path.as_posix(), lossless=True)
-    else:
-      imsave(fname=path.as_posix(), arr=array, check_contrast=check_contrast)
+    match (p := Path(path)).suffix.lower():
+      case cls.NPY_EXT:
+        np.save(p, arr=array)
+      case cls.CSV_EXT:
+        np.savetxt(fname=p, X=array, delimiter=cls.DELIMITER)
+      case cls.WEBP_EXT:
+        image = PIL.Image.fromarray(array)
+        webp.save_image(img=image, file_path=p, lossless=True)
+      case _:
+        imsave(fname=p, arr=array, check_contrast=check_contrast)
 
   @staticmethod
   def _scale_and_save(array: np.ndarray, path: Path, exts: list, dtype='uint8'):

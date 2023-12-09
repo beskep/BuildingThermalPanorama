@@ -9,6 +9,7 @@ SpinBox {
     property real realValue: value / 100
 
     editable: true
+    wheelEnabled: true
     from: 0
     value: 100
     to: 10000

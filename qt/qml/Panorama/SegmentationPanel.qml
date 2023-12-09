@@ -49,8 +49,6 @@ Pane {
 
                 anchors.fill: parent
                 objectName: 'segmentation_plot'
-                Layout.fillHeight: true
-                Layout.fillWidth: true
                 dpi_ratio: Screen.devicePixelRatio
             }
 
