@@ -188,7 +188,7 @@ class Images:
     if np.isnan(self.teti).any():
       raise ValueError('실내외 온도가 설정되지 않았습니다.')
 
-    return np.absolute((self.ir - self.teti[0]) / (self.teti[1] - self.teti[0]))
+    return (self.ir - self.teti[0]) / (self.teti[1] - self.teti[0])
 
   def vulnerable_area(self, *, window=True):
     if window:  # noqa: SIM108
