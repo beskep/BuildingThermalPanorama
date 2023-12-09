@@ -108,6 +108,11 @@ def _dir(d: str | DIR) -> DIR:
   return d
 
 
+class WorkingDirNotSetError(FileNotFoundError):
+  def __str__(self) -> str:
+    return self.args[0] if self.args else '대상 경로가 지정되지 않았습니다.'
+
+
 class ThermalPanoramaFileManager:
   SP_EXT: ClassVar[dict[SP, str]] = {
     SP.IR: FN.NPY,

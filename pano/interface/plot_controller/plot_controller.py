@@ -4,17 +4,12 @@ import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
-from pano.interface.common.pano_files import ThermalPanoramaFileManager
+import pano.interface.common.pano_files as pf
 from pano.interface.mbq import FigureCanvas, QtCore, QtGui
 from pano.interface.mbq import NavigationToolbar2QtQuick as NavToolbar
 
 _DIRS = ('bottom', 'top', 'left', 'right')
 TICK_PARAMS = {key: False for key in _DIRS + tuple('label' + x for x in _DIRS)}
-
-
-class WorkingDirNotSetError(FileNotFoundError):
-  def __str__(self) -> str:
-    return self.args[0] if self.args else '대상 경로가 지정되지 않았습니다.'
 
 
 class CropToolbar(NavToolbar):
@@ -80,8 +75,9 @@ class PlotController(QtCore.QObject):
     self.app.processEvents()
 
   def reset(self):
+    axs: Iterable[Axes]
     if isinstance(self.axes, Axes):
-      axs: Iterable = (self.axes,)
+      axs = (self.axes,)
     elif isinstance(self.axes, np.ndarray):
       axs = self.axes.ravel()
     else:
@@ -94,16 +90,16 @@ class PlotController(QtCore.QObject):
 class PanoPlotController(PlotController):
   def __init__(self, parent=None) -> None:
     super().__init__(parent=parent)
-    self._fm: ThermalPanoramaFileManager | None = None
+    self._fm: pf.ThermalPanoramaFileManager | None = None
 
   @property
-  def fm(self) -> ThermalPanoramaFileManager:
+  def fm(self) -> pf.ThermalPanoramaFileManager:
     if self._fm is None:
-      raise WorkingDirNotSetError
+      raise pf.WorkingDirNotSetError
     return self._fm
 
   @fm.setter
-  def fm(self, value: ThermalPanoramaFileManager):
+  def fm(self, value: pf.ThermalPanoramaFileManager):
     self._fm = value
 
   def _set_style(self):

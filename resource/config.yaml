@@ -25,6 +25,7 @@ file:
         IR: "*.xlsx"
         VIS: "*_실화상 이미지.JPG"
     force_horizontal: false # {false, "CW", "CCW"}
+    save_mat: false
 registration:
     metric: JointHistMI # {"JointHistMI", "MattesMI", "MeanSquare", ...}
     transformation: Similarity # {"Similarity", "Affine"}

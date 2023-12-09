@@ -85,7 +85,7 @@ def main(*, debug=False, loglevel=20):
     pc.init(app, canvas)
     pcs[name] = pc
 
-  controller.set_plot_controllers(pcs)
+  controller.pc = pcs  # type: ignore[assignment]
 
   return app.exec_()
 

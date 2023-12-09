@@ -4,6 +4,7 @@ from shutil import copy2
 from typing import Any
 
 import numpy as np
+import scipy.io as sio
 import seaborn as sns
 from matplotlib.axes import Axes
 from matplotlib.cm import get_cmap
@@ -233,7 +234,7 @@ class Images:
 
     return path
 
-  def save(self):
+  def save(self, *, mat=False):
     self._path(SP.SEG).parent.mkdir(parents=True, exist_ok=True)
 
     # SEG
@@ -261,6 +262,12 @@ class Images:
     else:
       copy2(self._fm.panorama_path(DIR.COR, SP.VIS), self._path(SP.VIS))
       copy2(self._fm.panorama_path(DIR.COR, SP.MASK), self._path(SP.MASK))
+
+    if mat:
+      sio.savemat(
+        self._fm.subdir(DIR.ANLY) / 'Panorama.mat',
+        {'IR': self.ir, 'segmentation': self.seg},
+      )
 
 
 class PointSelector(_SelectorWidget):
@@ -603,7 +610,7 @@ class AnalysisPlotController(PanoPlotController):
       with suppress(OSError):
         source.unlink()
 
-  def save(self):
-    self.images.save()
+  def save(self, *, mat=False):
+    self.images.save(mat=mat)
     self.save_plot()
     self.save_report()

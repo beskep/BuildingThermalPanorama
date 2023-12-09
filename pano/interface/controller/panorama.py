@@ -15,6 +15,7 @@ from pano.interface.common import pano_files as pf
 from pano.interface.common.config import update_config
 from pano.interface.common.pano_files import DIR, SP
 from pano.interface.mbq import QtCore, QtGui
+from pano.interface.plot_controller import PlotControllers
 from pano.interface.tree import tree_string
 from pano.misc.imageio import ImageIO
 
@@ -102,7 +103,7 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
 
     self._wd: Path | None = None
     self._fm: pf.ThermalPanoramaFileManager | None = None
-    self._pc = pc.PlotControllers(None, None, None, None, None)  # type: ignore[arg-type]
+    self._pc: pc.PlotControllers | None = None
     self._config: DictConfig | None = None
 
   @property
@@ -114,19 +115,26 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
     self._win = Window(win)
 
   @property
-  def pc(self) -> pc.PlotControllers:
+  def pc(self) -> PlotControllers:
+    if self._pc is None:
+      raise pf.WorkingDirNotSetError
     return self._pc
+
+  @pc.setter
+  def pc(self, value: dict | PlotControllers):
+    if isinstance(value, PlotControllers):
+      self._pc = value
+    else:
+      self._pc = PlotControllers(**value)
+
+    self._pc.analysis.summarize = self._analysis_summarize
 
   @property
   def fm(self) -> pf.ThermalPanoramaFileManager:
     if self._fm is None:
-      raise ValueError('ThermalPanoramaFileManager not set')
+      raise pf.WorkingDirNotSetError
 
     return self._fm
-
-  def set_plot_controllers(self, controllers: dict):
-    self._pc = pc.PlotControllers(**controllers)
-    self._pc.analysis.summarize = self._analysis_summarize
 
   @QtCore.Slot(str)
   def log(self, message: str):  # noqa: PLR6301
@@ -147,7 +155,7 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
     self._wd = wd
     self._fm = pf.ThermalPanoramaFileManager(wd)
 
-    for controller in self.pc.controllers():
+    for controller in self.pc.controllers().values():
       controller.fm = self._fm
     self.pc.analysis.show_point_temperature = lambda x: self.win.panel_function(
       'analysis', 'show_point_temperature', x
@@ -278,7 +286,7 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
         f.unlink()
 
     # plot 리셋
-    for controller in self.pc.controllers():
+    for controller in self.pc.controllers().values():
       controller.reset()
       controller.draw()
 
@@ -346,7 +354,7 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
   def pano_plot(self, d, sp):
     try:
       self.pc.panorama.plot(d=DIR[d], sp=SP[sp])
-    except pc.WorkingDirNotSetError:
+    except pf.WorkingDirNotSetError:
       pass
     except FileNotFoundError as e:
       logger.debug('FileNotFound: "{}"', e)
@@ -434,7 +442,7 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
 
     try:
       self.pc.analysis.plot()
-    except pc.WorkingDirNotSetError:
+    except pf.WorkingDirNotSetError:
       pass
     except FileNotFoundError as e:
       logger.debug('FileNotFound: "{}"', e)
@@ -483,7 +491,7 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
       self.pc.analysis.images.reset_images()
       ir = self.pc.analysis.images.ir
       seg = self.pc.analysis.images.seg
-    except pc.WorkingDirNotSetError:
+    except pf.WorkingDirNotSetError:
       return
 
     meta_files = list(self.fm.subdir(DIR.IR).glob('*.yaml'))
@@ -546,9 +554,11 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
 
   @QtCore.Slot()
   def analysis_save(self):
+    assert self._config is not None
+
     try:
-      self.pc.analysis.save()
-    except pc.WorkingDirNotSetError:
+      self.pc.analysis.save(mat=self._config['file'].get('save_mat', False))
+    except pf.WorkingDirNotSetError:
       pass
     except ValueError as e:
       self.win.error_popup(f'{e} 지표 및 분포 정보를 저장하지 못했습니다.')
@@ -563,7 +573,7 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
 
     try:
       self.pc.output.plot()
-    except pc.WorkingDirNotSetError:
+    except pf.WorkingDirNotSetError:
       pass
     except FileNotFoundError as e:
       logger.exception(e)
@@ -573,14 +583,14 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
     try:
       self.pc.output.lines.clear_lines()
       self.pc.output.draw()
-    except pc.WorkingDirNotSetError:
+    except pf.WorkingDirNotSetError:
       pass
 
   @QtCore.Slot()
   def output_estimate_edgelets(self):
     try:
       self.pc.output.estimate_edgelets()
-    except pc.WorkingDirNotSetError:
+    except pf.WorkingDirNotSetError:
       pass
     except FileNotFoundError as e:
       self.win.error_popup(e)
@@ -616,9 +626,24 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
 
     try:
       self.pc.output.save(segments)
-    except pc.WorkingDirNotSetError:
+    except pf.WorkingDirNotSetError:
       pass
     except (OSError, ValueError) as e:
       self.win.error_popup(e)
     else:
       self.win.popup('Success', '저장 완료')
+
+  @QtCore.Slot(str, float, bool)
+  def wwr_update(self, image, threshold, force):
+    try:
+      wwr = self.pc.wwr.update(image=image, threshold=threshold, force=force)
+    except pf.WorkingDirNotSetError:
+      pass
+    else:
+      row = {
+        'wall': f'{wwr.wall:,}',
+        'window': f'{wwr.window:,}',
+        'envelope': f'{wwr.wall+wwr.window:,}',
+        'wwr': f'{wwr.wwr:.1%}',
+      }
+      self.win.panel_function('wwr', 'show_wwr', row)

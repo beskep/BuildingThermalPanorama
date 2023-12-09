@@ -14,15 +14,16 @@ from skimage import draw
 from skimage.color import label2rgb
 from toolz.itertoolz import sliding_window
 
+import pano.interface.common.pano_files as pf
 from pano.interface.common.cmap import save_colormap
-from pano.interface.common.pano_files import DIR, SP, ThermalPanoramaFileManager
+from pano.interface.common.pano_files import DIR, SP
 from pano.interface.mbq import FigureCanvas
 from pano.misc import edgelet as edge
 from pano.misc.edgelet import Edgelets
 from pano.misc.imageio import ImageIO
 from pano.misc.tools import SegMask, normalize_image
 
-from .plot_controller import PanoPlotController, QtGui, WorkingDirNotSetError
+from .plot_controller import PanoPlotController, QtGui
 
 
 def _suppress_edgelets(
@@ -147,6 +148,16 @@ class SegmentsSummary:
       raise ValueError('요약 함수와 이름의 개수가 불일치함')
 
     self._len = len(self._fns)
+
+  @classmethod
+  def mask(cls, shape: tuple[int, int], coords: NDArray):
+    mask = np.full(shape=shape, fill_value=np.nan, dtype=np.uint8)
+
+    for idx, lines in enumerate(sliding_window(2, coords)):
+      m = cls._mask(lines=lines, image_shape=shape)
+      mask[m] = idx
+
+    return mask
 
   @staticmethod
   def _mask(lines: tuple[NDArray, NDArray], image_shape: tuple[int, int]):
@@ -477,7 +488,7 @@ class EdgeletsOption:
 
 
 class Images:
-  def __init__(self, fm: ThermalPanoramaFileManager) -> None:
+  def __init__(self, fm: pf.ThermalPanoramaFileManager) -> None:
     self._fm = fm
 
     self._ir: Any = None
@@ -604,7 +615,7 @@ class OutputPlotController(PanoPlotController):
     self.axes.set_axis_off()
 
   @property
-  def fm(self) -> ThermalPanoramaFileManager:
+  def fm(self) -> pf.ThermalPanoramaFileManager:
     return super().fm
 
   @fm.setter
@@ -615,7 +626,7 @@ class OutputPlotController(PanoPlotController):
   @property
   def images(self) -> Images:
     if self._images is None:
-      raise WorkingDirNotSetError
+      raise pf.WorkingDirNotSetError
     return self._images
 
   @property
@@ -690,6 +701,12 @@ class OutputPlotController(PanoPlotController):
 
     self.lines.extend_lines()
     coords = self.lines.coordinates(xmax=ir.shape[1], ymax=ir.shape[0])
+
+    # mask
+    ImageIO.save(
+      path=subdir / 'Floor.npy',
+      array=SegmentsSummary.mask(shape=(ir.shape[0], ir.shape[1]), coords=coords),
+    )
 
     # 벽 온도
     wall = ir.copy()
