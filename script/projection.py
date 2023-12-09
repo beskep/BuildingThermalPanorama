@@ -40,7 +40,7 @@ def cli(roll, pitch, yaw, va, path, output):
     else:
       a = [0, 0, 0]
       a[idx - 1] = angles[idx - 1]
-      img_rot = imgprj.project(*a)
+      img_rot = imgprj.project(a)
 
       ax.imshow(img_rot)
 

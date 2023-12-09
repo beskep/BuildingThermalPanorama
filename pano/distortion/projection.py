@@ -1,5 +1,8 @@
 """지정한 roll, yaw, pitch를 적용한 영상 projection"""
 
+from collections.abc import Collection
+from typing import TypedDict
+
 import numpy as np
 from skimage import transform
 
@@ -167,6 +170,13 @@ class ProjectionMatrix:
     return np.linalg.multi_dot([mtx_yaw, mtx_pitch, mtx_roll])
 
 
+class WarpArgs(TypedDict, total=False):
+  order: int | None
+  cval: float | None
+  clip: bool
+  preserve_range: bool
+
+
 class ImageProjection:
   def __init__(self, image: np.ndarray, viewing_angle: float) -> None:
     """
@@ -222,38 +232,49 @@ class ImageProjection:
 
   def project(
     self,
-    roll=0.0,
-    pitch=0.0,
-    yaw=0.0,
+    angles: Collection[float],
     *,
     scale=True,
-    cval=None,
     image: np.ndarray | None = None,
+    warp_args: WarpArgs | None = None,
+    preserve_dtype=True,
   ) -> np.ndarray:
     if image is None:
       image = self._image
     elif image.shape[:2] != self._image.shape[:2]:
       raise ValueError('image.shape[:2] != self._image.shape[:2]')
 
-    if cval is None:
-      cval = np.nan
-
-    if all(x == 0 for x in [roll, pitch, yaw]):
+    if all(x == 0 for x in angles):
       return image
 
-    mtx = self._rotate_matrix(roll=roll, pitch=pitch, yaw=yaw, scale=scale)
+    mtx = self._rotate_matrix(*angles, scale=scale)
 
     vertex = transform.matrix_transform(self._vertex0, mtx)
     shape = np.max(vertex, axis=0) - np.min(vertex, axis=0)
 
-    return transform.warp(
+    warp_args = warp_args or WarpArgs()
+    warp_args.setdefault('order', None)
+    warp_args.setdefault('clip', False)
+    warp_args.setdefault('preserve_range', True)
+    isinteger = issubclass(image.dtype.type, np.integer)
+
+    if warp_args.get('cval', None) is None:
+      warp_args['cval'] = 0 if isinteger else float('nan')
+
+    projected: np.ndarray = transform.warp(
       image=image,
       inverse_map=np.linalg.inv(mtx),
       output_shape=np.ceil(shape)[[1, 0]],
-      cval=cval,
-      clip=False,
-      preserve_range=True,
+      **warp_args,
     )
+
+    if preserve_dtype:
+      if isinteger:
+        projected[np.isnan(projected)] = 0
+
+      projected = projected.astype(image.dtype)
+
+    return projected
 
 
 if __name__ == '__main__':
@@ -264,12 +285,13 @@ if __name__ == '__main__':
   img = img_as_float(data.chelsea())
 
   prj = ImageProjection(image=img, viewing_angle=np.deg2rad(42.0))
-  angles = (2, 0.1, 0.7)
+  a = (2, 0.1, 0.7)
 
-  img_rot = prj.project(*angles, scale=False)
-  img_fit = prj.project(*angles, scale=True)
+  img_rot = prj.project(a, scale=False)
+  img_fit = prj.project(a, scale=True)
 
   fig, axes = plt.subplots(1, 3)
+  fig.set_layout_engine('constrained')
 
   axes[0].imshow(img)
   axes[1].imshow(img_rot)

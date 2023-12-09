@@ -9,7 +9,7 @@ from pano.interface.mbq import FigureCanvas
 from pano.interface.pano_project import ThermalPanorama
 from pano.misc.cmap import apply_colormap
 from pano.misc.imageio import ImageIO
-from pano.misc.tools import limit_image_size, uint8_image
+from pano.misc.tools import limit_image_size
 
 from .plot_controller import TICK_PARAMS, CropToolbar, PanoPlotController, QtGui
 
@@ -174,7 +174,9 @@ class PanoramaPlotController(PanoPlotController):
       self._prj = self._image_projection(limit=limit)
 
     self._angles = np.deg2rad([roll, pitch, yaw])
-    image = self._prj.project(*self._angles)
+    image = self._prj.project(
+      self._angles, warp_args={'order': 0 if self._sp is SP.SEG else 1}
+    )
 
     self.axes.clear()
     self.axes.imshow(image, cmap=self._cmap)
@@ -191,7 +193,11 @@ class PanoramaPlotController(PanoPlotController):
 
 
 def save_manual_correction(
-  wd, subdir, viewing_angle, angles, crop_range: np.ndarray | None
+  wd,
+  subdir,
+  viewing_angle,
+  angles,
+  crop_range: np.ndarray | None,
 ):
   # FIXME 영상 시점 어긋나는 문제
   tp = ThermalPanorama(wd, init_loglevel='TRACE')
@@ -206,14 +212,10 @@ def save_manual_correction(
       image = ImageIO.read(tp.fm.panorama_path(subdir, sp))
 
     corrected = prj.project(
-      roll=angles[0],
-      pitch=angles[1],
-      yaw=angles[2],
-      cval=(None if sp is SP.IR else 0),
+      angles,
       image=image,
+      warp_args={'order': 0 if sp in {SP.MASK, SP.SEG} else 1},
     )
-    if sp is SP.MASK:
-      corrected = uint8_image(corrected)
 
     if crop_range is not None:
       cr = np.multiply(crop_range, ir_pano.shape[::-1]).astype(int)
