@@ -5,6 +5,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.cm import get_cmap
+from matplotlib.colors import ListedColormap
 from matplotlib.patches import Patch
 from onnxruntime import InferenceSession
 from PIL import Image
@@ -55,7 +56,8 @@ class SmpModel:
       ax.set_axis_off()
       ax.set_title(title)
 
-    fig.legend(handles=self._handles, loc='lower center', ncol=5)  # TODO cmap 개수
+    # TODO cmap 개수
+    fig.legend(handles=self._handles, loc='lower center', ncol=5, fontsize='small')
     fig.tight_layout()
 
     return fig, axes
@@ -73,6 +75,25 @@ class SmpModel9(SmpModel):
     'Banner',
     'Canopy',
   )
+  COLORS = (
+    '#999999',  # background
+    '#1b9e77',  # wall
+    '#377eb8',  # window
+    '#984ea3',  # etc
+    '#fdd0a2',  # tree
+    '#fdae6b',  # lamp
+    '#fd8d3c',  # car
+    '#e6550d',  # banner
+    '#a63603',  # canopy
+  )
+
+  def __init__(self, path: str) -> None:
+    super().__init__(path)
+
+    self._cmap = ListedColormap(self.COLORS)
+    self._handles = [
+      Patch(facecolor=self._cmap(i), label=label) for i, label in enumerate(self.LABELS)
+    ]
 
   def predict(self, src: str | bytes | Path):
     mask = super().predict(src)

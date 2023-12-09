@@ -15,21 +15,10 @@ from .plot_controller import PanoPlotController, QtGui
 
 class SegmentationPlotController(PanoPlotController):
   TITLES = ('실화상', '부위 인식 결과')
-  COLORS = (
-    '#999999',  # background
-    '#1b9e77',  # wall
-    '#377eb8',  # window
-    '#984ea3',  # etc
-    '#fdd0a2',  # tree
-    '#fdae6b',  # lamp
-    '#fd8d3c',  # car
-    '#e6550d',  # banner
-    '#a63603',  # canopy
-  )
 
   def __init__(self, parent=None) -> None:
     super().__init__(parent=parent)
-    self._cmap = ListedColormap(self.COLORS)
+    self._cmap = ListedColormap(SmpModel9.COLORS)
     self._legend = None
 
   @property

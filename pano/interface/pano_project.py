@@ -368,6 +368,7 @@ class ThermalPanorama:
   def _segment(self, model: SmpModel9, file):
     mask = model.predict(file)
     fig, _ = model.visualization(src=file, mask=mask)
+    fig.tight_layout(rect=(0, 0.1, 1, 1))
 
     path = self._fm.change_dir(DIR.SEG, file)
     IIO.save(path=path, array=SegMask.index2vis(mask))

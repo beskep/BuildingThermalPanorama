@@ -23,11 +23,11 @@ from pano.misc import tools
 from pano.misc.cmap import apply_colormap
 from pano.misc.imageio import ImageIO, load_webp_mask
 from pano.misc.sp import wkhtmltopdf
+from pano.segmentation.onnx import SmpModel9
 
 from .plot_controller import PanoPlotController, QtGui
-from .segmentation import SegmentationPlotController
 
-SEG_CMAP = ListedColormap(SegmentationPlotController.COLORS)
+SEG_CMAP = ListedColormap(SmpModel9.COLORS)
 
 
 def _axes(fig):
