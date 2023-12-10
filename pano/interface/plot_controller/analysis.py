@@ -15,9 +15,10 @@ from matplotlib.patches import Patch
 from matplotlib.widgets import PolygonSelector, _SelectorWidget
 from skimage.draw import polygon2mask
 
+import pano.interface.common.pano_files as pf
 from pano import utils
 from pano.interface import analysis
-from pano.interface.common.pano_files import DIR, SP, ThermalPanoramaFileManager
+from pano.interface.common.pano_files import DIR, SP
 from pano.interface.mbq import FigureCanvas
 from pano.misc import tools
 from pano.misc.cmap import apply_colormap
@@ -79,7 +80,7 @@ def _summarize(ir, seg, threshold, factor, index: int):
 
 
 class Images:
-  def __init__(self, fm: ThermalPanoramaFileManager) -> None:
+  def __init__(self, fm: pf.ThermalPanoramaFileManager) -> None:
     self._fm = fm
 
     self._ir: np.ndarray | None = None  # IR image
@@ -341,6 +342,15 @@ class AnalysisPlotController(PanoPlotController):
     self.show_point_temperature = lambda x: x / 0
     self.summarize = lambda: 1 / 0
     self.correction_params = CorrectionParams()
+
+  @property
+  def fm(self):
+    return super().fm
+
+  @fm.setter
+  def fm(self, value: pf.ThermalPanoramaFileManager):
+    self._fm = value
+    self._images = None
 
   @property
   def cax(self) -> Axes:
