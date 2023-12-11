@@ -7,11 +7,12 @@ import Qt.labs.platform 1.1
 import "../Custom"
 
 Pane {
-    property bool path_selected: false
+    property bool has_working_dir: false
     property string file_dialog_mode: 'thermal' // thermal, visual
     property string _warning: ' <u>설정 변경 시 부위 인식 및 파노라마 생성 결과가 초기화됩니다.</u>'
 
     function init() {
+        con.has_working_dir();
     }
 
     function update_project_tree(text) {
@@ -44,6 +45,7 @@ Pane {
     function update_config(config) {
         let separate = config['panorama']['separate'];
         _separate.checked = separate;
+        _simultaneously.checked = !separate;
         app.separate_panorama = separate;
     }
 
@@ -72,6 +74,7 @@ Pane {
                 ToolButton {
                     text: '파일 선택'
                     icon: '\ue43e'
+                    enabled: has_working_dir
                     ToolTip.visible: hovered
                     ToolTip.delay: 500
                     ToolTip.text: '열화상 영상 파일 선택'
@@ -84,6 +87,7 @@ Pane {
                 ToolButton {
                     text: '열화상 추출'
                     icon: '\ue30d'
+                    enabled: has_working_dir
                     onReleased: con.command('extract')
                     ToolTip.visible: hovered
                     ToolTip.delay: 500
@@ -94,11 +98,11 @@ Pane {
                 }
 
                 RowLayout {
-                    enabled: path_selected
+                    enabled: has_working_dir
 
                     Label {
                         text: '열·실화상 파노라마 생성 설정'
-                        color: '#FAFAFA'
+                        color: has_working_dir ? '#FAFAFA' : '#953432'
                         font.weight: Font.Medium
                     }
 
@@ -113,6 +117,8 @@ Pane {
                     }
 
                     ToolRadioButton {
+                        id: _simultaneously
+
                         text: '동시 생성'
                         onReleased: set_separate_panorama()
                         ToolTip.visible: hovered
@@ -127,7 +133,7 @@ Pane {
                 ToolButton {
                     text: '실화상 입력'
                     icon: '\ue439'
-                    enabled: _separate.checked
+                    enabled: has_working_dir & _separate.checked
                     ToolTip.visible: hovered
                     ToolTip.delay: 500
                     ToolTip.text: '[옵션] 열화상과 함께 촬영된 실화상이 아닌 별도의 실화상 입력'
@@ -233,7 +239,7 @@ Pane {
         onAccepted: {
             var path = folder.toString().replace('file:///', '');
             con.prj_select_working_dir(path);
-            path_selected = true;
+            con.has_working_dir();
         }
     }
 

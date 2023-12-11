@@ -140,6 +140,11 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
   def log(self, message: str):  # noqa: PLR6301
     con.log(message=message)
 
+  @QtCore.Slot()
+  def has_working_dir(self):
+    p = self.win.panel('project')
+    p.setProperty('has_working_dir', self._wd is not None)
+
   @QtCore.Slot(str)
   def prj_select_working_dir(self, wd):
     wd = Path(wd).resolve()
@@ -174,6 +179,9 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
   def prj_add_images(self, text: str):
     try:
       self.fm.add_images(_paths(text))
+    except pf.WorkingDirNotSetError as e:
+      self.win.error_popup(e)
+      return
     except OSError as e:
       logger.exception(e)
       self.win.error_popup(str(e))
@@ -199,7 +207,7 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
   @QtCore.Slot(str)
   def command(self, command: str):
     if self._wd is None:
-      self.win.popup('Warning', '경로가 선택되지 않았습니다.')
+      self.win.popup('Warning', '프로젝트 폴더가 선택되지 않았습니다.')
       self.win.pb_state(indeterminate=False)
       return
 
