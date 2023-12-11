@@ -36,7 +36,7 @@ registration:
         unsharp: false
         edge: false
 panorama:
-    separate: false
+    separate: true
     target: IR # {"IR", "VIS"}
     stitch:
         perspective: panorama # {"panorama", "scan"}

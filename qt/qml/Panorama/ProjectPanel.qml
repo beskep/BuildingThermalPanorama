@@ -103,20 +103,20 @@ Pane {
                     }
 
                     ToolRadioButton {
-                        checked: true
-                        text: '동시 생성'
-                        onReleased: set_separate_panorama()
-                        ToolTip.visible: hovered
-                        ToolTip.text: ('개별 열·실화상을 정합 후 파노라마를 동시에 생성합니다.' + _warning)
-                    }
-
-                    ToolRadioButton {
                         id: _separate
 
+                        checked: true
                         text: '별도 생성'
                         onReleased: set_separate_panorama()
                         ToolTip.visible: hovered
                         ToolTip.text: ('열·실화상 파노라마를 별도로 생성하고 두 파노라마를 정합합니다.' + _warning)
+                    }
+
+                    ToolRadioButton {
+                        text: '동시 생성'
+                        onReleased: set_separate_panorama()
+                        ToolTip.visible: hovered
+                        ToolTip.text: ('개별 열·실화상을 정합 후 파노라마를 동시에 생성합니다.' + _warning)
                     }
 
                 }
