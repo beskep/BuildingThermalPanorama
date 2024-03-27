@@ -8,26 +8,20 @@ metrics = registration.evaluation.metrics
 
 
 class TestEval:
-  img1 = np.array(
-    [
-      [1.0, 2.0],
-      [3.0, 4.0],
-    ]
-  )
+  img1 = np.array([
+    [1.0, 2.0],
+    [3.0, 4.0],
+  ])
 
-  img2 = np.array(
-    [
-      [0.0, 1.0],
-      [1.0, 0.0],
-    ]
-  )
+  img2 = np.array([
+    [0.0, 1.0],
+    [1.0, 0.0],
+  ])
 
-  img3 = np.array(
-    [
-      [2.0, 3.0],
-      [4.0, 5.0],
-    ]
-  )
+  img3 = np.array([
+    [2.0, 3.0],
+    [4.0, 5.0],
+  ])
 
   def test_sum_of_squared_difference(self):
     assert metrics.compute_sse(self.img1, self.img2, norm=False) == 22
@@ -44,19 +38,15 @@ class TestEval:
 
 
 class TestMI:
-  img1 = np.array(
-    [
-      [1.0, 0.0],
-      [0.0, 1.0],
-    ]
-  )
+  img1 = np.array([
+    [1.0, 0.0],
+    [0.0, 1.0],
+  ])
 
-  img2 = np.array(
-    [
-      [0.0, 1.0],
-      [1.0, 0.0],
-    ]
-  )
+  img2 = np.array([
+    [0.0, 1.0],
+    [1.0, 0.0],
+  ])
 
   bins = 2
   base = 2
@@ -82,30 +72,24 @@ class TestMI:
     py = np.sum(pxy, axis=1).reshape([-1, 1])
 
     assert pxy / px == pytest.approx(
-      np.array(
-        [
-          [1 / 4, 2 / 6],
-          [3 / 4, 4 / 6],
-        ]
-      )
+      np.array([
+        [1 / 4, 2 / 6],
+        [3 / 4, 4 / 6],
+      ])
     )
     assert pxy / py == pytest.approx(
-      np.array(
-        [
-          [1 / 3, 2 / 3],
-          [3 / 7, 4 / 7],
-        ]
-      )
+      np.array([
+        [1 / 3, 2 / 3],
+        [3 / 7, 4 / 7],
+      ])
     )
 
     pxy_pxpy = pxy / (px * py)
     assert pxy_pxpy == pytest.approx(
-      np.array(
-        [
-          [1 / 12, 2 / 18],
-          [3 / 28, 4 / 42],
-        ]
-      )
+      np.array([
+        [1 / 12, 2 / 18],
+        [3 / 28, 4 / 42],
+      ])
     )
 
   def test_image_entropy(self):

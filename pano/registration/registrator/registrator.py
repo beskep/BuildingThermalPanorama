@@ -237,7 +237,8 @@ class RegisteringImage:
         영상 크기 오류
     """
     if self._shape is not None and self._shape != image.shape[:2]:
-      raise ValueError('shape error')
+      msg = 'shape error'
+      raise ValueError(msg)
 
     assert self._trsf_mtx is not None
     return warp(image, inverse_map=inv(self._trsf_mtx))
@@ -263,7 +264,8 @@ class RegisteringImage:
       trsf_image = self.transform_by_matrix(image)
     else:
       if self._trsf_fn is None:
-        raise ValueError('Transform 지정되지 않음.')
+        msg = 'Transform 지정되지 않음.'
+        raise ValueError(msg)
 
       try:
         trsf_image = self._trsf_fn(image)

@@ -9,15 +9,13 @@ def test_crop_by_mask():
   row = np.arange(5)
   image = row + 10 * row.reshape([-1, 1])
 
-  mask = np.array(
-    [
-      [0, 0, 0, 0, 0],
-      [0, 1, 1, 1, 0],
-      [0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0],
-      [0, 0, 0, 1, 0],
-    ]
-  )
+  mask = np.array([
+    [0, 0, 0, 0, 0],
+    [0, 1, 1, 1, 0],
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 1, 0],
+  ])
 
   cr, cm = tools.crop_mask(mask=mask, morphology_open=False)
   ci = cr.crop(image)
@@ -29,14 +27,12 @@ def test_crop_by_mask():
   assert cr.y_max == 5
 
   ci_ = np.array([1, 2, 3]) + 10 * np.array([1, 2, 3, 4]).reshape([-1, 1])
-  cm_ = np.array(
-    [
-      [1, 1, 1],
-      [0, 0, 0],
-      [0, 0, 0],
-      [0, 0, 1],
-    ]
-  )
+  cm_ = np.array([
+    [1, 1, 1],
+    [0, 0, 0],
+    [0, 0, 0],
+    [0, 0, 1],
+  ])
   assert np.all(ci == ci_)
   assert np.all(cm == cm_)
 

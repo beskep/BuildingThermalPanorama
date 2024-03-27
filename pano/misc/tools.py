@@ -225,11 +225,14 @@ def _check_and_prep(
   image2 = gray_image(image2)
 
   if image1.shape != image2.shape:
-    raise ValueError('image1.shape != image2.shape')
+    msg = 'image1.shape != image2.shape'
+    raise ValueError(msg)
   if image1.ndim != 2:
-    raise ValueError('image1.ndim != 2')
+    msg = 'image1.ndim != 2'
+    raise ValueError(msg)
   if image2.ndim != 2:
-    raise ValueError('image2.ndim != 2')
+    msg = 'image2.ndim != 2'
+    raise ValueError(msg)
 
   if normalize:
     image1 = normalize_image(image1)

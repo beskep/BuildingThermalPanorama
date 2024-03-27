@@ -47,11 +47,13 @@ def _segments(
   if flag_count:
     segments = seg_count
   elif np.isnan(building_width):
-    raise ValueError('건물 폭을 설정하지 않았습니다.')
+    msg = '건물 폭을 설정하지 않았습니다.'
+    raise ValueError(msg)
   else:
     segments = int(building_width / seg_length)
     if segments < 1:
-      raise ValueError('분할 길이 또는 건물 폭이 잘못 설정되었습니다.')
+      msg = '분할 길이 또는 건물 폭이 잘못 설정되었습니다.'
+      raise ValueError(msg)
 
   return segments
 
@@ -651,7 +653,7 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
       row = {
         'wall': f'{wwr.wall:,}',
         'window': f'{wwr.window:,}',
-        'envelope': f'{wwr.wall+wwr.window:,}',
+        'envelope': f'{wwr.wall + wwr.window:,}',
         'wwr': f'{wwr.wwr:.1%}',
       }
       self.win.panel_function('wwr', 'show_wwr', row)

@@ -132,7 +132,8 @@ class StitchingImages:
   def arrays(self, value: list[np.ndarray]):
     ndim = value[0].ndim
     if not all(x.ndim == ndim for x in value):
-      raise ValueError('영상의 채널 수가 동일하지 않음')
+      msg = '영상의 채널 수가 동일하지 않음'
+      raise ValueError(msg)
 
     self._arrays = value
     self._arrays_count = len(value)
@@ -337,7 +338,8 @@ class Stitcher:
     `warper_type`, `set_warper`를 통해 설정.
     """
     if self._warper is None:
-      raise ValueError('Warper 설정되지 않음')
+      msg = 'Warper 설정되지 않음'
+      raise ValueError(msg)
 
     return self._warper
 
@@ -496,7 +498,8 @@ class Stitcher:
     detail_ImageFeatures
     """
     if self.features_finder is None:
-      raise ValueError('features_finder가 지정되지 않음')
+      msg = 'features_finder가 지정되지 않음'
+      raise ValueError(msg)
 
     return cv.detail.computeImageFeatures2(
       featuresFinder=self.features_finder, image=image, mask=mask
@@ -529,7 +532,7 @@ class Stitcher:
     Panorama
     """
     if names is None:
-      names = [f'Image {x+1}' for x in range(images.count)]
+      names = [f'Image {x + 1}' for x in range(images.count)]
 
     prep_images, prep_masks = images.preprocess()
 

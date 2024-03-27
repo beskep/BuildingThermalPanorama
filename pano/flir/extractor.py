@@ -183,7 +183,8 @@ class FlirExtractor:
       # fix endianness, the bytes in the embedded png are in the wrong order
       raw_image = np.vectorize(lambda x: (x >> 8) + ((x & 0x00FF) << 8))(raw_image)
     elif self.meta.RawThermalImageType != 'TIFF':
-      raise ValueError('unexpected image type')
+      msg = 'unexpected image type'
+      raise ValueError(msg)
 
     return IRSignal.calculate(raw_image, self.meta)
 

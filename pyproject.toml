@@ -1,39 +1,45 @@
 [tool.ruff]
 target-version = 'py311'
 preview = true
-select = ['ALL']
-ignore = [
-    'ANN',
-    'COM',
-    'CPY',
-    'D1',
-    'D4',
-    'E1',
-    'E2',
-    'EM101',
-    'FIX',
-    'INP',
-    'ISC001',
-    'PTH123',
-    'Q',
-    'S101',
-    'T20',
-    'TD',
-    'TRY003',
-]
-exclude = ['mbq', 'script', 'pano/registration/evaluation/_*']
-per-file-ignores = { '__init__.py' = ['F401'] }
+output-format = 'concise'
 indent-width = 2
-cache-dir = '.cache/ruff'
+respect-gitignore = false
+exclude = ['mbq', 'script', 'pano/registration/evaluation/_*']
 
 [tool.ruff.format]
 preview = true
 quote-style = 'single'
 
-[tool.ruff.pydocstyle]
+[tool.ruff.lint]
+select = ['ALL']
+ignore = [
+    'ANN',    # flake8-annotations
+    'COM',    # flake8-commas
+    'CPY',    # flake8-copyright
+    'D1',     # pydocstyle: D1*
+    'D4',     # pydocstyle: D4*
+    'E1',     # pycodestyle: E1*
+    'E2',     # pycodestyle: E2*
+    'FIX',    # flake8-fixme
+    'INP',    # flake8-no-pep420
+    'ISC001', # flake8-implicit-str-concat: single-line-implicit-string-concatenation
+    'PTH123', # flake8-use-pathlib: builtin-open
+    'Q',      # flake8-quotes
+    'S',      # flake8-bandit
+    'T20',    # flake8-print
+    'TD',     # flake8-todos
+]
+extend-safe-fixes = [
+    'EM',  # flake8-errmsg
+    'TCH', # flake8-type-checking
+    'TRY', # tryceratops
+]
+per-file-ignores = { '__init__.py' = ['F401'] }
+
+[tool.ruff.lint.pydocstyle]
 convention = 'numpy'
 
-[tool.ruff.pylint]
+[tool.ruff.lint.pylint]
 max-args = 7
 
 [tool.mypy]
@@ -42,11 +48,9 @@ check_untyped_defs = true
 warn_unused_ignores = true
 warn_unused_configs = true
 exclude = ['.*/mbq/.*']
-cache_dir = '.cache/mypy'
 
 [tool.pytest.ini_options]
 addopts = '-v'
-cache_dir = '.cache/pytest'
 
 [tool.typos.default.extend-words]
 ANLY = 'ANLY'

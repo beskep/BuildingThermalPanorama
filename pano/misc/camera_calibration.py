@@ -111,7 +111,8 @@ def compute_camera_matrix(
       img_points.append(corners)
 
   if not obj_points:
-    raise ValueError('Chessboard 추출 실패')
+    msg = 'Chessboard 추출 실패'
+    raise ValueError(msg)
 
   _calibrate_camera(
     object_points=obj_points,
@@ -150,7 +151,8 @@ class CameraCalibration:
       self._matrix = np.array(params['matrix'])
       self._dist_coeff = params['dist_coeff']
     else:
-      raise ValueError('지원하지 않는 파일 형식입니다.')
+      msg = '지원하지 않는 파일 형식입니다.'
+      raise ValueError(msg)
 
   @property
   def image_size(self):

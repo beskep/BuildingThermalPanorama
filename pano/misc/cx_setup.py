@@ -68,9 +68,9 @@ def build():
   bins = ['ITK']
   lib_bin = Path(sys.base_prefix).joinpath('Library/bin')
   for b in bins:
-    include_files.extend(
-      [(f.as_posix(), f'lib/{f.name}') for f in lib_bin.glob(f'*{b}*')]
-    )
+    include_files.extend([
+      (f.as_posix(), f'lib/{f.name}') for f in lib_bin.glob(f'*{b}*')
+    ])
 
   sys_info = (sysconfig.get_platform(), sysconfig.get_python_version())
   version = datetime.now(tz=timezone('Asia/Seoul')).date().isoformat().replace('-', '.')

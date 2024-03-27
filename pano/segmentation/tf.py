@@ -175,7 +175,7 @@ def predict(
   model = DeepLabModel(graph_path=model_path)
 
   if names is None:
-    names = [f'Image {x+1}' for x in range(len(images))]
+    names = [f'Image {x + 1}' for x in range(len(images))]
 
   for image, fname in track(zip(images, names), total=len(images)):
     pil_image = PIL.Image.fromarray(image)

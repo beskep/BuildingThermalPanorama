@@ -2,13 +2,12 @@ from collections.abc import Callable, Iterable
 from contextlib import suppress
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, ClassVar, Literal
+from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
 import numpy as np
 from matplotlib.backend_bases import MouseButton
-from matplotlib.image import AxesImage
 from matplotlib.lines import Line2D
-from matplotlib.widgets import _SelectorWidget
+from matplotlib.widgets import _SelectorWidget  # noqa: PLC2701
 from numpy.typing import NDArray
 from skimage import draw
 from skimage.color import label2rgb
@@ -24,6 +23,9 @@ from pano.misc.imageio import ImageIO
 from pano.misc.tools import SegMask, normalize_image
 
 from .plot_controller import PanoPlotController, QtGui
+
+if TYPE_CHECKING:
+  from matplotlib.image import AxesImage
 
 
 def _suppress_edgelets(
@@ -145,7 +147,8 @@ class SegmentsSummary:
     self._names = tuple(names)
 
     if len(self._fns) != len(self._names):
-      raise ValueError('요약 함수와 이름의 개수가 불일치함')
+      msg = '요약 함수와 이름의 개수가 불일치함'
+      raise ValueError(msg)
 
     self._len = len(self._fns)
 
@@ -455,7 +458,8 @@ class LinesSelector(_SelectorWidget):
 
   def coordinates(self, xmax: int, ymax: int):
     if not self._lines:
-      raise ValueError('추정한 층 구분선이 없습니다.')
+      msg = '추정한 층 구분선이 없습니다.'
+      raise ValueError(msg)
 
     # Line2D.get_data():
     #   [[x1, x2],

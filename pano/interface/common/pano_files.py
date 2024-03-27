@@ -152,7 +152,8 @@ class ThermalPanoramaFileManager:
 
   def raw_files(self) -> list[Path]:
     if self._raw_pattern is None:
-      raise ValueError('Raw pattern not set')
+      msg = 'Raw pattern not set'
+      raise ValueError(msg)
 
     return self.glob(d=DIR.RAW, pattern=self._raw_pattern)
 
@@ -307,7 +308,8 @@ class ThermalPanoramaFileManager:
     try:
       _, paths = toolz.peek(paths)
     except StopIteration:
-      raise FileNotFoundError('선택된 파일이 없습니다.') from None
+      msg = '선택된 파일이 없습니다.'
+      raise FileNotFoundError(msg) from None
 
     p: str | Path
 

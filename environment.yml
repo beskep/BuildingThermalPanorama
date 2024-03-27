@@ -4,12 +4,6 @@ channels:
   - simpleitk
 dependencies:
   - python>=3.11
-  # UI
-  - pip
-  - pip:
-      - webp
-      - PyQt5>=5.15
-      - PyQtWebEngine
   # data analysis
   - numpy
   - nomkl
@@ -19,7 +13,6 @@ dependencies:
   - pandas
   - openpyxl
   # image
-  - opencv
   - scikit-image
   - onnxruntime
   - simpleitk
@@ -31,6 +24,12 @@ dependencies:
   - cx_freeze
   - pywin32
   - toolz
+  - pip
+  - pip:
+      - webp
+      - PyQt5>=5.15
+      - PyQtWebEngine
+      - opencv-python
   # dev
   - pytest
   - pylint

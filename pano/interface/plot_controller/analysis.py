@@ -1,7 +1,7 @@
 import dataclasses as dc
 from contextlib import suppress
 from shutil import copy2
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import scipy.io as sio
@@ -10,9 +10,8 @@ from matplotlib.axes import Axes
 from matplotlib.cm import get_cmap
 from matplotlib.colorbar import make_axes_gridspec
 from matplotlib.colors import BoundaryNorm, ListedColormap
-from matplotlib.image import AxesImage
 from matplotlib.patches import Patch
-from matplotlib.widgets import PolygonSelector, _SelectorWidget
+from matplotlib.widgets import PolygonSelector, _SelectorWidget  # noqa: PLC2701
 from skimage.draw import polygon2mask
 
 import pano.interface.common.pano_files as pf
@@ -27,6 +26,9 @@ from pano.misc.sp import wkhtmltopdf
 from pano.segmentation.onnx import SmpModel9
 
 from .plot_controller import PanoPlotController, QtGui
+
+if TYPE_CHECKING:
+  from matplotlib.image import AxesImage
 
 SEG_CMAP = ListedColormap(SmpModel9.COLORS)
 
@@ -187,7 +189,8 @@ class Images:
 
   def temperature_factor(self):
     if np.isnan(self.teti).any():
-      raise ValueError('실내외 온도가 설정되지 않았습니다.')
+      msg = '실내외 온도가 설정되지 않았습니다.'
+      raise ValueError(msg)
 
     return (self.ir - self.teti[0]) / (self.teti[1] - self.teti[0])
 
@@ -355,7 +358,8 @@ class AnalysisPlotController(PanoPlotController):
   @property
   def cax(self) -> Axes:
     if self._cax is None:
-      raise ValueError('Colorbar ax not set')
+      msg = 'Colorbar ax not set'
+      raise ValueError(msg)
 
     return self._cax
 

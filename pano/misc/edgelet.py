@@ -112,7 +112,8 @@ def image2edges(
   eqhist=True,
 ) -> np.ndarray:
   if image.ndim != 2:  # noqa: PLR2004
-    raise ValueError('image.ndim != 2')
+    msg = 'image.ndim != 2'
+    raise ValueError(msg)
 
   image = edge_preprocess(image, eqhist=eqhist)
 

@@ -1,8 +1,8 @@
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import numpy as np
 from loguru import logger
-from matplotlib.axes import Axes
 from matplotlib.backend_bases import MouseButton, MouseEvent
 from skimage import transform
 from skimage.exposure import equalize_hist
@@ -15,6 +15,9 @@ from pano.misc.tools import INTRP
 
 from .egs import MousePoints, NavigationToolbar
 from .plot_controller import TICK_PARAMS, PanoPlotController, QtGui
+
+if TYPE_CHECKING:
+  from matplotlib.axes import Axes
 
 
 def _rename_file(p0: Path, p1: Path):

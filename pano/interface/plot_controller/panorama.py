@@ -35,7 +35,8 @@ class PanoramaPlotController(PanoPlotController):
   @property
   def cax(self) -> Axes:
     if self._cax is None:
-      raise ValueError('Colorbar ax not set')
+      msg = 'Colorbar ax not set'
+      raise ValueError(msg)
 
     return self._cax
 
@@ -126,7 +127,8 @@ class PanoramaPlotController(PanoPlotController):
       image = image.astype(np.float32)
       mask = ImageIO.read(self.fm.panorama_path(d=d, sp=SP.MASK, error=True))
       if image.shape[:2] != mask.shape[:2]:
-        raise ValueError('파노라마와 마스크 파일의 shape이 일치하지 않습니다.')
+        msg = '파노라마와 마스크 파일의 shape이 일치하지 않습니다.'
+        raise ValueError(msg)
 
       image[np.logical_not(mask)] = np.nan
 

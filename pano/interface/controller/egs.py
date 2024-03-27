@@ -5,9 +5,9 @@ from contextlib import suppress
 from enum import IntEnum
 from pathlib import Path
 from shutil import copy2
+from typing import TYPE_CHECKING
 
 from loguru import logger
-from omegaconf import DictConfig
 from toolz import dicttoolz
 
 import pano.interface.common.pano_files as pf
@@ -17,6 +17,9 @@ from pano.interface.mbq import QtCore, QtGui
 from pano.interface.plot_controller.egs import DataNotFoundError, Images, PlotController
 from pano.misc.sp import wkhtmltopdf
 from pano.utils import DIR
+
+if TYPE_CHECKING:
+  from omegaconf import DictConfig
 
 # ruff: noqa: FBT003
 
@@ -109,7 +112,8 @@ class Controller(QtCore.QObject):
   @property
   def fm(self) -> pf.ThermalPanoramaFileManager:
     if self._fm is None:
-      raise ValueError('FileManager not set')
+      msg = 'FileManager not set'
+      raise ValueError(msg)
     return self._fm
 
   @property

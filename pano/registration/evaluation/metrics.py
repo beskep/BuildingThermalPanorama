@@ -11,7 +11,8 @@ from pano.misc.tools import bin_size, normalize_image
 
 def _check_shape(image1: np.ndarray, image2: np.ndarray):
   if image1.shape != image2.shape:
-    raise ValueError('shape1 != shape2')
+    msg = 'shape1 != shape2'
+    raise ValueError(msg)
 
 
 def compute_sse(image1: np.ndarray, image2: np.ndarray, *, norm=True):

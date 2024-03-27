@@ -80,13 +80,11 @@ class ProjectionMatrix:
     np.ndarray
     """
     if angle:
-      mtx = np.array(
-        [
-          [np.cos(angle), -np.sin(angle), 0],
-          [np.sin(angle), np.cos(angle), 0],
-          [0.0, 0.0, 1.0],
-        ]
-      )
+      mtx = np.array([
+        [np.cos(angle), -np.sin(angle), 0],
+        [np.sin(angle), np.cos(angle), 0],
+        [0.0, 0.0, 1.0],
+      ])
     else:
       mtx = np.identity(n=3)
 
@@ -107,13 +105,11 @@ class ProjectionMatrix:
     np.ndarray
     """
     if angle:
-      mtx_lr = np.array(
-        [
-          [np.cos(angle), 0.0, np.sin(angle)],
-          [0.0, 1.0, 0.0],
-          [-np.sin(angle), 0.0, np.cos(angle)],
-        ]
-      )
+      mtx_lr = np.array([
+        [np.cos(angle), 0.0, np.sin(angle)],
+        [0.0, 1.0, 0.0],
+        [-np.sin(angle), 0.0, np.cos(angle)],
+      ])
     else:
       mtx_lr = np.identity(n=3)
 
@@ -134,13 +130,11 @@ class ProjectionMatrix:
     np.ndarray
     """
     if angle:
-      mtx_ud = np.array(
-        [
-          [1.0, 0.0, 0.0],
-          [0.0, np.cos(angle), -np.sin(angle)],
-          [0.0, np.sin(angle), np.cos(angle)],
-        ]
-      )
+      mtx_ud = np.array([
+        [1.0, 0.0, 0.0],
+        [0.0, np.cos(angle), -np.sin(angle)],
+        [0.0, np.sin(angle), np.cos(angle)],
+      ])
     else:
       mtx_ud = np.identity(n=3)
 
@@ -193,14 +187,12 @@ class ImageProjection:
       image_shape=image.shape[:2], viewing_angle=viewing_angle
     )
 
-    self._vertex0 = np.array(
-      [
-        [0, 0],
-        [image.shape[1], 0],
-        [image.shape[1], image.shape[0]],
-        [0, image.shape[0]],
-      ]
-    )
+    self._vertex0 = np.array([
+      [0, 0],
+      [image.shape[1], 0],
+      [image.shape[1], image.shape[0]],
+      [0, image.shape[0]],
+    ])
 
   @property
   def image(self):
@@ -242,7 +234,8 @@ class ImageProjection:
     if image is None:
       image = self._image
     elif image.shape[:2] != self._image.shape[:2]:
-      raise ValueError('image.shape[:2] != self._image.shape[:2]')
+      msg = 'image.shape[:2] != self._image.shape[:2]'
+      raise ValueError(msg)
 
     if all(x == 0 for x in angles):
       return image

@@ -241,8 +241,8 @@ def ransac_3_line(
     vp1 = np.cross(l1, l2)
 
     # The vanishing line polar to v1
-    # h = np.dot(vp1, [1 / focal_length**2, 1 / focal_length**2, 1])
-    # h = [vp1[0] * invfsq, vp1[1] * invfsq, vp1[2]]
+    #` h = np.dot(vp1, [1 / focal_length**2, 1 / focal_length**2, 1])
+    #` h = [vp1[0] * invfsq, vp1[1] * invfsq, vp1[2]]
     h: Any = vp1 * farr
     vp2 = np.cross(h, l3)
 
@@ -377,12 +377,10 @@ def compute_homography_and_warp(
   v_post1 = v_post1 / np.sqrt(v_post1[0] ** 2 + v_post1[1] ** 2)
   v_post2 = v_post2 / np.sqrt(v_post2[0] ** 2 + v_post2[1] ** 2)
 
-  directions = np.array(
-    [
-      [v_post1[0], -v_post1[0], v_post2[0], -v_post2[0]],
-      [v_post1[1], -v_post1[1], v_post2[1], -v_post2[1]],
-    ]
-  )
+  directions = np.array([
+    [v_post1[0], -v_post1[0], v_post2[0], -v_post2[0]],
+    [v_post1[1], -v_post1[1], v_post2[1], -v_post2[1]],
+  ])
 
   thetas = np.arctan2(directions[0], directions[1])
 
@@ -395,13 +393,11 @@ def compute_homography_and_warp(
   else:
     v_ind = np.argmax([thetas[2], thetas[3]])
 
-  A1 = np.array(
-    [
-      [directions[0, v_ind], directions[0, h_ind], 0],
-      [directions[1, v_ind], directions[1, h_ind], 0],
-      [0, 0, 1],
-    ]
-  )
+  A1 = np.array([
+    [directions[0, v_ind], directions[0, h_ind], 0],
+    [directions[1, v_ind], directions[1, h_ind], 0],
+    [0, 0, 1],
+  ])
   # Might be a reflection. If so, remove reflection.
   if np.linalg.det(A1) < 0:
     A1[:, 0] = -A1[:, 0]
@@ -545,7 +541,8 @@ def rectify_image(
       edgelets1, focal_length, num_ransac_iter=3000, threshold_inlier=5
     )
   else:
-    raise KeyError("Parameter 'algorithm' has to be one of {'3-line', 'independent'}")
+    msg = "Parameter 'algorithm' has to be one of {'3-line', 'independent'}"
+    raise KeyError(msg)
 
   # Compute the homography and warp
   return compute_homography_and_warp(image, vp1, vp2, clip_factor=clip_factor)

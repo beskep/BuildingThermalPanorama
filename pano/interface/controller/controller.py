@@ -103,7 +103,8 @@ class Consumer(QtCore.QThread):
 
   def run(self):
     if self.queue is None:
-      raise ValueError('queue not set')
+      msg = 'queue not set'
+      raise ValueError(msg)
 
     while True:
       if not self.queue.empty():

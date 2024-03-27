@@ -1,4 +1,4 @@
-from collections.abc import Iterable
+from typing import TYPE_CHECKING
 
 import numpy as np
 from matplotlib.axes import Axes
@@ -8,8 +8,11 @@ import pano.interface.common.pano_files as pf
 from pano.interface.mbq import FigureCanvas, QtCore, QtGui
 from pano.interface.mbq import NavigationToolbar2QtQuick as NavToolbar
 
+if TYPE_CHECKING:
+  from collections.abc import Iterable
+
 _DIRS = ('bottom', 'top', 'left', 'right')
-TICK_PARAMS = {key: False for key in _DIRS + tuple('label' + x for x in _DIRS)}
+TICK_PARAMS = dict.fromkeys((*_DIRS, *(f'label{x}' for x in _DIRS)), False)
 
 
 class CropToolbar(NavToolbar):
@@ -36,28 +39,32 @@ class PlotController(QtCore.QObject):
   @property
   def app(self) -> QtGui.QGuiApplication:
     if self._app is None:
-      raise ValueError('app not set')
+      msg = 'app not set'
+      raise ValueError(msg)
 
     return self._app
 
   @property
   def canvas(self) -> FigureCanvas:
     if self._canvas is None:
-      raise ValueError('canvas not set')
+      msg = 'canvas not set'
+      raise ValueError(msg)
 
     return self._canvas
 
   @property
   def fig(self) -> Figure:
     if self._fig is None:
-      raise ValueError('fig not set')
+      msg = 'fig not set'
+      raise ValueError(msg)
 
     return self._fig
 
   @property
   def axes(self) -> Axes:
     if self._axes is None:
-      raise ValueError('axes not set')
+      msg = 'axes not set'
+      raise ValueError(msg)
 
     return self._axes
 

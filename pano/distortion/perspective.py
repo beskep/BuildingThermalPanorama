@@ -82,7 +82,8 @@ class VanishingPoint:
   @property
   def pos(self) -> int:
     if self._pos is None:
-      raise ValueError('position not computed')
+      msg = 'position not computed'
+      raise ValueError(msg)
 
     return self._pos
 
@@ -152,7 +153,8 @@ class Homography:
 
   def warp(self, image: np.ndarray, order=INTRP.BiCubic):
     if self.Htranslate is None:
-      raise ValueError('Homography not set')
+      msg = 'Homography not set'
+      raise ValueError(msg)
 
     if image.shape[:2] != self.input_shape:
       msg = (
@@ -338,12 +340,10 @@ class PerspectiveCorrection:
     v_post1 = v_post1 / np.sqrt(v_post1[0] ** 2 + v_post1[1] ** 2)
     v_post2 = v_post2 / np.sqrt(v_post2[0] ** 2 + v_post2[1] ** 2)
 
-    directions = np.array(
-      [
-        [v_post1[0], -v_post1[0], v_post2[0], -v_post2[0]],
-        [v_post1[1], -v_post1[1], v_post2[1], -v_post2[1]],
-      ]
-    )
+    directions = np.array([
+      [v_post1[0], -v_post1[0], v_post2[0], -v_post2[0]],
+      [v_post1[1], -v_post1[1], v_post2[1], -v_post2[1]],
+    ])
 
     thetas = np.arctan2(directions[0], directions[1])
 
@@ -356,13 +356,11 @@ class PerspectiveCorrection:
     else:
       v_ind = np.argmax([thetas[2], thetas[3]])
 
-    A1 = np.array(
-      [
-        [directions[0, v_ind], directions[0, h_ind], 0],
-        [directions[1, v_ind], directions[1, h_ind], 0],
-        [0, 0, 1],
-      ]
-    )
+    A1 = np.array([
+      [directions[0, v_ind], directions[0, h_ind], 0],
+      [directions[1, v_ind], directions[1, h_ind], 0],
+      [0, 0, 1],
+    ])
 
     # Might be a reflection. If so, remove reflection.
     if np.linalg.det(A1) < 0:
@@ -392,13 +390,11 @@ class PerspectiveCorrection:
       max_x = min(max_x, int(-tx + max_offset))
       max_y = min(max_y, int(-ty + max_offset))
 
-    T = np.array(
-      [
-        [1, 0, -tx],
-        [0, 1, -ty],
-        [0, 0, 1],
-      ]
-    )
+    T = np.array([
+      [1, 0, -tx],
+      [0, 1, -ty],
+      [0, 0, 1],
+    ])
 
     return T, max_x, max_y
 
@@ -489,7 +485,8 @@ class PerspectiveCorrection:
     for idx in range(self._opt.vp_iter + 1):
       logger.debug('Vanishing point iter {}', idx)
       if edgelets.count < self.MIN_EDGELETS:
-        raise NotEnoughEdgeletsError('Not enough edgelets')
+        msg = 'Not enough edgelets'
+        raise NotEnoughEdgeletsError(msg)
 
       vp = _Rectify.ransac_vanishing_point(
         edgelets=edgelets,
@@ -515,7 +512,8 @@ class PerspectiveCorrection:
         break
 
     else:
-      raise ValueError('Vanishing point 추정 실패')
+      msg = 'Vanishing point 추정 실패'
+      raise ValueError(msg)
 
     return vp, edgelets
 

@@ -1,9 +1,8 @@
 from functools import cached_property
-from typing import Literal, NamedTuple
+from typing import TYPE_CHECKING, Literal, NamedTuple
 
 import numpy as np
 from loguru import logger
-from matplotlib.image import AxesImage
 from skimage.color import gray2rgb
 
 import pano.interface.common.pano_files as pf
@@ -13,6 +12,9 @@ from pano.misc.imageio import ImageIO
 from pano.misc.tools import SegMask
 
 from .plot_controller import PanoPlotController
+
+if TYPE_CHECKING:
+  from matplotlib.image import AxesImage
 
 Image = Literal['vis', 'seg']
 
