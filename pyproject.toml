@@ -42,6 +42,10 @@ convention = 'numpy'
 [tool.ruff.lint.pylint]
 max-args = 7
 
+[tool.pylint.messages_control]
+confidence = ['HIGH', 'INFERENCE', 'INFERENCE_FAILURE']
+disable = ['C', 'R', 'I', 'fixme']
+
 [tool.mypy]
 disable_error_code = ['var-annotated', 'import']
 check_untyped_defs = true
