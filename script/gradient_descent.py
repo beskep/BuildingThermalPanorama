@@ -55,7 +55,7 @@ def plot3d():
   zs = np.array(
       [
           cost_fn(X, y_noise.reshape(-1, 1), np.array([t0, t1]).reshape(-1, 1))
-          for t0, t1 in zip(np.ravel(T0), np.ravel(T1))
+          for t0, t1 in zip(np.ravel(T0), np.ravel(T1), strict=False)
       ]
   )
   # Reshaping the cost values
@@ -93,7 +93,7 @@ def plot3d():
   ax.set_xlabel('theta 0')
   ax.set_ylabel('theta 1')
   ax.set_zlabel('Cost function')
-  ax.set_title('Gradient descent: Root at {}'.format(theta_result.ravel()))
+  ax.set_title(f'Gradient descent: Root at {theta_result.ravel()}')
   ax.view_init(45, 45)
 
   # #Contour plot

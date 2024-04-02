@@ -1,9 +1,11 @@
-from typing import Union
+from typing import TYPE_CHECKING
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-import numpy as np
 import seaborn as sns
+
+if TYPE_CHECKING:
+  import numpy as np
 
 
 def set_style(context='notebook', style='whitegrid', font_scale=1):
@@ -50,7 +52,7 @@ class Subplots:
     )
 
     self._fig: plt.Figure = subplots[0]
-    self._axes: Union[plt.Axes, np.ndarray] = subplots[1]
+    self._axes: plt.Axes | np.ndarray = subplots[1]
 
   def __enter__(self):
     return (self._fig, self._axes)

@@ -5,7 +5,6 @@ img1 img2 histogram 2d_hisgotram+MI
 """
 
 from pathlib import Path
-from typing import Optional
 
 import click
 import matplotlib.pyplot as plt
@@ -35,11 +34,11 @@ def _read_img(path, eq=False) -> np.ndarray:
 
 def pairwise(iterable):
   it = iter(iterable)
-  return zip(it, it)
+  return zip(it, it, strict=False)
 
 
 def mi_plot(
-    paths: tuple, titles=('IR', 'Visible'), eqs: Optional[tuple] = None
+    paths: tuple, titles=('IR', 'Visible'), eqs: tuple | None = None
 ) -> tuple[plt.Figure, plt.Axes]:
   """
   Parameters
@@ -67,7 +66,7 @@ def mi_plot(
   nrows = len(paths)
   fig, axes = plt.subplots(nrows=nrows, ncols=4, figsize=(16, 8))
 
-  for row, (p, eq) in enumerate(zip(paths, eqs)):
+  for row, (p, eq) in enumerate(zip(paths, eqs, strict=False)):
     img1 = _read_img(p[0], eq=eq[0])
     img2 = _read_img(p[1], eq=eq[1])
 
@@ -81,7 +80,7 @@ def mi_plot(
       axes[row, col].set_axis_off()
       # axes[row, col].set_title(titles[col])
 
-    hist_data = {title: img.ravel() for title, img in zip(titles, images)}
+    hist_data = {title: img.ravel() for title, img in zip(titles, images, strict=False)}
     sns.histplot(data=hist_data, ax=axes[row, 2], stat='probability', palette=palette)
     axes[row, 2].set_xlabel('Intensity')
     if not all(eq):

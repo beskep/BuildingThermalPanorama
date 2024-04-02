@@ -48,7 +48,7 @@ def metrics_by_trnsl(fixed_image, moving_image, translation_range, bins='auto'):
   for col, (img, title) in enumerate(
       zip(
           [fixed_image, moving_image],
-          ['IR image', 'Visible image'],
+          ['IR image', 'Visible image'], strict=False,
       )
   ):
     axes[0, col].imshow(img)

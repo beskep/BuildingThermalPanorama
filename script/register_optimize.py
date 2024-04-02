@@ -6,7 +6,6 @@ STIK 인자 최적화 효율 평가
 import shutil
 from itertools import product
 from pathlib import Path
-from typing import Optional, Union
 
 import click
 import numpy as np
@@ -29,7 +28,7 @@ class _RegistrationPreprocess(RegistrationPreprocess):
       'norm',
   )
 
-  def __init__(self, shape: tuple, exposure: Optional[str]) -> None:
+  def __init__(self, shape: tuple, exposure: str | None) -> None:
     if exposure not in self.EXPOSURE:
       raise ValueError(exposure)
 
@@ -62,7 +61,7 @@ class _ThermalPanorama(ThermalPanorama):
   EXPOSURE = _RegistrationPreprocess.EXPOSURE
   BINS = (30, 50, 'auto')
 
-  def __init__(self, directory: Union[str, Path], default_config=False) -> None:
+  def __init__(self, directory: str | Path, default_config=False) -> None:
     super().__init__(directory, default_config=default_config)
 
     self._metric = self.METRIC[0]

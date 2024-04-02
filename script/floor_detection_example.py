@@ -92,7 +92,7 @@ def draw_edgelets(
   arr = _pnts_arr(edgelets)
   lim = dict(xlim=ax.get_xlim(), ylim=ax.get_ylim())
 
-  for xs, ys in zip(*arr):
+  for xs, ys in zip(*arr, strict=False):
     if not extend:
       x, y = xs, ys
       color = cmap[0]

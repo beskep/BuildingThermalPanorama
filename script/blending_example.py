@@ -1,4 +1,3 @@
-from typing import Optional
 
 import cv2 as cv
 import matplotlib.pyplot as plt
@@ -36,7 +35,7 @@ def laplacian_pyramid(pyramid: list[NDArray]):
 
 
 def multiband_blending(
-    img1: NDArray, img2: NDArray, mask: Optional[NDArray] = None, deep=4
+    img1: NDArray, img2: NDArray, mask: NDArray | None = None, deep=4
 ):
   if img1.shape != img2.shape:
     raise ValueError
@@ -149,7 +148,7 @@ def example_feather(img1: NDArray, img2: NDArray, width=0.1):
       fig.add_subplot(gs[1, :]),
       fig.add_subplot(gs[0, 1]),
   ]
-  for idx, (ax, img) in enumerate(zip(axes, [img1, blended, img2])):
+  for idx, (ax, img) in enumerate(zip(axes, [img1, blended, img2], strict=False)):
     imgu = img.astype(np.uint8)
     ax.imshow(imgu)
     Image.fromarray(imgu).save(DIR / f'blending-feather-02-{idx}.png')
@@ -163,7 +162,7 @@ def _pyramid_plot(pyramid: list, title=None):
   assert len(pyramid) <= 4
   fig, axes = plt.subplots(2, 2)
 
-  for idx, (ax, img) in enumerate(zip(axes.ravel(), pyramid)):
+  for idx, (ax, img) in enumerate(zip(axes.ravel(), pyramid, strict=False)):
     ax.imshow(img)
     if title:
       ax.set_title(f'{title} No. {idx+1}')
@@ -178,7 +177,7 @@ def _pyramid_plot(pyramid: list, title=None):
 
 
 def example_multiband(
-    img1: NDArray, img2: NDArray, mask: Optional[NDArray] = None, deep=4
+    img1: NDArray, img2: NDArray, mask: NDArray | None = None, deep=4
 ):
   if img1.shape != img2.shape:
     raise ValueError

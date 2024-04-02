@@ -1,11 +1,9 @@
 from collections import defaultdict
 from pathlib import Path
-from typing import DefaultDict
 
 import click
 import pandas as pd
 import yaml
-from loguru import logger
 
 
 def _images_count(images):
@@ -40,7 +38,7 @@ def main(path, output):
   path = Path(path)
   pano_dirs = path.rglob('03 Panorama')
 
-  dd = DefaultDict(list)
+  dd = defaultdict(list)
   for pano_dir in pano_dirs:
     case = pano_dir.parent.name
     r = _read_case(pano_dir)

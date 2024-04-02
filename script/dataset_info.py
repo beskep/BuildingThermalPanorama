@@ -2,7 +2,6 @@ import os
 import re
 from collections import defaultdict
 from pathlib import Path
-from typing import Optional
 
 import click
 import pandas as pd
@@ -38,7 +37,7 @@ def get_camera(directory: Path):
   return name[: name.find(' ', 5)]
 
 
-def get_images_count(directory: Path, camera: Optional[str] = None):
+def get_images_count(directory: Path, camera: str | None = None):
   raw = directory.joinpath('Raw')
   d = raw if raw.exists() else directory
 

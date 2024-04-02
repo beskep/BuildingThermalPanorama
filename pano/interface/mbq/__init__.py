@@ -1,4 +1,6 @@
 """
+matplotlib_backend_qtquick
+
 References
 ----------
 matplotlib_backend_qtquick <https://github.com/jmitrevs/matplotlib_backend_qtquick>

@@ -1,6 +1,7 @@
-"""
-Render to qtquick from agg.
-"""
+# type: ignore  # noqa: PGH003
+# ruff: noqa: ERA001 N806 E741
+# pylint: disable-all
+"""Render to qtquick from agg."""
 
 import numpy as np
 from matplotlib.backends.backend_agg import FigureCanvasAgg
@@ -9,7 +10,7 @@ from .backend_qtquick import FigureCanvasQtQuick, QtCore, QtGui
 
 
 class FigureCanvasQtQuickAgg(FigureCanvasAgg, FigureCanvasQtQuick):
-  """This class customizes the FigureCanvasQtQuick for Agg"""
+  """Customizes the FigureCanvasQtQuick for Agg"""
 
   def __init__(self, figure=None, parent=None):
     super().__init__(figure=figure, parent=parent)
@@ -18,6 +19,7 @@ class FigureCanvasQtQuickAgg(FigureCanvasAgg, FigureCanvasQtQuick):
   def paint(self, p):
     """
     Copy the image from the Agg canvas to the qt.drawable.
+
     In Qt, all drawing should be done inside of here when a widget is
     shown onscreen.
     """
@@ -41,16 +43,16 @@ class FigureCanvasQtQuickAgg(FigureCanvasAgg, FigureCanvasQtQuick):
         #  Change QImage format to RGBA8888
         #    now no conversion needed
         #    And with bigendian?
-        stringBuffer = np.asarray(self.renderer._renderer).tobytes()
+        stringBuffer = np.asarray(self.renderer._renderer).tobytes()  # noqa: SLF001
       else:
         stringBuffer = self.renderer.tostring_argb()
 
       # convert the Agg rendered image -> qImage
       qImage = QtGui.QImage(
-          stringBuffer,
-          int(self.renderer.width),
-          int(self.renderer.height),
-          QtGui.QImage.Format_RGBA8888,
+        stringBuffer,
+        int(self.renderer.width),
+        int(self.renderer.height),
+        QtGui.QImage.Format_RGBA8888,
       )
       if hasattr(qImage, 'setDevicePixelRatio'):
         # Not available on Qt4 or some older Qt5.
@@ -69,7 +71,7 @@ class FigureCanvasQtQuickAgg(FigureCanvasAgg, FigureCanvasQtQuick):
     else:
       bbox = self.blitbox
       # repaint uses logical pixels, not physical pixels like the renderer.
-      l, b, w, h = [pt / self._dpi_ratio for pt in bbox.bounds]
+      l, b, w, h = (pt / self._dpi_ratio for pt in bbox.bounds)
       t = b + h
       reg = self.copy_from_bbox(bbox)
       stringBuffer = reg.to_string_argb()
@@ -88,9 +90,7 @@ class FigureCanvasQtQuickAgg(FigureCanvasAgg, FigureCanvasQtQuick):
       self.blitbox = None
 
   def blit(self, bbox=None):
-    """
-    Blit the region in bbox
-    """
+    """Blit the region in bbox"""
     # If bbox is None, blit the entire canvas. Otherwise
     # blit only the area defined by the bbox.
     if bbox is None and self.figure:
@@ -98,7 +98,7 @@ class FigureCanvasQtQuickAgg(FigureCanvasAgg, FigureCanvasQtQuick):
 
     self.blitbox = bbox
     # repaint uses logical pixels, not physical pixels like the renderer.
-    l, b, w, h = [pt / self._dpi_ratio for pt in bbox.bounds]
+    l, b, w, h = (pt / self._dpi_ratio for pt in bbox.bounds)
     t = b + h
     self.repaint(l, self.renderer.height - t, w, h)
 

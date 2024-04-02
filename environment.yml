@@ -23,7 +23,7 @@ dependencies:
   - omegaconf
   - cx_freeze
   - pywin32
-  - toolz
+  - more-itertools
   - pip
   - pip:
       - webp

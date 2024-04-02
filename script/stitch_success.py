@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Optional
 
 import click
 import matplotlib.pyplot as plt
@@ -12,7 +11,7 @@ from script.plot import set_style
 set_style()
 
 
-def show_or_save(fig, output: Optional[Path] = None, fname=None):
+def show_or_save(fig, output: Path | None = None, fname=None):
   if output:
     if fname is None:
       fname = 'plot'

@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Optional
 
 import click
 import matplotlib.pyplot as plt
@@ -31,7 +30,7 @@ def remove_outliers(data: np.ndarray, k=1.5):
   return data[~mask]
 
 
-def image_outlier_map(image: np.ndarray, label: Optional[np.ndarray] = None, k=1.5):
+def image_outlier_map(image: np.ndarray, label: np.ndarray | None = None, k=1.5):
   if label is None:
     label = np.zeros_like(image, dtype=int)
   else:
@@ -90,7 +89,7 @@ def main(directory, ir, mask, seg, ks):
   for ax in axes.ravel():
     ax.imshow(ir_arr, cmap='autumn')
 
-  for k, ax in zip(ks, axes.ravel()[1:]):
+  for k, ax in zip(ks, axes.ravel()[1:], strict=False):
     outliers = image_outlier_map(image=ir_arr, label=seg_arr, k=float(k))
     ax.imshow(outliers)
     ax.set_title(f'k = {k}')

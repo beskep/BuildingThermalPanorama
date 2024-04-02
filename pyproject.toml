@@ -4,7 +4,7 @@ preview = true
 output-format = 'concise'
 indent-width = 2
 respect-gitignore = false
-exclude = ['mbq', 'script', 'pano/registration/evaluation/_*']
+exclude = ['pano/registration/evaluation/_*']
 
 [tool.ruff.format]
 preview = true
@@ -17,7 +17,7 @@ ignore = [
     'COM',    # flake8-commas
     'CPY',    # flake8-copyright
     'D1',     # pydocstyle: D1*
-    'D4',     # pydocstyle: D4*
+    'D400',   # pydocstyle: ends-in-period
     'E1',     # pycodestyle: E1*
     'E2',     # pycodestyle: E2*
     'FIX',    # flake8-fixme
@@ -44,14 +44,18 @@ max-args = 7
 
 [tool.pylint.messages_control]
 confidence = ['HIGH', 'INFERENCE', 'INFERENCE_FAILURE']
-disable = ['C', 'R', 'I', 'fixme']
+disable = ['C', 'R', 'I', 'no-member', 'fixme']
 
 [tool.mypy]
-disable_error_code = ['var-annotated', 'import']
+disable_error_code = [
+    'attr_defined',
+    'import-untyped',
+    'import',
+    'var-annotated',
+]
 check_untyped_defs = true
 warn_unused_ignores = true
 warn_unused_configs = true
-exclude = ['.*/mbq/.*']
 
 [tool.pytest.ini_options]
 addopts = '-v'

@@ -8,10 +8,10 @@ import numpy as np
 from matplotlib.backend_bases import MouseButton
 from matplotlib.lines import Line2D
 from matplotlib.widgets import _SelectorWidget  # noqa: PLC2701
+from more_itertools import sliding_window
 from numpy.typing import NDArray
 from skimage import draw
 from skimage.color import label2rgb
-from toolz.itertoolz import sliding_window
 
 import pano.interface.common.pano_files as pf
 from pano.interface.common.cmap import save_colormap
@@ -124,7 +124,7 @@ def extend_lines(n: Any, p: Any, xlim: Any, ylim: Any) -> tuple[tuple, tuple]:
 def _segment_mask(storey_mask: np.ndarray, num: int):
   points = np.linspace(0, storey_mask.shape[1], num=(num + 1), endpoint=True)
 
-  for idx1, idx2 in sliding_window(2, np.round(points)):
+  for idx1, idx2 in sliding_window(np.round(points), 2):
     mask = storey_mask.copy()
     mask[:, : int(idx1)] = False
     mask[:, int(idx2) :] = False
@@ -156,7 +156,7 @@ class SegmentsSummary:
   def mask(cls, shape: tuple[int, int], coords: NDArray):
     mask = np.full(shape=shape, fill_value=np.nan, dtype=np.uint8)
 
-    for idx, lines in enumerate(sliding_window(2, coords)):
+    for idx, lines in enumerate(sliding_window(coords, 2)):
       m = cls._mask(lines=lines, image_shape=shape)
       mask[m] = idx
 
@@ -205,7 +205,7 @@ class SegmentsSummary:
 
     stats = []
     label = np.zeros_like(arr, dtype=int)  # segments 구분 시각화
-    for idx, lines in enumerate(sliding_window(2, coords)):
+    for idx, lines in enumerate(sliding_window(coords, 2)):
       mask = self._mask(lines=lines, image_shape=(arr.shape[0], arr.shape[1]))
 
       # 수직 선으로 `num`개 분할한 조각의 stat 계산

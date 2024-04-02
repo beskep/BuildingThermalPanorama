@@ -11,8 +11,7 @@ References
     vanishing point detection." 2012 IEEE/RSJ International Conference on
     Intelligent Robots and Systems. IEEE, 2012.
 """
-
-# ruff: noqa: NPY002 N806 D401
+# ruff: noqa: NPY002 N806 D401 PLR0914
 
 from typing import Any
 
@@ -241,8 +240,8 @@ def ransac_3_line(
     vp1 = np.cross(l1, l2)
 
     # The vanishing line polar to v1
-    #` h = np.dot(vp1, [1 / focal_length**2, 1 / focal_length**2, 1])
-    #` h = [vp1[0] * invfsq, vp1[1] * invfsq, vp1[2]]
+    # ` h = np.dot(vp1, [1 / focal_length**2, 1 / focal_length**2, 1])
+    # ` h = [vp1[0] * invfsq, vp1[1] * invfsq, vp1[2]]
     h: Any = vp1 * farr
     vp2 = np.cross(h, l3)
 

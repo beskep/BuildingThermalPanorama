@@ -50,7 +50,7 @@ def hough1(path):
   axes[0].plot([0, x0y0[0]], [0, x0y0[1]], color='gray')
 
   theta = np.linspace(0, np.pi, num=50)
-  for x, y in zip(xy_dots_xs, xy_dots_ys):
+  for x, y in zip(xy_dots_xs, xy_dots_ys, strict=False):
     rho = theta_rho(theta, x=x, y=y)
     axes[1].plot(theta, rho)
 
@@ -123,7 +123,7 @@ def hough2(path, fs):
   # ax[2].set_axis_off()
   ax[2].set_title('(c) Detected lines')
 
-  for _, angle, dist in zip(*hough_line_peaks(h, theta, d)):
+  for _, angle, dist in zip(*hough_line_peaks(h, theta, d), strict=False):
     (x0, y0) = dist * np.array([np.cos(angle), np.sin(angle)])
     ax[2].axline((x0, y0), slope=np.tan(angle + np.pi / 2), linewidth=2)
 
