@@ -8,7 +8,6 @@ from shutil import copy2
 from typing import TYPE_CHECKING
 
 from loguru import logger
-from toolz import dicttoolz
 
 import pano.interface.common.pano_files as pf
 import pano.interface.controller.controller as con
@@ -257,11 +256,11 @@ class Controller(QtCore.QObject):
       'Histogram': dst / f'{image.stem}_hist.png',
     }
 
-    fmt = dicttoolz.merge(
-      prj,
-      params,
-      {k: f'{v:.1f} ℃' for k, v in stat.items()},
-      {k: v.as_posix() for k, v in images.items()},
+    fmt = (
+      prj
+      | params
+      | {k: f'{v:.1f} ℃' for k, v in stat.items()}
+      | {k: v.as_posix() for k, v in images.items()}
     )
 
     return template.read_text(encoding='UTF-8').format_map(fmt)

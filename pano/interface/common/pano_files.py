@@ -53,7 +53,6 @@ from pathlib import Path
 from shutil import copy2
 from typing import ClassVar
 
-import toolz
 from loguru import logger
 from omegaconf import DictConfig
 
@@ -315,9 +314,7 @@ class ThermalPanoramaFileManager:
     ------
     FileNotFoundError
     """
-    try:
-      _, paths = toolz.peek(paths)
-    except StopIteration:
+    if not (paths := list(paths)):
       msg = '선택된 파일이 없습니다.'
       raise FileNotFoundError(msg) from None
 
@@ -375,19 +372,17 @@ def init_directory(
       `raise_empty`가 `True`고 작업 폴더에 영상 파일이 없는 경우 raise.
   """
   if not (raw_dir := directory / DIR.RAW.value).exists():
-    files: Iterable[Path] = (
+    files = [
       x
       for x in directory.glob('*')
       if x.is_file() and x.suffix.lower() in {'.jpg', '.xlsx', '.png'}
-    )
+    ]
 
-    try:
-      _, files = toolz.peek(files)
-    except StopIteration:
-      if raise_empty:
-        msg = f'영상 파일이 발견되지 않았습니다.: "{directory}"'
-        raise ImageNotFoundError(msg) from None
-    else:
+    if not files and raise_empty:
+      msg = f'영상 파일이 발견되지 않았습니다.: "{directory}"'
+      raise ImageNotFoundError(msg) from None
+
+    if not files:
       raw_dir.mkdir()
 
     for file in files:
