@@ -195,7 +195,7 @@ class RegisteringImage:
     transform_function: Callable[[np.ndarray], np.ndarray] | None = None,
   ):
     """
-    Moving image의 registration 방법 설정
+    Moving image의 registration 방법 설정.
 
     Parameters
     ----------
@@ -203,7 +203,7 @@ class RegisteringImage:
         변환 행렬, by default None
     transform_function : Optional[Callable[[np.ndarray], np.ndarray]], optional
         변환 함수 (f: np.ndarray -> np.ndarray), by default None
-    """
+    """  # noqa: D401
     self._trsf_mtx = transform_matrix
     self._trsf_fn = transform_function
 
@@ -256,6 +256,11 @@ class RegisteringImage:
     -------
     np.ndarray
         Fixed image의 시점에 맞게 변환 (정합)된 영상
+
+    Raises
+    ------
+    ValueError
+        Transform 미지정
     """
     if self._shape is not None and image.shape[:2] != self._shape:
       image = resize(image, output_shape=self._shape, anti_aliasing=True)

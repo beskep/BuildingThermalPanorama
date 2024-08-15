@@ -1,4 +1,5 @@
 """VGG Image Annotator (VIA)의 프로젝트 저장 결과로부터 annotation 해석"""
+# ruff: noqa: DOC402 DOC501
 
 import json
 from collections import defaultdict

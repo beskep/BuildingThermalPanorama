@@ -8,6 +8,7 @@ Bukhari, F., & Dailey, M. N. (2013). Automatic Radial Distortion Estimation
 from a Single Image. Journal of Mathematical Imaging and Vision, 45(1), 31–45.
 https://doi.org/10.1007/s10851-012-0342-2
 """
+# ruff: noqa: RUF002 PLR2004 N806
 
 from typing import Any
 
@@ -22,14 +23,10 @@ from skimage.restoration import denoise_bilateral
 from pano import utils
 from pano.misc import tools
 
-# ruff: noqa
-
 
 class AbsResidualCircleModel(CircleModel):
   def residuals(self, data):
-    residuals = np.abs(super().residuals(data))
-
-    return residuals
+    return np.abs(super().residuals(data))
 
 
 class RadialDistortionModel:
@@ -93,13 +90,12 @@ class RadialDistortionModel:
 
     data = np.array(data)
     x0, y0, _ = self.params
-    error = self.static_residuals(data=data, x0=x0, y0=y0)
-
-    return error
+    return self.static_residuals(data=data, x0=x0, y0=y0)
 
   def inv_distort_map(self, xdyd: np.ndarray):
     if self.params is None:
-      raise ValueError('parameter is None')
+      msg = 'parameter is None'
+      raise ValueError(msg)
 
     x0y0 = np.array(self.params[:2]).reshape([1, 2])
 
@@ -116,9 +112,7 @@ class RadialDistortionModel:
     assert np.all(rr >= 0.0)
 
     xu0yu0 = rr * xd0_yd0
-    xuyu = xu0yu0 + x0y0
-
-    return xuyu
+    return xu0yu0 + x0y0  # xuyu
 
 
 def inv_radial_distort_map(xdyd: np.ndarray, k1: float, center) -> np.ndarray:
@@ -130,7 +124,7 @@ def inv_radial_distort_map(xdyd: np.ndarray, k1: float, center) -> np.ndarray:
 
   # if k1 >= 0:
   #   # pincushion distortion
-  # else:
+  # else:  # noqa: ERA001
   #   # barrel distortion
 
   c = np.divide(
@@ -160,9 +154,7 @@ def radial_distort_map(xuyu: np.ndarray, k1: float, center) -> np.ndarray:
   r_ratio = np.divide(rd, ru, out=np.ones_like(ru), where=ru != 0)
   xdyd_center = r_ratio * xuyu_center
 
-  xdyd = xdyd_center + center
-
-  return xdyd
+  return xdyd_center + center  # xdyd
 
 
 class RadialDistortion:

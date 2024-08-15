@@ -16,7 +16,13 @@ class PATH:
 
 
 def exiftool(*args) -> bytes:
-  """ExifTool 프로그램을 통해 영상 파일의 메타 데이터 (Exif) 추출."""
+  """
+  ExifTool 프로그램을 통해 영상 파일의 메타 데이터 (Exif) 추출.
+
+  Returns
+  -------
+  bytes
+  """
   PATH.EXIFTOOL.stat()
   args = (PATH.EXIFTOOL, *args)
   return sp.check_output(list(map(str, args)), stderr=sp.DEVNULL)

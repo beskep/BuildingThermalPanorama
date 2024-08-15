@@ -1,3 +1,4 @@
+import operator
 from collections.abc import Callable, Iterable
 from contextlib import suppress
 from dataclasses import dataclass
@@ -116,7 +117,7 @@ def extend_lines(n: Any, p: Any, xlim: Any, ylim: Any) -> tuple[tuple, tuple]:
       (px - np.divide(ny * (y1 - py), nx), y1),  # y=y1 선과 만나는 지점
     ]
 
-  points = sorted(points, key=lambda x: x[0])
+  points = sorted(points, key=operator.itemgetter(0))
 
   return points[1], points[2]  # x좌표가 중간인 두 점 반환
 

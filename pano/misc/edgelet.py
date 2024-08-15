@@ -93,7 +93,18 @@ class HoughOptions:
 
 
 def edge_preprocess(image: np.ndarray, *, eqhist=True) -> np.ndarray:
-  """전처리 (회색 변환 및 히스토그램 평활화)"""
+  """
+  전처리 (회색 변환 및 히스토그램 평활화)
+
+  Parameters
+  ----------
+  image : np.ndarray
+  eqhist : bool, optional
+
+  Returns
+  -------
+  np.ndarray
+  """
   na = np.isnan(image)
   image[na] = np.nanmin(image)
 

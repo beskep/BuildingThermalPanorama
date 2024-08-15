@@ -4,6 +4,7 @@
 
 import enum
 from collections.abc import Callable
+from typing import Literal
 
 import numpy as np
 import SimpleITK as sitk  # noqa: N813
@@ -67,7 +68,7 @@ class SITKRegistrator(BaseRegistrator):
     self,
     transformation=Transformation.Similarity,
     metric=Metric.JointHistMI,
-    optimizer='powell',
+    optimizer: Literal['powell', 'gradient_descent'] = 'powell',
     bins: str | int = 'auto',
   ) -> None:
     """
@@ -79,8 +80,8 @@ class SITKRegistrator(BaseRegistrator):
         정합하기 위한 moving_image의 변환 방법
     metric : Metric, optional
         최적화 대상 metric
-    optimizer : str, optional
-        최적화 방법. {'powell', 'gradient_descent'}
+    optimizer : Literal['powell', 'gradient_descent']
+        최적화 방법.
     bins : Union[str, int], optional
         `metric`이 `JointHistMI` 혹은 `MattesMI`인 경우 히스토그램과
         엔트로피 계산을 위한 bins 개수.
@@ -122,9 +123,6 @@ class SITKRegistrator(BaseRegistrator):
         convergenceWindowSize=20,
         maximumStepSizeInPhysicalUnits=2,
       )
-    else:
-      msg = f'Optimizer `{optimizer}` not in ["powell", "gradient_descent"]'
-      raise ValueError(msg)
 
     # 각 parameter의 scaling factor 결정 방법
     self._method.SetOptimizerScalesFromPhysicalShift()
@@ -240,6 +238,11 @@ class SITKRegistrator(BaseRegistrator):
     -------
     np.ndarray
         Transform matrix
+
+    Raises
+    ------
+    AssertionError
+        params 가정 오류
     """
     match len(params := transform.GetParameters()):
       case 4:
@@ -247,7 +250,7 @@ class SITKRegistrator(BaseRegistrator):
       case 6:
         ttype = 'affine'
       case _:
-        raise ValueError(params)
+        raise AssertionError(params)
 
     # 수치적으로 transform matrix 추정
     # (simpleitk의 문서가 부실해서 parameter를 해석할 수 없음)

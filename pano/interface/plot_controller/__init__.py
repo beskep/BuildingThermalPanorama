@@ -3,7 +3,7 @@ from collections.abc import Iterable
 
 from .analysis import AnalysisPlotController
 from .output import OutputPlotController
-from .panorama import PanoramaPlotController, save_manual_correction
+from .panorama import PanoramaPlotController, save_manual_correction  # noqa: F401
 from .plot_controller import PanoPlotController
 from .registration import RegistrationPlotController
 from .segmentation import SegmentationPlotController

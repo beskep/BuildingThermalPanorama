@@ -13,7 +13,7 @@ References
 """
 # ruff: noqa: NPY002 N806 D401 PLR0914
 
-from typing import Any
+from typing import Any, Literal
 
 import numpy as np
 from loguru import logger
@@ -368,13 +368,13 @@ def compute_homography_and_warp(
   vanishing_line = np.cross(vp1, vp2)
   H = np.eye(3)
   H[2] = vanishing_line / vanishing_line[2]
-  H = H / H[2, 2]
+  H /= H[2, 2]
 
   # Find directions corresponding to vanishing points
   v_post1 = np.dot(H, vp1)
   v_post2 = np.dot(H, vp2)
-  v_post1 = v_post1 / np.sqrt(v_post1[0] ** 2 + v_post1[1] ** 2)
-  v_post2 = v_post2 / np.sqrt(v_post2[0] ** 2 + v_post2[1] ** 2)
+  v_post1 /= np.sqrt(v_post1[0] ** 2 + v_post1[1] ** 2)
+  v_post2 /= np.sqrt(v_post2[0] ** 2 + v_post2[1] ** 2)
 
   directions = np.array([
     [v_post1[0], -v_post1[0], v_post2[0], -v_post2[0]],
@@ -489,7 +489,11 @@ def vis_model(image, model, *, show=True):
 
 
 def rectify_image(
-  image: np.ndarray, clip_factor=6, algorithm='independent', *, reestimate=False
+  image: np.ndarray,
+  clip_factor=6,
+  algorithm: Literal['3-line', 'independent'] = 'independent',
+  *,
+  reestimate=False,
 ):
   """Rectified image with vanishing point computed using ransac.
 
@@ -500,7 +504,7 @@ def rectify_image(
   clip_factor: float, optional
       Proportion of image in multiples of image size to be retained if gone
       out of bounds after homography.
-  algorithm: one of {'3-line', 'independent'}
+  algorithm: Literal['3-line', 'independent']
       independent ransac algorithm finds the orthogonal vanishing points by
       applying ransac twice.
       3-line algorithm finds the orthogonal vanishing points together, but
@@ -513,6 +517,11 @@ def rectify_image(
   -------
   warped_img: ndarray
       Rectified image.
+
+  Raises
+  ------
+  ValueError
+      이미지 차원 오류
   """
   if image.ndim != 2:  # noqa: PLR2004
     raise ValueError
@@ -539,9 +548,6 @@ def rectify_image(
     vp1, vp2 = ransac_3_line(
       edgelets1, focal_length, num_ransac_iter=3000, threshold_inlier=5
     )
-  else:
-    msg = "Parameter 'algorithm' has to be one of {'3-line', 'independent'}"
-    raise KeyError(msg)
 
   # Compute the homography and warp
   return compute_homography_and_warp(image, vp1, vp2, clip_factor=clip_factor)

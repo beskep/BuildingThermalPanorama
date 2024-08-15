@@ -38,7 +38,7 @@ def _detect_chessboard(file: Path, save_dir: Path, img_size, pattern_size, crite
     path = save_dir.joinpath(file.with_suffix('.jpg').name)
     ImageIO.save(path=path, array=image)
 
-  return img_size, ret, corners
+  return img_size, ret, corners  # noqa: DOC201
 
 
 def _calibrate_camera(object_points, image_points, image_size, save_dir: Path):
@@ -88,6 +88,11 @@ def compute_camera_matrix(
       결과 저장 경로
   pattern_size : tuple, optional
       검출한 체스보드 패턴 개수, by default (3, 3)
+
+  Raises
+  ------
+  ValueError
+      추출 실패
   """
   save_dir = Path(save_dir).resolve()
 
@@ -123,28 +128,34 @@ def compute_camera_matrix(
 
 
 class CameraCalibration:
-  def __init__(self, params_path: str | Path):
+  def __init__(self, path: str | Path):
     """추출한 Camera Calibration 패러미터를 읽고 주어진 영상을 calibrate
 
     Parameters
     ----------
-    params_path : Union[str, Path]
+    path : str | Path
         `compute_camera_matrix`를 통해 산정한 카메라 패러미터 파일.
         `.npz` 또는 `.yaml` 파일 입력 가능.
-    """
-    params_path = Path(params_path)
-    if not params_path.exists():
-      raise FileNotFoundError(params_path)
 
-    ext = params_path.suffix
+    Raises
+    ------
+    FileNotFoundError
+        파일 미존재
+    ValueError
+        파일 형식 오류
+    """
+    if not (path := Path(path)).exists():
+      raise FileNotFoundError(path)
+
+    ext = path.suffix
     if ext == '.npz':
-      npz_file = np.load(params_path.as_posix())
+      npz_file = np.load(path.as_posix())
 
       self._img_size = tuple(npz_file['image_size'])
       self._matrix = npz_file['matrix']
       self._dist_coeff = npz_file['dist_coeff']
     elif ext in {'.yaml', '.yml'}:
-      with open(params_path, encoding=_ENC) as f:
+      with open(path, encoding=_ENC) as f:
         params = yaml.safe_load(f)
 
       self._img_size = tuple(params['image_size'])

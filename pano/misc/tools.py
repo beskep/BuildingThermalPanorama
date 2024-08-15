@@ -278,11 +278,6 @@ def prep_compare_images(
   Returns
   -------
   Union[np.ndarray, List[np.ndarray]]
-
-  Raises
-  ------
-  ValueError
-      두 영상의 해상도 (shape)이 다르거나 2차원이 아닌 경우
   """
   img1, img2 = _check_and_prep(
     image1=image1, image2=image2, normalize=norm, eq_hist=eq_hist
@@ -333,11 +328,6 @@ def prep_compare_fig(
       plt.Figure
 
       np.ndarray of plt.Axes
-
-  Raises
-  ------
-  ValueError
-      두 영상의 해상도 (shape)이 다르거나 2차원이 아닌 경우
   """
   img1, img2 = _check_and_prep(
     image1=images[0],

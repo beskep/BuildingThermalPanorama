@@ -262,8 +262,12 @@ class ThermalPanoramaFileManager:
     자동 열/실화상 정합 결과인 transform matrix 저장 경로.
 
     실화상을 열화상 크기에 맞게 resize 후 matrix를 적용 필요.
+
+    Returns
+    -------
+    Path
     """
-    return self.subdir(DIR.RGST).joinpath('transformation_matrix.npz')
+    return self.subdir(DIR.RGST) / 'transformation_matrix.npz'
 
   @staticmethod
   def segment_model_path():
@@ -304,7 +308,13 @@ class ThermalPanoramaFileManager:
       copy2(src, dst)
 
   def replace_visual_images(self, paths: Iterable[str | Path]):
-    """동시 추출된 실화상 대신 새 실화상 입력."""
+    """
+    동시 추출된 실화상 대신 새 실화상 입력.
+
+    Raises
+    ------
+    FileNotFoundError
+    """
     try:
       _, paths = toolz.peek(paths)
     except StopIteration:

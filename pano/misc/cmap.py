@@ -1,6 +1,7 @@
 """FLIR 촬영 영상에 저장된 colormap 추출 및 영상 데이터에 적용"""
 
 from pathlib import Path
+from typing import Literal
 
 import cv2 as cv
 import numpy as np
@@ -9,7 +10,11 @@ from matplotlib.colors import Colormap, ListedColormap
 from pano.misc import sp, tools
 
 
-def extract_flir_colormap(image_path: str, save_path: str, color_space: str = 'RGB'):
+def extract_flir_colormap(
+  image_path: str,
+  save_path: str,
+  color_space: Literal['rgb', 'ycrcb'] = 'rgb',
+):
   """
   FLIR 촬영 파일로부터 열화상의 colormap 정보를 추출하고 text 파일로 저장
 
@@ -22,11 +27,6 @@ def extract_flir_colormap(image_path: str, save_path: str, color_space: str = 'R
   color_space : str, optional
       Colormap을 저장할 colorspace. "RGB" 또는 "YCrCb".
   """
-  color_space = color_space.lower()
-  if color_space not in {'rgb', 'ycrcb'}:
-    msg = f'{color_space} not in {{"rgb", "ycrcb"}}'
-    raise ValueError(msg)
-
   palette = sp.get_exif_binary(path=image_path, tag='-Palette')
   palette_array = np.array(list(palette)).reshape([1, -1, 3]).astype(np.uint8)
 
@@ -39,7 +39,7 @@ def extract_flir_colormap(image_path: str, save_path: str, color_space: str = 'R
 class FLIRColormap(ListedColormap):
   @classmethod
   def from_uint8_colors(
-    cls, colors: np.ndarray, color_space: str = 'RGB'
+    cls, colors: np.ndarray, color_space: Literal['rgb', 'ycrcb'] = 'rgb'
   ) -> ListedColormap:
     """
     unit8 형태 색상 정보로부터 matplotlib cmap 생성
@@ -49,16 +49,11 @@ class FLIRColormap(ListedColormap):
     colors : np.ndarray
         색상 정보. shape: (Any, 3)
     color_space : str, optional
-        Colorspace. "RGB" 또는 "YCrCb".
 
     Returns
     -------
     ListedColormap
     """
-    color_space = color_space.lower()
-    if color_space not in {'rgb', 'ycrcb'}:
-      raise ValueError(color_space)
-
     if color_space == 'ycrcb':
       colors = colors.reshape([1, -1, 3])
       colors = cv.cvtColor(colors, code=cv.COLOR_YCrCb2RGB)

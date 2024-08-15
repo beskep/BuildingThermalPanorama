@@ -1,12 +1,14 @@
 """외피 열화상 파노라마 영상처리 알고리즘의 CLI 인터페이스"""
 
 from pathlib import Path
+from typing import Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
 import yaml
 from loguru import logger
 from omegaconf import OmegaConf
+from rich.progress import track
 
 import pano.registration.registrator.simpleitk as rsitk
 from pano import stitch, utils
@@ -23,6 +25,8 @@ from pano.segmentation.onnx import SmpModel9
 from .common.cmap import apply_colormap, get_thermal_colormap
 from .common.config import DictConfig, update_config
 from .common.pano_files import DIR, FN, SP, ThermalPanoramaFileManager, init_directory
+
+Manufacturer = Literal['FLIR', 'testo']
 
 
 class ThermalPanorama:
@@ -42,7 +46,7 @@ class ThermalPanorama:
     self._fm = ThermalPanoramaFileManager(directory=wd)
 
     # 제조사, Raw 파일 패턴
-    self._manufacturer = self._check_manufacturer()
+    self._manufacturer: Manufacturer = self._check_manufacturer()
     self._fm.raw_pattern = self._config['file'][self._manufacturer]['IR']
     logger.log(init_loglevel, 'Manufacturer: {}', self._manufacturer)
 
@@ -71,7 +75,7 @@ class ThermalPanorama:
 
     self._config = update_config(self._wd, config)
 
-  def _check_manufacturer(self) -> str:
+  def _check_manufacturer(self) -> Manufacturer:
     fopt: DictConfig = self._config['file']
     flir_files = self._fm.glob(d=DIR.RAW, pattern=fopt['FLIR']['IR'])
     testo_ir_files = self._fm.glob(d=DIR.RAW, pattern=fopt['testo']['IR'])
@@ -85,7 +89,7 @@ class ThermalPanorama:
       msg = '지원하지 않는 Raw 파일 형식입니다.'
       raise ValueError(msg)
 
-    return manufacturer
+    return manufacturer  # type: ignore[return-value]
 
   def _check_camera_model(self) -> str | None:
     tags = ['Model', 'CameraModel']
@@ -177,6 +181,10 @@ class ThermalPanorama:
     ----------
     file : Path
         Raw 파일 경로
+
+    Raises
+    ------
+    FileNotFoundError
     """
     if not file.exists():
       raise FileNotFoundError(file)
@@ -193,8 +201,6 @@ class ThermalPanorama:
     elif self._manufacturer == 'testo':
       ir, vis = self._extract_testo_image(path=file)
       meta = None
-    else:
-      raise ValueError
 
     assert ir is not None
     self._save_extracted_image(fname=file.stem, ir=ir, vis=vis, meta=meta)
@@ -208,7 +214,7 @@ class ThermalPanorama:
       self._fm.subdir(DIR.VIS, mkdir=True)
 
       files = self._fm.raw_files()
-      for file in utils.track(files, description='Extracting images...'):
+      for file in track(files, description='Extracting images...'):
         self._extract_raw_file(file=file)
 
   def extract_generator(self):
@@ -310,7 +316,7 @@ class ThermalPanorama:
 
     files = self._fm.raw_files()
     registrator, prep, matrices = None, None, {}
-    for file in utils.track(sequence=files, description='Registering...'):
+    for file in track(sequence=files, description='Registering...'):
       if registrator is None:
         ir = IIO.read(self._fm.change_dir(DIR.IR, file))
         registrator, prep = self._init_registrator(shape=ir.shape)
@@ -381,7 +387,7 @@ class ThermalPanorama:
     files, model = self._init_segment_model()
 
     self._fm.subdir(DIR.SEG, mkdir=True)
-    for file in utils.track(files, description='Segmenting...'):
+    for file in track(files, description='Segmenting...'):
       self._segment(model, file)
 
     logger.success('외피 부위 인식 완료')
@@ -817,4 +823,4 @@ class ThermalPanorama:
     with path.open('w') as f:
       yaml.safe_dump(threshold, f)
 
-    return 1.0
+    yield 1.0

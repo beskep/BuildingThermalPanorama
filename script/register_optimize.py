@@ -2,7 +2,6 @@
 STIK 인자 최적화 효율 평가
 대상: 전처리 (nomalization, standardization), STIK metric
 """
-
 import shutil
 from itertools import product
 from pathlib import Path
@@ -10,6 +9,7 @@ from pathlib import Path
 import click
 import numpy as np
 from loguru import logger
+from rich.progress import track
 
 import pano.registration.registrator.simpleitk as rsitk
 from pano import utils
@@ -112,7 +112,7 @@ class _ThermalPanorama(ThermalPanorama):
 
     files = self._fm.raw_files()
     registrator, prep, matrices = None, None, {}
-    for file in utils.track(sequence=files, description='Registering...'):
+    for file in track(sequence=files, description='Registering...'):
       ir = IIO.read(self._fm.change_dir(DIR.IR, file))
       registrator, prep = self._init_registrator(shape=ir.shape)
 

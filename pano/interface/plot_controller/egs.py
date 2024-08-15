@@ -255,8 +255,19 @@ def _limit(data: NDArray, k=2.5):
   return (oa.lower, oa.upper)
 
 
-def _bbox(axes: Axes | Iterable[Axes], *, full=False):
-  """From https://stackoverflow.com/questions/4325733/save-a-subplot-in-matplotlib."""
+def _bbox(axes: Axes | Iterable[Axes], *, full=False) -> Bbox:
+  """
+  From https://stackoverflow.com/questions/4325733/save-a-subplot-in-matplotlib.
+
+  Parameters
+  ----------
+  axes : Axes | Iterable[Axes]
+  full : bool, optional
+
+  Returns
+  -------
+  Bbox
+  """
   if isinstance(axes, Axes):
     axes = [axes]
 

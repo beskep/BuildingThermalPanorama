@@ -92,7 +92,7 @@ class VanishingPoint:
     rxy = (self.xy - shape / 2.0) / shape
     hv = np.abs(rxy) > 0.5 + margin
 
-    self._pos = self._POS_DICT[(hv[0], hv[1])]
+    self._pos = self._POS_DICT[hv[0], hv[1]]
 
   def __str__(self) -> str:
     arr = np.array2string(self.array.ravel(), precision=2, separator=',')
@@ -197,7 +197,10 @@ class Correction:
     return img
 
   def correct(
-    self, image: np.ndarray, mask: np.ndarray | None = None, order=INTRP.BiCubic
+    self,
+    image: np.ndarray,
+    mask: np.ndarray | None = None,
+    order=INTRP.BiCubic,
   ) -> tuple[np.ndarray, np.ndarray | None]:
     """
     저장된 왜곡 보정 결과를 통해 새 영상 보정
@@ -218,11 +221,6 @@ class Correction:
         Corrected image
     Optional[np.ndarray]
         Corrected mask
-
-    Raises
-    ------
-    ValueError
-        if image.shape[:2] != self.image.shape[:2]
     """
     img = self._warp_and_crop(image, order=order)
 
@@ -251,7 +249,17 @@ class Correction:
       )
 
   def process_plot(self, image: np.ndarray) -> tuple[plt.Figure, plt.Axes]:
-    """보정 과정을 확인할 수 있는 matplotlib plot 생성"""
+    """
+    보정 과정을 확인할 수 있는 matplotlib plot 생성
+
+    Parameters
+    ----------
+    image : np.ndarray
+
+    Returns
+    -------
+    tuple[plt.Figure, plt.Axes]
+    """
     fig, axes = plt.subplots(2, 3, figsize=(16, 9))
 
     # preprocessed image
@@ -337,8 +345,8 @@ class PerspectiveCorrection:
     # Find directions corresponding to vanishing points
     v_post1 = np.dot(H, vp1)
     v_post2 = np.dot(H, vp2)
-    v_post1 = v_post1 / np.sqrt(v_post1[0] ** 2 + v_post1[1] ** 2)
-    v_post2 = v_post2 / np.sqrt(v_post2[0] ** 2 + v_post2[1] ** 2)
+    v_post1 /= np.sqrt(v_post1[0] ** 2 + v_post1[1] ** 2)
+    v_post2 /= np.sqrt(v_post2[0] ** 2 + v_post2[1] ** 2)
 
     directions = np.array([
       [v_post1[0], -v_post1[0], v_post2[0], -v_post2[0]],
@@ -424,7 +432,7 @@ class PerspectiveCorrection:
     vanishing_line = np.cross(vp1, vp2)
     Hproject = np.eye(3)
     Hproject[2] = vanishing_line / vanishing_line[2]
-    Hproject = Hproject / Hproject[2, 2]
+    Hproject /= Hproject[2, 2]
 
     # Computes affine transform to make axes corresponding to
     # vanishing points orthogonal
@@ -476,7 +484,7 @@ class PerspectiveCorrection:
 
     Raises
     ------
-    NotEnoughEdgelets
+    NotEnoughEdgeletsError
         조건에 맞지 않는 경우를 제외한 edgelet이 10개 미만인 경우
     ValueError
         Vanishing point 추정 실패

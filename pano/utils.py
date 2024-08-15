@@ -7,13 +7,14 @@ from operator import length_hint
 from pathlib import Path
 from typing import ClassVar, TypeVar
 
+import rich
+
 try:
   import winsound
 except ImportError:
   winsound = None  # type: ignore[assignment]
 
 from loguru import logger
-from rich.console import Console
 from rich.logging import RichHandler
 from rich.progress import track as _track
 from rich.theme import Theme
@@ -54,7 +55,8 @@ class _Handler(RichHandler):
     return super().emit(record)
 
 
-console = Console(theme=Theme({'logging.level.success': 'blue'}))
+console = rich.get_console()
+console.push_theme(Theme({'logging.level.success': 'bold blue'}))
 _handler = _Handler(console=console, log_time_format='[%X]')
 
 
@@ -87,25 +89,6 @@ def set_logger(level: int | str = 20, name='pano'):
 T = TypeVar('T')
 
 
-def track(
-  sequence: Iterable[T] | Sequence[T],
-  description='Working...',
-  total: float | None = None,
-  *,
-  transient=True,
-  **kwargs,
-):
-  """Track progress on console by iterating over a sequence."""
-  return _track(
-    sequence=sequence,
-    description=description,
-    total=total,
-    console=console,
-    transient=transient,
-    **kwargs,
-  )
-
-
 def ptrack(
   sequence: Iterable[T] | Sequence[T],
   description='Working...',
@@ -114,11 +97,6 @@ def ptrack(
   transient=True,
   **kwargs,
 ):
-  """
-  Track progress on console by iterating over a sequence.
-
-  Yield progress ratio and value.
-  """
   if total is None:
     total = length_hint(sequence)
 

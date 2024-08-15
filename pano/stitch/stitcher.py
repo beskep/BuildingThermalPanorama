@@ -336,6 +336,15 @@ class Stitcher:
 
     3차원 공간에 위치한 영상을 평면에 투영하는 방법을 결정함.
     `warper_type`, `set_warper`를 통해 설정.
+
+    Returns
+    -------
+    cv.PyRotationWarper
+
+    Raises
+    ------
+    ValueError
+        Warper가 설정되지 않은 경우
     """
     if self._warper is None:
       msg = 'Warper 설정되지 않음'
@@ -466,7 +475,19 @@ class Stitcher:
     self._warper = cv.PyRotationWarper(type=self.warper_type, scale=scale)
 
   def set_mode(self, mode: str):
-    """파노라마 생성 모드 ({`'pano'`, `'scan'`}) 및 모드별 적절한 알고리즘 설정."""
+    """
+    파노라마 생성 모드 ({`'pano'`, `'scan'`}) 및 모드별 적절한 알고리즘 설정.
+
+    Parameters
+    ----------
+    mode : str
+        "pano", "scan"
+
+    Raises
+    ------
+    ValueError
+        pano 값 오류
+    """
     if mode.startswith('pano'):
       self.estimator = cv.detail_HomographyBasedEstimator()
       self.set_features_matcher('pano')
@@ -496,6 +517,11 @@ class Stitcher:
     Returns
     -------
     detail_ImageFeatures
+
+    Raises
+    ------
+    ValueError
+        self.features_finder가 지정되지 않은 경우
     """
     if self.features_finder is None:
       msg = 'features_finder가 지정되지 않음'
@@ -606,6 +632,11 @@ class Stitcher:
         매칭된 영상의 index 목록
     matches_graph : str
         매칭 graph (영상 간 연결 관계) 정보
+
+    Raises
+    ------
+    StitchError
+        이미지 개수 부족
     """
     logger.trace('Feature finding and matching')
     # note: find_features에는 마스크 적용하지 않음
@@ -694,7 +725,7 @@ class Stitcher:
     ------
     cv.error
         지나치게 과도한 영상 변형 시
-    """
+    """  # noqa: DOC502
     if not np.isclose(self._compose_work_aspect, 1.0, rtol=1e-05, atol=0):
       camera.focal *= self._compose_work_aspect
       camera.ppx *= self._compose_work_aspect
@@ -710,7 +741,7 @@ class Stitcher:
 
     warped_shape = (roi[2] - roi[0], roi[3] - roi[1])
     if any(image.shape[x] * self._warp_threshold < warped_shape[x] for x in range(2)):
-      raise cv.error
+      raise cv.error  # noqa: DOC501
 
     if abs(self._compose_scale - 1) > 0.1:
       img = cv.resize(
@@ -837,6 +868,11 @@ class Stitcher:
         파노라마 영상
     stitched_mask : np.ndarray
         파노라마 영역의 마스크
+
+    Raises
+    ------
+    ValueError
+        blend_type 오류
     """
     corners = [(x[0].item(), x[1].item()) for x in rois]
     dst_size = cv.detail.resultRoi(corners=corners, images=images)
