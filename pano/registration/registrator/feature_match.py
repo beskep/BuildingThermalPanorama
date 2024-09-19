@@ -78,7 +78,7 @@ class HoughLineFeatureDetector(BaseDetector):
     self._lines = np.array(lines)
     self.keypoints_ = np.average(self._lines, axis=1)
 
-  def extract(self, image, keypoints=None):
+  def extract(self, image, keypoints=None):  # noqa: ARG002
     lines = self._lines.astype('float', copy=True)
 
     if self._normalize:
@@ -152,7 +152,7 @@ class BRIEFDetector(BaseDetector):
     self._extractor.extract(image=image, keypoints=keypoints)
     self.descriptors_ = self._extractor.descriptors
 
-  def detect_and_extract(self, image, *args, **kwargs):
+  def detect_and_extract(self, image, *args, **kwargs):  # noqa: ARG002
     self.detect(image)
     self.extract(image, self.keypoints)
 

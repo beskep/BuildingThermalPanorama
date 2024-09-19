@@ -1,7 +1,5 @@
 """DeepLabV3+"""
 
-# ruff: noqa
-
 from pathlib import Path
 
 import numpy as np
@@ -65,8 +63,9 @@ def label_to_color_image(label: np.ndarray, cmap='pascal') -> np.ndarray:
       If label is not of rank 2 or its value is larger than color
       map maximum entry.
   """
-  if label.ndim != 2:
-    raise ValueError('Expect 2-D input label')
+  if label.ndim != 2:  # noqa: PLR2004
+    msg = 'Expect 2-D input label'
+    raise ValueError(msg)
 
   if cmap == 'pascal':
     colormap = create_pascal_label_colormap()
@@ -74,15 +73,14 @@ def label_to_color_image(label: np.ndarray, cmap='pascal') -> np.ndarray:
     colormap = np.array(plt.get_cmap(cmap).colors) * 255
 
   if np.max(label) >= len(colormap):
-    raise ValueError('label value too large.')
+    msg = 'label value too large.'
+    raise ValueError(msg)
 
   return colormap[label]
 
 
 LABEL_NAMES = np.asarray(['Background', 'Wall', 'Window', 'etc.'])
-
 FULL_LABEL_MAP = np.arange(len(LABEL_NAMES)).reshape(len(LABEL_NAMES), 1)
-# FULL_COLOR_MAP = label_to_color_image(FULL_LABEL_MAP)
 
 
 def vis_segmentation(
@@ -177,7 +175,7 @@ def predict(
   if names is None:
     names = [f'Image {x + 1}' for x in range(len(images))]
 
-  for image, fname in track(zip(images, names), total=len(images)):
+  for image, fname in track(zip(images, names, strict=False), total=len(images)):
     pil_image = PIL.Image.fromarray(image)
 
     resized_image, seg_map = model.run(pil_image)
@@ -215,7 +213,8 @@ class DeepLabModel:
         graph_def.ParseFromString(f.read())
     except (RuntimeError, ValueError, OSError) as e:
       logger.exception('loading failed')
-      raise RuntimeError('failed to load graph') from e
+      msg = 'failed to load graph'
+      raise RuntimeError(msg) from e  # noqa: DOC501
 
     with self.graph.as_default():
       tf.import_graph_def(graph_def, name='')
@@ -277,8 +276,9 @@ class DeepLabModel:
     """
     pil_image = PIL.Image.fromarray(image)
     resized_image, seg_map = self.run(image=pil_image)
-
     resized_shape = (resized_image.height, resized_image.width)
+
+    vis_image: np.ndarray | PILImage
     if not (resize or image.shape[:2] == resized_shape):
       vis_image = resized_image
     else:
@@ -293,7 +293,10 @@ class DeepLabModel:
       seg_map = np.round(seg_map).astype(np.uint8)
 
     fig, seg_image = vis_segmentation(
-      image=vis_image, seg_map=seg_map, show=False, cmap=cmap
+      image=vis_image,
+      seg_map=seg_map,
+      show=False,
+      cmap=cmap,
     )
 
     return seg_map, seg_image, fig

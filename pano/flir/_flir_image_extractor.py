@@ -1,18 +1,17 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """https://github.com/Nervengift/read_thermal.py"""
+
+# ruff: noqa: DOC201 DOC501 N803 N806
 
 import io
 import json
 import os
 import re
 import subprocess
+from pathlib import Path
 
 import numpy as np
 from matplotlib import cm
 from PIL import Image, UnidentifiedImageError
-
-# ruff: noqa
 
 
 class FlirExifNotFoundError(ValueError):
@@ -20,7 +19,7 @@ class FlirExifNotFoundError(ValueError):
 
 
 class FlirImageExtractor:
-  def __init__(self, exiftool_path='exiftool', is_debug=False):
+  def __init__(self, exiftool_path='exiftool', *, is_debug=False):
     self.exiftool_path = exiftool_path
     self.is_debug = is_debug
     self.flir_img_filename = ''
@@ -40,18 +39,19 @@ class FlirImageExtractor:
 
   def process_image(self, flir_img_filename):
     """
-    Given a valid image path, process the file: extract real thermal values
+    Given a valid image path, process the file.
+
+    extract real thermal values
     and a thumbnail for comparison (generally thumbnail is on the visible spectre)
     :param flir_img_filename:
     :return:
     """
     if self.is_debug:
-      print('INFO Flir image filepath:{}'.format(flir_img_filename))
+      print(f'INFO Flir image filepath:{flir_img_filename}')
 
-    if not os.path.isfile(flir_img_filename):
-      raise ValueError(
-        "Input file does not exist or this user don't have permission on this file"
-      )
+    if not Path(flir_img_filename).is_file():
+      msg = "Input file does not exist or this user don't have permission on this file"
+      raise ValueError(msg)
 
     self.flir_img_filename = flir_img_filename
 
@@ -64,10 +64,7 @@ class FlirImageExtractor:
     self.thermal_image_np = self.extract_thermal_image()
 
   def get_image_type(self):
-    """
-    Get the embedded thermal image type, generally can be TIFF or PNG
-    :return:
-    """
+    """Get the embedded thermal image type, generally can be TIFF or PNG."""
     key = 'RawThermalImageType'
     args = [
       self.exiftool_path,
@@ -79,28 +76,21 @@ class FlirImageExtractor:
     meta = json.loads(meta_json.decode())[0]
 
     if key not in meta:
-      raise FlirExifNotFoundError(f'{key} not found in {self.flir_img_filename}')
+      msg = f'{key} not found in {self.flir_img_filename}'
+      raise FlirExifNotFoundError(msg)
 
     return meta[key]
 
   def get_rgb_np(self):
-    """
-    Return the last extracted rgb image
-    :return:
-    """
+    """Return the last extracted rgb image"""
     return self.rgb_image_np
 
   def get_thermal_np(self):
-    """
-    Return the last extracted thermal image
-    :return:
-    """
+    """Return the last extracted thermal image"""
     return self.thermal_image_np
 
   def extract_embedded_image(self):
-    """
-    extracts the visual image as 2D numpy array of RGB values
-    """
+    """Extract the visual image as 2D numpy array of RGB values"""
     image_tag = '-EmbeddedImage'
     # ThumbnailImage 대신 적용
     if self.use_thumbnail:
@@ -124,10 +114,7 @@ class FlirImageExtractor:
     return visual_np
 
   def extract_thermal_image(self):
-    """
-    extracts the thermal image as 2D numpy array with temperatures in oC
-    """
-
+    """Extract the thermal image as 2D numpy array with temperatures in oC"""
     # read image metadata needed for conversion of the raw sensor values
     # E=1,SD=1,RTemp=20,ATemp=RTemp,IRWTemp=RTemp,IRT=1,RH=50,
     # PR1=21106.77,PB=1501,PF=1,PO=-7340,PR2=0.012545258
@@ -173,7 +160,7 @@ class FlirImageExtractor:
       # fix endianness, the bytes in the embedded png are in the wrong order
       thermal_np = np.vectorize(lambda x: (x >> 8) + ((x & 0x00FF) << 8))(thermal_np)
 
-    thermal_np = self.raw2temp(
+    return self.raw2temp(
       thermal_np,
       E=meta['Emissivity'],
       OD=subject_distance,
@@ -189,10 +176,8 @@ class FlirImageExtractor:
       PR2=meta['PlanckR2'],
     )
 
-    return thermal_np
-
   @staticmethod
-  def raw2temp(
+  def raw2temp(  # noqa: PLR0913 PLR0914 PLR0917
     raw,
     E=1,
     OD=1,
@@ -209,11 +194,11 @@ class FlirImageExtractor:
   ):
     """
     convert raw values from the flir sensor to temperatures in C
+
     # this calculation has been ported to python from
     # https://github.com/gtatters/Thermimage/blob/master/R/raw2temp.R
     # a detailed explanation of what is going on here can be found there
     """
-
     # constants
     ATA1 = 0.006569
     ATA2 = 0.01262
@@ -284,19 +269,13 @@ class FlirImageExtractor:
 
   @staticmethod
   def extract_float(dirtystr):
-    """
-    Extract the float value of a string, helpful for parsing the exiftool data
-    :return:
-    """
+    """Extract the float value of a string, helpful for parsing the exiftool data"""
     digits = re.findall(r'[-+]?\d*\.\d+|\d+', dirtystr)
 
     return float(digits[0])
 
   def save_images(self):
-    """
-    Save the extracted images
-    :return:
-    """
+    """Save the extracted images"""
     rgb_np = self.get_rgb_np()
     thermal_np = self.extract_thermal_image()
 
@@ -306,15 +285,15 @@ class FlirImageExtractor:
     )
     img_thermal = Image.fromarray(np.uint8(cm.inferno(thermal_normalized) * 255))
 
-    fn_prefix, _ = os.path.splitext(self.flir_img_filename)
+    fn_prefix, _ = os.path.splitext(self.flir_img_filename)  # noqa: PTH122
     thermal_filename = fn_prefix + self.thermal_suffix
     image_filename = fn_prefix + self.image_suffix
     if self.use_thumbnail:
       image_filename = fn_prefix + self.thumbnail_suffix
 
     if self.is_debug:
-      print('DEBUG Saving RGB image to:{}'.format(image_filename))
-      print('DEBUG Saving Thermal image to:{}'.format(thermal_filename))
+      print(f'DEBUG Saving RGB image to:{image_filename}')
+      print(f'DEBUG Saving Thermal image to:{thermal_filename}')
 
     img_visual.save(image_filename)
     img_thermal.save(thermal_filename)
