@@ -1,11 +1,12 @@
 # pylint: disable=wrong-import-position
-# ruff: noqa: E402 PLR2004
+# ruff: noqa: E402
 
 import os
 import sys
 from multiprocessing import freeze_support
+from typing import Annotated
 
-import click
+from cyclopts import App, Parameter
 from loguru import logger
 
 from pano.interface.common.init import init_project
@@ -39,10 +40,10 @@ class Files:
 def _init(loglevel):
   utils.set_logger(loglevel, 'AnomalyDetection')
 
-  if loglevel < 10:
+  if loglevel < 10:  # noqa: PLR2004
     os.environ['QT_DEBUG_PLUGINS'] = '1'
 
-  if loglevel < 5:
+  if loglevel < 5:  # noqa: PLR2004
     QtCore.qInstallMessageHandler(_qt_message_handler)
 
   QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
@@ -50,12 +51,15 @@ def _init(loglevel):
   os.environ['QT_QUICK_CONTROLS_CONF'] = str(Files.CONF)
 
 
-@click.command(
-  context_settings={'allow_extra_args': True, 'ignore_unknown_options': True}
-)
-@click.option('-d', '--debug', is_flag=True)
-@click.option('-l', '--loglevel', default=20)
-def main(*, debug=False, loglevel=20):
+app = App()
+
+
+@app.default
+def main(
+  *,
+  debug: bool = False,
+  loglevel: Annotated[int, Parameter(['--loglevel', '-l'])] = 20,
+):
   freeze_support()
   loglevel = min(loglevel, (10 if debug else 20))
   _init(loglevel=loglevel)
@@ -82,4 +86,4 @@ def main(*, debug=False, loglevel=20):
 
 
 if __name__ == '__main__':
-  main()
+  app()

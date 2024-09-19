@@ -13,10 +13,12 @@ dependencies = [
     "onnxruntime>=1.18.1",
     "simpleitk>=2.3.1",
     "pyqt5>=5.15",
+    "pyqtwebengine>=5.15.7",
     "opencv-python>=4.10.0.84",
     "loguru>=0.7.2",
     "rich>=13.7.1",
     "click>=8.1.7",
+    "cyclopts>=2.9.9",
     "cx-freeze>=7.2.0",
     "pywin32>=306",
     "more-itertools>=10.4.0",
@@ -36,9 +38,10 @@ build-backend = "hatchling.build"
 managed = true
 dev-dependencies = [
     "ruff>=0.5.7",
-    "pytest>=8.3.2",
     "pylint>=3.2.6",
     "mypy>=1.11.1",
+    "pytest>=8.3.2",
+    "pytest-sugar>=1.0.0",
 ]
 
 [tool.hatch.metadata]
@@ -51,7 +54,7 @@ packages = ["pano"]
 preview = true
 output-format = "concise"
 indent-width = 2
-exclude = ["pano/registration/evaluation/_*", "script/*"]
+exclude = [".venv", "pano/registration/evaluation/_*", "script/*"]
 
 [tool.ruff.format]
 preview = true
