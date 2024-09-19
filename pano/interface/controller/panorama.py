@@ -80,7 +80,7 @@ class Window(con.Window):
     return f(*args)
 
   def update_config(self, config: DictConfig):
-    self._window.update_config(json.dumps(OmegaConf.to_object(config)))
+    self._window.update_config(json.dumps(OmegaConf.to_container(config)))
 
 
 class Controller(QtCore.QObject):  # noqa: PLR0904

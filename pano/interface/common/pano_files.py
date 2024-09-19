@@ -382,7 +382,7 @@ def init_directory(
       msg = f'영상 파일이 발견되지 않았습니다.: "{directory}"'
       raise ImageNotFoundError(msg) from None
 
-    if not files:
+    if files:
       raw_dir.mkdir()
 
     for file in files:
