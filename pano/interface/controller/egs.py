@@ -128,6 +128,10 @@ class Controller(QtCore.QObject):
     self._prj_data = self._prj_data.replace(**{key: value})
 
   def command(self, commands: str | Iterable[str], name: str | None = None):
+    if self._consumer.isRunning():
+      self.win.popup(title='Warning', message='이전 작업이 아직 종료되지 않았습니다.')
+      return
+
     if self._wd is None:
       self.win.popup('Warning', '경로가 선택되지 않았습니다.')
       self.win.pb_state(False)

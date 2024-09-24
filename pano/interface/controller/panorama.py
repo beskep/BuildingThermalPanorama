@@ -208,6 +208,10 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
 
   @QtCore.Slot(str)
   def command(self, command: str):
+    if self._consumer.isRunning():
+      self.win.popup(title='Warning', message='이전 작업이 아직 종료되지 않았습니다.')
+      return
+
     if self._wd is None:
       self.win.popup('Warning', '프로젝트 폴더가 선택되지 않았습니다.')
       self.win.pb_state(indeterminate=False)
@@ -397,6 +401,10 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
 
   @QtCore.Slot(float, float, float)
   def pano_save_manual_correction(self, roll, pitch, yaw):
+    if self._consumer.isRunning():
+      self.win.popup(title='Warning', message='이전 작업이 아직 종료되지 않았습니다.')
+      return
+
     self.win.pb_state(indeterminate=True)
 
     def _done():
