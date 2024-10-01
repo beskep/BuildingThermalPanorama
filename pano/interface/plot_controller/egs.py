@@ -1,9 +1,9 @@
+from __future__ import annotations
+
 from collections import defaultdict
-from collections.abc import Iterable
 from functools import cached_property
 from itertools import chain
-from pathlib import Path
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
 import numpy as np
 import seaborn as sns
@@ -11,10 +11,8 @@ import yaml
 from matplotlib.axes import Axes
 from matplotlib.backend_bases import MouseButton, MouseEvent
 from matplotlib.cm import get_cmap
-from matplotlib.figure import Figure
 from matplotlib.gridspec import GridSpec
 from matplotlib.transforms import Bbox
-from numpy.typing import NDArray
 from skimage import transform
 
 from pano.interface.analysis import summarize
@@ -25,6 +23,13 @@ from pano.misc.imageio import ImageIO
 
 from .plot_controller import FigureCanvas, QtGui
 from .plot_controller import PanoPlotController as _PanoPlotCtrl
+
+if TYPE_CHECKING:
+  from collections.abc import Iterable
+  from pathlib import Path
+
+  from matplotlib.figure import Figure
+  from numpy.typing import NDArray
 
 CMAP = get_cmap('inferno')
 

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import dataclasses as dc
 from contextlib import suppress
 from shutil import copy2
@@ -6,7 +8,6 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 import scipy.io as sio
 import seaborn as sns
-from matplotlib.axes import Axes
 from matplotlib.cm import get_cmap
 from matplotlib.colorbar import make_axes_gridspec
 from matplotlib.colors import BoundaryNorm, ListedColormap
@@ -15,20 +16,20 @@ from matplotlib.widgets import PolygonSelector, _SelectorWidget  # noqa: PLC2701
 from skimage.draw import polygon2mask
 
 import pano.interface.common.pano_files as pf
-from pano import utils
+from pano import misc, utils
 from pano.interface import analysis
 from pano.interface.common.pano_files import DIR, SP
-from pano.interface.mbq import FigureCanvas
 from pano.misc import tools
-from pano.misc.cmap import apply_colormap
-from pano.misc.imageio import ImageIO, load_webp_mask
-from pano.misc.sp import wkhtmltopdf
+from pano.misc.imageio import ImageIO
 from pano.segmentation.onnx import SmpModel9
 
 from .plot_controller import PanoPlotController, QtGui
 
 if TYPE_CHECKING:
+  from matplotlib.axes import Axes
   from matplotlib.image import AxesImage
+
+  from pano.interface.mbq import FigureCanvas
 
 SEG_CMAP = ListedColormap(SmpModel9.COLORS)
 
@@ -143,7 +144,7 @@ class Images:
       path = self._fm.subdir(DIR.COR).joinpath('Panorama.webp')
 
       try:
-        seg = load_webp_mask(path.as_posix())
+        seg = misc.imageio.load_webp_mask(path.as_posix())
       except ValueError as e:
         msg = '수동 수정 결과 인식 불가. 대상 파일에 부위 인식 레이어 (흑백)가 '
         msg += '존재하지 않습니다.' if e.args[1] == 0 else '두 개 이상 존재합니다.'
@@ -248,7 +249,7 @@ class Images:
     ImageIO.save(self._path(SP.IR), self.ir)
     ImageIO.save(
       self._path(SP.IR, color=True),
-      apply_colormap(self.ir, cmap=_get_cmap(), na=True),
+      misc.cmap.apply_colormap(self.ir, cmap=_get_cmap(), na=True),
     )
 
     # temperature factor
@@ -610,7 +611,7 @@ class AnalysisPlotController(PanoPlotController):
     for css in report.glob('*.css'):
       copy2(css, source)
 
-    wkhtmltopdf(html, html.with_suffix('.pdf'))
+    misc.sp.wkhtmltopdf(html, html.with_suffix('.pdf'))
 
     # unlink
     html.unlink()

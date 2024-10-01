@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from functools import cached_property
 from typing import TYPE_CHECKING, Literal, NamedTuple
 
@@ -7,7 +9,6 @@ from skimage.color import gray2rgb
 
 import pano.interface.common.pano_files as pf
 from pano.interface.common.pano_files import DIR, SP
-from pano.interface.mbq import FigureCanvas, QtGui
 from pano.misc.imageio import ImageIO
 from pano.misc.tools import SegMask
 
@@ -15,6 +16,9 @@ from .plot_controller import PanoPlotController
 
 if TYPE_CHECKING:
   from matplotlib.image import AxesImage
+  from PyQt5 import QtGui
+
+  from pano.interface.mbq import FigureCanvas
 
 Image = Literal['vis', 'seg']
 

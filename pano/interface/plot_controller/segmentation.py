@@ -1,16 +1,24 @@
-from pathlib import Path
+from __future__ import annotations
 
-import numpy as np
+from typing import TYPE_CHECKING
+
 from matplotlib.colors import ListedColormap
 from matplotlib.patches import Patch
 
 from pano.interface.common.pano_files import DIR
-from pano.interface.mbq import FigureCanvas
 from pano.misc.imageio import ImageIO
 from pano.misc.tools import SegMask
 from pano.segmentation.onnx import SmpModel9
 
-from .plot_controller import PanoPlotController, QtGui
+from .plot_controller import PanoPlotController
+
+if TYPE_CHECKING:
+  from pathlib import Path
+
+  import numpy as np
+  from PyQt5 import QtGui
+
+  from pano.interface.mbq import FigureCanvas
 
 
 class SegmentationPlotController(PanoPlotController):

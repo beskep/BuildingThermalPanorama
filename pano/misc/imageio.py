@@ -142,7 +142,7 @@ class ImageIO:
         np.savetxt(fname=p, X=array, delimiter=cls.DELIMITER)
       case cls.WEBP_EXT:
         image = PIL.Image.fromarray(array)
-        webp.save_image(img=image, file_path=p, lossless=True)
+        webp.save_image(img=image, file_path=str(p), lossless=True)
       case _:
         imsave(fname=p, arr=array, check_contrast=check_contrast)
 

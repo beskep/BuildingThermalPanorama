@@ -7,24 +7,20 @@ import matplotlib.pyplot as plt
 import numpy as np
 import yaml
 from loguru import logger
-from omegaconf import OmegaConf
+from omegaconf import DictConfig, OmegaConf
 from rich.progress import track
 
 import pano.registration.registrator.simpleitk as rsitk
-from pano import stitch, utils
+from pano import misc, stitch, utils
 from pano.distortion import perspective as persp
 from pano.flir import FlirExtractor
-from pano.misc import sp as sbpc
 from pano.misc import tools
-from pano.misc.anomaly import anomaly_threshold
 from pano.misc.imageio import ImageIO as IIO  # noqa: N817
-from pano.misc.imageio import save_webp_images
 from pano.misc.tools import SegMask
 from pano.segmentation.onnx import SmpModel9
 
-from .common.cmap import apply_colormap, get_thermal_colormap
-from .common.config import DictConfig, update_config
-from .common.pano_files import DIR, FN, SP, ThermalPanoramaFileManager, init_directory
+from . import common as cm
+from .common import DIR, FN, SP
 
 Manufacturer = Literal['FLIR', 'testo']
 
@@ -42,8 +38,8 @@ class ThermalPanorama:
       raise FileNotFoundError(wd)
 
     self._wd = wd
-    self._config = init_directory(directory=wd, default_config=default_config)
-    self._fm = ThermalPanoramaFileManager(directory=wd)
+    self._config = cm.init_directory(directory=wd, default_config=default_config)
+    self._fm = cm.ThermalPanoramaFileManager(directory=wd)
 
     # 제조사, Raw 파일 패턴
     self._manufacturer: Manufacturer = self._check_manufacturer()
@@ -55,7 +51,7 @@ class ThermalPanorama:
     logger.log(init_loglevel, 'Camera: {}', self._camera)
 
     # 컬러맵
-    self._cmap = get_thermal_colormap(
+    self._cmap = cm.cmap.get_thermal_colormap(
       name=self._config['color'].get('colormap', 'iron')
     )
 
@@ -73,7 +69,7 @@ class ThermalPanorama:
       assert isinstance(c, DictConfig)
       config = c
 
-    self._config = update_config(self._wd, config)
+    self._config = cm.update_config(self._wd, config)
 
   def _check_manufacturer(self) -> Manufacturer:
     fopt: DictConfig = self._config['file']
@@ -103,7 +99,7 @@ class ThermalPanorama:
 
       return exif[tag]
 
-    exifs = sbpc.get_exif(files=[x.as_posix() for x in raw_files], tags=tags)
+    exifs = misc.sp.get_exif(files=[x.as_posix() for x in raw_files], tags=tags)
     models = [_get_model(x) for x in exifs]
     models = [x for x in models if x is not None]
 
@@ -168,7 +164,7 @@ class ThermalPanorama:
     IIO.save_with_meta(path=ir_path, array=ir, exts=[FN.NPY], meta=meta)
 
     if self._config['color']['extract_color_image']:
-      color_image = apply_colormap(ir, self._cmap)
+      color_image = cm.cmap.apply_colormap(ir, self._cmap)
       IIO.save(path=self._fm.color_path(ir_path), array=color_image)
 
     IIO.save(path=vis_path, array=vis)
@@ -488,7 +484,7 @@ class ThermalPanorama:
         )
 
         # 적외선 colormap 영상 저장
-        color_panorama = apply_colormap(panorama.panorama, self._cmap)
+        color_panorama = cm.cmap.apply_colormap(panorama.panorama, self._cmap)
         IIO.save(path=self._fm.color_path(path), array=color_panorama)
       else:
         # 실화상 저장
@@ -747,7 +743,10 @@ class ThermalPanorama:
     )
 
     # colormap 적용 버전 저장
-    IIO.save(path=self._fm.color_path(path), array=apply_colormap(cpano, self._cmap))
+    IIO.save(
+      path=self._fm.color_path(path),
+      array=cm.cmap.apply_colormap(cpano, self._cmap),
+    )
     logger.debug('IR 파노라마 보정 파일 저장')
 
     # mask 저장
@@ -772,7 +771,7 @@ class ThermalPanorama:
     ]
     images[0] = self._fm.color_path(images[0])
     path = self.fm.subdir(DIR.COR).joinpath('Panorama.webp')
-    save_webp_images(*images, path=path)
+    misc.imageio.save_webp_images(*images, path=path)
 
   def run(self):
     separate = self._config['panorama']['separate']
@@ -810,7 +809,7 @@ class ThermalPanorama:
       mask = tools.SegMask.vis2index(mask)
 
       arr = ir[mask == tools.SegMask.WALL]
-      t, model = anomaly_threshold(array=arr)
+      t, model = misc.anomaly.anomaly_threshold(array=arr)
       threshold[fi.stem] = round(t, 2)
 
       cluster = model.predict(ir.reshape([-1, 1])).reshape(ir.shape)

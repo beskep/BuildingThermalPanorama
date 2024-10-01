@@ -13,9 +13,11 @@ from pano.interface.common.init import init_project
 
 init_project(qt=True)
 
+from PyQt5 import QtCore, QtGui, QtQml
+
 from pano import utils
 from pano.interface.controller.egs import Controller
-from pano.interface.mbq import FigureCanvas, QtCore, QtGui, QtQml
+from pano.interface.mbq import FigureCanvas
 
 _qt_message = {
   QtCore.QtMsgType.QtDebugMsg: 'DEBUG',
@@ -70,13 +72,14 @@ def main(
   engine = QtQml.QQmlApplicationEngine(str(Files.QML))
 
   try:
-    win: QtGui.QWindow = engine.rootObjects()[0]
+    win: QtGui.QWindow = engine.rootObjects()[0]  # type: ignore[assignment]
   except IndexError:
     logger.critical('Failed to load QML {}', Files.QML)
     return -1
 
   controller = Controller(win, loglevel)
-  context = engine.rootContext()
+  if (context := engine.rootContext()) is None:
+    raise RuntimeError
   context.setContextProperty('con', controller)
 
   canvas = win.findChild(FigureCanvas, 'plot')

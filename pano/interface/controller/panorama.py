@@ -7,16 +7,13 @@ from typing import ClassVar, Literal
 import numpy as np
 from loguru import logger
 from omegaconf import DictConfig, OmegaConf
+from PyQt5 import QtCore, QtGui
 
+import pano.interface.common as cm
 import pano.interface.controller.controller as con
+import pano.interface.plot_controller as pc
 from pano.interface import analysis
-from pano.interface import plot_controller as pc
-from pano.interface.common import pano_files as pf
-from pano.interface.common.config import update_config
-from pano.interface.common.pano_files import DIR, SP
-from pano.interface.mbq import QtCore, QtGui
-from pano.interface.plot_controller import PlotControllers
-from pano.interface.tree import tree_string
+from pano.interface.common import DIR, SP
 from pano.misc.imageio import ImageIO
 
 
@@ -63,7 +60,13 @@ def _paths(text: str):
 
 
 _Panel = Literal[
-  'project', 'registration', 'segmentation', 'panorama', 'analysis', 'output', 'wwr'
+  'project',
+  'registration',
+  'segmentation',
+  'panorama',
+  'analysis',
+  'output',
+  'wwr',
 ]
 
 
@@ -104,7 +107,7 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
     self._consumer.fail.connect(self.win.error_popup)
 
     self._wd: Path | None = None
-    self._fm: pf.ThermalPanoramaFileManager | None = None
+    self._fm: cm.ThermalPanoramaFileManager | None = None
     self._pc: pc.PlotControllers | None = None
     self._config: DictConfig | None = None
 
@@ -117,24 +120,24 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
     self._win = Window(win)
 
   @property
-  def pc(self) -> PlotControllers:
+  def pc(self) -> pc.PlotControllers:
     if self._pc is None:
-      raise pf.WorkingDirNotSetError
+      raise cm.WorkingDirNotSetError
     return self._pc
 
   @pc.setter
-  def pc(self, value: dict | PlotControllers):
-    if isinstance(value, PlotControllers):
+  def pc(self, value):
+    if isinstance(value, pc.PlotControllers):
       self._pc = value
     else:
-      self._pc = PlotControllers(**value)
+      self._pc = pc.PlotControllers(**value)
 
     self._pc.analysis.summarize = self._analysis_summarize
 
   @property
-  def fm(self) -> pf.ThermalPanoramaFileManager:
+  def fm(self) -> cm.ThermalPanoramaFileManager:
     if self._fm is None:
-      raise pf.WorkingDirNotSetError
+      raise cm.WorkingDirNotSetError
 
     return self._fm
 
@@ -154,13 +157,13 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
       raise FileNotFoundError(wd)
 
     try:
-      self._config = pf.init_directory(directory=wd, copy=True, raise_empty=False)
-    except pf.ImageNotFoundError as e:
+      self._config = cm.init_directory(directory=wd, copy=True, raise_empty=False)
+    except cm.ImageNotFoundError as e:
       self.win.error_popup(e)
       return
 
     self._wd = wd
-    self._fm = pf.ThermalPanoramaFileManager(wd)
+    self._fm = cm.ThermalPanoramaFileManager(wd)
 
     for controller in self.pc.controllers().values():
       controller.fm = self._fm
@@ -174,14 +177,14 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
     self.update_image_view()
 
   def prj_update_project_tree(self):
-    tree = tree_string(self._wd, width=40)
+    tree = cm.tree.tree_string(self._wd, width=40)
     self.win.panel_function('project', 'update_project_tree', tree)
 
   @QtCore.Slot(str)
   def prj_add_images(self, text: str):
     try:
       self.fm.add_images(_paths(text))
-    except pf.WorkingDirNotSetError as e:
+    except cm.WorkingDirNotSetError as e:
       self.win.error_popup(e)
       return
     except OSError as e:
@@ -208,13 +211,13 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
 
   @QtCore.Slot(str)
   def command(self, command: str):
-    if self._consumer.isRunning():
-      self.win.popup(title='Warning', message='이전 작업이 아직 종료되지 않았습니다.')
-      return
-
     if self._wd is None:
       self.win.popup('Warning', '프로젝트 폴더가 선택되지 않았습니다.')
       self.win.pb_state(indeterminate=False)
+      return
+
+    if self._consumer.isRunning():
+      self.win.popup(title='Warning', message='이전 작업이 아직 종료되지 않았습니다.')
       return
 
     self.win.pb_state(indeterminate=True)
@@ -262,7 +265,7 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
     logger.debug('config: {}', config)
 
     configs = self._configure(self._config, config)
-    self._config = update_config(self._wd, *configs)
+    self._config = cm.update_config(self._wd, *configs)
     self.win.update_config(self._config)  # 이미 반영된 설정도 다시 업데이트 함
 
   def _configure(self, config0, config1):
@@ -368,7 +371,7 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
   def pano_plot(self, d, sp):
     try:
       self.pc.panorama.plot(d=DIR[d], sp=SP[sp])
-    except pf.WorkingDirNotSetError:
+    except cm.WorkingDirNotSetError:
       pass
     except FileNotFoundError as e:
       logger.debug('FileNotFound: "{}"', e)
@@ -460,7 +463,7 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
 
     try:
       self.pc.analysis.plot()
-    except pf.WorkingDirNotSetError:
+    except cm.WorkingDirNotSetError:
       pass
     except FileNotFoundError as e:
       logger.debug('FileNotFound: "{}"', e)
@@ -509,7 +512,7 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
       self.pc.analysis.images.reset_images()
       ir = self.pc.analysis.images.ir
       seg = self.pc.analysis.images.seg
-    except pf.WorkingDirNotSetError:
+    except cm.WorkingDirNotSetError:
       return
 
     meta_files = list(self.fm.subdir(DIR.IR).glob('*.yaml'))
@@ -576,7 +579,7 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
 
     try:
       self.pc.analysis.save(mat=self._config['file'].get('save_mat', False))
-    except pf.WorkingDirNotSetError:
+    except cm.WorkingDirNotSetError:
       pass
     except ValueError as e:
       self.win.error_popup(f'{e} 지표 및 분포 정보를 저장하지 못했습니다.')
@@ -591,7 +594,7 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
 
     try:
       self.pc.output.plot()
-    except pf.WorkingDirNotSetError:
+    except cm.WorkingDirNotSetError:
       pass
     except FileNotFoundError as e:
       logger.exception(e)
@@ -601,14 +604,14 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
     try:
       self.pc.output.lines.clear_lines()
       self.pc.output.draw()
-    except pf.WorkingDirNotSetError:
+    except cm.WorkingDirNotSetError:
       pass
 
   @QtCore.Slot()
   def output_estimate_edgelets(self):
     try:
       self.pc.output.estimate_edgelets()
-    except pf.WorkingDirNotSetError:
+    except cm.WorkingDirNotSetError:
       pass
     except FileNotFoundError as e:
       self.win.error_popup(e)
@@ -644,7 +647,7 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
 
     try:
       self.pc.output.save(segments)
-    except pf.WorkingDirNotSetError:
+    except cm.WorkingDirNotSetError:
       pass
     except (OSError, ValueError) as e:
       self.win.error_popup(e)
@@ -655,7 +658,7 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
   def wwr_update(self, image, threshold, force):
     try:
       wwr = self.pc.wwr.update(image=image, threshold=threshold, force=force)
-    except pf.WorkingDirNotSetError:
+    except cm.WorkingDirNotSetError:
       pass
     else:
       row = {

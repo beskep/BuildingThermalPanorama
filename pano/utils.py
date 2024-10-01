@@ -8,16 +8,18 @@ from pathlib import Path
 from typing import ClassVar, TypeVar
 
 import rich
+from loguru import logger
+from rich.logging import RichHandler
+from rich.progress import track as _track
+from rich.theme import Theme
 
 try:
   import winsound
 except ImportError:
   winsound = None  # type: ignore[assignment]
 
-from loguru import logger
-from rich.logging import RichHandler
-from rich.progress import track as _track
-from rich.theme import Theme
+
+T = TypeVar('T')
 
 
 def is_frozen():
@@ -84,9 +86,6 @@ def set_logger(level: int | str = 20, name='pano'):
   except ValueError:
     # 빈 칸 표시하는 'BLANK' level 새로 등록
     logger.level(name='BLANK', no=_Handler.BLANK_NO)
-
-
-T = TypeVar('T')
 
 
 def ptrack(

@@ -1,4 +1,5 @@
-from pathlib import Path
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -8,16 +9,20 @@ from skimage import transform
 from skimage.exposure import equalize_hist
 
 from pano.interface.common.pano_files import DIR, FN, SP
-from pano.interface.mbq import FigureCanvas
 from pano.misc import tools
 from pano.misc.imageio import ImageIO
 from pano.misc.tools import INTRP
 
 from .egs import MousePoints, NavigationToolbar
-from .plot_controller import TICK_PARAMS, PanoPlotController, QtGui
+from .plot_controller import TICK_PARAMS, PanoPlotController
 
 if TYPE_CHECKING:
+  from pathlib import Path
+
   from matplotlib.axes import Axes
+  from PyQt5 import QtGui
+
+  from pano.interface.mbq import FigureCanvas
 
 
 def _rename_file(p0: Path, p1: Path):

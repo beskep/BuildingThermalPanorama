@@ -3,9 +3,10 @@ from typing import TYPE_CHECKING
 import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
+from PyQt5 import QtCore, QtGui
 
 import pano.interface.common.pano_files as pf
-from pano.interface.mbq import FigureCanvas, QtCore, QtGui
+from pano.interface.mbq import FigureCanvas
 from pano.interface.mbq import NavigationToolbar2QtQuick as NavToolbar
 
 if TYPE_CHECKING:

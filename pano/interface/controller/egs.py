@@ -1,26 +1,27 @@
+from __future__ import annotations
+
 import dataclasses as dc
 import multiprocessing as mp
-from collections.abc import Iterable
 from contextlib import suppress
 from enum import IntEnum
-from pathlib import Path
 from shutil import copy2
 from typing import TYPE_CHECKING
 
 from loguru import logger
+from PyQt5 import QtCore, QtGui
 
 import pano.interface.common.pano_files as pf
 import pano.interface.controller.controller as con
 from pano.flir.extractor import FlirExtractor
-from pano.interface.mbq import QtCore, QtGui
 from pano.interface.plot_controller.egs import DataNotFoundError, Images, PlotController
 from pano.misc.sp import wkhtmltopdf
 from pano.utils import DIR
 
 if TYPE_CHECKING:
-  from omegaconf import DictConfig
+  from collections.abc import Iterable
+  from pathlib import Path
 
-# ruff: noqa: FBT003
+  from omegaconf import DictConfig
 
 
 class Window(con.Window):
@@ -134,16 +135,16 @@ class Controller(QtCore.QObject):
 
     if self._wd is None:
       self.win.popup('Warning', '경로가 선택되지 않았습니다.')
-      self.win.pb_state(False)
+      self.win.pb_state(indeterminate=False)
       return
 
     commands = (commands,) if isinstance(commands, str) else tuple(commands)
     name = '' if name is None else f'{name.strip()} '
-    self.win.pb_state(True)
+    self.win.pb_state(indeterminate=True)
 
     def done():
       self.win.popup('Success', f'{name}작업 완료')
-      self.win.pb_state(False)
+      self.win.pb_state(indeterminate=False)
       self.win.pb_value(1.0)
 
       with suppress(TypeError):

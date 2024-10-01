@@ -1,20 +1,27 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import numpy as np
-from matplotlib.axes import Axes
 from matplotlib.cm import get_cmap
 from matplotlib.colorbar import make_axes_gridspec
 
+from pano import misc
 from pano.distortion.projection import ImageProjection
 from pano.interface.common.pano_files import DIR, FN, SP
-from pano.interface.mbq import FigureCanvas
 from pano.interface.pano_project import ThermalPanorama
-from pano.misc.cmap import apply_colormap
 from pano.misc.imageio import ImageIO
-from pano.misc.tools import limit_image_size
 
-from .plot_controller import TICK_PARAMS, CropToolbar, PanoPlotController, QtGui
+from . import plot_controller as pc
+
+if TYPE_CHECKING:
+  from matplotlib.axes import Axes
+  from PyQt5 import QtGui
+
+  from pano.interface.mbq import FigureCanvas
 
 
-class PanoramaPlotController(PanoPlotController):
+class PanoramaPlotController(pc.PanoPlotController):
   _GRID_COUNTS = (7, 7)  # (height, width)
 
   def __init__(self, parent=None) -> None:
@@ -22,7 +29,7 @@ class PanoramaPlotController(PanoPlotController):
 
     self._cax: Axes | None = None
     self._prj: ImageProjection | None = None
-    self._toolbar: CropToolbar | None = None
+    self._toolbar: pc.CropToolbar | None = None
 
     self._dir = DIR.PANO
     self._sp = SP.IR
@@ -63,7 +70,7 @@ class PanoramaPlotController(PanoPlotController):
   def init(self, app: QtGui.QGuiApplication, canvas: FigureCanvas):
     self._app = app
     self._canvas = canvas
-    self._toolbar = CropToolbar(canvas=canvas)
+    self._toolbar = pc.CropToolbar(canvas=canvas)
 
     self._fig = canvas.figure
     self._axes = self._fig.add_subplot(111)
@@ -106,7 +113,7 @@ class PanoramaPlotController(PanoPlotController):
   def _set_style(self):
     if self.axes.has_data() and self._grid:
       self.axes.set_axis_on()
-      self.axes.tick_params(axis='both', which='both', **TICK_PARAMS)
+      self.axes.tick_params(axis='both', which='both', **pc.TICK_PARAMS)
     else:
       self.axes.set_axis_off()
 
@@ -140,7 +147,7 @@ class PanoramaPlotController(PanoPlotController):
     if limit:
       # order=1 (bilinear interpolation)이 아니면
       # nan이 포함된 영상 크기 변환에 오류가 발생하는 듯
-      image = limit_image_size(image=image, limit=limit, order=1)
+      image = misc.tools.limit_image_size(image=image, limit=limit, order=1)
 
     return ImageProjection(image=image, viewing_angle=self.viewing_angle)
 
@@ -240,7 +247,7 @@ def save_manual_correction(
       # colormap 버전
       ImageIO.save(
         path=tp.fm.color_path(path),
-        array=apply_colormap(image=corrected, cmap=tp.cmap),
+        array=misc.cmap.apply_colormap(image=corrected, cmap=tp.cmap),
       )
 
   tp.save_multilayer_panorama()

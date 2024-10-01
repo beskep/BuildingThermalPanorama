@@ -1,23 +1,24 @@
-# ruff: noqa: FBT001 FBT003
+from __future__ import annotations
 
-import multiprocessing as mp
-from collections.abc import Iterable
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from loguru import logger
+from PyQt5 import QtCore, QtGui
 
 from pano import utils
-from pano.interface.mbq import QtCore, QtGui
+
+if TYPE_CHECKING:
+  import multiprocessing as mp
+  from collections.abc import Iterable
 
 
 def log(message: str):
-  idx = message.find('|')
-
-  if idx == -1:
+  if (i := message.find('|')) == -1:
     level = 'DEBUG'
   else:
-    level = message[:idx].upper()
-    message = message[(idx + 1) :]
+    level = message[:i].upper()
+    message = message[(i + 1) :]
 
   logger.log(level, message)
 
@@ -37,7 +38,7 @@ def _command(queue: mp.Queue, tp, command: str, step: int, count: float):
   try:
     if fn is None:
       getattr(tp, command)()
-      queue.put(False)
+      queue.put(obj=False)
       queue.put((step + 1) / count)
     else:
       for r in fn():
@@ -80,7 +81,7 @@ def producer(
   else:
     queue.put(1.0)
 
-  queue.put(False)
+  queue.put(obj=False)
 
 
 class Consumer(QtCore.QThread):
@@ -135,7 +136,7 @@ class Window:
   def pb_value(self, value: float):
     return self._window.pb_value(value)
 
-  def pb_state(self, indeterminate: bool):
+  def pb_state(self, indeterminate: bool):  # noqa: FBT001 (`update` signal)
     self._window.pb_state(indeterminate)
 
   def popup(self, title: str, message: str, timeout: int | None = None):
@@ -155,6 +156,6 @@ class Window:
     if isinstance(e, Exception):
       logger.exception(e)
 
-    self.pb_state(False)
+    self.pb_state(indeterminate=False)
     self.pb_value(0.0)
     self.popup(title='Error', message=str(e))

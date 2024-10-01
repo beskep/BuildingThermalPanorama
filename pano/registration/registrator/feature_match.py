@@ -275,7 +275,7 @@ class FeatureBasedRegistrator(BaseRegistrator):
       registered = register(moving_image)
       mtx = trsf.params  # .param 맞나?
 
-    ax = kwargs.get('ax', None)
+    ax = kwargs.get('ax')
     if ax is not None:
       feature.plot_matches(
         ax=ax,

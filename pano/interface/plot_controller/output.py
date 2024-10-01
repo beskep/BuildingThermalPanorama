@@ -1,8 +1,8 @@
+from __future__ import annotations
+
 import operator
-from collections.abc import Callable, Iterable
 from contextlib import suppress
 from dataclasses import dataclass
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
 import numpy as np
@@ -10,14 +10,12 @@ from matplotlib.backend_bases import MouseButton
 from matplotlib.lines import Line2D
 from matplotlib.widgets import _SelectorWidget  # noqa: PLC2701
 from more_itertools import sliding_window
-from numpy.typing import NDArray
 from skimage import draw
 from skimage.color import label2rgb
 
 import pano.interface.common.pano_files as pf
 from pano.interface.common.cmap import save_colormap
 from pano.interface.common.pano_files import DIR, SP
-from pano.interface.mbq import FigureCanvas
 from pano.misc import edgelet as edge
 from pano.misc.edgelet import Edgelets
 from pano.misc.imageio import ImageIO
@@ -26,7 +24,13 @@ from pano.misc.tools import SegMask, normalize_image
 from .plot_controller import PanoPlotController, QtGui
 
 if TYPE_CHECKING:
+  from collections.abc import Callable, Iterable
+  from pathlib import Path
+
   from matplotlib.image import AxesImage
+  from numpy.typing import NDArray
+
+  from pano.interface.mbq import FigureCanvas
 
 
 def _suppress_edgelets(
