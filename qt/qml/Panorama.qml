@@ -72,7 +72,7 @@ ApplicationWindow {
     FontLoader {
         id: icon
 
-        source: `${fd}MaterialIcons-Regular.ttf`
+        source: `${fd}MaterialSymbolsOutlined-Regular.ttf`
     }
 
     ColumnLayout {
