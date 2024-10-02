@@ -26,6 +26,7 @@ ApplicationWindow {
 
     function pb_state(indeterminate) {
         _pb.indeterminate = indeterminate;
+        _pb2.indeterminate = !indeterminate;
     }
 
     function status_message(msg) {
@@ -192,12 +193,34 @@ ApplicationWindow {
 
         }
 
-        ProgressBar {
-            id: _pb
-
+        Pane {
+            padding: 0
             Layout.fillWidth: true
-            indeterminate: false
-            value: 1
+            Layout.preferredHeight: 10
+
+            ProgressBar {
+                // 뒷쪽 배경 progress bar
+
+                id: _pb2
+
+                anchors.fill: parent
+                bar_height: 10
+                bar_alpha: 0.25
+                background_alpha: 0.1
+                indeterminate: true
+                value: 1
+            }
+
+            ProgressBar {
+                id: _pb
+
+                anchors.fill: parent
+                bar_height: 10
+                background_alpha: 0
+                indeterminate: false
+                value: 1
+            }
+
         }
 
     }
