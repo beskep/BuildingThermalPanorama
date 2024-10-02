@@ -8,6 +8,7 @@ T.ToolButton {
     id: control
 
     property alias icon: _icon.text
+    property alias icon2: _icon2.text
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0, contentItem.implicitWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0, contentItem.implicitHeight + topPadding + bottomPadding)
@@ -23,8 +24,8 @@ T.ToolButton {
             id: _icon
 
             text: ''
-            font.family: 'Material Icons'
-            font.pointSize: _text.font.pixelSize
+            font.family: 'Material Symbols Outlined'
+            font.pointSize: _text.font.pixelSize + 2
             color: (!control.enabled ? control.Material.hintTextColor : (control.checked || control.highlighted) ? control.Material.accent : '#fff')
             elide: Text.ElideRight
             horizontalAlignment: Text.AlignHCenter
@@ -36,6 +37,18 @@ T.ToolButton {
 
             text: control.text
             font: control.font
+            color: (!control.enabled ? control.Material.hintTextColor : (control.checked || control.highlighted) ? control.Material.accent : '#fff')
+            elide: Text.ElideRight
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+        }
+
+        Text {
+            id: _icon2
+
+            text: ''
+            font.family: 'Material Symbols Outlined'
+            font.pointSize: _text.font.pixelSize + 2
             color: (!control.enabled ? control.Material.hintTextColor : (control.checked || control.highlighted) ? control.Material.accent : '#fff')
             elide: Text.ElideRight
             horizontalAlignment: Text.AlignHCenter
