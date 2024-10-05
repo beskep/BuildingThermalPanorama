@@ -6,6 +6,7 @@ T.ToolSeparator {
     id: control
 
     property alias color: _rectangle.color
+    property var bar_width: 2
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0, contentItem.implicitWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0, contentItem.implicitHeight + topPadding + bottomPadding)
@@ -17,9 +18,9 @@ T.ToolSeparator {
     contentItem: Rectangle {
         id: _rectangle
 
-        implicitWidth: vertical ? 1 : 30
-        implicitHeight: vertical ? 30 : 1
-        color: '#e0e0e0'
+        implicitWidth: vertical ? bar_width : 30
+        implicitHeight: vertical ? 30 : bar_width
+        color: '#E0E0E0'
     }
 
 }
