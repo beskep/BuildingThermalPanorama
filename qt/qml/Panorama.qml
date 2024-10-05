@@ -49,6 +49,10 @@ ApplicationWindow {
         output_panel.update_config(config_json);
     }
 
+    function set_panel(index) {
+        tab_bar.currentIndex = index;
+    }
+
     width: 1600
     height: 900
     visible: true

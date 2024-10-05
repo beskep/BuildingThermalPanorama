@@ -5,10 +5,10 @@ import QtQuick.Layouts 1.15
 import QtQuick.Window 2.15
 import Qt.labs.platform 1.1
 import "../Custom"
+import "OptionPopup"
 
 Pane {
     property bool has_working_dir: false
-    property string file_dialog_mode: 'thermal' // thermal, visual
     property string _warning: ' <u>설정 변경 시 부위 인식 및 파노라마 생성 결과가 초기화됩니다.</u>'
 
     function init() {
@@ -24,17 +24,6 @@ Pane {
         return parts[parts.length - 1];
     }
 
-    function set_separate_panorama() {
-        let config = {
-            "panorama": {
-                "separate": _separate.checked
-            }
-        };
-        con.configure(JSON.stringify(config));
-        app.separate_panorama = _separate.checked;
-        app.popup('정합 설정 변경', '부위 인식 및 파노라마 생성 결과가 초기화됐습니다.', 5000);
-    }
-
     function update_image_view(paths) {
         grid_model.clear();
         paths.forEach((path) => grid_model.append({
@@ -42,29 +31,25 @@ Pane {
         }));
     }
 
-    function update_config(config) {
-        let separate = config['panorama']['separate'];
-        _separate.checked = separate;
-        _simultaneously.checked = !separate;
-        app.separate_panorama = separate;
-    }
-
     width: 1280
     height: 720
     padding: 10
+
+    ProjectOption {
+        id: _option
+    }
 
     ColumnLayout {
         anchors.fill: parent
 
         ToolBar {
             RowLayout {
-                // TODO 옵션 전체 초기화 버튼
-
                 spacing: 0
 
                 ToolButton {
                     text: '프로젝트 폴더 선택'
                     icon: '\ue8a7'
+                    font.pointSize: 13
                     onReleased: folder_dialog.open()
                     ToolTip.visible: hovered
                     ToolTip.delay: 500
@@ -72,21 +57,9 @@ Pane {
                 }
 
                 ToolButton {
-                    text: '파일 선택'
-                    icon: '\ue43e'
-                    enabled: has_working_dir
-                    ToolTip.visible: hovered
-                    ToolTip.delay: 500
-                    ToolTip.text: '열화상 영상 파일 선택'
-                    onReleased: {
-                        file_dialog_mode = 'thermal';
-                        file_dialog.open();
-                    }
-                }
-
-                ToolButton {
-                    text: '열화상 추출'
-                    icon: '\ue30d'
+                    text: '열화상 추출·저장'
+                    icon: '\ue161'
+                    font.pointSize: 13
                     enabled: has_working_dir
                     onReleased: con.command('extract')
                     ToolTip.visible: hovered
@@ -97,50 +70,53 @@ Pane {
                 ToolSeparator {
                 }
 
-                RowLayout {
-                    enabled: has_working_dir
+                ToolButton {
+                    text: '폴더 열기'
+                    icon: '\ue2c8'
+                    onReleased: con.open_dir('IR')
+                }
 
-                    Label {
-                        text: '열·실화상 파노라마 생성 설정'
-                        color: has_working_dir ? '#FAFAFA' : '#953432'
-                        font.weight: Font.Medium
-                    }
-
-                    ToolRadioButton {
-                        id: _separate
-
-                        checked: true
-                        text: '별도 생성'
-                        onReleased: set_separate_panorama()
-                        ToolTip.visible: hovered
-                        ToolTip.text: ('열·실화상 파노라마를 별도로 생성하고 두 파노라마를 정합합니다.' + _warning)
-                    }
-
-                    ToolRadioButton {
-                        id: _simultaneously
-
-                        text: '동시 생성'
-                        onReleased: set_separate_panorama()
-                        ToolTip.visible: hovered
-                        ToolTip.text: ('개별 열·실화상을 정합 후 파노라마를 동시에 생성합니다.' + _warning)
-                    }
-
+                ToolSeparator {
                 }
 
                 ToolSeparator {
                 }
 
                 ToolButton {
-                    text: '실화상 입력'
-                    icon: '\ue439'
-                    enabled: has_working_dir & _separate.checked
+                    text: '이전'
+                    icon: '\ueac3'
+                    enabled: false
+                }
+
+                ToolButton {
+                    text: '다음'
+                    icon2: '\ueac9'
+                    onReleased: app.set_panel(1)
+                }
+
+                ToolSeparator {
+                }
+
+                ToolSeparator {
+                }
+
+                ToolButton {
+                    text: '설정' // TODO test
+                    text_color: '#A0FFFFFF'
+                    icon: '\ue8b8'
+                    onReleased: _option.open()
                     ToolTip.visible: hovered
                     ToolTip.delay: 500
-                    ToolTip.text: '[옵션] 열화상과 함께 촬영된 실화상이 아닌 별도의 실화상 입력'
-                    onReleased: {
-                        file_dialog_mode = 'visual';
-                        file_dialog.open();
-                    }
+                    ToolTip.text: '프로젝트 설정'
+                }
+
+                ToolButton {
+                    text: '도움말' // TODO
+                    text_color: '#A0FFFFFF'
+                    icon: '\ue88e'
+                }
+
+                ToolSeparator {
                 }
 
             }
@@ -240,21 +216,6 @@ Pane {
             var path = folder.toString().replace('file:///', '');
             con.prj_select_working_dir(path);
             con.has_working_dir();
-        }
-    }
-
-    FileDialog {
-        id: file_dialog
-
-        nameFilters: ['All files (*)']
-        fileMode: FileDialog.OpenFiles
-        onAccepted: {
-            if (file_dialog_mode === 'thermal')
-                con.prj_add_images(JSON.stringify(files));
-            else if (file_dialog_mode === 'visual')
-                con.prj_select_vis_images(JSON.stringify(files));
-            else
-                throw file_dialog_mode;
         }
     }
 

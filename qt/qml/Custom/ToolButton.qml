@@ -9,6 +9,8 @@ T.ToolButton {
 
     property alias icon: _icon.text
     property alias icon2: _icon2.text
+    property alias text_size: _text.font.pointSize
+    property var text_color: '#FFF'
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0, contentItem.implicitWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0, contentItem.implicitHeight + topPadding + bottomPadding)
@@ -25,8 +27,8 @@ T.ToolButton {
 
             text: ''
             font.family: 'Material Symbols Outlined'
-            font.pointSize: _text.font.pixelSize + 2
-            color: (!control.enabled ? control.Material.hintTextColor : (control.checked || control.highlighted) ? control.Material.accent : '#fff')
+            font.pointSize: _text.font.pointSize + 2
+            color: (!control.enabled ? control.Material.hintTextColor : (control.checked || control.highlighted) ? control.Material.accent : text_color)
             elide: Text.ElideRight
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
@@ -37,7 +39,7 @@ T.ToolButton {
 
             text: control.text
             font: control.font
-            color: (!control.enabled ? control.Material.hintTextColor : (control.checked || control.highlighted) ? control.Material.accent : '#fff')
+            color: (!control.enabled ? control.Material.hintTextColor : (control.checked || control.highlighted) ? control.Material.accent : text_color)
             elide: Text.ElideRight
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
@@ -48,8 +50,8 @@ T.ToolButton {
 
             text: ''
             font.family: 'Material Symbols Outlined'
-            font.pointSize: _text.font.pixelSize + 2
-            color: (!control.enabled ? control.Material.hintTextColor : (control.checked || control.highlighted) ? control.Material.accent : '#fff')
+            font.pointSize: _text.font.pointSize + 2
+            color: (!control.enabled ? control.Material.hintTextColor : (control.checked || control.highlighted) ? control.Material.accent : text_color)
             elide: Text.ElideRight
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
