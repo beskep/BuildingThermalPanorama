@@ -20,9 +20,9 @@ Support for PyQt4 is deprecated.
 
 import os
 import sys
-from distutils.version import LooseVersion
 
 import matplotlib as mpl
+from packaging.version import Version
 
 QT_API_PYQT5 = 'PyQt5'
 QT_API_PYSIDE2 = 'PySide2'
@@ -156,7 +156,7 @@ def _setup_pyqt4():  # noqa: C901
     __version__ = QtCore.PYQT_VERSION_STR
     # PyQt 4.6 introduced getSaveFileNameAndFilter:
     # https://riverbankcomputing.com/news/pyqt-46
-    if __version__ < LooseVersion('4.6'):
+    if Version(__version__) < Version('4.6'):
       msg = 'PyQt<4.6 is not supported'
       raise ImportError(msg)
     QtCore.Signal = QtCore.pyqtSignal
