@@ -65,7 +65,6 @@ def main(
   debug: bool = False,
   loglevel: Annotated[int, Parameter(['--loglevel', '-l'])] = 20,
 ):
-  freeze_support()
   loglevel = min(loglevel, (10 if debug else 20))
   _init(loglevel=loglevel)
 
@@ -98,4 +97,5 @@ def main(
 
 
 if __name__ == '__main__':
+  freeze_support()
   app()

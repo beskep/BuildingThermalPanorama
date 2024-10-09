@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from multiprocessing import freeze_support
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -58,6 +59,7 @@ def producer(
   loglevel: int,
   logname='pano',
 ):
+  freeze_support()
   utils.set_logger(loglevel, logname)
 
   # pylint: disable=import-outside-toplevel
