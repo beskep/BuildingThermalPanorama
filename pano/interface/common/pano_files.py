@@ -60,7 +60,7 @@ from pano import utils
 
 from .config import set_config
 
-MODEL_PATH = utils.DIR.RESOURCE / 'DeepLabV3PlusEfficientnetB6.onnx'
+MODEL_PATH = utils.DIR.RESOURCE / 'misc/DeepLabV3PlusEfficientnetB6.onnx'
 
 
 class DIR(Enum):

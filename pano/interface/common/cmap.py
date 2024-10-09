@@ -17,7 +17,7 @@ __all__ = [
 ]
 
 DEFAULT_CMAP = 'inferno'
-_CMAP_PATH = DIR.RESOURCE.joinpath('iron_colormap_rgb.txt')
+_CMAP_PATH = DIR.RESOURCE / 'misc/iron_colormap_rgb.txt'
 
 
 def get_iron_colormap() -> ListedColormap:
