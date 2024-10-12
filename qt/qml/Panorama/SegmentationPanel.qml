@@ -5,6 +5,7 @@ import QtQuick.Layouts 1.15
 import QtQuick.Window 2.15
 import QtGraphicalEffects 1.0
 import "../Custom"
+import "../Button" as Btn
 import Backend 1.0
 
 Pane {
@@ -27,13 +28,38 @@ Pane {
         anchors.fill: parent
 
         ToolBar {
-            ToolButton {
-                text: qsTr('부위 인식')
-                icon: '\uea40'
-                onReleased: con.command('segment')
-                ToolTip.visible: hovered
-                ToolTip.delay: 500
-                ToolTip.text: qsTr('정합된 실화상의 자동 부위 인식 실행')
+            RowLayout {
+                Btn.ToolButton {
+                    text: '부위 인식' // XXX 저장으로 변경?
+                    icon: '\uea40'
+                    onReleased: con.command('segment')
+                    ToolTip.visible: hovered
+                    ToolTip.delay: 500
+                    ToolTip.text: qsTr('정합된 실화상의 자동 부위 인식 실행')
+                }
+
+                ToolSeparator {
+                }
+
+                Btn.OpenFolder {
+                    onReleased: con.open_dir('SEG')
+                }
+
+                ToolSeparator {
+                }
+
+                Btn.Navigation {
+                    index: 2
+                }
+
+                ToolSeparator {
+                }
+
+                Btn.Help {
+                    // TODO
+
+                }
+
             }
 
         }

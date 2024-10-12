@@ -5,6 +5,7 @@ import QtQuick.Layouts 1.15
 import QtQuick.Window 2.15
 import Qt.labs.qmlmodels 1.0
 import "../Custom"
+import "../Button" as Btn
 import Backend 1.0
 
 Pane {
@@ -58,7 +59,7 @@ Pane {
             spacing: 0
 
             RowLayout {
-                ToolButton {
+                Btn.ToolButton {
                     id: _load_mask
 
                     text: '불러오기'
@@ -75,7 +76,7 @@ Pane {
                 ToolSeparator {
                 }
 
-                ToolButton {
+                Btn.ToolButton {
                     id: _polygon_select
 
                     text: '영역 선택'
@@ -90,7 +91,7 @@ Pane {
                     }
                 }
 
-                ToolButton {
+                Btn.ToolButton {
                     id: _point_select
 
                     text: '지점 선택'
@@ -110,7 +111,7 @@ Pane {
                 ToolSeparator {
                 }
 
-                ToolButton {
+                Btn.ToolButton {
                     text: '선택 취소'
                     icon: '\ue14a'
                     onReleased: con.analysis_cancel_selection()
@@ -119,13 +120,40 @@ Pane {
                     ToolTip.text: qsTr('영역 선택 취소')
                 }
 
-                ToolButton {
+                Btn.ToolButton {
                     text: qsTr('저장')
                     icon: '\ue161'
                     onReleased: con.analysis_save()
                     ToolTip.visible: hovered
                     ToolTip.delay: 500
                     ToolTip.text: qsTr('온도 분포 및 취약 부위 분석 결과 저장')
+                }
+
+                ToolSeparator {
+                }
+
+                Btn.OpenFolder {
+                    onReleased: con.open_dir('ANLY')
+                }
+
+                ToolSeparator {
+                }
+
+                Btn.Navigation {
+                    index: 6
+                }
+
+                ToolSeparator {
+                }
+
+                Btn.Setting {
+                    // TODO
+
+                }
+
+                Btn.Help {
+                    // TODO
+
                 }
 
             }
@@ -227,7 +255,7 @@ Pane {
 
                         }
 
-                        ExpandButton {
+                        Btn.ExpandButton {
                             id: _expand_button
                         }
 

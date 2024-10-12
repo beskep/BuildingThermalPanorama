@@ -5,6 +5,7 @@ import QtQuick.Layouts 1.15
 import QtQuick.Window 2.15
 import Qt.labs.platform 1.1
 import "../Custom"
+import "../Button" as Btn
 import "OptionPopup"
 
 Pane {
@@ -46,7 +47,7 @@ Pane {
             RowLayout {
                 spacing: 0
 
-                ToolButton {
+                Btn.ToolButton {
                     text: '프로젝트 폴더 선택'
                     icon: '\ue8a7'
                     font.pointSize: 13
@@ -56,7 +57,7 @@ Pane {
                     ToolTip.text: '열화상 파노라마가 저장된 작업 경로 선택'
                 }
 
-                ToolButton {
+                Btn.ToolButton {
                     text: '열화상 추출·저장'
                     icon: '\ue161'
                     font.pointSize: 13
@@ -70,9 +71,7 @@ Pane {
                 ToolSeparator {
                 }
 
-                ToolButton {
-                    text: '폴더 열기'
-                    icon: '\ue2c8'
+                Btn.OpenFolder {
                     onReleased: con.open_dir('IR')
                 }
 
@@ -82,16 +81,8 @@ Pane {
                 ToolSeparator {
                 }
 
-                ToolButton {
-                    text: '이전'
-                    icon: '\ueac3'
-                    enabled: false
-                }
-
-                ToolButton {
-                    text: '다음'
-                    icon2: '\ueac9'
-                    onReleased: app.set_panel(1)
+                Btn.Navigation {
+                    index: 0
                 }
 
                 ToolSeparator {
@@ -100,20 +91,12 @@ Pane {
                 ToolSeparator {
                 }
 
-                ToolButton {
-                    text: '설정' // TODO test
-                    text_color: '#A0FFFFFF'
-                    icon: '\ue8b8'
+                Btn.Setting {
                     onReleased: _option.open()
-                    ToolTip.visible: hovered
-                    ToolTip.delay: 500
                     ToolTip.text: '프로젝트 설정'
                 }
 
-                ToolButton {
-                    text: '도움말' // TODO
-                    text_color: '#A0FFFFFF'
-                    icon: '\ue88e'
+                Btn.Help {
                 }
 
                 ToolSeparator {

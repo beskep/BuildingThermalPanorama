@@ -7,6 +7,7 @@ import QtGraphicalEffects 1.0
 import Qt.labs.platform 1.1
 import QtWebEngine 1.8
 import "../Custom"
+import "../Button" as Btn
 import Backend 1.0
 
 Pane {
@@ -51,13 +52,13 @@ Pane {
                 RowLayout {
                     visible: mode === 0
 
-                    ToolButton {
+                    Btn.ToolButton {
                         text: '경로 선택'
                         icon: '\ue8a7'
                         onReleased: _folder_dialog.open()
                     }
 
-                    ToolButton {
+                    Btn.ToolButton {
                         text: '영상 변환'
                         icon: '\ue30d'
                         onReleased: con.qml_command('extract', '열·실화상 추출')
@@ -68,14 +69,14 @@ Pane {
                 RowLayout {
                     visible: mode === 1
 
-                    ToolButton {
+                    Btn.ToolButton {
                         text: '자동 정합'
                         icon: '\ue663'
                         onReleased: con.qml_command('register', '열·실화상 자동 정합')
                         visible: false
                     }
 
-                    ToolButton {
+                    Btn.ToolButton {
                         id: _point
 
                         text: '지점 선택'
@@ -87,7 +88,7 @@ Pane {
                         }
                     }
 
-                    ToolButton {
+                    Btn.ToolButton {
                         id: _zoom
 
                         text: '확대'
@@ -99,7 +100,7 @@ Pane {
                         }
                     }
 
-                    ToolButton {
+                    Btn.ToolButton {
                         text: '초기 시점'
                         icon: '\ue88a'
                         onReleased: con.plot_navigation(true, false)
@@ -110,7 +111,7 @@ Pane {
                 RowLayout {
                     visible: mode === 2
 
-                    ToolButton {
+                    Btn.ToolButton {
                         text: '이상 영역 검출'
                         icon: '\ue7ee'
                         onReleased: con.qml_command('segment, detect', '외피 분할 및 열적 이상 영역 검출')
@@ -121,7 +122,7 @@ Pane {
                 RowLayout {
                     visible: mode === 3
 
-                    ToolButton {
+                    Btn.ToolButton {
                         text: '저장'
                         icon: '\ue161'
                         onReleased: _file_dialog.open()

@@ -4,10 +4,12 @@ import QtQuick.Controls.Material 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Window 2.15
 import "../Custom"
+import "../Button" as Btn
 import "OptionPopup"
 import Backend 1.0
 
 Pane {
+    // TODO 파노라마 생성, 왜곡보정 분리
     property bool correction_plot: false
 
     function init() {
@@ -57,7 +59,7 @@ Pane {
                 spacing: 0
 
                 RowLayout {
-                    ToolRadioButton {
+                    Btn.ToolRadioButton {
                         id: _ir
 
                         text: '열화상'
@@ -65,14 +67,14 @@ Pane {
                         onReleased: pano_plot()
                     }
 
-                    ToolRadioButton {
+                    Btn.ToolRadioButton {
                         id: _vis
 
                         text: '실화상'
                         onReleased: pano_plot()
                     }
 
-                    ToolRadioButton {
+                    Btn.ToolRadioButton {
                         id: _seg
 
                         text: '부위 인식'
@@ -87,7 +89,7 @@ Pane {
                 RowLayout {
                     visible: !correction_plot
 
-                    ToolButton {
+                    Btn.ToolButton {
                         text: qsTr('파노라마 생성')
                         icon: '\ue40b'
                         ToolTip.visible: hovered
@@ -105,7 +107,7 @@ Pane {
                 RowLayout {
                     visible: correction_plot
 
-                    ToolButton {
+                    Btn.ToolButton {
                         text: qsTr('자동 보정')
                         icon: '\ue663'
                         ToolTip.visible: hovered
@@ -121,7 +123,7 @@ Pane {
                     ToolSeparator {
                     }
 
-                    ToolButton {
+                    Btn.ToolButton {
                         id: _manual
 
                         text: qsTr('수동 보정')
@@ -136,7 +138,7 @@ Pane {
                         }
                     }
 
-                    ToolButton {
+                    Btn.ToolButton {
                         id: _crop
 
                         text: qsTr('자르기')
@@ -154,7 +156,7 @@ Pane {
                     ToolSeparator {
                     }
 
-                    ToolButton {
+                    Btn.ToolButton {
                         text: qsTr('저장')
                         icon: '\ue161'
                         onReleased: con.pano_save_manual_correction(_roll.value, _pitch.value, _yaw.value)
@@ -163,7 +165,7 @@ Pane {
                         ToolTip.text: qsTr('수동 시점 왜곡 보정·영역 지정 결과를 저장')
                     }
 
-                    ToolButton {
+                    Btn.ToolButton {
                         text: qsTr('취소')
                         icon: '\ue14a'
                         ToolTip.visible: hovered
@@ -177,16 +179,26 @@ Pane {
                         }
                     }
 
-                    ToolSeparator {
-                    }
-
                 }
 
-                ToolButton {
-                    text: qsTr('설정')
-                    icon: '\ue8b8'
-                    ToolTip.visible: hovered
-                    ToolTip.delay: 500
+                ToolSeparator {
+                }
+
+                Btn.OpenFolder {
+                    onReleased: con.open_dir(correction_plot ? 'COR' : 'PANO')
+                }
+
+                ToolSeparator {
+                }
+
+                Btn.Navigation {
+                    index: correction_plot ? 5 : 3 // XXX
+                }
+
+                ToolSeparator {
+                }
+
+                Btn.Setting {
                     ToolTip.text: (correction_plot ? '시점 왜곡 보정 설정' : '파노라마 생성 설정')
                     onReleased: {
                         if (correction_plot)
@@ -194,6 +206,11 @@ Pane {
                         else
                             _panorama_option.open();
                     }
+                }
+
+                Btn.Help {
+                    // TODO
+
                 }
 
             }
@@ -235,7 +252,7 @@ Pane {
                     ColumnLayout {
                         RowLayout {
                             Label {
-                                text: '\ue028'
+                                text: '\ue028' // FIXME
                                 font.family: 'Material Icons'
                                 font.pointSize: 18
                                 Layout.preferredWidth: 30
@@ -260,7 +277,7 @@ Pane {
 
                         RowLayout {
                             Label {
-                                text: '\ue0c3'
+                                text: '\ue0c3' // FIXME
                                 font.family: 'Material Icons'
                                 font.pointSize: 18
                                 Layout.preferredWidth: 30
@@ -285,7 +302,7 @@ Pane {
 
                         RowLayout {
                             Label {
-                                text: '\ue8d4'
+                                text: '\ue8d4' // FIXME
                                 font.family: 'Material Icons'
                                 font.pointSize: 18
                                 Layout.preferredWidth: 30

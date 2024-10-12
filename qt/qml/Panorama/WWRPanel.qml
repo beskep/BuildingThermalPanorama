@@ -5,6 +5,7 @@ import QtQuick.Layouts 1.15
 import QtQuick.Window 2.15
 import Qt.labs.qmlmodels 1.0
 import "../Custom"
+import "../Button" as Btn
 import Backend 1.0
 
 Pane {
@@ -32,7 +33,7 @@ Pane {
 
         ToolBar {
             RowLayout {
-                ToolRadioButton {
+                Btn.ToolRadioButton {
                     id: _vis
 
                     checked: true
@@ -40,8 +41,28 @@ Pane {
                     onCheckedChanged: update_plot(false)
                 }
 
-                ToolRadioButton {
+                Btn.ToolRadioButton {
                     text: '부위 인식'
+                }
+
+                ToolSeparator {
+                }
+
+                Btn.Navigation {
+                    index: 8
+                }
+
+                ToolSeparator {
+                }
+
+                Btn.Setting {
+                    // TODO
+
+                }
+
+                Btn.Help {
+                    // TODO
+
                 }
 
             }

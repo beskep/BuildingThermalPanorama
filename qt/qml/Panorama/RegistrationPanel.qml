@@ -5,15 +5,14 @@ import QtQuick.Layouts 1.15
 import QtQuick.Window 2.15
 import QtGraphicalEffects 1.0
 import "../Custom"
+import "../Button" as Btn
 import "OptionPopup"
 import Backend 1.0
 
 Pane {
-    property bool separate_panorama: false
-
     function init() {
         con.rgst_reset();
-        if (separate_panorama)
+        if (app.separate_panorama)
             con.rgst_pano_draw();
 
     }
@@ -23,11 +22,6 @@ Pane {
         paths.forEach((path) => image_model.append({
             "path": path
         }));
-    }
-
-    function update_config(config) {
-        _option.update_config(config);
-        separate_panorama = config['panorama']['separate'];
     }
 
     width: 1280
@@ -46,63 +40,76 @@ Pane {
             RowLayout {
                 spacing: 0
 
-                ToolButton {
+                Btn.ToolButton {
                     text: qsTr('자동 정합')
                     icon: '\ue663'
                     onReleased: con.command('register')
-                    visible: !separate_panorama
+                    visible: !app.separate_panorama
                     ToolTip.visible: hovered
                     ToolTip.delay: 500
                     ToolTip.text: qsTr('전체 열화상·실화상 자동 정합')
                 }
 
                 ToolSeparator {
-                    visible: !separate_panorama
+                    visible: !app.separate_panorama
                 }
 
-                ToolButton {
-                    id: _point
+                RowLayout {
+                    // TODO 위치 변경
+                    Btn.ToolButton {
+                        id: _point
 
-                    text: qsTr('지점 선택')
-                    icon: '\ue55c'
-                    down: true
-                    ToolTip.visible: hovered
-                    ToolTip.delay: 500
-                    ToolTip.text: qsTr('열화상과 실화상의 대응되는 네 지점을 선택해서 수동으로 정합')
-                    onReleased: {
-                        down = true;
-                        _zoom.down = false;
+                        text: qsTr('지점 선택')
+                        icon: '\ue55c'
+                        down: true
+                        ToolTip.visible: hovered
+                        ToolTip.delay: 500
+                        ToolTip.text: qsTr('열화상과 실화상의 대응되는 네 지점을 선택해서 수동으로 정합')
+                        onReleased: {
+                            down = true;
+                            _zoom.down = false;
+                        }
                     }
-                }
 
-                ToolButton {
-                    id: _zoom
+                    Btn.ToolButton {
+                        id: _zoom
 
-                    text: qsTr('확대')
-                    icon: '\ue56b'
-                    onDownChanged: con.rgst_zoom(down)
-                    ToolTip.visible: hovered
-                    ToolTip.delay: 500
-                    ToolTip.text: qsTr('정밀한 지점 선택을 위해 확대할 영역 지정')
-                    onReleased: {
-                        down = true;
-                        _point.down = false;
+                        text: qsTr('확대')
+                        icon: '\ue56b'
+                        onDownChanged: con.rgst_zoom(down)
+                        ToolTip.visible: hovered
+                        ToolTip.delay: 500
+                        ToolTip.text: qsTr('정밀한 지점 선택을 위해 확대할 영역 지정')
+                        onReleased: {
+                            down = true;
+                            _point.down = false;
+                        }
                     }
+
+                    ToolSeparator {
+                    }
+
+                    Btn.ToolButton {
+                        text: qsTr('초기 시점')
+                        icon: '\ue88a'
+                        onReleased: con.rgst_home()
+                        ToolTip.visible: hovered
+                        ToolTip.delay: 500
+                        ToolTip.text: qsTr('영역 확대를 취소하고 전체 영상 표시')
+                    }
+
+                    Btn.ToolButton {
+                        text: qsTr('취소')
+                        icon: '\ue14a'
+                        onReleased: con.rgst_reset()
+                        ToolTip.visible: hovered
+                        ToolTip.delay: 500
+                        ToolTip.text: qsTr('수동 정합 취소')
+                    }
+
                 }
 
-                ToolSeparator {
-                }
-
-                ToolButton {
-                    text: qsTr('초기 시점')
-                    icon: '\ue88a'
-                    onReleased: con.rgst_home()
-                    ToolTip.visible: hovered
-                    ToolTip.delay: 500
-                    ToolTip.text: qsTr('영역 확대를 취소하고 전체 영상 표시')
-                }
-
-                ToolButton {
+                Btn.ToolButton {
                     text: qsTr('저장')
                     icon: '\ue161'
                     onReleased: con.rgst_save()
@@ -111,29 +118,32 @@ Pane {
                     ToolTip.text: qsTr('대상 영상의 수동 정합 결과 저장')
                 }
 
-                ToolButton {
-                    text: qsTr('취소')
-                    icon: '\ue14a'
-                    onReleased: con.rgst_reset()
-                    ToolTip.visible: hovered
-                    ToolTip.delay: 500
-                    ToolTip.text: qsTr('수동 정합 취소')
+                ToolSeparator {
                 }
 
-                RowLayout {
-                    visible: !separate_panorama
+                Btn.OpenFolder {
+                    onReleased: con.open_dir(app.separate_panorama ? 'PANO' : 'RGST')
+                }
 
-                    ToolSeparator {
-                    }
+                ToolSeparator {
+                }
 
-                    ToolButton {
-                        text: qsTr('설정')
-                        icon: '\ue8b8'
-                        onReleased: _option.open()
-                        ToolTip.visible: hovered
-                        ToolTip.delay: 500
-                        ToolTip.text: qsTr('자동 열·실화상 정합 설정')
-                    }
+                Btn.Navigation {
+                    index: app.separate_panorama ? 4 : 1
+                }
+
+                ToolSeparator {
+                }
+
+                Btn.Setting {
+                    // TODO
+                    enabled: !app.separate_panorama
+                    onReleased: _option.open()
+                    ToolTip.text: '자동 열·실화상 정합 설정'
+                }
+
+                Btn.Help {
+                    // TODO
 
                 }
 

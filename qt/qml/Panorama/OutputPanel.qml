@@ -5,6 +5,7 @@ import QtQuick.Layouts 1.15
 import QtQuick.Window 2.15
 import Qt.labs.qmlmodels 1.0
 import "../Custom"
+import "../Button" as Btn
 import "OptionPopup"
 import Backend 1.0
 
@@ -53,7 +54,7 @@ Pane {
             spacing: 0
 
             RowLayout {
-                ToolButton {
+                Btn.ToolButton {
                     text: '자동 추정'
                     icon: '\ue663'
                     onReleased: con.output_estimate_edgelets()
@@ -62,7 +63,7 @@ Pane {
                     ToolTip.text: qsTr('층 구분선 자동 추정')
                 }
 
-                ToolButton {
+                Btn.ToolButton {
                     id: _delete
 
                     text: '전체 삭제'
@@ -73,7 +74,7 @@ Pane {
                     ToolTip.text: qsTr('층 구분선 전체 삭제')
                 }
 
-                ToolButton {
+                Btn.ToolButton {
                     text: '저장'
                     icon: '\ue161'
                     onReleased: save_output()
@@ -82,16 +83,28 @@ Pane {
                     ToolTip.text: qsTr('GIS 연동을 위한 층별 온도 데이터 저장')
                 }
 
-                ToolButton {
-                    text: '설정'
-                    icon: '\ue8b8'
+                ToolSeparator {
+                }
+
+                Btn.OpenFolder {
+                    onReleased: con.open_dir('OUT')
+                }
+
+                ToolSeparator {
+                }
+
+                Btn.Navigation {
+                    index: 7
+                }
+
+                ToolSeparator {
+                }
+
+                Btn.Setting {
                     onReleased: _option.open()
                 }
 
-                ToolButton {
-                    text: '도움말'
-                    icon: '\ue88e'
-                    ToolTip.visible: hovered
+                Btn.Help {
                     ToolTip.text: '자동 추정: 영상 윤곽선으로부터 층 구분선 추정\n마우스 좌클릭: 구분선 추가 또는 수정\n마우스 우클릭: 구분선 삭제'
                 }
 
@@ -172,7 +185,7 @@ Pane {
 
                     }
 
-                    ExpandButton {
+                    Btn.ExpandButton {
                         id: _expand_button
                     }
 
