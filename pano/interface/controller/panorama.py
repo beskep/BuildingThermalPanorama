@@ -159,11 +159,15 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
       self.win.popup('Error', str(e))
       return
 
-    if not d.exists():
-      self.win.popup('Warning', f'폴더가 존재하지 않습니다.\n{d}')
-      return
-
-    os.startfile(d)
+    try:
+      os.startfile(d)
+    except FileNotFoundError:
+      self.win.popup(
+        'Warning',
+        '결과 폴더가 존재하지 않습니다.\n작업을 먼저 실행해주세요.',
+      )
+    except OSError as e:
+      self.win.popup('Error', str(e))
 
   @QtCore.Slot(str)
   def prj_select_working_dir(self, wd):
