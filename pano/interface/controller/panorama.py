@@ -1,5 +1,6 @@
 import json
 import multiprocessing as mp
+import os
 from contextlib import suppress
 from pathlib import Path
 from typing import ClassVar, Literal
@@ -149,6 +150,20 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
   def has_working_dir(self):
     p = self.win.panel('project')
     p.setProperty('has_working_dir', self._wd is not None)
+
+  @QtCore.Slot(str)
+  def open_dir(self, directory):
+    try:
+      d = self.fm.subdir(directory)
+    except cm.WorkingDirNotSetError as e:
+      self.win.popup('Error', str(e))
+      return
+
+    if not d.exists():
+      self.win.popup('Warning', f'폴더가 존재하지 않습니다.\n{d}')
+      return
+
+    os.startfile(d)
 
   @QtCore.Slot(str)
   def prj_select_working_dir(self, wd):
