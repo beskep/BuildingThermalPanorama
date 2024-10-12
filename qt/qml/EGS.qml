@@ -118,7 +118,7 @@ ApplicationWindow {
     }
 
     Image {
-        source: `${resource}/EGSolutionsLogoKR.svg`
+        source: `${resource}/misc/EGSolutionsLogoKR.svg`
         sourceSize.width: tab_bar.width - 10
         anchors.left: parent.left
         anchors.leftMargin: 5
