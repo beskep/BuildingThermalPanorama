@@ -7,7 +7,7 @@ RoundButton {
     property var expanded: true
 
     flat: true
-    font.family: 'Material Icons'
+    font.family: 'Material Symbols Outlined'
     font.pixelSize: 24
     text: expanded ? '\ue5dc' : '\ue5dd'
     onReleased: {

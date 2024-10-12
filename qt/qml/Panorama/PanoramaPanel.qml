@@ -252,8 +252,8 @@ Pane {
                     ColumnLayout {
                         RowLayout {
                             Label {
-                                text: '\ue028' // FIXME
-                                font.family: 'Material Icons'
+                                text: '\ue028'
+                                font.family: 'Material Symbols Outlined'
                                 font.pointSize: 18
                                 Layout.preferredWidth: 30
                             }
@@ -277,8 +277,8 @@ Pane {
 
                         RowLayout {
                             Label {
-                                text: '\ue0c3' // FIXME
-                                font.family: 'Material Icons'
+                                text: '\ue0c3'
+                                font.family: 'Material Symbols Outlined'
                                 font.pointSize: 18
                                 Layout.preferredWidth: 30
                             }
@@ -302,8 +302,8 @@ Pane {
 
                         RowLayout {
                             Label {
-                                text: '\ue8d4' // FIXME
-                                font.family: 'Material Icons'
+                                text: '\ue8d4'
+                                font.family: 'Material Symbols Outlined'
                                 font.pointSize: 18
                                 Layout.preferredWidth: 30
                             }
