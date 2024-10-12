@@ -10,8 +10,9 @@ ApplicationWindow {
     id: app
 
     property ApplicationWindow app: app
-    property bool separate_panorama: false
-    property string fd: '../../resource/font/'
+    property bool separate_panorama: true
+    property string resource: '../../resource'
+    property alias panel_count: tab_bar.count
     property alias project_panel: project_panel
     property alias registration_panel: registration_panel
     property alias segmentation_panel: segmentation_panel
@@ -43,10 +44,16 @@ ApplicationWindow {
 
     function update_config(config) {
         let config_json = JSON.parse(config);
-        project_panel.update_config(config_json);
-        registration_panel.update_config(config_json);
-        panorama_panel.update_config(config_json);
-        output_panel.update_config(config_json);
+        let panels = [project_panel, registration_panel, segmentation_panel, panorama_panel, analysis_panel, output_panel, wwr_panel];
+        panels.forEach(function(p) {
+            try {
+                p.update_config(config_json);
+            } catch (error) {
+                if (!error instanceof TypeError)
+                    console.log(error);
+
+            }
+        });
     }
 
     function set_panel(index) {
@@ -61,23 +68,23 @@ ApplicationWindow {
     FontLoader {
         id: mono
 
-        source: `${fd}iosevka-ss11-regular.ttf`
+        source: `${resource}/font/iosevka-ss11-regular.ttf`
     }
 
     FontLoader {
         id: sans
 
-        source: `${fd}SourceHanSansKR-Normal.otf`
+        source: `${resource}/font/SourceHanSansKR-Normal.otf`
     }
 
     FontLoader {
-        source: `${fd}SourceHanSansKR-Medium.otf`
+        source: `${resource}/font/SourceHanSansKR-Medium.otf`
     }
 
     FontLoader {
         id: icon
 
-        source: `${fd}MaterialSymbolsOutlined-Regular.ttf`
+        source: `${resource}/font/MaterialSymbolsOutlined-Regular.ttf`
     }
 
     ColumnLayout {
@@ -87,60 +94,92 @@ ApplicationWindow {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
-            VertTabBar {
-                id: tab_bar
-
+            Pane {
                 Layout.preferredWidth: 200
                 Layout.fillHeight: true
+                padding: 0
 
-                TabButton {
-                    text: '프로젝트 설정'
-                    width: parent.width
-                    ToolTip.visible: hovered
-                    ToolTip.delay: 200
-                    ToolTip.text: '프로젝트 경로 설정 및 파일 추출'
-                }
+                ColumnLayout {
+                    anchors.fill: parent
 
-                TabButton {
-                    text: '열·실화상 정합'
-                    width: parent.width
-                    enabled: !separate_panorama
-                }
+                    Image {
+                        source: `${resource}/misc/KictLogo.svg`
+                        Layout.topMargin: 25
+                        Layout.bottomMargin: 20
+                        Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                    }
 
-                TabButton {
-                    text: '외피 부위 인식'
-                    width: parent.width
-                }
+                    VertTabBar {
+                        id: tab_bar
 
-                TabButton {
-                    text: '파노라마 생성'
-                    width: parent.width
-                }
+                        contentHeight: 50
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
 
-                TabButton {
-                    text: '파노라마 정합'
-                    width: parent.width
-                    enabled: separate_panorama
-                }
+                        TabButton {
+                            text: '프로젝트 설정'
+                            width: parent.width
+                            font.pointSize: 14
+                            ToolTip.visible: hovered
+                            ToolTip.delay: 200
+                            ToolTip.text: '프로젝트 경로 설정 및 파일 추출'
+                        }
 
-                TabButton {
-                    text: '왜곡 보정'
-                    width: parent.width
-                }
+                        TabButton {
+                            text: '열·실화상 정합'
+                            width: parent.width
+                            font.pointSize: 14
+                            enabled: !separate_panorama
+                        }
 
-                TabButton {
-                    text: '에너지 검진'
-                    width: parent.width
-                }
+                        TabButton {
+                            text: '외피 부위 인식'
+                            width: parent.width
+                            font.pointSize: 14
+                        }
 
-                TabButton {
-                    text: 'GIS 연동'
-                    width: parent.width
-                }
+                        TabButton {
+                            text: '파노라마 생성'
+                            width: parent.width
+                            font.pointSize: 14
+                        }
 
-                TabButton {
-                    text: '창면적비 계산'
-                    width: parent.width
+                        TabButton {
+                            text: '파노라마 정합'
+                            width: parent.width
+                            font.pointSize: 14
+                            enabled: separate_panorama
+                        }
+
+                        TabButton {
+                            text: '왜곡 보정'
+                            width: parent.width
+                            font.pointSize: 14
+                        }
+
+                        TabButton {
+                            text: '에너지 검진'
+                            width: parent.width
+                            font.pointSize: 14
+                        }
+
+                        TabButton {
+                            text: 'GIS 연동'
+                            width: parent.width
+                            font.pointSize: 14
+                        }
+
+                        TabButton {
+                            text: '창면적비 계산'
+                            width: parent.width
+                            font.pointSize: 14
+                        }
+
+                        background: Rectangle {
+                        }
+
+                    }
+
                 }
 
                 background: Rectangle {
@@ -164,9 +203,6 @@ ApplicationWindow {
 
                     RegistrationPanel {
                         id: registration_panel
-
-                        // 파노라마 정합 선택 시
-                        separate_panorama: separate_panorama
                     }
 
                     SegmentationPanel {
