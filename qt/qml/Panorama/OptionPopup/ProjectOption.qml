@@ -77,15 +77,15 @@ Popup {
                 RowLayout {
                     Label {
                         Layout.fillWidth: true
-                        text: '별도 생성'
+                        text: '동시 생성'
                     }
 
                     RadioButton {
-                        id: _separate
+                        id: _simultaneously
 
                         checked: true
                         ToolTip.visible: hovered
-                        ToolTip.text: '열·실화상 파노라마 별도 생성 후 두 파노라마를 정합.' + _warning
+                        ToolTip.text: '열·실화상 정합 후 파노라마 동시 생성.' + _warning
                     }
 
                     Rectangle {
@@ -94,15 +94,15 @@ Popup {
 
                     Label {
                         Layout.fillWidth: true
-                        text: '동시 생성'
+                        text: '별도 생성'
                     }
 
                     RadioButton {
-                        id: _simultaneously
+                        id: _separate
 
                         checked: false
                         ToolTip.visible: hovered
-                        ToolTip.text: '열·실화상 정합 후 파노라마 동시 생성.' + _warning
+                        ToolTip.text: '열·실화상 파노라마 별도 생성 후 두 파노라마를 정합.' + _warning
                     }
 
                 }

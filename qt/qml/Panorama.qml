@@ -10,7 +10,7 @@ ApplicationWindow {
     id: app
 
     property ApplicationWindow app: app
-    property bool separate_panorama: true
+    property bool separate_panorama: false
     property string resource: '../../resource'
     property alias panel_count: tab_bar.count
     property alias project_panel: project_panel
