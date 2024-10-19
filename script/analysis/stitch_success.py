@@ -50,7 +50,7 @@ def _plot_success_rate(df: pd.DataFrame, output):
   show_or_save(fig, output=output, fname='success_pc')
 
 
-def _plot_scatter(df: pd.DataFrame, outout):
+def _plot_scatter(df: pd.DataFrame, output):
   dfc = df.copy()
   dfc['success'] = ['Success' if x else 'Fail' for x in dfc['success']]
 
@@ -68,7 +68,7 @@ def _plot_scatter(df: pd.DataFrame, outout):
       ax=ax,
   )
 
-  show_or_save(fig, output=outout, fname='scatter')
+  show_or_save(fig, output=output, fname='scatter')
 
 
 def _plot_grid(df: pd.DataFrame, output):
@@ -178,7 +178,7 @@ def main(path, photographer, camera, output, ratio):
 
   _plot_heatmap(df, output=output)
   _plot_success_rate(df, output=output)
-  _plot_scatter(df, outout=output)
+  _plot_scatter(df, output=output)
   _plot_grid(df, output=output)
 
 
