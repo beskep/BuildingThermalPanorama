@@ -11,13 +11,14 @@ T.ToolButton {
     property alias icon2: _icon2.text
     property alias text_size: _text.font.pointSize
     property var text_color: '#FFF'
+    property var ripple_color: ''
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0, contentItem.implicitWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0, contentItem.implicitHeight + topPadding + bottomPadding)
     baselineOffset: contentItem.y + contentItem.baselineOffset
     padding: 4
-    leftPadding: 15
-    rightPadding: 15
+    leftPadding: 10
+    rightPadding: 10
 
     contentItem: RowLayout {
         Layout.alignment: Qt.AlignVCenter
@@ -72,7 +73,7 @@ T.ToolButton {
         pressed: control.pressed
         anchor: control
         active: control.enabled && (control.down || control.visualFocus || control.hovered)
-        color: control.Material.rippleColor
+        color: ripple_color ? ripple_color : control.Material.rippleColor
     }
 
 }

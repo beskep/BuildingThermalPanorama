@@ -50,65 +50,6 @@ Pane {
                     ToolTip.text: qsTr('전체 열화상·실화상 자동 정합')
                 }
 
-                ToolSeparator {
-                    visible: !app.separate_panorama
-                }
-
-                RowLayout {
-                    // TODO 위치 변경
-                    Btn.ToolButton {
-                        id: _point
-
-                        text: qsTr('지점 선택')
-                        icon: '\ue55c'
-                        down: true
-                        ToolTip.visible: hovered
-                        ToolTip.delay: 500
-                        ToolTip.text: qsTr('열화상과 실화상의 대응되는 네 지점을 선택해서 수동으로 정합')
-                        onReleased: {
-                            down = true;
-                            _zoom.down = false;
-                        }
-                    }
-
-                    Btn.ToolButton {
-                        id: _zoom
-
-                        text: qsTr('확대')
-                        icon: '\ue56b'
-                        onDownChanged: con.rgst_zoom(down)
-                        ToolTip.visible: hovered
-                        ToolTip.delay: 500
-                        ToolTip.text: qsTr('정밀한 지점 선택을 위해 확대할 영역 지정')
-                        onReleased: {
-                            down = true;
-                            _point.down = false;
-                        }
-                    }
-
-                    ToolSeparator {
-                    }
-
-                    Btn.ToolButton {
-                        text: qsTr('초기 시점')
-                        icon: '\ue88a'
-                        onReleased: con.rgst_home()
-                        ToolTip.visible: hovered
-                        ToolTip.delay: 500
-                        ToolTip.text: qsTr('영역 확대를 취소하고 전체 영상 표시')
-                    }
-
-                    Btn.ToolButton {
-                        text: qsTr('취소')
-                        icon: '\ue14a'
-                        onReleased: con.rgst_reset()
-                        ToolTip.visible: hovered
-                        ToolTip.delay: 500
-                        ToolTip.text: qsTr('수동 정합 취소')
-                    }
-
-                }
-
                 Btn.ToolButton {
                     text: qsTr('저장')
                     icon: '\ue161'
@@ -219,27 +160,100 @@ Pane {
                 ColumnLayout {
                     anchors.fill: parent
 
-                    FigureCanvas {
-                        id: plot
-
+                    Pane {
                         Layout.fillHeight: true
                         Layout.fillWidth: true
-                        objectName: 'registration_plot'
-                        dpi_ratio: Screen.devicePixelRatio
-                    }
 
-                    RowLayout {
-                        Layout.alignment: Qt.AlignRight | Qt.AlignBottom
-                        Layout.rightMargin: 20
+                        FigureCanvas {
+                            id: plot
 
-                        Label {
-                            text: qsTr('그리드')
+                            anchors.fill: parent
+                            objectName: 'registration_plot'
+                            dpi_ratio: Screen.devicePixelRatio
                         }
 
-                        CheckBox {
+                        Pane {
+                            // plot 상호작용 버튼
+                            Material.elevation: 1
+                            anchors.left: parent.left
+                            anchors.bottom: parent.bottom
                             padding: 0
-                            checkState: Qt.Unchecked
-                            onCheckStateChanged: con.rgst_set_grid(checkState === Qt.Checked)
+                            leftPadding: 5
+
+                            RowLayout {
+                                RowLayout {
+                                    visible: _expand.expanded
+
+                                    Btn.MiniToolButton {
+                                        id: _point
+
+                                        text: '지점 선택'
+                                        icon: '\ue55c'
+                                        down: true
+                                        ToolTip.text: '열화상과 실화상의 대응되는 네 지점을 선택해서 수동으로 정합'
+                                        onReleased: {
+                                            down = true;
+                                            _zoom.down = false;
+                                        }
+                                    }
+
+                                    Btn.MiniToolButton {
+                                        id: _zoom
+
+                                        text: '확대'
+                                        icon: '\ue56b'
+                                        ToolTip.text: '정밀한 지점 선택을 위해 확대할 영역 지정'
+                                        onDownChanged: con.rgst_zoom(down)
+                                        onReleased: {
+                                            down = true;
+                                            _point.down = false;
+                                        }
+                                    }
+
+                                    ToolSeparator {
+                                        leftPadding: 2
+                                        rightPadding: 2
+                                    }
+
+                                    Btn.MiniToolButton {
+                                        text: '그리드'
+                                        icon: '\ue3ec'
+                                        ToolTip.text: '그리드 표시 여부'
+                                        onReleased: {
+                                            down = !down;
+                                            con.rgst_set_grid(down);
+                                        }
+                                    }
+
+                                    ToolSeparator {
+                                        leftPadding: 2
+                                        rightPadding: 2
+                                    }
+
+                                    Btn.MiniToolButton {
+                                        text: '초기시점'
+                                        icon: '\ue88a'
+                                        ToolTip.text: '영역 확대를 취소하고 전체 영상 표시'
+                                        onReleased: con.rgst_home()
+                                    }
+
+                                    Btn.MiniToolButton {
+                                        text: '취소'
+                                        icon: '\ue14a'
+                                        ToolTip.text: '수동 정합 취소'
+                                        onReleased: con.rgst_reset()
+                                    }
+
+                                }
+
+                                Btn.Expand {
+                                    id: _expand
+
+                                    padding: 0
+                                }
+
+                            }
+
                         }
 
                     }
