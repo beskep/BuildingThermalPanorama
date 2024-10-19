@@ -118,6 +118,7 @@ Pane {
 
                     delegate: Pane {
                         Material.elevation: 0
+                        padding: 5
                         width: image_view.width - 20
                         height: width * 3 / 4 + 10
 
@@ -163,95 +164,100 @@ Pane {
                     Pane {
                         Layout.fillHeight: true
                         Layout.fillWidth: true
+                        padding: 5
 
-                        FigureCanvas {
-                            id: plot
-
+                        ColumnLayout {
                             anchors.fill: parent
-                            objectName: 'registration_plot'
-                            dpi_ratio: Screen.devicePixelRatio
-                        }
 
-                        Pane {
-                            // plot 상호작용 버튼
-                            Material.elevation: 1
-                            anchors.left: parent.left
-                            anchors.bottom: parent.bottom
-                            padding: 0
-                            leftPadding: 5
+                            Pane {
+                                // plot 상호작용 버튼
+                                Material.elevation: 1
+                                padding: 0
+                                leftPadding: 5
 
-                            RowLayout {
                                 RowLayout {
-                                    visible: _expand.expanded
+                                    RowLayout {
+                                        visible: _expand.expanded
 
-                                    Btn.MiniToolButton {
-                                        id: _point
+                                        Btn.MiniToolButton {
+                                            id: _point
 
-                                        text: '지점 선택'
-                                        icon: '\ue55c'
-                                        down: true
-                                        ToolTip.text: '열화상과 실화상의 대응되는 네 지점을 선택해서 수동으로 정합'
-                                        onReleased: {
-                                            down = true;
-                                            _zoom.down = false;
+                                            text: '지점 선택'
+                                            icon: '\ue55c'
+                                            down: true
+                                            ToolTip.text: '열화상과 실화상의 대응되는 네 지점을 선택해서 수동으로 정합'
+                                            onReleased: {
+                                                down = true;
+                                                _zoom.down = false;
+                                            }
                                         }
-                                    }
 
-                                    Btn.MiniToolButton {
-                                        id: _zoom
+                                        Btn.MiniToolButton {
+                                            id: _zoom
 
-                                        text: '확대'
-                                        icon: '\ue56b'
-                                        ToolTip.text: '정밀한 지점 선택을 위해 확대할 영역 지정'
-                                        onDownChanged: con.rgst_zoom(down)
-                                        onReleased: {
-                                            down = true;
-                                            _point.down = false;
+                                            text: '확대'
+                                            icon: '\ue56b'
+                                            ToolTip.text: '정밀한 지점 선택을 위해 확대할 영역 지정'
+                                            onDownChanged: con.rgst_zoom(down)
+                                            onReleased: {
+                                                down = true;
+                                                _point.down = false;
+                                            }
                                         }
-                                    }
 
-                                    ToolSeparator {
-                                        leftPadding: 2
-                                        rightPadding: 2
-                                    }
-
-                                    Btn.MiniToolButton {
-                                        text: '그리드'
-                                        icon: '\ue3ec'
-                                        ToolTip.text: '그리드 표시 여부'
-                                        onReleased: {
-                                            down = !down;
-                                            con.rgst_set_grid(down);
+                                        ToolSeparator {
+                                            leftPadding: 2
+                                            rightPadding: 2
                                         }
+
+                                        Btn.MiniToolButton {
+                                            text: '그리드'
+                                            icon: '\ue3ec'
+                                            ToolTip.text: '그리드 표시 여부'
+                                            onReleased: {
+                                                down = !down;
+                                                con.rgst_set_grid(down);
+                                            }
+                                        }
+
+                                        ToolSeparator {
+                                            leftPadding: 2
+                                            rightPadding: 2
+                                        }
+
+                                        Btn.MiniToolButton {
+                                            text: '초기시점'
+                                            icon: '\ue88a'
+                                            ToolTip.text: '영역 확대를 취소하고 전체 영상 표시'
+                                            onReleased: con.rgst_home()
+                                        }
+
+                                        Btn.MiniToolButton {
+                                            text: '취소'
+                                            icon: '\ue14a'
+                                            ToolTip.text: '수동 정합 취소'
+                                            onReleased: con.rgst_reset()
+                                        }
+
                                     }
 
-                                    ToolSeparator {
-                                        leftPadding: 2
-                                        rightPadding: 2
-                                    }
+                                    Btn.Expand {
+                                        id: _expand
 
-                                    Btn.MiniToolButton {
-                                        text: '초기시점'
-                                        icon: '\ue88a'
-                                        ToolTip.text: '영역 확대를 취소하고 전체 영상 표시'
-                                        onReleased: con.rgst_home()
-                                    }
-
-                                    Btn.MiniToolButton {
-                                        text: '취소'
-                                        icon: '\ue14a'
-                                        ToolTip.text: '수동 정합 취소'
-                                        onReleased: con.rgst_reset()
+                                        padding: 0
                                     }
 
                                 }
 
-                                Btn.Expand {
-                                    id: _expand
+                            }
 
-                                    padding: 0
-                                }
+                            FigureCanvas {
+                                id: plot
 
+                                Layout.fillHeight: true
+                                Layout.fillWidth: true
+                                objectName: 'registration_plot'
+                                dpi_ratio: Screen.devicePixelRatio
                             }
 
                         }
