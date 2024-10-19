@@ -3,7 +3,6 @@
 import sys
 import sysconfig
 from datetime import datetime
-from pathlib import Path
 
 from cx_Freeze import Executable, setup
 from pytz import timezone
@@ -59,18 +58,13 @@ def build():
     'skimage.measure.fit',
     'skimage.transform._warps',
     'skimage.transform.hough_transform',
+    'skimage.transform.integral',
+    'skimage.transform.pyramids',
     'skimage',
     'webp',
   ]
   excludes = ['locket', 'mypy', 'PySide2', 'tkinter', 'resource']
   zip_include_packages = []
-
-  bins = ['ITK']
-  lib_bin = Path(sys.base_prefix).joinpath('Library/bin')
-  for b in bins:
-    include_files.extend([
-      (f.as_posix(), f'lib/{f.name}') for f in lib_bin.glob(f'*{b}*')
-    ])
 
   sys_info = (sysconfig.get_platform(), sysconfig.get_python_version())
   version = datetime.now(tz=timezone('Asia/Seoul')).date().isoformat().replace('-', '.')
@@ -86,18 +80,18 @@ def build():
       'excludes': excludes,
       'optimize': 1,
       'silent_level': 1,
+      'include_msvcr': True,
     }
   }
 
   executables = [
-    Executable(script=r'pano\interface\cli.py', target_name='CLI'),
-    Executable(script=r'pano\interface\gui.py', target_name='GUI'),
+    Executable(script=r'pano\interface\gui.py', target_name='BuildingThermalPanorama'),
   ]
 
   setup(
     name='app',
     version='0.1',
-    description='ThermalPanorama',
+    description='BuildingThermalPanorama',
     options=options,
     executables=executables,
     packages=[],
