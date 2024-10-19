@@ -184,7 +184,7 @@ Pane {
 
                     RowLayout {
                         RowLayout {
-                            visible: _expand_button.expanded
+                            visible: _expand.expanded
 
                             RadioButton {
                                 id: _ir
@@ -255,8 +255,8 @@ Pane {
 
                         }
 
-                        Btn.ExpandButton {
-                            id: _expand_button
+                        Btn.Expand {
+                            id: _expand
                         }
 
                     }
