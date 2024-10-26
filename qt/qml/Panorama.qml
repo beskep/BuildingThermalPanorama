@@ -27,7 +27,6 @@ ApplicationWindow {
 
     function pb_state(indeterminate) {
         _pb.indeterminate = indeterminate;
-        _pb2.indeterminate = !indeterminate;
     }
 
     function status_message(msg) {
@@ -245,9 +244,9 @@ ApplicationWindow {
 
                 anchors.fill: parent
                 bar_height: 10
-                bar_alpha: 0.25
+                bar_alpha: 0.2
                 background_alpha: 0.1
-                indeterminate: true
+                indeterminate: _pb.value !== 1
                 value: 1
             }
 
@@ -256,6 +255,7 @@ ApplicationWindow {
 
                 anchors.fill: parent
                 bar_height: 10
+                bar_alpha: value === 1 ? 0.8 : 0.6
                 background_alpha: 0
                 indeterminate: false
                 value: 1
