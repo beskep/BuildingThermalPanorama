@@ -18,7 +18,7 @@ Slider {
         implicitHeight: 4
         width: control.availableWidth
         height: implicitHeight
-        color: Material.color(control.Material.accentColor, Material.Shade100)
+        color: Qt.rgba(control.Material.accentColor.r, control.Material.accentColor.g, control.Material.accentColor.b, 0.2)
     }
 
 }
