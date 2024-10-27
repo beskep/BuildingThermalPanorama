@@ -194,11 +194,6 @@ Pane {
                                 }
                             }
 
-                            ToolSeparator {
-                                leftPadding: 2
-                                rightPadding: 2
-                            }
-
                             Btn.MiniToolButton {
                                 text: '취소'
                                 icon: '\ue14a'
