@@ -9,7 +9,6 @@ import "OptionPopup"
 import Backend 1.0
 
 Pane {
-    // TODO 파노라마 생성, 왜곡보정 분리
     property bool correction_plot: false
 
     function init() {
@@ -59,34 +58,6 @@ Pane {
                 spacing: 0
 
                 RowLayout {
-                    Btn.ToolRadioButton {
-                        id: _ir
-
-                        text: '열화상'
-                        checked: true
-                        onReleased: pano_plot()
-                    }
-
-                    Btn.ToolRadioButton {
-                        id: _vis
-
-                        text: '실화상'
-                        onReleased: pano_plot()
-                    }
-
-                    Btn.ToolRadioButton {
-                        id: _seg
-
-                        text: '부위 인식'
-                        onReleased: pano_plot()
-                    }
-
-                }
-
-                ToolSeparator {
-                }
-
-                RowLayout {
                     visible: !correction_plot
 
                     Btn.ToolButton {
@@ -120,42 +91,6 @@ Pane {
                         }
                     }
 
-                    ToolSeparator {
-                    }
-
-                    Btn.ToolButton {
-                        id: _manual
-
-                        text: qsTr('수동 보정')
-                        icon: '\ue41e'
-                        down: true
-                        ToolTip.visible: hovered
-                        ToolTip.delay: 500
-                        ToolTip.text: qsTr('사용자가 지정한 각도에 따라 시점 왜곡을 수동으로 보정')
-                        onReleased: {
-                            down = true;
-                            _crop.down = false;
-                        }
-                    }
-
-                    Btn.ToolButton {
-                        id: _crop
-
-                        text: qsTr('자르기')
-                        icon: '\ue3be'
-                        onDownChanged: con.pano_crop_mode(down)
-                        ToolTip.visible: hovered
-                        ToolTip.delay: 500
-                        ToolTip.text: qsTr('시점 왜곡이 보정된 영상의 저장 영역을 마우스 드래그를 통해 지정')
-                        onReleased: {
-                            down = true;
-                            _manual.down = false;
-                        }
-                    }
-
-                    ToolSeparator {
-                    }
-
                     Btn.ToolButton {
                         text: qsTr('저장')
                         icon: '\ue161'
@@ -163,20 +98,6 @@ Pane {
                         ToolTip.visible: hovered
                         ToolTip.delay: 500
                         ToolTip.text: qsTr('수동 시점 왜곡 보정·영역 지정 결과를 저장')
-                    }
-
-                    Btn.ToolButton {
-                        text: qsTr('취소')
-                        icon: '\ue14a'
-                        ToolTip.visible: hovered
-                        ToolTip.delay: 500
-                        ToolTip.text: qsTr('수동 시점 왜곡 보정·영역 지정 취소')
-                        onReleased: {
-                            if (_manual.down)
-                                reset();
-                            else
-                                con.pano_home();
-                        }
                     }
 
                 }
@@ -192,7 +113,7 @@ Pane {
                 }
 
                 Btn.Navigation {
-                    index: correction_plot ? 5 : 3 // XXX
+                    index: correction_plot ? 5 : 3
                 }
 
                 ToolSeparator {
@@ -229,6 +150,124 @@ Pane {
                 anchors.fill: parent
                 objectName: 'panorama_plot'
                 dpi_ratio: Screen.devicePixelRatio
+            }
+
+            Pane {
+                // plot 상호작용 버튼
+                Material.elevation: 1
+                padding: 0
+                leftPadding: 5
+                anchors.left: parent.left
+                anchors.top: parent.top
+
+                RowLayout {
+                    RowLayout {
+                        visible: _expand.expanded
+
+                        RowLayout {
+                            // 왜곡보정 plot 상호작용 버튼
+                            visible: correction_plot
+
+                            Btn.MiniToolButton {
+                                id: _manual
+
+                                text: '수동 보정'
+                                icon: '\ue41e'
+                                down: true
+                                ToolTip.text: '사용자가 지정한 각도에 따라 시점 왜곡을 수동으로 보정'
+                                onReleased: {
+                                    down = true;
+                                    _crop.down = false;
+                                }
+                            }
+
+                            Btn.MiniToolButton {
+                                id: _crop
+
+                                text: '자르기'
+                                icon: '\ue3be'
+                                onDownChanged: con.pano_crop_mode(down)
+                                ToolTip.text: '시점 왜곡이 보정된 영상의 저장 영역을 마우스 드래그를 통해 지정'
+                                onReleased: {
+                                    down = true;
+                                    _manual.down = false;
+                                }
+                            }
+
+                            ToolSeparator {
+                                leftPadding: 2
+                                rightPadding: 2
+                            }
+
+                            Btn.MiniToolButton {
+                                text: '취소'
+                                icon: '\ue14a'
+                                ToolTip.text: '수동 시점 왜곡 보정·영역 지정 취소'
+                                onReleased: {
+                                    if (_manual.down)
+                                        reset();
+                                    else
+                                        con.pano_home();
+                                }
+                            }
+
+                            ToolSeparator {
+                                leftPadding: 2
+                                rightPadding: 2
+                            }
+
+                            Btn.MiniToolButton {
+                                text: '그리드'
+                                icon: '\ue3ec'
+                                ToolTip.text: '그리드 표시 여부'
+                                onReleased: {
+                                    down = !down;
+                                    con.pano_set_grid(down);
+                                }
+                            }
+
+                            ToolSeparator {
+                                leftPadding: 2
+                                rightPadding: 2
+                            }
+
+                        }
+
+                        RadioButton {
+                            id: _ir
+
+                            implicitHeight: 36
+                            text: '열화상'
+                            checked: true
+                            onReleased: pano_plot()
+                        }
+
+                        RadioButton {
+                            id: _vis
+
+                            implicitHeight: 36
+                            text: '실화상'
+                            onReleased: pano_plot()
+                        }
+
+                        RadioButton {
+                            id: _seg
+
+                            implicitHeight: 36
+                            text: '부위 인식'
+                            onReleased: pano_plot()
+                        }
+
+                    }
+
+                    Btn.Expand {
+                        id: _expand
+
+                        padding: 0
+                    }
+
+                }
+
             }
 
         }
@@ -349,7 +388,8 @@ Pane {
                             anchors.fill: parent
 
                             Label {
-                                text: qsTr('해상도')
+                                Layout.preferredWidth: 60
+                                text: '해상도'
                             }
 
                             SpinBox {
@@ -366,60 +406,26 @@ Pane {
 
                     }
 
-                    RowLayout {
-                        Pane {
-                            Layout.preferredHeight: 50
+                    Pane {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 50
+                        ToolTip.visible: hovered
+                        ToolTip.delay: 500
+                        ToolTip.text: qsTr('열화상 카메라의 시야각')
 
-                            RowLayout {
-                                Label {
-                                    text: qsTr('그리드')
-                                }
-
-                                CheckBox {
-                                    checkState: Qt.Unchecked
-                                    onCheckStateChanged: con.pano_set_grid(checkState === Qt.Checked)
-                                }
-
-                                Rectangle {
-                                    Layout.preferredWidth: 10
-                                }
-
+                        RowLayout {
+                            Label {
+                                Layout.preferredWidth: 60
+                                text: '시야각 (º)'
                             }
 
-                        }
-
-                        Pane {
-                            Layout.fillWidth: true
-                            Layout.preferredHeight: 50
-                            ToolTip.visible: hovered
-                            ToolTip.delay: 500
-                            ToolTip.text: qsTr('열화상 카메라의 시야각')
-
-                            RowLayout {
-                                Label {
-                                    text: qsTr('시야각')
-                                }
-
-                                Rectangle {
-                                    Layout.preferredWidth: 5
-                                }
-
-                                TextField {
-                                    text: '42'
-                                    Layout.preferredWidth: 40
-                                    onTextChanged: {
-                                        con.pano_set_viewing_angle(text);
-                                    }
-
-                                    validator: DoubleValidator {
-                                    }
-
-                                }
-
-                                Label {
-                                    text: qsTr('º')
-                                }
-
+                            SpinBox {
+                                Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                                from: 20
+                                to: 120
+                                value: 42
+                                stepSize: 2
+                                onValueChanged: con.pano_set_viewing_angle(value)
                             }
 
                         }
