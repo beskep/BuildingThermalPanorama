@@ -12,10 +12,9 @@ Pane {
     property real min_temperature: 0
     property real max_temperature: 1
     property bool flag_bt: false
-    property int mode_height: 36
 
     function analysis_plot() {
-        con.analysis_plot(_factor.checked, _show_segmentation.checked, _show_vulnerable.checked, _dist.checked);
+        con.analysis_plot(_factor.checked, _show_segmentation.down, _show_vulnerable.down, _dist.checked);
     }
 
     function init() {
@@ -73,53 +72,6 @@ Pane {
                     }
                 }
 
-                ToolSeparator {
-                }
-
-                Btn.ToolButton {
-                    id: _polygon_select
-
-                    text: '영역 선택'
-                    icon: '\ueb39'
-                    down: true
-                    ToolTip.visible: hovered
-                    ToolTip.delay: 500
-                    ToolTip.text: qsTr('분석 영역을 다각형 형태로 선택')
-                    onReleased: {
-                        down = true;
-                        _point_select.down = false;
-                    }
-                }
-
-                Btn.ToolButton {
-                    id: _point_select
-
-                    text: '지점 선택'
-                    icon: '\ue55c'
-                    ToolTip.visible: hovered
-                    ToolTip.delay: 500
-                    ToolTip.text: qsTr('온도 보정을 위한 실측 지점 선택')
-                    onReleased: {
-                        down = true;
-                        _polygon_select.down = false;
-                    }
-                    onDownChanged: {
-                        con.analysis_set_selector(down);
-                    }
-                }
-
-                ToolSeparator {
-                }
-
-                Btn.ToolButton {
-                    text: '선택 취소'
-                    icon: '\ue14a'
-                    onReleased: con.analysis_cancel_selection()
-                    ToolTip.visible: hovered
-                    ToolTip.delay: 500
-                    ToolTip.text: qsTr('영역 선택 취소')
-                }
-
                 Btn.ToolButton {
                     text: qsTr('저장')
                     icon: '\ue161'
@@ -175,21 +127,63 @@ Pane {
                     dpi_ratio: Screen.devicePixelRatio
                 }
 
-                // plot 종류 선택
+                // 툴바
                 Pane {
+                    // TODO 높이 조절
                     Material.elevation: 1
-                    anchors.left: parent.left
-                    anchors.bottom: parent.bottom
                     padding: 0
+                    leftPadding: 5
+                    anchors.left: parent.left
+                    anchors.top: parent.top
 
                     RowLayout {
                         RowLayout {
                             visible: _expand.expanded
 
+                            Btn.MiniToolButton {
+                                id: _polygon_select
+
+                                text: '영역 선택'
+                                icon: '\ueb39'
+                                down: true
+                                ToolTip.text: '분석 영역을 다각형 형태로 선택'
+                                onReleased: {
+                                    down = true;
+                                    _point_select.down = false;
+                                }
+                            }
+
+                            Btn.MiniToolButton {
+                                id: _point_select
+
+                                text: '지점 선택'
+                                icon: '\ue55c'
+                                ToolTip.text: '온도 보정을 위한 실측 지점 선택'
+                                onReleased: {
+                                    down = true;
+                                    _polygon_select.down = false;
+                                }
+                                onDownChanged: {
+                                    con.analysis_set_selector(down);
+                                }
+                            }
+
+                            Btn.MiniToolButton {
+                                text: '선택 취소'
+                                icon: '\ue14a'
+                                onReleased: con.analysis_cancel_selection()
+                                ToolTip.text: '영역 선택 취소'
+                            }
+
+                            ToolSeparator {
+                                leftPadding: 2
+                                rightPadding: 2
+                            }
+
                             RadioButton {
                                 id: _ir
 
-                                Layout.preferredHeight: mode_height
+                                implicitHeight: 36
                                 text: '열화상'
                                 checked: true
                                 onReleased: analysis_plot()
@@ -198,7 +192,7 @@ Pane {
                             RadioButton {
                                 id: _factor
 
-                                Layout.preferredHeight: mode_height
+                                implicitHeight: 36
                                 text: '지표'
                                 onReleased: analysis_plot()
                             }
@@ -206,50 +200,57 @@ Pane {
                             RadioButton {
                                 id: _dist
 
-                                Layout.preferredHeight: mode_height
+                                implicitHeight: 36
                                 text: '분포'
                                 onReleased: analysis_plot()
                             }
 
                             ToolSeparator {
-                                color: '#9e9e9e'
+                                leftPadding: 2
+                                rightPadding: 2
                             }
 
-                            CheckBox {
+                            Btn.MiniToolButton {
                                 id: _show_segmentation
 
-                                Layout.preferredHeight: mode_height
-                                text: '외피 부위 표시'
-                                onReleased: analysis_plot()
-                                onCheckedChanged: {
-                                    if (checked & _show_vulnerable.checked)
-                                        _show_vulnerable.checked = false;
+                                text: '외피부위'
+                                icon: down ? '\ue8f4' : '\ue8f5'
+                                ToolTip.text: '외피부위 표시'
+                                onReleased: {
+                                    down = !down;
+                                    if (down & _show_vulnerable.down)
+                                        _show_vulnerable.down = false;
 
+                                    analysis_plot();
                                 }
                             }
 
-                            CheckBox {
+                            Btn.MiniToolButton {
                                 id: _show_vulnerable
 
-                                Layout.preferredHeight: mode_height
-                                text: '취약부위 표시'
-                                onReleased: analysis_plot()
-                                onCheckedChanged: {
-                                    if (checked & _show_segmentation.checked)
-                                        _show_segmentation.checked = false;
+                                text: '취약부위'
+                                icon: down ? '\ue8f4' : '\ue8f5'
+                                ToolTip.text: '취약부위 표시'
+                                onReleased: {
+                                    down = !down;
+                                    if (down & _show_segmentation.down)
+                                        _show_segmentation.down = false;
 
-                                    if (checked & _ir.checked)
+                                    if (down & _ir.checked)
                                         _factor.checked = true;
 
+                                    analysis_plot();
                                 }
                             }
 
-                            CheckBox {
-                                Layout.preferredHeight: mode_height
-                                text: '창문 취약부위 표시'
-                                checked: true
-                                onCheckedChanged: {
-                                    con.analysis_window_vulnerable(checked);
+                            Btn.MiniToolButton {
+                                text: '창문 취약부위'
+                                icon: down ? '\ue8f4' : '\ue8f5'
+                                down: true
+                                ToolTip.text: '창문 취약부위 표시'
+                                onReleased: {
+                                    down = !down;
+                                    con.analysis_window_vulnerable(down);
                                 }
                             }
 
@@ -257,6 +258,8 @@ Pane {
 
                         Btn.Expand {
                             id: _expand
+
+                            padding: 0
                         }
 
                     }
