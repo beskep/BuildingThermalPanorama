@@ -6,7 +6,7 @@ import QtQuick.Window 2.15
 import QtGraphicalEffects 1.0
 import "../Custom"
 import "../Button" as Btn
-import "OptionPopup"
+import "OptionPopup" as Opt
 import Backend 1.0
 
 Pane {
@@ -29,7 +29,7 @@ Pane {
     padding: 10
     objectName: 'registration_panel'
 
-    RegistrationOption {
+    Opt.Registration {
         id: _option
     }
 

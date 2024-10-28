@@ -5,7 +5,7 @@ import QtQuick.Layouts 1.15
 import QtQuick.Window 2.15
 import "../Custom"
 import "../Button" as Btn
-import "OptionPopup"
+import "OptionPopup" as Opt
 import Backend 1.0
 
 Pane {
@@ -42,11 +42,11 @@ Pane {
     padding: 10
     objectName: 'panorama_panel'
 
-    PanoramaOption {
+    Opt.Panorama {
         id: _panorama_option
     }
 
-    CorrectionOption {
+    Opt.Correction {
         id: _correction_option
     }
 

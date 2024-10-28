@@ -6,7 +6,7 @@ import QtQuick.Window 2.15
 import Qt.labs.platform 1.1
 import "../Custom"
 import "../Button" as Btn
-import "OptionPopup"
+import "OptionPopup" as Opt
 
 Pane {
     property bool has_working_dir: false
@@ -36,7 +36,7 @@ Pane {
     height: 720
     padding: 10
 
-    ProjectOption {
+    Opt.Project {
         id: _option
     }
 

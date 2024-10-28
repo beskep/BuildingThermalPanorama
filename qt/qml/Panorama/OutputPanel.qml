@@ -6,7 +6,7 @@ import QtQuick.Window 2.15
 import Qt.labs.qmlmodels 1.0
 import "../Custom"
 import "../Button" as Btn
-import "OptionPopup"
+import "OptionPopup" as Opt
 import Backend 1.0
 
 Pane {
@@ -43,7 +43,7 @@ Pane {
     padding: 10
     objectName: 'output_panel'
 
-    OutputOption {
+    Opt.Output {
         id: _option
     }
 
