@@ -51,6 +51,295 @@ Pane {
     padding: 10
     objectName: 'analysis_panel'
 
+    Popup {
+        id: _option
+
+        anchors.centerIn: Overlay.overlay
+        Material.elevation: 5
+        padding: 0
+        height: _option_content.implicitHeight
+
+        ColumnLayout {
+            id: _option_content
+
+            anchors.fill: parent
+
+            ColumnLayout {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                Layout.margins: 20
+                Layout.minimumWidth: 450 // XXX
+                Layout.maximumWidth: 750
+                spacing: 20
+
+                Label {
+                    Layout.fillWidth: true
+                    font.pointSize: 16
+                    font.weight: Font.Medium
+                    text: '온도 보정 설정'
+                }
+
+                RowLayout {
+                    spacing: 50
+
+                    ColumnLayout {
+                        Label {
+                            font.weight: Font.Medium
+                            text: '방사율 수정'
+                        }
+
+                        GridLayout {
+                            columns: 2
+
+                            Label {
+                                text: '벽'
+                            }
+
+                            TextField {
+                                id: _wall_emissivity
+
+                                text: '0.90'
+                                color: 'gray'
+                                horizontalAlignment: TextInput.AlignRight
+                                onTextChanged: {
+                                    _ce_button.highlighted = true;
+                                    color = 'gray';
+                                }
+
+                                validator: DoubleValidator {
+                                }
+
+                            }
+
+                            Label {
+                                text: '창문'
+                            }
+
+                            TextField {
+                                id: _window_emissivity
+
+                                text: '0.92'
+                                color: 'gray'
+                                horizontalAlignment: TextInput.AlignRight
+                                onTextChanged: {
+                                    _ce_button.highlighted = true;
+                                    color = 'gray';
+                                }
+
+                                validator: DoubleValidator {
+                                }
+
+                            }
+
+                        }
+
+                        Button {
+                            id: _ce_button
+
+                            Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                            text: '적용'
+                            onReleased: {
+                                let ewall = parseFloat(_wall_emissivity.text);
+                                let ewindow = parseFloat(_window_emissivity.text);
+                                con.analysis_correct_emissivity(ewall, ewindow);
+                                analysis_plot(); // XXX
+                                highlighted = false;
+                                _wall_emissivity.color = 'black';
+                                _window_emissivity.color = 'black';
+                            }
+                        }
+
+                    }
+
+                    ColumnLayout {
+                        Layout.fillHeight: true
+
+                        Label {
+                            font.weight: Font.Medium
+                            text: '지점 온도 보정'
+                        }
+
+                        GridLayout {
+                            columns: 3
+
+                            Label {
+                                text: '열화상'
+                            }
+
+                            TextField {
+                                id: _ir_temperature
+
+                                readOnly: true
+                                horizontalAlignment: TextInput.AlignRight
+                            }
+
+                            Label {
+                                text: '℃'
+                            }
+
+                            Label {
+                                text: '보정 온도'
+                            }
+
+                            TextField {
+                                id: _reference_temperature
+
+                                horizontalAlignment: TextInput.AlignRight
+                                onTextChanged: {
+                                    _ct_button.highlighted = true;
+                                    color = 'gray';
+                                }
+
+                                validator: DoubleValidator {
+                                }
+
+                            }
+
+                            Label {
+                                text: '℃'
+                            }
+
+                        }
+
+                        Button {
+                            id: _ct_button
+
+                            Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                            text: '보정'
+                            onReleased: {
+                                let temperature = parseFloat(_reference_temperature.text);
+                                con.analysis_correct_temperature(temperature);
+                                analysis_plot();
+                                highlighted = false;
+                                _reference_temperature.color = 'black';
+                            }
+                        }
+
+                    }
+
+                    ColumnLayout {
+                        Layout.fillHeight: true
+
+                        Label {
+                            font.weight: Font.Medium
+                            text: '환경 변수'
+                        }
+
+                        GridLayout {
+                            columns: 3
+
+                            Label {
+                                text: '실내 온도'
+                            }
+
+                            TextField {
+                                id: _int_temperature
+
+                                text: ''
+                                horizontalAlignment: TextInput.AlignRight
+                                onTextChanged: {
+                                    _bt_button.highlighted = true;
+                                    color = 'gray';
+                                }
+
+                                validator: DoubleValidator {
+                                }
+
+                            }
+
+                            Label {
+                                text: '℃'
+                            }
+
+                            Label {
+                                text: '실외 온도'
+                            }
+
+                            TextField {
+                                id: _ext_temperature
+
+                                text: ''
+                                horizontalAlignment: TextInput.AlignRight
+                                onTextChanged: {
+                                    _bt_button.highlighted = true;
+                                    color = 'gray';
+                                }
+
+                                validator: DoubleValidator {
+                                }
+
+                            }
+
+                            Label {
+                                text: '℃'
+                            }
+
+                        }
+
+                        Button {
+                            id: _bt_button
+
+                            Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                            text: '설정'
+                            onReleased: {
+                                let te = parseFloat(_ext_temperature.text);
+                                let ti = parseFloat(_int_temperature.text);
+                                con.analysis_set_teti(te, ti);
+                                flag_bt = true;
+                                highlighted = false;
+                                _factor.checked = true;
+                                _ext_temperature.color = 'black';
+                                _int_temperature.color = 'black';
+                                analysis_plot();
+                            }
+                        }
+
+                    }
+
+                }
+
+                Label {
+                    Layout.fillWidth: true
+                    font.pointSize: 16
+                    font.weight: Font.Medium
+                    text: '에너지 검진 설정'
+                }
+
+                RowLayout {
+                    Label {
+                        text: '취약부위 임계치'
+                    }
+
+                    FloatSpinBox {
+                        id: _threshold
+
+                        value: 80
+                        from: 0
+                        to: 100
+                        stepSize: 5
+                        onValueChanged: {
+                            con.analysis_set_threshold(value / 100);
+                            if (flag_bt)
+                                analysis_plot();
+
+                        }
+                    }
+
+                }
+
+                Button {
+                    Layout.alignment: Qt.AlignRight | Qt.AlignBottom
+                    flat: true
+                    text: 'OK'
+                    onClicked: _option.close()
+                }
+
+            }
+
+        }
+
+    }
+
     ColumnLayout {
         anchors.fill: parent
 
@@ -99,8 +388,7 @@ Pane {
                 }
 
                 Btn.Setting {
-                    // TODO
-
+                    onReleased: _option.open()
                 }
 
                 Btn.Help {
@@ -347,357 +635,120 @@ Pane {
 
         // 하단 옵션 패널
         Pane {
+            // RowLayout {
+            //     anchors.fill: parent
+            //     spacing: 20
+            // }
+
             Material.elevation: 2
             Layout.fillWidth: true
+            Layout.preferredHeight: 150
 
-            RowLayout {
+            ColumnLayout {
+                spacing: 0
                 anchors.fill: parent
-                spacing: 20
 
-                ColumnLayout {
-                    Layout.fillHeight: true
+                HorizontalHeaderView {
+                    syncView: table_view
 
-                    Label {
-                        font.weight: Font.Medium
-                        text: '방사율 수정'
-                    }
-
-                    GridLayout {
-                        columns: 2
-
-                        Label {
-                            text: '벽'
+                    model: ListModel {
+                        ListElement {
+                            name: '클래스'
                         }
 
-                        TextField {
-                            id: _wall_emissivity
-
-                            text: '0.90'
-                            color: 'gray'
-                            horizontalAlignment: TextInput.AlignRight
-                            onTextChanged: {
-                                _ce_button.highlighted = true;
-                                color = 'gray';
-                            }
-
-                            validator: DoubleValidator {
-                            }
-
+                        ListElement {
+                            name: '평균'
                         }
 
-                        Label {
-                            text: '창문'
+                        ListElement {
+                            name: '표준편차'
                         }
 
-                        TextField {
-                            id: _window_emissivity
+                        ListElement {
+                            name: 'Q1'
+                        }
 
-                            text: '0.92'
-                            color: 'gray'
-                            horizontalAlignment: TextInput.AlignRight
-                            onTextChanged: {
-                                _ce_button.highlighted = true;
-                                color = 'gray';
-                            }
+                        ListElement {
+                            name: '중위수'
+                        }
 
-                            validator: DoubleValidator {
-                            }
+                        ListElement {
+                            name: 'Q3'
+                        }
 
+                        ListElement {
+                            name: '취약부위 비율'
                         }
 
                     }
 
-                    Button {
-                        id: _ce_button
+                    delegate: Rectangle {
+                        implicitHeight: 40
+                        implicitWidth: 150
+                        color: '#eeeeee'
 
-                        Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                        text: '적용'
-                        onReleased: {
-                            let ewall = parseFloat(_wall_emissivity.text);
-                            let ewindow = parseFloat(_window_emissivity.text);
-                            con.analysis_correct_emissivity(ewall, ewindow);
-                            analysis_plot();
-                            highlighted = false;
-                            _wall_emissivity.color = 'black';
-                            _window_emissivity.color = 'black';
+                        Label {
+                            horizontalAlignment: Text.AlignHCenter
+                            anchors.centerIn: parent
+                            text: name
+                            font.weight: Font.Medium
                         }
+
                     }
 
                 }
 
-                ColumnLayout {
-                    Layout.fillHeight: true
+                TableView {
+                    id: table_view
 
-                    Label {
-                        font.weight: Font.Medium
-                        text: '지점 온도 보정'
-                    }
-
-                    GridLayout {
-                        columns: 3
-
-                        Label {
-                            text: '열화상'
-                        }
-
-                        TextField {
-                            id: _ir_temperature
-
-                            readOnly: true
-                            horizontalAlignment: TextInput.AlignRight
-                        }
-
-                        Label {
-                            text: '℃'
-                        }
-
-                        Label {
-                            text: '보정 온도'
-                        }
-
-                        TextField {
-                            id: _reference_temperature
-
-                            horizontalAlignment: TextInput.AlignRight
-                            onTextChanged: {
-                                _ct_button.highlighted = true;
-                                color = 'gray';
-                            }
-
-                            validator: DoubleValidator {
-                            }
-
-                        }
-
-                        Label {
-                            text: '℃'
-                        }
-
-                    }
-
-                    Button {
-                        id: _ct_button
-
-                        Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                        text: '보정'
-                        onReleased: {
-                            let temperature = parseFloat(_reference_temperature.text);
-                            con.analysis_correct_temperature(temperature);
-                            analysis_plot();
-                            highlighted = false;
-                            _reference_temperature.color = 'black';
-                        }
-                    }
-
-                }
-
-                ColumnLayout {
-                    Layout.fillHeight: true
-
-                    Label {
-                        font.weight: Font.Medium
-                        text: '환경 변수'
-                    }
-
-                    GridLayout {
-                        columns: 3
-
-                        Label {
-                            text: '실내 온도'
-                        }
-
-                        TextField {
-                            id: _int_temperature
-
-                            text: ''
-                            horizontalAlignment: TextInput.AlignRight
-                            onTextChanged: {
-                                _bt_button.highlighted = true;
-                                color = 'gray';
-                            }
-
-                            validator: DoubleValidator {
-                            }
-
-                        }
-
-                        Label {
-                            text: '℃'
-                        }
-
-                        Label {
-                            text: '실외 온도'
-                        }
-
-                        TextField {
-                            id: _ext_temperature
-
-                            text: ''
-                            horizontalAlignment: TextInput.AlignRight
-                            onTextChanged: {
-                                _bt_button.highlighted = true;
-                                color = 'gray';
-                            }
-
-                            validator: DoubleValidator {
-                            }
-
-                        }
-
-                        Label {
-                            text: '℃'
-                        }
-
-                    }
-
-                    Button {
-                        id: _bt_button
-
-                        Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                        text: '설정'
-                        onReleased: {
-                            let te = parseFloat(_ext_temperature.text);
-                            let ti = parseFloat(_int_temperature.text);
-                            con.analysis_set_teti(te, ti);
-                            flag_bt = true;
-                            highlighted = false;
-                            _factor.checked = true;
-                            _ext_temperature.color = 'black';
-                            _int_temperature.color = 'black';
-                            analysis_plot();
-                        }
-                    }
-
-                }
-
-                ColumnLayout {
-                    spacing: 0
+                    columnSpacing: 2
+                    rowSpacing: 2
+                    boundsBehavior: Flickable.StopAtBounds
                     Layout.fillWidth: true
+                    Layout.fillHeight: true
 
-                    RowLayout {
+                    model: TableModel {
+                        id: table_model
+
+                        rows: []
+
+                        TableModelColumn {
+                            display: 'class'
+                        }
+
+                        TableModelColumn {
+                            display: 'avg'
+                        }
+
+                        TableModelColumn {
+                            display: 'std'
+                        }
+
+                        TableModelColumn {
+                            display: 'q1'
+                        }
+
+                        TableModelColumn {
+                            display: 'median'
+                        }
+
+                        TableModelColumn {
+                            display: 'q3'
+                        }
+
+                        TableModelColumn {
+                            display: 'vulnerable'
+                        }
+
+                    }
+
+                    delegate: Rectangle {
+                        implicitHeight: 40
+                        implicitWidth: 150
+
                         Label {
-                            text: '취약부위 임계치'
-                        }
-
-                        FloatSpinBox {
-                            id: _threshold
-
-                            value: 80
-                            from: 0
-                            to: 100
-                            stepSize: 5
-                            onValueChanged: {
-                                con.analysis_set_threshold(value / 100);
-                                if (flag_bt)
-                                    analysis_plot();
-
-                            }
-                        }
-
-                    }
-
-                    HorizontalHeaderView {
-                        syncView: table_view
-
-                        model: ListModel {
-                            ListElement {
-                                name: '클래스'
-                            }
-
-                            ListElement {
-                                name: '평균'
-                            }
-
-                            ListElement {
-                                name: '표준편차'
-                            }
-
-                            ListElement {
-                                name: 'Q1'
-                            }
-
-                            ListElement {
-                                name: '중위수'
-                            }
-
-                            ListElement {
-                                name: 'Q3'
-                            }
-
-                            ListElement {
-                                name: '취약부위<br>비율'
-                            }
-
-                        }
-
-                        delegate: Rectangle {
-                            implicitHeight: 50
-                            implicitWidth: 100
-                            color: '#eeeeee'
-
-                            Label {
-                                text: name
-                                horizontalAlignment: Text.AlignHCenter
-                                anchors.centerIn: parent
-                            }
-
-                        }
-
-                    }
-
-                    TableView {
-                        id: table_view
-
-                        columnSpacing: 1
-                        rowSpacing: 1
-                        boundsBehavior: Flickable.StopAtBounds
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-
-                        model: TableModel {
-                            id: table_model
-
-                            rows: []
-
-                            TableModelColumn {
-                                display: 'class'
-                            }
-
-                            TableModelColumn {
-                                display: 'avg'
-                            }
-
-                            TableModelColumn {
-                                display: 'std'
-                            }
-
-                            TableModelColumn {
-                                display: 'q1'
-                            }
-
-                            TableModelColumn {
-                                display: 'median'
-                            }
-
-                            TableModelColumn {
-                                display: 'q3'
-                            }
-
-                            TableModelColumn {
-                                display: 'vulnerable'
-                            }
-
-                        }
-
-                        delegate: Rectangle {
-                            implicitHeight: 40
-                            implicitWidth: 100
-
-                            Label {
-                                text: display
-                                anchors.centerIn: parent
-                            }
-
+                            text: display
+                            anchors.centerIn: parent
                         }
 
                     }
