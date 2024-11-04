@@ -10,8 +10,6 @@ import "OptionPopup" as Opt
 import Backend 1.0
 
 Pane {
-    property int mode_height: 36
-
     function output_plot() {
         let image = '';
         if (_image_ir.checked)
@@ -61,17 +59,6 @@ Pane {
                     ToolTip.visible: hovered
                     ToolTip.delay: 500
                     ToolTip.text: qsTr('층 구분선 자동 추정')
-                }
-
-                Btn.ToolButton {
-                    id: _delete
-
-                    text: '전체 삭제'
-                    icon: '\ue872'
-                    onReleased: con.output_clear_lines()
-                    ToolTip.visible: hovered
-                    ToolTip.delay: 500
-                    ToolTip.text: qsTr('층 구분선 전체 삭제')
                 }
 
                 Btn.ToolButton {
@@ -126,21 +113,34 @@ Pane {
                 dpi_ratio: Screen.devicePixelRatio
             }
 
-            // plot 종류 선택
+            // 툴바
             Pane {
-                Material.elevation: 1
                 anchors.left: parent.left
-                anchors.bottom: parent.bottom
+                anchors.top: parent.top
+                Material.elevation: 1
                 padding: 0
+                leftPadding: 5
 
                 RowLayout {
                     RowLayout {
                         visible: _expand.expanded
 
+                        Btn.MiniToolButton {
+                            text: '초기화'
+                            icon: '\uf053'
+                            ToolTip.text: '층 구분선 전체 삭제'
+                            onReleased: con.output_clear_lines()
+                        }
+
+                        ToolSeparator {
+                            leftPadding: 2
+                            rightPadding: 2
+                        }
+
                         RadioButton {
                             id: _image_ir
 
-                            Layout.preferredHeight: mode_height
+                            implicitHeight: 36
                             text: '열화상'
                             checked: true
                             onReleased: output_plot()
@@ -149,7 +149,7 @@ Pane {
                         RadioButton {
                             id: _image_edges
 
-                            Layout.preferredHeight: mode_height
+                            implicitHeight: 36
                             text: '윤곽선'
                             onReleased: output_plot()
                         }
@@ -157,7 +157,7 @@ Pane {
                         RadioButton {
                             id: _image_vis
 
-                            Layout.preferredHeight: mode_height
+                            implicitHeight: 36
                             text: '실화상'
                             onReleased: output_plot()
                         }
@@ -165,17 +165,18 @@ Pane {
                         RadioButton {
                             id: _image_seg
 
-                            Layout.preferredHeight: mode_height
+                            implicitHeight: 36
                             text: '외피 부위'
                             onReleased: output_plot()
                         }
 
                         ToolSeparator {
-                            color: '#9e9e9e'
+                            leftPadding: 2
+                            rightPadding: 2
                         }
 
                         CheckBox {
-                            Layout.preferredHeight: mode_height
+                            implicitHeight: 36
                             text: '선분 연장'
                             onCheckedChanged: con.output_extend_lines(checked)
                             ToolTip.visible: hovered
@@ -187,6 +188,8 @@ Pane {
 
                     Btn.Expand {
                         id: _expand
+
+                        padding: 0
                     }
 
                 }
