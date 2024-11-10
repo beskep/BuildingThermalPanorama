@@ -390,10 +390,8 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
   def pano_plot(self, d, sp):
     try:
       self.pc.panorama.plot(d=DIR[d], sp=SP[sp])
-    except cm.WorkingDirNotSetError:
-      pass
-    except FileNotFoundError as e:
-      logger.debug('FileNotFound: "{}"', e)
+    except (cm.WorkingDirNotSetError, FileNotFoundError) as e:
+      logger.debug('{}: {}', e.__class__.__name__, e)
 
   @QtCore.Slot(float, float, float, int)
   def pano_rotate(self, roll, pitch, yaw, limit):
@@ -482,10 +480,8 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
 
     try:
       self.pc.analysis.plot()
-    except cm.WorkingDirNotSetError:
-      pass
-    except FileNotFoundError as e:
-      logger.debug('FileNotFound: "{}"', e)
+    except (cm.WorkingDirNotSetError, FileNotFoundError) as e:
+      logger.debug('{}: {}', e.__class__.__name__, e)
     except ValueError as e:
       self.win.error_popup(e)
     else:
@@ -598,8 +594,8 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
 
     try:
       self.pc.analysis.save(mat=self._config['file'].get('save_mat', False))
-    except cm.WorkingDirNotSetError:
-      pass
+    except (cm.WorkingDirNotSetError, FileNotFoundError) as e:
+      logger.debug('{}: {}', e.__class__.__name__, e)
     except ValueError as e:
       self.win.error_popup(f'{e} 지표 및 분포 정보를 저장하지 못했습니다.')
       self.pc.analysis.plot()
@@ -613,10 +609,8 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
 
     try:
       self.pc.output.plot()
-    except cm.WorkingDirNotSetError:
-      pass
-    except FileNotFoundError as e:
-      logger.exception(e)
+    except (cm.WorkingDirNotSetError, FileNotFoundError) as e:
+      logger.debug('{}: {}', e.__class__.__name__, e)
 
   @QtCore.Slot()
   def output_clear_lines(self):
@@ -639,25 +633,30 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
   def output_extend_lines(self, value):
     self.pc.output.lines.extend = value
 
-  @QtCore.Slot(bool, int, float, float)
-  def output_save(self, flag_count, seg_count, seg_length, building_width):
+  @QtCore.Slot()
+  def output_save(self):
+    if self._config is None:
+      return
+
+    conf = self._config['output']['segment']
+
     try:
       segments = _segments(
-        flag_count=flag_count,
-        seg_count=seg_count,
-        seg_length=seg_length,
-        building_width=building_width,
+        flag_count=conf['method'] == 'count',
+        seg_count=conf['count'],
+        seg_length=conf['length'],
+        building_width=conf['building_width'],
       )
     except ValueError as e:
       self.win.error_popup(e)
       segments = None
 
     logger.debug(
-      'flag_count={} | count={} | length={} | width={} | segments={}',
-      flag_count,
-      seg_count,
-      seg_length,
-      building_width,
+      'method={} | count={} | length={} | width={} | segments={}',
+      conf['method'],
+      conf['count'],
+      conf['length'],
+      conf['building_width'],
       segments,
     )
 
@@ -677,8 +676,8 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
   def wwr_update(self, image, threshold, force):
     try:
       wwr = self.pc.wwr.update(image=image, threshold=threshold, force=force)
-    except cm.WorkingDirNotSetError:
-      pass
+    except (cm.WorkingDirNotSetError, FileNotFoundError) as e:
+      logger.debug('{}: {}', e.__class__.__name__, e)
     else:
       row = {
         'wall': f'{wwr.wall:,}',

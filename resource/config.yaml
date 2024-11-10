@@ -112,3 +112,8 @@ output:
         max_count: 10
         distance_threshold: 10
         angle_threshold: 5
+    segment:
+        method: count # {'count', 'length'}
+        count: 20
+        length: 0.05
+        building_width: null

@@ -33,7 +33,7 @@ Pane {
     }
 
     function save_output() {
-        con.output_save(_split_count.checked, _segments_count.value, parseFloat(_segments_length.text), parseFloat(_building_width.text));
+        con.output_save();
     }
 
     width: 1280
@@ -190,113 +190,6 @@ Pane {
                         id: _expand
 
                         padding: 0
-                    }
-
-                }
-
-            }
-
-        }
-
-        // 하단 옵션 패널
-        Pane {
-            Material.elevation: 2
-            Layout.fillWidth: true
-
-            ColumnLayout {
-                ButtonGroup {
-                    id: _split_group
-                }
-
-                RowLayout {
-                    spacing: 25
-
-                    ColumnLayout {
-                        RadioButton {
-                            id: _split_count
-
-                            ButtonGroup.group: _split_group
-                            font.weight: Font.Medium
-                            text: '분할 개수 설정'
-                            checked: true
-                        }
-
-                        RowLayout {
-                            enabled: _split_count.checked
-
-                            Label {
-                                text: '분할 개수'
-                            }
-
-                            SpinBox {
-                                id: _segments_count
-
-                                value: 20
-                            }
-
-                        }
-
-                    }
-
-                    ColumnLayout {
-                        RadioButton {
-                            id: _split_length
-
-                            ButtonGroup.group: _split_group
-                            font.weight: Font.Medium
-                            text: '분할 길이 설정'
-                        }
-
-                        RowLayout {
-                            spacing: 25
-                            enabled: _split_length.checked
-
-                            RowLayout {
-                                Label {
-                                    text: '분할 길이'
-                                }
-
-                                TextField {
-                                    id: _segments_length
-
-                                    horizontalAlignment: TextInput.AlignRight
-                                    text: '0.05'
-
-                                    validator: DoubleValidator {
-                                    }
-
-                                }
-
-                                Label {
-                                    text: 'm'
-                                }
-
-                            }
-
-                            RowLayout {
-                                Label {
-                                    text: '건물 폭'
-                                }
-
-                                TextField {
-                                    id: _building_width
-
-                                    horizontalAlignment: TextInput.AlignRight
-                                    text: ''
-
-                                    validator: DoubleValidator {
-                                    }
-
-                                }
-
-                                Label {
-                                    text: 'm'
-                                }
-
-                            }
-
-                        }
-
                     }
 
                 }

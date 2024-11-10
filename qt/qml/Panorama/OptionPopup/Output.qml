@@ -16,10 +16,13 @@ Popup {
         if (!cfg)
             return ;
 
+        // canny
         _canny_sigma.value = cfg['canny']['sigma'] * 100;
+        // hough
         _hough_threshold.value = cfg['hough']['threshold'];
         _hough_line_gap.value = cfg['hough']['line_gap'];
         _hough_line_length.value = cfg['hough']['line_length'];
+        // edgelet
         if (cfg['edgelet']['segmentation'])
             _edgelet_seg.checked = true;
         else
@@ -29,6 +32,11 @@ Popup {
         _edgelet_max_count.value = cfg['edgelet']['max_count'];
         _edgelet_distance.value = cfg['edgelet']['distance_threshold'];
         _edgelet_angle.value = cfg['edgelet']['angle_threshold'];
+        // segment
+        _split_count.checked = cfg['segment']['method'] === 'count';
+        _segments_count.value = cfg['segment']['count'];
+        _segments_length.text = cfg['segment']['length'];
+        _building_width.text = cfg['segment']['building_width'];
     }
 
     function configure() {
@@ -49,6 +57,12 @@ Popup {
                     "max_count": _edgelet_max_count.value,
                     "distance_threshold": _edgelet_distance.value,
                     "angle_threshold": _edgelet_angle.value
+                },
+                "segment": {
+                    "method": _split_count.checked ? "count" : "length",
+                    "count": _segments_count.value,
+                    "length": parseFloat(_segments_length.text),
+                    "building_width": parseFloat(_building_width.text)
                 }
             }
         };
@@ -71,11 +85,13 @@ Popup {
         anchors.fill: parent
 
         ColumnLayout {
+            // TODO spacing
+
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.margins: 20
-            Layout.minimumWidth: 450
-            Layout.maximumWidth: 750
+            Layout.minimumWidth: 500
+            Layout.maximumWidth: 1000
             spacing: 20
 
             Label {
@@ -88,7 +104,7 @@ Popup {
             }
 
             RowLayout {
-                spacing: 20
+                spacing: 50
 
                 ColumnLayout {
                     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
@@ -168,6 +184,114 @@ Popup {
 
                     }
 
+                    Rectangle {
+                        height: 20
+                    }
+
+                    Label {
+                        Layout.fillWidth: true
+                        font.weight: Font.Medium
+                        font.pointSize: 13
+                        text: '층 인식'
+                    }
+
+                    RowLayout {
+                        spacing: 25
+
+                        RadioButton {
+                            id: _split_count
+
+                            Layout.fillWidth: true
+                            text: '분할 개수 설정'
+                            checked: true
+                        }
+
+                        RadioButton {
+                            id: _split_length
+
+                            Layout.fillWidth: true
+                            text: '분할 길이 설정'
+                        }
+
+                    }
+
+                    GridLayout {
+                        Layout.fillWidth: true
+                        columns: 2
+                        columnSpacing: 25
+
+                        RowLayout {
+                            enabled: _split_count.checked
+
+                            Label {
+                                text: '분할 개수'
+                            }
+
+                            SpinBox {
+                                id: _segments_count
+
+                                Layout.fillWidth: true
+                                wheelEnabled: true
+                                value: 20
+                            }
+
+                        }
+
+                        RowLayout {
+                            enabled: _split_length.checked
+
+                            Label {
+                                text: '분할 길이'
+                            }
+
+                            TextField {
+                                id: _segments_length
+
+                                Layout.fillWidth: true
+                                horizontalAlignment: TextInput.AlignRight
+                                text: '0.05'
+
+                                validator: DoubleValidator {
+                                }
+
+                            }
+
+                            Label {
+                                text: 'm'
+                            }
+
+                        }
+
+                        Label {
+                        }
+
+                        RowLayout {
+                            enabled: _split_length.checked
+
+                            Label {
+                                text: '건물 폭'
+                            }
+
+                            TextField {
+                                id: _building_width
+
+                                Layout.fillWidth: true
+                                horizontalAlignment: TextInput.AlignRight
+                                text: ''
+
+                                validator: DoubleValidator {
+                                }
+
+                            }
+
+                            Label {
+                                text: 'm'
+                            }
+
+                        }
+
+                    }
+
                 }
 
                 ColumnLayout {
@@ -217,6 +341,7 @@ Popup {
                             id: _edgelet_window_threshold
 
                             Layout.fillWidth: true
+                            wheelEnabled: true
                             enabled: _edgelet_seg.checked
                             value: 50
                             from: 0
@@ -233,6 +358,7 @@ Popup {
                             id: _edgelet_slab_position
 
                             Layout.fillWidth: true
+                            wheelEnabled: true
                             enabled: _edgelet_seg.checked
                             value: 50
                             from: 0
@@ -249,6 +375,7 @@ Popup {
                             id: _edgelet_max_count
 
                             Layout.fillWidth: true
+                            wheelEnabled: true
                             value: 10
                             from: 1
                             to: 100
@@ -264,6 +391,7 @@ Popup {
                             id: _edgelet_distance
 
                             Layout.fillWidth: true
+                            wheelEnabled: true
                             value: 10
                             from: 1
                             to: 100
@@ -279,6 +407,7 @@ Popup {
                             id: _edgelet_angle
 
                             Layout.fillWidth: true
+                            wheelEnabled: true
                             value: 5
                             from: 1
                             to: 90
