@@ -673,11 +673,6 @@ Pane {
 
         // 하단 옵션 패널
         Pane {
-            // RowLayout {
-            //     anchors.fill: parent
-            //     spacing: 20
-            // }
-
             Material.elevation: 2
             Layout.fillWidth: true
             Layout.preferredHeight: 150
