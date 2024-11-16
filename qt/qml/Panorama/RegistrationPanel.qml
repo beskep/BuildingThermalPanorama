@@ -14,7 +14,8 @@ Pane {
         con.rgst_reset();
         if (app.separate_panorama)
             con.rgst_pano_draw();
-
+        else if (image_model.count)
+            con.rgst_plot(image_model.get(0)['path']);
     }
 
     function update_image_view(paths) {

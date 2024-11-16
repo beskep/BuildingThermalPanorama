@@ -10,6 +10,9 @@ import Backend 1.0
 
 Pane {
     function init() {
+        if (image_model.count)
+            con.seg_plot(image_model.get(0)['path']);
+
     }
 
     function update_image_view(paths) {
