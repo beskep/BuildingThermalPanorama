@@ -7,6 +7,7 @@ import "../../Custom"
 Popup {
     id: _popup
 
+    property int tooltip_width: 600
     property var _config: {
         "distort_correction": null
     }
@@ -109,6 +110,13 @@ Popup {
                         to: 10000
                         stepSize: 10
                         decimals: 1
+
+                        ToolTip {
+                            text: '윤곽선 검출을 위한 가우시안 필터의 표준편차입니다. 클수록 민감도가 낮아지지만 노이즈의 영향이 감소합니다.'
+                            implicitWidth: tooltip_width
+                            visible: parent.hovered
+                        }
+
                     }
 
                     Label {
@@ -124,6 +132,13 @@ Popup {
                         from: 1
                         to: 1000
                         stepSize: 1
+
+                        ToolTip {
+                            text: '직선 윤곽선 검출을 위한 임계값입니다.'
+                            implicitWidth: tooltip_width
+                            visible: parent.hovered
+                        }
+
                     }
 
                     Label {
@@ -139,6 +154,13 @@ Popup {
                         from: 1
                         to: 1000
                         stepSize: 1
+
+                        ToolTip {
+                            text: '설정치보다 긴 윤곽선만 검출됩니다.'
+                            implicitWidth: tooltip_width
+                            visible: parent.hovered
+                        }
+
                     }
 
                     Label {
@@ -154,6 +176,13 @@ Popup {
                         from: 1
                         to: 1000
                         stepSize: 1
+
+                        ToolTip {
+                            text: '직선 중간에 설정치보다 작은 공백이 존재해도 윤곽선으로 인식합니다.'
+                            implicitWidth: tooltip_width
+                            visible: parent.hovered
+                        }
+
                     }
 
                 }
@@ -176,7 +205,7 @@ Popup {
 
                     Label {
                         Layout.fillWidth: true
-                        text: '소실점 판단 임계 각도 [º]'
+                        text: '소실점 판단 임계 각도 [°]'
                     }
 
                     FloatSpinBox {
@@ -188,6 +217,13 @@ Popup {
                         to: 3000
                         stepSize: 50
                         decimals: 1
+
+                        ToolTip {
+                            text: '소실점 추정을 위한 RANSAC 알고리즘의 임계값. 설정치 이하 오차를 무시하고 윤곽선이 수렴하는 소실점을 인식합니다.'
+                            implicitWidth: tooltip_width
+                            visible: parent.hovered
+                        }
+
                     }
 
                     Label {
@@ -203,6 +239,13 @@ Popup {
                         from: 0
                         to: 1000
                         stepSize: 10
+
+                        ToolTip {
+                            text: '영상 가장자리로 인한 소실점의 추정 오류를 방지하기 위해 영상 가장자리를 제외하는 침식 알고리즘의 강도입니다. 50(기본값)으로 설정하면 가장자리에서 약 50픽셀 거리 영역이 분석에서 제외됩니다.'
+                            implicitWidth: tooltip_width
+                            visible: parent.hovered
+                        }
+
                     }
 
                     Label {
@@ -218,6 +261,13 @@ Popup {
                         from: 1
                         to: 10
                         stepSize: 1
+
+                        ToolTip {
+                            text: '소실점 추정을 위한 계산의 최대 반복 횟수입니다.'
+                            implicitWidth: tooltip_width
+                            visible: parent.hovered
+                        }
+
                     }
 
                     Label {
@@ -227,6 +277,13 @@ Popup {
 
                     CheckBox {
                         id: _correction_strict
+
+                        ToolTip {
+                            text: '수직·수평 방향에 있는 소실점만 인식합니다. 기울어진 영상(oblique shot) 이 아닌 경우 왜곡 보정 정확도 개선을 위해 체크할 수 있습니다.'
+                            implicitWidth: tooltip_width
+                            visible: parent.hovered
+                        }
+
                     }
 
                 }

@@ -7,6 +7,7 @@ import "../../Custom"
 Popup {
     id: _popup
 
+    property int tooltip_width: 700
     property var _config: {
         "panorama": null
     }
@@ -140,6 +141,13 @@ Popup {
 
                         Layout.fillWidth: true
                         model: ['Panorama', 'Scan']
+
+                        ToolTip {
+                            text: 'Panorama(기본): 한 자리에서 카메라를 상하 좌우로 움직이며 촬영합니다.<br>Scan: 자리를 이동하며 대상에 평행하도록 촬영합니다.'
+                            implicitWidth: tooltip_width
+                            visible: parent.hovered
+                        }
+
                     }
 
                     Label {
@@ -152,6 +160,13 @@ Popup {
 
                         Layout.fillWidth: true
                         model: ['Plane', 'Spherical']
+
+                        ToolTip {
+                            text: 'Plane(기본): 평면으로 파노라마 영상을 투영합니다.<br>Spherical: 구형으로 파노라마 영상을 투영합니다.'
+                            implicitWidth: tooltip_width
+                            visible: parent.hovered
+                        }
+
                     }
 
                     Label {
@@ -164,6 +179,13 @@ Popup {
 
                         Layout.fillWidth: true
                         model: ['Feather', 'Multiband', 'None']
+
+                        ToolTip {
+                            text: '영상이 겹치는 영역이 자연스럽게 이어지게 하기 위한 처리 방법을 결정합니다.<br>Feather(기본): 겹치는 영역의 이미지를 평균하여 처리합니다.<br>Multiband: 해상도를 변경한 여러 이미지를 통해 겹치는 영역을 처리합니다.<br>None(기본): Blend를 하지 않습니다.'
+                            implicitWidth: tooltip_width
+                            visible: parent.hovered
+                        }
+
                     }
 
                     Label {
@@ -176,6 +198,13 @@ Popup {
 
                         Layout.fillWidth: true
                         model: ['Feather', 'Multiband', 'None']
+
+                        ToolTip {
+                            text: '영상이 겹치는 영역이 자연스럽게 이어지게 하기 위한 처리 방법을 결정합니다.<br>Feather: 겹치는 영역의 이미지를 평균하여 처리합니다.<br>Multiband: 해상도를 변경한 여러 이미지를 통해 겹치는 영역을 처리합니다.<br>None: Blend를 하지 않습니다.'
+                            implicitWidth: tooltip_width
+                            visible: parent.hovered
+                        }
+
                     }
 
                     Label {
@@ -190,6 +219,13 @@ Popup {
                         from: 1
                         to: 100
                         stepSize: 1
+
+                        ToolTip {
+                            text: '0.05(기본). 값이 클수록 경계가 자연스럽지만 흐릿하게 보일 수 있습니다.'
+                            implicitWidth: tooltip_width
+                            visible: parent.hovered
+                        }
+
                     }
 
                     Label {
@@ -204,6 +240,13 @@ Popup {
                         from: 1
                         to: 100
                         stepSize: 1
+
+                        ToolTip {
+                            text: '0.05(기본). 값이 클수록 경계가 자연스럽지만 흐릿하게 보일 수 있습니다.'
+                            implicitWidth: tooltip_width
+                            visible: parent.hovered
+                        }
+
                     }
 
                     Label {
@@ -219,6 +262,13 @@ Popup {
                         from: 10
                         to: 100
                         stepSize: 5
+
+                        ToolTip {
+                            text: '1.00(기본). 입력한 영상 대비 생성하는 파노라마의 해상도. 영상 크기가 너무 커서 오류가 발생할 경우 낮춰주세요.'
+                            implicitWidth: tooltip_width
+                            visible: parent.hovered
+                        }
+
                     }
 
                     Label {
@@ -235,6 +285,13 @@ Popup {
                         to: 10000
                         stepSize: 100
                         decimals: 1
+
+                        ToolTip {
+                            text: '20.0(기본). 파노라마 생성을 위한 각 영상의 최대 변형 정도. 클수록 가장자리의 영상도 파노라마에 포함할 수 있지만 시점 왜곡이 커지고 파노라마의 생성에 실패하거나 혹은 파일 용량이 커질 수 있습니다.'
+                            implicitWidth: tooltip_width
+                            visible: parent.hovered
+                        }
+
                     }
 
                 }
@@ -272,6 +329,13 @@ Popup {
 
                         Layout.fillWidth: true
                         model: ['Equalization', 'Normalization', 'None']
+
+                        ToolTip {
+                            text: 'Equalization(기본): 히스토그램 평활화를 통해 명암차를 극대화하고 영상 인식 정확도를 개선합니다.<br>Normalization:히스토그램 정규화를 통해 최대·최소 밝기 차이를 극대화합니다. Equalization에 비해 명암 개선 정도는 낮지만 자연스러운 영상을 얻습니다.<br>None: 명암 보정을 하지 않습니다.'
+                            implicitWidth: tooltip_width
+                            visible: parent.hovered
+                        }
+
                     }
 
                     Label {
@@ -283,6 +347,13 @@ Popup {
 
                         Layout.fillWidth: true
                         model: ['Equalization', 'Normalization', 'None']
+
+                        ToolTip {
+                            text: 'Equalization: 히스토그램 평활화를 통해 명암차를 극대화하고 영상 인식 정확도를 개선합니다.<br>Normalization(기본):히스토그램 정규화를 통해 최대·최소 밝기 차이를 극대화합니다. Equalization에 비해 명암 개선 정도는 낮지만 자연스러운 영상을 얻습니다.<br>None: 명암 보정을 하지 않습니다.'
+                            implicitWidth: tooltip_width
+                            visible: parent.hovered
+                        }
+
                     }
 
                     Label {
@@ -294,6 +365,13 @@ Popup {
 
                         Layout.fillWidth: true
                         model: ['Bilateral', 'Gaussian', 'None']
+
+                        ToolTip {
+                            text: 'Bilateral(기본): 양방향 필터를 적용하여 노이즈를 제거합니다.<br>Gaussian: 가우시안 필터를 적용하여 노이즈를 제거합니다.<br>None: 노이즈를 제거하지 않습니다.'
+                            implicitWidth: tooltip_width
+                            visible: parent.hovered
+                        }
+
                     }
 
                     Label {
@@ -305,13 +383,20 @@ Popup {
 
                         Layout.fillWidth: true
                         model: ['Bilateral', 'Gaussian', 'None']
+
+                        ToolTip {
+                            text: 'Bilateral: 양방향 필터를 적용하여 노이즈를 제거합니다.<br>Gaussian(기본): 가우시안 필터를 적용하여 노이즈를 제거합니다.<br>None: 노이즈를 제거하지 않습니다.'
+                            implicitWidth: tooltip_width
+                            visible: parent.hovered
+                        }
+
                     }
 
                 }
 
                 RowLayout {
                     Label {
-                        text: '마스킹 온도'
+                        text: '마스킹 온도 [°C]'
                     }
 
                     FloatSpinBox {
@@ -323,6 +408,13 @@ Popup {
                         to: 5000
                         stepSize: 100
                         decimals: 1
+
+                        ToolTip {
+                            text: '-30.0(기본). 설정값 미만의 영역을 하늘로 인식합니다.'
+                            implicitWidth: tooltip_width
+                            visible: parent.hovered
+                        }
+
                     }
 
                 }

@@ -7,6 +7,7 @@ import "../../Custom"
 Popup {
     id: _popup
 
+    property int tooltip_width: 850
     property var _config: {
         "registration": null
     }
@@ -83,33 +84,25 @@ Popup {
                 }
 
                 RowLayout {
-                    Label {
-                        Layout.fillWidth: true
-                        text: 'HistogramEq'
-                    }
-
                     CheckBox {
                         id: _hist_eq
 
+                        text: 'HistogramEq'
                         checked: true
                         ToolTip.visible: hovered
-                        ToolTip.text: '히스토그램 균일화를 통해 명암을 보정'
+                        ToolTip.text: '히스토그램 평활화 방법을 통해 영상의 명암 대비를 높여 밝기 및 선명도를 보강합니다.'
                     }
 
                     Rectangle {
                         width: 50
                     }
 
-                    Label {
-                        Layout.fillWidth: true
-                        text: 'Sharpening'
-                    }
-
                     CheckBox {
                         id: _unsharp
 
+                        text: 'Sharpening'
                         ToolTip.visible: hovered
-                        ToolTip.text: '물체 간 경계선의 명암 차이를 강화'
+                        ToolTip.text: '샤프닝 방법을 통해 영상의 엣지 부분의 대비를 높여 객체의 경계를 강화합니다.'
                     }
 
                 }
@@ -140,6 +133,13 @@ Popup {
 
                         Layout.fillWidth: true
                         model: ['JointHistMI', 'MattesMI', 'MeanSquare']
+
+                        ToolTip {
+                            text: 'JointHistMI(기본): 두 영상의 명암분포 유사도를 측정하기 위해 조인트 히스토그램 상에서 상호의존정보를 이용합니다.<br>MattesMI: 최적화를 위한 반복마다 새로운 세트를 사용하는 대신, 픽셀 위치에 대한 단일 세트를 사용합니다.<br>MeanSquare: 두 영상의 정합 시 평균 제곱 오차를 이용하여 평가합니다.'
+                            implicitWidth: tooltip_width
+                            visible: parent.hovered
+                        }
+
                     }
 
                     Label {
@@ -152,6 +152,13 @@ Popup {
 
                         Layout.fillWidth: true
                         model: ['Similarity', 'Affine']
+
+                        ToolTip {
+                            text: 'Similarity(기본): 평행이동, 회전, 크기 변화를 반영하여 변환합니다.<br>Affine: Similarity에 선형성을 보존하여 변환합니다.'
+                            implicitWidth: tooltip_width
+                            visible: parent.hovered
+                        }
+
                     }
 
                     Label {
@@ -164,6 +171,13 @@ Popup {
 
                         Layout.fillWidth: true
                         model: ['Auto', 'Freedman-Diaconis', 'Square Root']
+
+                        ToolTip {
+                            text: 'Auto(기본): 데이터 크기와 분산을 고려해 구간 개수를 결정합니다.<br>Freedman-Diaconis: 사분범위와 데이터 개수를 고려해 구간 개수를 결정합니다.<br>Square Root: 데이터 개수의 제곱근으로 구간 개수를 결정합니다 (다른 방법의 구간 개수가 너무 많을 때 선택).'
+                            implicitWidth: tooltip_width
+                            visible: parent.hovered
+                        }
+
                     }
 
                     Label {
@@ -176,6 +190,13 @@ Popup {
 
                         Layout.fillWidth: true
                         model: ['Gradient Descent', 'Powell']
+
+                        ToolTip {
+                            text: 'Gradient Descent(기본): 경사하강법을 통해 최적화합니다.<br>Powell:Powell\'s conjugate direction method를 통해 최적화합니다.'
+                            implicitWidth: tooltip_width
+                            visible: parent.hovered
+                        }
+
                     }
 
                 }

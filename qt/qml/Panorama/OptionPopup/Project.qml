@@ -21,7 +21,6 @@ Popup {
     }
 
     function configure() {
-        // TODO test
         _config = {
             "panorama": {
                 "separate": _separate.checked
@@ -32,7 +31,6 @@ Popup {
     }
 
     function update_config(config) {
-        // TODO test
         _config['panorama'] = config['panorama'];
         reset();
     }
@@ -75,34 +73,26 @@ Popup {
                 }
 
                 RowLayout {
-                    Label {
-                        Layout.fillWidth: true
-                        text: '동시 생성'
-                    }
-
                     RadioButton {
                         id: _simultaneously
 
+                        text: '동시 생성'
                         checked: true
                         ToolTip.visible: hovered
-                        ToolTip.text: '열·실화상 정합 후 파노라마 동시 생성.' + _warning
+                        ToolTip.text: '열화상과 함께 촬영된 실화상을 활용할 때 사용합니다.' + _warning
                     }
 
                     Rectangle {
                         width: 50
                     }
 
-                    Label {
-                        Layout.fillWidth: true
-                        text: '별도 생성'
-                    }
-
                     RadioButton {
                         id: _separate
 
+                        text: '별도 생성'
                         checked: false
                         ToolTip.visible: hovered
-                        ToolTip.text: '열·실화상 파노라마 별도 생성 후 두 파노라마를 정합.' + _warning
+                        ToolTip.text: '열화상과 다른 시기에 촬영된 실화상을 활용할 때 사용합니다.' + _warning
                     }
 
                 }

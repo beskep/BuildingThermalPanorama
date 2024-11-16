@@ -77,7 +77,6 @@ Pane {
                 }
 
                 Btn.Setting {
-                    // TODO
                     enabled: !app.separate_panorama
                     onReleased: _option.open()
                     ToolTip.text: '자동 열·실화상 정합 설정'

@@ -7,6 +7,7 @@ import "../../Custom"
 Popup {
     id: _popup
 
+    property int tooltip_width: 500
     property var _config: {
         "output": null
     }
@@ -85,8 +86,6 @@ Popup {
         anchors.fill: parent
 
         ColumnLayout {
-            // TODO spacing
-
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.margins: 20
@@ -135,6 +134,13 @@ Popup {
                             to: 10000
                             stepSize: 20
                             decimals: 1
+
+                            ToolTip {
+                                text: '윤곽선 검출을 위한 가우시안 필터의 표준편차입니다. 클수록 민감도가 낮아지지만 노이즈의 영향이 감소합니다.'
+                                implicitWidth: tooltip_width
+                                visible: parent.hovered
+                            }
+
                         }
 
                         Label {
@@ -150,6 +156,13 @@ Popup {
                             from: 1
                             to: 1000
                             stepSize: 1
+
+                            ToolTip {
+                                text: '직선 윤곽선 검출을 위한 임계값입니다.'
+                                implicitWidth: tooltip_width
+                                visible: parent.hovered
+                            }
+
                         }
 
                         Label {
@@ -165,6 +178,13 @@ Popup {
                             from: 1
                             to: 1000
                             stepSize: 5
+
+                            ToolTip {
+                                text: '설정치보다 긴 윤곽선만 검출됩니다.'
+                                implicitWidth: tooltip_width
+                                visible: parent.hovered
+                            }
+
                         }
 
                         Label {
@@ -180,6 +200,13 @@ Popup {
                             from: 1
                             to: 1000
                             stepSize: 5
+
+                            ToolTip {
+                                text: '직선 중간에 설정치보다 작은 공백이 존재해도 윤곽선으로 인식합니다.'
+                                implicitWidth: tooltip_width
+                                visible: parent.hovered
+                            }
+
                         }
 
                     }
@@ -204,6 +231,13 @@ Popup {
                             Layout.fillWidth: true
                             text: '분할 개수 설정'
                             checked: true
+
+                            ToolTip {
+                                text: '건물의 폭을 지정한 개수로 분할합니다.'
+                                implicitWidth: tooltip_width
+                                visible: parent.hovered
+                            }
+
                         }
 
                         RadioButton {
@@ -211,6 +245,13 @@ Popup {
 
                             Layout.fillWidth: true
                             text: '분할 길이 설정'
+
+                            ToolTip {
+                                text: '건물의 폭을 일정한 길이로 분할합니다.'
+                                implicitWidth: tooltip_width
+                                visible: parent.hovered
+                            }
+
                         }
 
                     }
@@ -233,6 +274,13 @@ Popup {
                                 Layout.fillWidth: true
                                 wheelEnabled: true
                                 value: 20
+
+                                ToolTip {
+                                    text: '지정한 개수만큼 건물의 폭을 분할합니다.'
+                                    implicitWidth: tooltip_width
+                                    visible: parent.hovered
+                                }
+
                             }
 
                         }
@@ -250,6 +298,12 @@ Popup {
                                 Layout.fillWidth: true
                                 horizontalAlignment: TextInput.AlignRight
                                 text: '0.05'
+
+                                ToolTip {
+                                    text: '건물 폭을 분할하는 길이를 설정합니다.'
+                                    implicitWidth: tooltip_width
+                                    visible: parent.hovered
+                                }
 
                                 validator: DoubleValidator {
                                 }
@@ -278,6 +332,12 @@ Popup {
                                 Layout.fillWidth: true
                                 horizontalAlignment: TextInput.AlignRight
                                 text: ''
+
+                                ToolTip {
+                                    text: '건물의 폭을 설정합니다.'
+                                    implicitWidth: tooltip_width
+                                    visible: parent.hovered
+                                }
 
                                 validator: DoubleValidator {
                                 }
@@ -347,6 +407,13 @@ Popup {
                             from: 0
                             to: 100
                             stepSize: 5
+
+                            ToolTip {
+                                text: '층 인식 결과 중 창문을 제외하기 위한 임계치입니다. 외피 영역 중 임계치보다 창문 영역의 비율이 높으면 층 구분선이 아니라고 판단합니다.'
+                                implicitWidth: tooltip_width
+                                visible: parent.hovered
+                            }
+
                         }
 
                         Label {
@@ -364,6 +431,13 @@ Popup {
                             from: 0
                             to: 100
                             stepSize: 5
+
+                            ToolTip {
+                                text: '층 구분선 사이 영역 중 슬라브가 위치하는 높이를 설정합니다.'
+                                implicitWidth: tooltip_width
+                                visible: parent.hovered
+                            }
+
                         }
 
                         Label {
@@ -380,6 +454,13 @@ Popup {
                             from: 1
                             to: 100
                             stepSize: 1
+
+                            ToolTip {
+                                text: '층의 최대 인식 개수를 설정합니다.'
+                                implicitWidth: tooltip_width
+                                visible: parent.hovered
+                            }
+
                         }
 
                         Label {
@@ -396,11 +477,18 @@ Popup {
                             from: 1
                             to: 100
                             stepSize: 1
+
+                            ToolTip {
+                                text: '지정한 거리 이상 떨어진 층만 인식합니다.'
+                                implicitWidth: tooltip_width
+                                visible: parent.hovered
+                            }
+
                         }
 
                         Label {
                             Layout.fillWidth: true
-                            text: '각도 한계 [degree]'
+                            text: '각도 한계 [°]'
                         }
 
                         SpinBox {
@@ -412,6 +500,13 @@ Popup {
                             from: 1
                             to: 90
                             stepSize: 1
+
+                            ToolTip {
+                                text: '수평과 설정 각도 이상 차이가 존재하면 층 구분선으로 인식하지 않습니다.'
+                                implicitWidth: tooltip_width
+                                visible: parent.hovered
+                            }
+
                         }
 
                     }

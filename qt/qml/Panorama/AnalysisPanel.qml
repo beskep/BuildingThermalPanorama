@@ -9,9 +9,11 @@ import "../Button" as Btn
 import Backend 1.0
 
 Pane {
+    // TODO 실내외 온도 자동 지정
     property real min_temperature: 0
     property real max_temperature: 1
     property bool flag_bt: false
+    property int tooltip_width: 400
 
     function analysis_plot() {
         con.analysis_plot(_factor.checked, _show_segmentation.down, _show_vulnerable.down, _dist.checked);
@@ -68,7 +70,7 @@ Pane {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 Layout.margins: 20
-                Layout.minimumWidth: 450 // XXX
+                Layout.minimumWidth: 450
                 Layout.maximumWidth: 750
                 spacing: 20
 
@@ -106,6 +108,12 @@ Pane {
                                     color = 'gray';
                                 }
 
+                                ToolTip {
+                                    text: '벽의 방사율을 수정합니다.'
+                                    implicitWidth: tooltip_width
+                                    visible: parent.hovered
+                                }
+
                                 validator: DoubleValidator {
                                 }
 
@@ -124,6 +132,12 @@ Pane {
                                 onTextChanged: {
                                     _ce_button.highlighted = true;
                                     color = 'gray';
+                                }
+
+                                ToolTip {
+                                    text: '창문의 방사율을 수정합니다.'
+                                    implicitWidth: tooltip_width
+                                    visible: parent.hovered
                                 }
 
                                 validator: DoubleValidator {
@@ -190,6 +204,12 @@ Pane {
                                     color = 'gray';
                                 }
 
+                                ToolTip {
+                                    text: '선택한 지점의 온도를 사용자가 입력한 온도로 보정합니다.'
+                                    implicitWidth: tooltip_width
+                                    visible: parent.hovered
+                                }
+
                                 validator: DoubleValidator {
                                 }
 
@@ -242,6 +262,12 @@ Pane {
                                     color = 'gray';
                                 }
 
+                                ToolTip {
+                                    text: '취약부위를 검출하기 위한 실내 온도를 입력합니다.'
+                                    implicitWidth: tooltip_width
+                                    visible: parent.hovered
+                                }
+
                                 validator: DoubleValidator {
                                 }
 
@@ -263,6 +289,12 @@ Pane {
                                 onTextChanged: {
                                     _bt_button.highlighted = true;
                                     color = 'gray';
+                                }
+
+                                ToolTip {
+                                    text: '취약부위를 검출하기 위한 실외 온도를 입력합니다.'
+                                    implicitWidth: tooltip_width
+                                    visible: parent.hovered
                                 }
 
                                 validator: DoubleValidator {
@@ -323,6 +355,13 @@ Pane {
                                 analysis_plot();
 
                         }
+
+                        ToolTip {
+                            text: '0.80(기본값). 에너지 취약부위 검출을 위한 임계치를 설정합니다. 임계치 이상의 영역이 취약부위로 분류됩니다.'
+                            implicitWidth: tooltip_width
+                            visible: parent.hovered
+                        }
+
                     }
 
                 }
@@ -417,12 +456,11 @@ Pane {
 
                 // 툴바
                 Pane {
-                    // TODO 높이 조절
+                    anchors.left: parent.left
+                    anchors.top: parent.top
                     Material.elevation: 1
                     padding: 0
                     leftPadding: 5
-                    anchors.left: parent.left
-                    anchors.top: parent.top
 
                     RowLayout {
                         RowLayout {

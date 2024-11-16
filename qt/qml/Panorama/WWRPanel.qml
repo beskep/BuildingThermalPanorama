@@ -10,6 +10,7 @@ import Backend 1.0
 
 Pane {
     property int table_width: 250
+    property int tooltip_width: 500
 
     function init() {
         update_plot(true);
@@ -74,6 +75,13 @@ Pane {
                         to: 100
                         stepSize: 5
                         onValueChanged: update_plot(false)
+
+                        ToolTip {
+                            text: '외피 외 면적의 비중이 설정치 이상인 층은 창면적비 추정 데이터에서 제외합니다.'
+                            implicitWidth: tooltip_width
+                            visible: parent.hovered
+                        }
+
                     }
 
                 }
@@ -92,7 +100,7 @@ Pane {
                 Btn.ToolButton {
                     text: '저장'
                     icon: '\ue161'
-                    onReleased: save_wwr() // TODO
+                    onReleased: save_wwr()
                     ToolTip.visible: hovered
                     ToolTip.delay: 500
                     ToolTip.text: '창면적비 저장'
