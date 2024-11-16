@@ -5,7 +5,6 @@ import "../Button"
 
 ToolButton {
     text: '설정'
-    text_color: '#A0FFFFFF'
     icon: '\ue8b8'
     ToolTip.visible: hovered
     ToolTip.delay: 200

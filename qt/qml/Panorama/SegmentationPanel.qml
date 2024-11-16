@@ -55,6 +55,10 @@ Pane {
                 ToolSeparator {
                 }
 
+                Btn.Setting {
+                    enabled: false
+                }
+
                 Btn.Help {
                     // TODO
 
