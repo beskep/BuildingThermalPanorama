@@ -24,25 +24,78 @@ Pane {
         table_model.appendRow(value);
     }
 
+    function save_wwr() {
+        con.wwr_save(JSON.stringify(table_model.rows[0]));
+    }
+
     width: 1280
     height: 720
     padding: 10
+
+    Popup {
+        id: _option
+
+        anchors.centerIn: Overlay.overlay
+        Material.elevation: 5
+        padding: 0
+        height: _option_content.implicitHeight
+
+        ColumnLayout {
+            id: _option_content
+
+            anchors.fill: parent
+
+            ColumnLayout {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                Layout.margins: 20
+                Layout.minimumWidth: 450
+                Layout.maximumWidth: 750
+                spacing: 20
+
+                Label {
+                    Layout.fillWidth: true
+                    font.pointSize: 16
+                    font.weight: Font.Medium
+                    text: '창면적비 설정'
+                }
+
+                RowLayout {
+                    Label {
+                        font.bold: true
+                        text: '외피 가림 임계치'
+                    }
+
+                    FloatSpinBox {
+                        id: _threshold
+
+                        value: 10
+                        from: 0
+                        to: 100
+                        stepSize: 5
+                        onValueChanged: update_plot(false)
+                    }
+
+                }
+
+            }
+
+        }
+
+    }
 
     ColumnLayout {
         anchors.fill: parent
 
         ToolBar {
             RowLayout {
-                Btn.ToolRadioButton {
-                    id: _vis
-
-                    checked: true
-                    text: '실화상'
-                    onCheckedChanged: update_plot(false)
-                }
-
-                Btn.ToolRadioButton {
-                    text: '부위 인식'
+                Btn.ToolButton {
+                    text: '저장'
+                    icon: '\ue161'
+                    onReleased: save_wwr() // TODO
+                    ToolTip.visible: hovered
+                    ToolTip.delay: 500
+                    ToolTip.text: '창면적비 저장'
                 }
 
                 ToolSeparator {
@@ -56,8 +109,7 @@ Pane {
                 }
 
                 Btn.Setting {
-                    // TODO
-
+                    onReleased: _option.open()
                 }
 
                 Btn.Help {
@@ -83,33 +135,51 @@ Pane {
                 dpi_ratio: Screen.devicePixelRatio
             }
 
+            // 툴바
+            Pane {
+                anchors.left: parent.left
+                anchors.top: parent.top
+                Material.elevation: 1
+                padding: 0
+                leftPadding: 5
+
+                RowLayout {
+                    RowLayout {
+                        visible: _expand.expanded
+
+                        RadioButton {
+                            id: _vis
+
+                            checked: true
+                            text: '실화상'
+                            onCheckedChanged: update_plot(false)
+                        }
+
+                        RadioButton {
+                            text: '부위 인식'
+                        }
+
+                    }
+
+                    Btn.Expand {
+                        id: _expand
+
+                        padding: 0
+                    }
+
+                }
+
+            }
+
         }
 
         Pane {
             Material.elevation: 2
-            Layout.preferredHeight: 160
+            Layout.preferredHeight: 100
             Layout.fillWidth: true
 
             ColumnLayout {
                 anchors.fill: parent
-
-                RowLayout {
-                    Label {
-                        font.bold: true
-                        text: '외피 가림 임계치'
-                    }
-
-                    FloatSpinBox {
-                        id: _threshold
-
-                        value: 10
-                        from: 0
-                        to: 100
-                        stepSize: 5
-                        onValueChanged: update_plot(false)
-                    }
-
-                }
 
                 ColumnLayout {
                     spacing: 0

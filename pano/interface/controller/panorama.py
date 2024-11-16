@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import ClassVar, Literal
 
 import numpy as np
+import pandas as pd
 from loguru import logger
 from omegaconf import DictConfig, OmegaConf
 from PyQt5 import QtCore, QtGui
@@ -686,3 +687,31 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
         'wwr': f'{wwr.wwr:.1%}',
       }
       self.win.panel_function('wwr', 'show_wwr', row)
+
+  @QtCore.Slot(str)
+  def wwr_save(self, s):
+    try:
+      path = self.fm.subdir(DIR.WWR, mkdir=True) / '창면적비.csv'
+    except cm.WorkingDirNotSetError as e:
+      logger.debug('{}: {}', e.__class__.__name__, e)
+      return
+
+    wwr: dict[str, str] = json.loads(s)
+
+    if any('-' in x for x in wwr.values()):
+      self.win.popup('Warning', '창면적비가 계산되지 않았습니다.')
+      return
+
+    columns = [
+      ['wall', '벽 픽셀 수'],
+      ['window', '창문 픽셀 수'],
+      ['envelope', '외피 픽셀 수'],
+      ['wwr', '창면적비'],
+    ]
+    (
+      pd.DataFrame.from_dict(
+        {k: [wwr[e]] for e, k in columns}, orient='columns'
+      ).to_csv(path, index=False, encoding='UTF-8-SIG')
+    )
+
+    self.win.popup('Success', '창면적비 저장 완료.')

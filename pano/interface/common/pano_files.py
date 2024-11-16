@@ -73,6 +73,7 @@ class DIR(Enum):
   COR = '04 Correction'
   ANLY = '05 Analysis'
   OUT = '06 Output'
+  WWR = '07 WWR'
 
 
 class FN:
