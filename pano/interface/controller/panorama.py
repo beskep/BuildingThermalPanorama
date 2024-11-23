@@ -254,6 +254,9 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
       elif command == 'register':
         self.pc.registration.reset()
         self.pc.registration.reset_matrices()
+        self.win.panel_function('registration', 'init')
+      elif command == 'segment':
+        self.win.panel_function('segmentation', 'init')
 
       self.win.popup('Success', f'{cmd_kr} 완료')
       self.win.pb_state(indeterminate=False)
