@@ -163,7 +163,7 @@ ApplicationWindow {
                         }
 
                         TabButton {
-                            text: 'GIS 연동'
+                            text: '건물 층 추정'
                             width: parent.width
                             font.pointSize: 14
                         }
