@@ -387,7 +387,6 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
     try:
       self.pc.segmentation.plot(path, separate=self._config['panorama']['separate'])
     except FileNotFoundError:
-      self.win.error_popup('부위 인식 결과가 없습니다.')
       logger.warning('File not found: {}', path)
 
   @QtCore.Slot(str, str)
