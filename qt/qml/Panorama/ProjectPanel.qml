@@ -97,6 +97,7 @@ Pane {
                 }
 
                 Btn.Help {
+                    onReleased: con.open_help(4)
                 }
 
                 ToolSeparator {

@@ -130,8 +130,7 @@ Pane {
                 }
 
                 Btn.Help {
-                    // TODO
-
+                    onReleased: con.open_help(correction_plot ? 9 : 8)
                 }
 
             }

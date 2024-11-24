@@ -22,12 +22,11 @@ except ImportError:
 T = TypeVar('T')
 
 
-def is_frozen():
-  return getattr(sys, 'frozen', False)
+IS_FROZEN = getattr(sys, 'frozen', False)
 
 
 class DIR:
-  if is_frozen():
+  if IS_FROZEN:
     ROOT = Path(sys.executable).parent.resolve()
   else:
     ROOT = Path(__file__).parents[1].resolve()

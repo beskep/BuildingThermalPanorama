@@ -56,11 +56,15 @@ from typing import ClassVar
 from loguru import logger
 from omegaconf import DictConfig
 
-from pano import utils
+from pano.utils import DIR as _DIR
+from pano.utils import IS_FROZEN
 
 from .config import set_config
 
-MODEL_PATH = utils.DIR.RESOURCE / 'misc/DeepLabV3PlusEfficientnetB6.onnx'
+MODEL_PATH = _DIR.RESOURCE / 'misc/DeepLabV3PlusEfficientnetB6.onnx'
+HELP_PATH = (
+  _DIR.ROOT if IS_FROZEN else _DIR.RESOURCE / 'misc'
+) / '프로그램 사용자 매뉴얼.pdf'
 
 
 class DIR(Enum):

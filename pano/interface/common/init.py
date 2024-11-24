@@ -2,9 +2,10 @@
 
 import os
 import sys
+import webbrowser
 from pathlib import Path
 
-from pano.utils import DIR, is_frozen
+from pano.utils import DIR, IS_FROZEN
 
 
 def is_ascii(s: str):
@@ -41,8 +42,9 @@ def init_project(
   os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
   skimage.io.use_plugin('pil')
 
+  # qt
   if qt:
-    if not is_frozen() and 'PySide2' in sys.modules:
+    if not IS_FROZEN and 'PySide2' in sys.modules:
       import PySide2
 
       pyside_dir = Path(PySide2.__file__).parent
@@ -54,6 +56,7 @@ def init_project(
   if not (font_path := DIR.RESOURCE / 'font' / font_file).exists():
     raise FileNotFoundError(font_path)
 
+  # plot
   fe = fm.FontEntry(fname=font_path.as_posix(), name=font_name)
   fm.fontManager.ttflist.insert(0, fe)
 
@@ -63,3 +66,15 @@ def init_project(
     font=font_name,
     rc={'axes.edgecolor': '0.2', 'grid.color': '0.8', 'image.cmap': 'inferno'},
   )
+
+  # webbrowser
+  for name, path in [
+    ['firefox', 'C:/Program Files/Mozilla Firefox/firefox.exe'],
+    ['chrome', 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe'],
+  ]:
+    webbrowser.register(
+      name,
+      None,
+      webbrowser.BackgroundBrowser(path),
+      preferred=True,
+    )

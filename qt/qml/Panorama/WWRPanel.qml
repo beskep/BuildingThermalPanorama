@@ -121,8 +121,7 @@ Pane {
                 }
 
                 Btn.Help {
-                    // TODO
-
+                    onReleased: con.open_help(12)
                 }
 
             }

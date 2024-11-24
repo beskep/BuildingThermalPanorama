@@ -63,6 +63,7 @@ resource/font
 *.onnx
 *.exe
 *.bat
+*.pdf
 .*.py
 *.pyproject*
 TODO.md

@@ -1,6 +1,7 @@
 import json
 import multiprocessing as mp
 import os
+import webbrowser
 from contextlib import suppress
 from pathlib import Path
 from typing import ClassVar, Literal
@@ -15,7 +16,7 @@ import pano.interface.common as cm
 import pano.interface.controller.controller as con
 import pano.interface.plot_controller as pc
 from pano.interface import analysis
-from pano.interface.common import DIR, SP
+from pano.interface.common import DIR, HELP_PATH, SP
 from pano.misc.imageio import ImageIO
 
 
@@ -169,6 +170,15 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
       )
     except OSError as e:
       self.win.popup('Error', str(e))
+
+  @QtCore.Slot(int)
+  def open_help(self, page):  # noqa: PLR6301
+    path = HELP_PATH.as_posix()
+    if page:
+      path = f'{path}#page={page}'
+
+    logger.debug(path)
+    webbrowser.open(f'file:///{path}')
 
   @QtCore.Slot(str)
   def prj_select_working_dir(self, wd):

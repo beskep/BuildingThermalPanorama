@@ -4,6 +4,7 @@ from .init import init_project
 from .pano_files import (
   DIR,
   FN,
+  HELP_PATH,
   SP,
   ThermalPanoramaFileManager,
   WorkingDirNotSetError,
@@ -15,6 +16,7 @@ __all__ = [
   'DEFAULT_CONFIG_PATH',
   'DIR',
   'FN',
+  'HELP_PATH',
   'SP',
   'ThermalPanoramaFileManager',
   'WorkingDirNotSetError',

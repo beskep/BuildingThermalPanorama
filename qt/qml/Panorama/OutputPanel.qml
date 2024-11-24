@@ -92,7 +92,7 @@ Pane {
                 }
 
                 Btn.Help {
-                    ToolTip.text: '자동 추정: 영상 윤곽선으로부터 층 구분선 추정\n마우스 좌클릭: 구분선 추가 또는 수정\n마우스 우클릭: 구분선 삭제'
+                    onReleased: con.open_help(11)
                 }
 
             }
