@@ -474,14 +474,19 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
     )
     self.pc.registration.draw()
 
-  @QtCore.Slot(bool, bool, bool, bool)
-  def analysis_plot(self, factor, segmentation, vulnerable, distribution):
+  @QtCore.Slot(bool, bool, bool, bool, bool)
+  def analysis_plot(self, factor, segmentation, vulnerable, distribution, auto_range):
     self.pc.analysis.setting.factor = factor
     self.pc.analysis.setting.segmentation = segmentation
     self.pc.analysis.setting.vulnerable = vulnerable
     self.pc.analysis.setting.distribution = distribution
 
     try:
+      if auto_range:
+        trange = self.pc.analysis.images.temperature_range()
+        self.win.panel_function('analysis', 'set_temperature_range', *trange)
+        self.analysis_set_teti(*trange)
+
       self.pc.analysis.plot()
     except (cm.WorkingDirNotSetError, FileNotFoundError) as e:
       logger.debug('{}: {}', e.__class__.__name__, e)
@@ -530,7 +535,8 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
       self.pc.analysis.images.reset_images()
       ir = self.pc.analysis.images.ir
       seg = self.pc.analysis.images.seg
-    except cm.WorkingDirNotSetError:
+    except (cm.WorkingDirNotSetError, FileNotFoundError) as e:
+      logger.debug('{}: {}', e.__class__.__name__, e)
       return
 
     meta_files = list(self.fm.subdir(DIR.IR).glob('*.yaml'))
@@ -577,7 +583,8 @@ class Controller(QtCore.QObject):  # noqa: PLR0904
 
   @QtCore.Slot(float, float)
   def analysis_set_teti(self, te, ti):
-    self.pc.analysis.images.teti = (te, ti)
+    with suppress(cm.WorkingDirNotSetError):
+      self.pc.analysis.images.teti = (te, ti)
 
   @QtCore.Slot(float)
   def analysis_set_threshold(self, value):

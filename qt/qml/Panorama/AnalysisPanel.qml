@@ -9,18 +9,17 @@ import "../Button" as Btn
 import Backend 1.0
 
 Pane {
-    // TODO 실내외 온도 자동 지정
     property real min_temperature: 0
     property real max_temperature: 1
     property bool flag_bt: false
     property int tooltip_width: 400
 
-    function analysis_plot() {
-        con.analysis_plot(_factor.checked, _show_segmentation.down, _show_vulnerable.down, _dist.checked);
+    function analysis_plot(auto_range = false) {
+        con.analysis_plot(_factor.checked, _show_segmentation.down, _show_vulnerable.down, _dist.checked, auto_range);
     }
 
     function init() {
-        analysis_plot();
+        analysis_plot(true);
     }
 
     function set_temperature_range(vmin, vmax) {
