@@ -179,7 +179,7 @@ class RegistrationPlotController(PanoPlotController):
     if axi not in {0, 1}:
       return
 
-    if event.button == MouseButton.LEFT:
+    if event.button == MouseButton.LEFT and not self._toolbar.zoom_mode:
       self._points.add_point(ax=ax, event=event)
     elif event.button == MouseButton.RIGHT:
       self._points.remove_points(ax=ax)
