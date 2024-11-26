@@ -10,12 +10,20 @@ import "OptionPopup" as Opt
 import Backend 1.0
 
 Pane {
+    property real image_border_width: 4
+    property string current_image_path: ''
+
     function init() {
         con.rgst_reset();
         if (app.separate_panorama)
             con.rgst_pano_draw();
         else if (image_model.count)
-            con.rgst_plot(image_model.get(0)['path']);
+            rgst_plot(image_model.get(0)['path']);
+    }
+
+    function rgst_plot(path) {
+        con.rgst_plot(path);
+        current_image_path = path;
     }
 
     function update_image_view(paths) {
@@ -121,11 +129,22 @@ Pane {
                         width: image_view.width - 20
                         height: width * 3 / 4 + 10
 
+                        Rectangle {
+                            id: _image_border
+
+                            anchors.centerIn: _image
+                            width: _image.width + 2 * image_border_width
+                            height: _image.height + 2 * image_border_width
+                            border.color: '#1976D2'
+                            border.width: image_border_width
+                            visible: path === current_image_path
+                        }
+
                         Image {
                             id: _image
 
                             source: path
-                            width: parent.width
+                            width: parent.width - 10
                             fillMode: Image.PreserveAspectFit
                         }
 
@@ -140,9 +159,9 @@ Pane {
                         MouseArea {
                             anchors.fill: parent
                             hoverEnabled: true
-                            onReleased: con.rgst_plot(path)
                             onEntered: _bc.brightness = -0.25
                             onExited: _bc.brightness = 0
+                            onReleased: rgst_plot(path)
                         }
 
                     }

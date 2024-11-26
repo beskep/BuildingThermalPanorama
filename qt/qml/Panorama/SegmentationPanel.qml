@@ -9,10 +9,18 @@ import "../Button" as Btn
 import Backend 1.0
 
 Pane {
+    property real image_border_width: 4
+    property string current_image_path: ''
+
     function init() {
         if (image_model.count)
-            con.seg_plot(image_model.get(0)['path']);
+            seg_plot(image_model.get(0)['path']);
 
+    }
+
+    function seg_plot(path) {
+        con.seg_plot(path);
+        current_image_path = path;
     }
 
     function update_image_view(paths) {
@@ -123,6 +131,17 @@ Pane {
                     height: image_view.height - 20
                     width: height * 4 / 3 + 10
 
+                    Rectangle {
+                        id: _image_border
+
+                        anchors.centerIn: _image
+                        width: _image.width + 2 * image_border_width
+                        height: _image.height + 2 * image_border_width
+                        border.color: '#1976D2'
+                        border.width: image_border_width
+                        visible: path === current_image_path
+                    }
+
                     Image {
                         id: _image
 
@@ -142,7 +161,7 @@ Pane {
                     MouseArea {
                         anchors.fill: parent
                         hoverEnabled: true
-                        onReleased: con.seg_plot(path)
+                        onReleased: seg_plot(path)
                         onEntered: _bc.brightness = -0.25
                         onExited: _bc.brightness = 0
                     }
